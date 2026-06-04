@@ -50,6 +50,13 @@ export default class SpeedTapScene extends Phaser.Scene {
         // Active target tracked objects
         this.activeTargets = [];
         this.spawnTimerEvent = null;
+
+        // Micro-behavior metrics
+        this.stimulusSpawnTime = 0;
+        this.firstInteractionRegistered = false;
+        this.firstInteractionLatency = 0;
+        this.spamClickCount = 0;
+        this.lastMissTime = 0;
     }
 
     create() {
@@ -96,9 +103,19 @@ export default class SpeedTapScene extends Phaser.Scene {
 
         // Background click handler to register "misses" (clicking blank space)
         this.input.on('pointerdown', (pointer, gameObjects) => {
+            this.registerFirstInteraction();
             if (gameObjects.length === 0) {
                 this.registerMiss();
+                const now = this.time.now;
+                if (now - this.lastMissTime < 200) {
+                    this.spamClickCount++;
+                }
+                this.lastMissTime = now;
             }
+        });
+
+        this.input.on('pointermove', () => {
+            this.registerFirstInteraction();
         });
 
         // 3. Game Loops and Timers
@@ -133,6 +150,10 @@ export default class SpeedTapScene extends Phaser.Scene {
         if (this.activeTargets.length >= this.maxConcurrentObjects) {
             return;
         }
+
+        this.stimulusSpawnTime = this.time.now;
+        this.firstInteractionRegistered = false;
+        this.firstInteractionLatency = 0;
 
         const width = this.scale.width;
         const height = this.scale.height;
@@ -332,9 +353,14 @@ export default class SpeedTapScene extends Phaser.Scene {
 
         const payload = {
             session_id: this.sessionId,
-            reaction_time: reaction_time,
-            accuracy: this.accuracy,
-            difficulty: this.difficultyLevel
+            cognitive_domain: "reflexes_and_focus",
+            game_type: "speed_tap",
+            reaction_time: reactionTime,
+            accuracy_rate: this.accuracy,
+            difficulty: this.difficultyLevel,
+            error_count: this.misses,
+            hesitation_ms: this.firstInteractionLatency || 0,
+            spam_click_count: this.spamClickCount
         };
 
         try {
@@ -356,6 +382,13 @@ export default class SpeedTapScene extends Phaser.Scene {
         } catch (error) {
             // Satisfy connection redundancy standard: Log warning, keep playing
             console.warn('[Telemetry Dispatch] Database connection failed. Telemetry queued locally.', error);
+        }
+    }
+
+    registerFirstInteraction() {
+        if (!this.firstInteractionRegistered && this.stimulusSpawnTime > 0) {
+            this.firstInteractionLatency = this.time.now - this.stimulusSpawnTime;
+            this.firstInteractionRegistered = true;
         }
     }
 

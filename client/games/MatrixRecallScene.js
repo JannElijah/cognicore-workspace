@@ -3,16 +3,16 @@
  * Chapter 2 Methodology Compliance: Software Engineering Architecture Patterns
  * - Pattern: Model-View-Controller (MVC) / Client-Server Communication (Bridge Pattern)
  * - Component: View & Controller (Phaser Game Loop) / Data Dispatcher (Service Bridge)
- * - Modular Independence: Self-contained Memory Match spatial sequence scene.
+ * - Modular Independence: Self-contained Matrix Recall spatial grid pattern scene.
  * - Dynamic Difficulty Adjustment (DDA): Implements hot-swapping game variables
- *   (grid_size, sequence_length, flash_duration) dynamically updated via REST API.
+ *   (grid_cols, grid_rows, target_count, flash_duration) dynamically updated via REST API.
  * ================================================================================
  */
 import Phaser from 'phaser';
 
-export default class MemoryMatchScene extends Phaser.Scene {
+export default class MatrixRecallScene extends Phaser.Scene {
     constructor() {
-        super('MemoryMatchScene');
+        super('MatrixRecallScene');
     }
 
     init(data) {
@@ -21,27 +21,28 @@ export default class MemoryMatchScene extends Phaser.Scene {
         this.apiUrl = data.apiUrl || 'http://127.0.0.1:5000';
         this.onGameOver = data.onGameOver || null;
 
-        // DDA parameters
+        // DDA parameters (Spatial Visual Memory)
         const dda = data.ddaParameters || {};
         this.difficultyLevel = dda.difficulty_level || 1;
-        this.gridSize = dda.grid_size || 3;             // 3x3, 4x4, 5x5 grid
-        this.sequenceLength = dda.sequence_length || 3;   // sequence to remember
-        this.flashDuration = dda.flash_duration || 1000;   // ms per flash
+        this.gridCols = dda.grid_cols || 3;
+        this.gridRows = dda.grid_rows || 3;
+        this.targetCount = dda.target_count || 3;
+        this.flashDuration = dda.flash_duration || 1200;
 
         // Game states
         this.score = 0;
-        this.correctSequences = 0;
+        this.hits = 0; // successfully recalled matrices
         this.totalAttempts = 0;
         this.accuracy = 1.0;
         this.gameDuration = 45000; // 45 seconds session
         this.timeLeft = this.gameDuration;
 
-        this.sequence = [];
-        this.playerSequence = [];
+        this.targets = []; // Stores indices of cells that are targets
+        this.playerSelections = []; // Stores indices clicked by player
         this.gamePhase = 'INTRO'; // INTRO | FLASHING | RECALL | FEEDBACK | GAMEOVER
-        this.sequenceEndTime = 0; // Marks when the flash phase ended
+        this.flashStartTime = 0; // Marks when the flash phase ended for timing
 
-        this.gridCells = []; // Stores cell container objects
+        this.gridCells = []; // Stores cell graphics reference
         this.countdownTimer = null;
         this.roundTimer = null;
 
@@ -66,12 +67,12 @@ export default class MemoryMatchScene extends Phaser.Scene {
         const grid = this.add.grid(width / 2, height / 2, width, height, 80, 80, 0x000000, 0, 0x3b82f6, 0.03);
         grid.setOrigin(0.5);
 
-        // 2. HUD Elements
+        // 2. HUD Setup
         this.scoreText = this.add.text(20, 20, 'SCORE: 0', {
             fontFamily: 'system-ui, -apple-system, sans-serif',
             fontSize: '24px',
             fontWeight: 'bold',
-            fill: '#4ade80' // neon green
+            fill: '#38bdf8' // neon blue
         });
 
         this.accuracyText = this.add.text(20, 50, 'ACCURACY: 100%', {
@@ -95,7 +96,7 @@ export default class MemoryMatchScene extends Phaser.Scene {
         }).setOrigin(0.5, 0);
 
         // Status instruction message
-        this.statusText = this.add.text(width / 2, 90, 'PREPARING TRAINING...', {
+        this.statusText = this.add.text(width / 2, 90, 'PREPARING MATRIX...', {
             fontFamily: 'system-ui, -apple-system, sans-serif',
             fontSize: '22px',
             fontWeight: '800',
@@ -141,7 +142,6 @@ export default class MemoryMatchScene extends Phaser.Scene {
         this.gridCells.forEach(cell => {
             if (cell.bg) cell.bg.destroy();
             if (cell.glow) cell.glow.destroy();
-            if (cell.label) cell.label.destroy();
         });
         this.gridCells = [];
 
@@ -149,46 +149,44 @@ export default class MemoryMatchScene extends Phaser.Scene {
         const height = this.scale.height;
 
         // Grid sizing details
-        const gridAreaSize = 380;
-        const spacing = 12;
-        const totalSpacing = spacing * (this.gridSize - 1);
-        const cellSize = (gridAreaSize - totalSpacing) / this.gridSize;
+        const gridAreaWidth = 380;
+        const gridAreaHeight = 380;
+        const spacing = 10;
+        
+        const totalSpacingX = spacing * (this.gridCols - 1);
+        const totalSpacingY = spacing * (this.gridRows - 1);
+        
+        const cellWidth = (gridAreaWidth - totalSpacingX) / this.gridCols;
+        const cellHeight = (gridAreaHeight - totalSpacingY) / this.gridRows;
 
-        const startX = (width - gridAreaSize) / 2 + cellSize / 2;
-        const startY = 160 + (gridAreaSize - cellSize * this.gridSize - totalSpacing) / 2 + cellSize / 2;
+        const startX = (width - gridAreaWidth) / 2 + cellWidth / 2;
+        const startY = 160 + (gridAreaHeight - (cellHeight * this.gridRows + totalSpacingY)) / 2 + cellHeight / 2;
 
-        for (let row = 0; row < this.gridSize; row++) {
-            for (let col = 0; col < this.gridSize; col++) {
-                const index = row * this.gridSize + col;
-                const x = startX + col * (cellSize + spacing);
-                const y = startY + row * (cellSize + spacing);
+        for (let row = 0; row < this.gridRows; row++) {
+            for (let col = 0; col < this.gridCols; col++) {
+                const index = row * this.gridCols + col;
+                const x = startX + col * (cellWidth + spacing);
+                const y = startY + row * (cellHeight + spacing);
 
                 // Base graphic: Dark glassmorphic square
                 const cellBg = this.add.graphics();
                 cellBg.setPosition(x, y);
                 cellBg.fillStyle(0x1e293b, 0.45); // Glass grey
                 cellBg.lineStyle(1.5, 0xffffff, 0.08); // Subtle border
-                cellBg.fillRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
-                cellBg.strokeRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
+                cellBg.fillRoundedRect(-cellWidth / 2, -cellHeight / 2, cellWidth, cellHeight, 6);
+                cellBg.strokeRoundedRect(-cellWidth / 2, -cellHeight / 2, cellWidth, cellHeight, 6);
 
                 // Glow graphic (overlay rendered during highlighting)
                 const cellGlow = this.add.graphics();
                 cellGlow.setPosition(x, y);
                 cellGlow.setVisible(false);
-                cellGlow.fillStyle(0xa855f7, 0.6); // Purple highlight fill
-                cellGlow.lineStyle(3, 0xd8b4fe, 0.9); // Brighter border
-                cellGlow.fillRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
-                cellGlow.strokeRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
-
-                // Label showing row/col indexes in spatial terms (for subtle accessibility or detail)
-                const cellLabel = this.add.text(x, y, '', {
-                    fontFamily: 'Arial',
-                    fontSize: '14px',
-                    fill: '#475569'
-                }).setOrigin(0.5);
+                cellGlow.fillStyle(0xf59e0b, 0.6); // Gold/Orange highlight fill
+                cellGlow.lineStyle(3, 0xfef08a, 0.9); // Brighter border
+                cellGlow.fillRoundedRect(-cellWidth / 2, -cellHeight / 2, cellWidth, cellHeight, 6);
+                cellGlow.strokeRoundedRect(-cellWidth / 2, -cellHeight / 2, cellWidth, cellHeight, 6);
 
                 // Set Interactive area
-                cellBg.setInteractive(new Phaser.Geom.Rectangle(-cellSize / 2, -cellSize / 2, cellSize, cellSize), Phaser.Geom.Rectangle.Contains);
+                cellBg.setInteractive(new Phaser.Geom.Rectangle(-cellWidth / 2, -cellHeight / 2, cellWidth, cellHeight), Phaser.Geom.Rectangle.Contains);
 
                 // Click event
                 cellBg.on('pointerdown', (pointer, localX, localY, event) => {
@@ -198,21 +196,23 @@ export default class MemoryMatchScene extends Phaser.Scene {
 
                 // Hover micro-animations
                 cellBg.on('pointerover', () => {
-                    if (this.gamePhase === 'RECALL') {
+                    if (this.gamePhase === 'RECALL' && !this.playerSelections.includes(index)) {
                         cellBg.clear();
                         cellBg.fillStyle(0x334155, 0.6);
                         cellBg.lineStyle(2, 0x38bdf8, 0.4);
-                        cellBg.fillRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
-                        cellBg.strokeRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
+                        cellBg.fillRoundedRect(-cellWidth / 2, -cellHeight / 2, cellWidth, cellHeight, 6);
+                        cellBg.strokeRoundedRect(-cellWidth / 2, -cellHeight / 2, cellWidth, cellHeight, 6);
                     }
                 });
 
                 cellBg.on('pointerout', () => {
-                    cellBg.clear();
-                    cellBg.fillStyle(0x1e293b, 0.45);
-                    cellBg.lineStyle(1.5, 0xffffff, 0.08);
-                    cellBg.fillRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
-                    cellBg.strokeRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
+                    if (!this.playerSelections.includes(index)) {
+                        cellBg.clear();
+                        cellBg.fillStyle(0x1e293b, 0.45);
+                        cellBg.lineStyle(1.5, 0xffffff, 0.08);
+                        cellBg.fillRoundedRect(-cellWidth / 2, -cellHeight / 2, cellWidth, cellHeight, 6);
+                        cellBg.strokeRoundedRect(-cellWidth / 2, -cellHeight / 2, cellWidth, cellHeight, 6);
+                    }
                 });
 
                 // Reference bindings
@@ -222,8 +222,8 @@ export default class MemoryMatchScene extends Phaser.Scene {
                     y,
                     bg: cellBg,
                     glow: cellGlow,
-                    label: cellLabel,
-                    cellSize
+                    cellWidth,
+                    cellHeight
                 };
 
                 this.gridCells.push(cellObj);
@@ -245,46 +245,52 @@ export default class MemoryMatchScene extends Phaser.Scene {
         if (this.timeLeft <= 0) return;
 
         this.gamePhase = 'FLASHING';
-        this.playerSequence = [];
-        this.statusText.setText('WATCH CAREFULLY!').setAlpha(1).setFill('#c084fc');
-
-        // Generate target sequence
-        this.sequence = [];
-        const totalTilesCount = this.gridSize * this.gridSize;
-        for (let i = 0; i < this.sequenceLength; i++) {
-            const randIndex = Phaser.Math.Between(0, totalTilesCount - 1);
-            this.sequence.push(randIndex);
-        }
-
-        console.log('[Memory Match] Generated Sequence:', this.sequence);
-
-        // Flash sequence in order
-        this.flashSequence();
-    }
-
-    flashSequence() {
-        let delayOffset = 500; // brief pause before starting
-        const stepDelay = this.flashDuration;
-
-        this.sequence.forEach((cellIndex, step) => {
-            this.time.delayedCall(delayOffset, () => {
-                if (this.gamePhase !== 'FLASHING') return;
-                this.highlightCell(cellIndex, 0xa855f7, stepDelay * 0.7); // purple flash
-            });
-            delayOffset += stepDelay;
+        this.playerSelections = [];
+        
+        // Reset grid cells styling
+        this.gridCells.forEach(cell => {
+            cell.glow.setVisible(false);
+            cell.bg.clear();
+            cell.bg.fillStyle(0x1e293b, 0.45);
+            cell.bg.lineStyle(1.5, 0xffffff, 0.08);
+            cell.bg.fillRoundedRect(-cell.cellWidth / 2, -cell.cellHeight / 2, cell.cellWidth, cell.cellHeight, 6);
+            cell.bg.strokeRoundedRect(-cell.cellWidth / 2, -cell.cellHeight / 2, cell.cellWidth, cell.cellHeight, 6);
         });
 
-        // Wait until all flashes are complete to transition to player input
-        this.time.delayedCall(delayOffset - 100, () => {
+        this.statusText.setText('WATCH CAREFULLY!').setFill('#e9d5ff'); // light purple
+
+        // Generate target cell indexes randomly
+        this.targets = [];
+        const totalCells = this.gridCols * this.gridRows;
+        const indices = Array.from({ length: totalCells }, (_, i) => i);
+        Phaser.Utils.Array.Shuffle(indices);
+        this.targets = indices.slice(0, this.targetCount);
+
+        console.log('[Matrix Recall] Generated Targets:', this.targets);
+
+        // Flash targets simultaneously
+        this.targets.forEach(index => {
+            this.highlightCell(index, 0xa855f7, 0xf3e8ff, this.flashDuration); // Purple glow
+        });
+
+        // Transition to recall phase after the flash duration ends
+        this.time.delayedCall(this.flashDuration, () => {
             if (this.gamePhase !== 'FLASHING') return;
+            
+            // Hide the glow templates
+            this.gridCells.forEach(cell => {
+                if (this.targets.includes(cell.index)) {
+                    cell.glow.setVisible(false);
+                }
+            });
+
             this.gamePhase = 'RECALL';
-            this.sequenceEndTime = this.time.now;
+            this.flashStartTime = this.time.now;
             this.stimulusSpawnTime = this.time.now;
             this.firstInteractionRegistered = false;
             this.firstInteractionLatency = 0;
-            this.statusText.setText('REPEAT SEQUENCE!').setFill('#38bdf8');
+            this.statusText.setText('RECALL PATTERN!').setFill('#38bdf8'); // neon blue
             
-            // Micro-pulsing scale animation on status text
             this.tweens.add({
                 targets: this.statusText,
                 scale: 1.08,
@@ -295,74 +301,81 @@ export default class MemoryMatchScene extends Phaser.Scene {
         });
     }
 
-    highlightCell(index, color, duration = 400) {
+    highlightCell(index, fillColor, strokeColor, duration) {
         const cell = this.gridCells.find(c => c.index === index);
         if (!cell) return;
 
         const glow = cell.glow;
-        const cellSize = cell.cellSize;
-
         glow.clear();
-        glow.fillStyle(color, 0.75);
-        glow.lineStyle(3.5, 0xffffff, 0.95);
-        glow.fillRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
-        glow.strokeRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
+        glow.fillStyle(fillColor, 0.8);
+        glow.lineStyle(3, strokeColor, 0.95);
+        glow.fillRoundedRect(-cell.cellWidth / 2, -cell.cellHeight / 2, cell.cellWidth, cell.cellHeight, 6);
+        glow.strokeRoundedRect(-cell.cellWidth / 2, -cell.cellHeight / 2, cell.cellWidth, cell.cellHeight, 6);
         glow.setVisible(true);
 
-        // Tween pop scaling
         this.tweens.add({
-            targets: [cell.bg, cell.glow, cell.label],
-            scale: 1.12,
+            targets: [cell.bg, cell.glow],
+            scale: 1.08,
             duration: 150,
             yoyo: true,
-            ease: 'Quad.easeOut',
-            onComplete: () => {
-                glow.setVisible(false);
-            }
-        });
-
-        // Safeguard visibility reset
-        this.time.delayedCall(duration, () => {
-            glow.setVisible(false);
+            ease: 'Quad.easeOut'
         });
     }
 
     handleCellInput(index) {
         if (this.gamePhase !== 'RECALL') return;
+        if (this.playerSelections.includes(index)) return; // Prevent double-clicking same cell
 
-        const stepIdx = this.playerSequence.length;
-        const expectedIndex = this.sequence[stepIdx];
-        this.playerSequence.push(index);
+        this.playerSelections.push(index);
 
-        if (index === expectedIndex) {
-            // Correct click
-            this.highlightCell(index, 0x06b6d4, 250); // Neon blue flash
-            
-            // If the user has matched the full sequence
-            if (this.playerSequence.length === this.sequence.length) {
-                this.handleSuccessfulSequence();
+        if (this.targets.includes(index)) {
+            // Correct cell clicked
+            const cell = this.gridCells.find(c => c.index === index);
+            if (cell) {
+                // Highlight block in neon green/teal
+                cell.glow.clear();
+                cell.glow.fillStyle(0x10b981, 0.7); // Emerald green
+                cell.glow.lineStyle(3, 0xa7f3d0, 0.95);
+                cell.glow.fillRoundedRect(-cell.cellWidth / 2, -cell.cellHeight / 2, cell.cellWidth, cell.cellHeight, 6);
+                cell.glow.strokeRoundedRect(-cell.cellWidth / 2, -cell.cellHeight / 2, cell.cellWidth, cell.cellHeight, 6);
+                cell.glow.setVisible(true);
+
+                this.tweens.add({
+                    targets: [cell.bg, cell.glow],
+                    scale: 1.06,
+                    duration: 100,
+                    yoyo: true,
+                    ease: 'Quad.easeOut'
+                });
+            }
+
+            // If player clicked all correct targets
+            const correctClicksCount = this.playerSelections.filter(x => this.targets.includes(x)).length;
+            if (correctClicksCount === this.targets.length) {
+                this.handleSuccessfulRecall();
             }
         } else {
-            // Mismatch clicked (Failure)
-            this.handleFailedSequence(index);
+            // Wrong cell clicked (Round Fail)
+            this.handleFailedRecall(index);
         }
     }
 
-    handleSuccessfulSequence() {
+    handleSuccessfulRecall() {
         this.gamePhase = 'FEEDBACK';
-        this.correctSequences++;
+        this.hits++;
         this.totalAttempts++;
 
-        const recallTime = this.time.now - this.sequenceEndTime;
+        const recallTime = this.time.now - this.flashStartTime;
         
         // Calculate dynamic reward score
-        const baseReward = 100 * this.sequenceLength;
-        const speedBonus = Math.max(0, Math.round((12000 - recallTime) / 10)); // faster yields more points
+        const baseReward = 100 * this.targetCount;
+        const speedBonus = Math.max(0, Math.round((10000 - recallTime) / 10)); // faster yields more points
         const roundScore = baseReward + speedBonus;
         this.score += roundScore;
 
-        this.showFloatingFeedback(`+${roundScore} PERFECT!`, '#22c55e');
-        this.statusText.setText('SUCCESS!').setFill('#22c55e');
+        this.showFloatingFeedback(`+${roundScore} PERFECT!`, '#10b981');
+        this.statusText.setText('SUCCESS!').setFill('#10b981');
+        this.cameras.main.flash(100, 16, 185, 129, 0.15); // soft green splash
 
         this.updateHUD();
 
@@ -373,30 +386,47 @@ export default class MemoryMatchScene extends Phaser.Scene {
         this.scheduleNextRound();
     }
 
-    handleFailedSequence(wrongIndex) {
+    handleFailedRecall(wrongIndex) {
         this.gamePhase = 'FEEDBACK';
         this.totalAttempts++;
 
-        const recallTime = this.time.now - this.sequenceEndTime;
-        
+        const recallTime = this.time.now - this.flashStartTime;
+
         // Highlight wrong tile in red
-        this.highlightCell(wrongIndex, 0xef4444, 500);
-        
-        // Flash the correct tile in gold to guide user feedback learning
-        const correctIndex = this.sequence[this.playerSequence.length - 1];
-        this.time.delayedCall(250, () => {
-            this.highlightCell(correctIndex, 0xf59e0b, 500); // Gold helper highlight
+        const cell = this.gridCells.find(c => c.index === wrongIndex);
+        if (cell) {
+            cell.glow.clear();
+            cell.glow.fillStyle(0xef4444, 0.7); // Red
+            cell.glow.lineStyle(3, 0xfecaca, 0.95);
+            cell.glow.fillRoundedRect(-cell.cellWidth / 2, -cell.cellHeight / 2, cell.cellWidth, cell.cellHeight, 6);
+            cell.glow.strokeRoundedRect(-cell.cellWidth / 2, -cell.cellHeight / 2, cell.cellWidth, cell.cellHeight, 6);
+            cell.glow.setVisible(true);
+        }
+
+        // Highlight the correct missing targets in gold/orange to guide feedback learning
+        this.targets.forEach(idx => {
+            if (!this.playerSelections.includes(idx)) {
+                const targetCell = this.gridCells.find(c => c.index === idx);
+                if (targetCell) {
+                    targetCell.glow.clear();
+                    targetCell.glow.fillStyle(0xf59e0b, 0.5); // Gold/Orange
+                    targetCell.glow.lineStyle(2.5, 0xfef08a, 0.8);
+                    targetCell.glow.fillRoundedRect(-targetCell.cellWidth / 2, -targetCell.cellHeight / 2, targetCell.cellWidth, targetCell.cellHeight, 6);
+                    targetCell.glow.strokeRoundedRect(-targetCell.cellWidth / 2, -targetCell.cellHeight / 2, targetCell.cellWidth, targetCell.cellHeight, 6);
+                    targetCell.glow.setVisible(true);
+                }
+            }
         });
 
         // Shake camera
         this.cameras.main.shake(150, 0.008);
 
-        this.showFloatingFeedback('INCORRECT RECALL', '#ef4444');
-        this.statusText.setText('SEQUENCE BROKEN!').setFill('#ef4444');
+        this.showFloatingFeedback('INCORRECT CELL', '#ef4444');
+        this.statusText.setText('PATTERN BROKEN!').setFill('#ef4444');
 
         this.updateHUD();
 
-        // Dispatch telemetry with 0 accuracy for this sequence mismatch
+        // Dispatch telemetry with 0 accuracy
         this.dispatchMetricTelemetry(recallTime, 0.0);
 
         // Trigger next round
@@ -404,10 +434,10 @@ export default class MemoryMatchScene extends Phaser.Scene {
     }
 
     scheduleNextRound() {
-        this.time.delayedCall(1600, () => {
+        this.time.delayedCall(1650, () => {
             if (this.timeLeft <= 0) return;
             
-            // Check with DDA after every 3 sequences
+            // Check with DDA after every 3 rounds
             if (this.totalAttempts % 3 === 0) {
                 this.adaptDifficulty();
             } else {
@@ -420,7 +450,7 @@ export default class MemoryMatchScene extends Phaser.Scene {
         this.scoreText.setText(`SCORE: ${this.score}`);
         
         if (this.totalAttempts > 0) {
-            this.accuracy = this.correctSequences / this.totalAttempts;
+            this.accuracy = this.hits / this.totalAttempts;
         } else {
             this.accuracy = 1.0;
         }
@@ -453,20 +483,23 @@ export default class MemoryMatchScene extends Phaser.Scene {
     async dispatchMetricTelemetry(recallTimeMs, roundAccuracy) {
         if (!this.sessionId) return;
 
+        // Calculate errors: in MatrixRecall, if they failed, the round error is 1. If succeeded, 0.
+        const errorVal = roundAccuracy === 1.0 ? 0 : 1;
+
         const payload = {
             session_id: this.sessionId,
             cognitive_domain: "spatial_visual_memory",
-            game_type: "memory_match",
+            game_type: "matrix_recall",
             reaction_time: recallTimeMs,
             accuracy_rate: roundAccuracy,
             difficulty: this.difficultyLevel,
-            error_count: roundAccuracy === 1.0 ? 0 : 1,
+            error_count: errorVal,
             hesitation_ms: this.firstInteractionLatency || 0,
             spam_click_count: this.spamClickCount
         };
 
         try {
-            console.log('[Telemetry Dispatch] Sending metrics...', payload);
+            console.log('[Telemetry Dispatch] Sending Matrix Recall metrics...', payload);
             await fetch(`${this.apiUrl}/api/submit-metrics`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -490,7 +523,7 @@ export default class MemoryMatchScene extends Phaser.Scene {
         this.statusText.setText('SYNCING ADAPTATION...').setFill('#64748b');
 
         try {
-            console.log('[DDA Bridge] Checking memory scaling profiles...');
+            console.log('[DDA Bridge] Checking Matrix Recall scaling profiles...');
             const response = await fetch(`${this.apiUrl}/api/dda`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -502,23 +535,24 @@ export default class MemoryMatchScene extends Phaser.Scene {
                 if (data.status === 'success' && data.dda_parameters) {
                     const params = data.dda_parameters;
                     const difficultyChanged = this.difficultyLevel !== params.difficulty_level;
-                    const gridSizeChanged = this.gridSize !== params.grid_size;
+                    const gridChanged = this.gridCols !== params.grid_cols || this.gridRows !== params.grid_rows;
 
                     this.difficultyLevel = params.difficulty_level;
-                    this.gridSize = params.grid_size;
-                    this.sequenceLength = params.sequence_length;
+                    this.gridCols = params.grid_cols;
+                    this.gridRows = params.grid_rows;
+                    this.targetCount = params.target_count;
                     this.flashDuration = params.flash_duration;
 
                     this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);
 
                     if (difficultyChanged) {
-                        const direction = difficultyChanged && params.difficulty_level > this.difficultyLevel ? 'INCREASED' : 'ADJUSTED';
+                        const direction = params.difficulty_level > this.difficultyLevel ? 'INCREASED' : 'ADJUSTED';
                         this.showFloatingFeedback(`DIFFICULTY ADJUSTED: LEVEL ${this.difficultyLevel}`, '#a855f7');
                     }
 
-                    // Re-render grid mapping dynamically if size scales (e.g. 3x3 -> 4x4)
-                    if (gridSizeChanged) {
-                        console.log(`[DDA Scale] Re-drawing grid to grid size: ${this.gridSize}`);
+                    // Re-render grid layout dynamically if structure changed
+                    if (gridChanged) {
+                        console.log(`[DDA Scale] Re-drawing grid to cols: ${this.gridCols}, rows: ${this.gridRows}`);
                         this.drawGrid();
                     }
                 }
@@ -540,22 +574,21 @@ export default class MemoryMatchScene extends Phaser.Scene {
         this.gridCells.forEach(cell => {
             if (cell.bg) cell.bg.destroy();
             if (cell.glow) cell.glow.destroy();
-            if (cell.label) cell.label.destroy();
         });
         this.gridCells = [];
 
-        console.log('[Memory Match Game Over] Telemetry summary:', {
+        console.log('[Matrix Recall Game Over] Telemetry summary:', {
             score: this.score,
-            hits: this.correctSequences,
-            misses: this.totalAttempts - this.correctSequences,
+            hits: this.hits,
+            misses: this.totalAttempts - this.hits,
             accuracy: this.accuracy
         });
 
         if (this.onGameOver) {
             this.onGameOver({
                 score: this.score,
-                hits: this.correctSequences,
-                misses: this.totalAttempts - this.correctSequences,
+                hits: this.hits,
+                misses: this.totalAttempts - this.hits,
                 accuracy: this.accuracy,
                 difficultyLevel: this.difficultyLevel
             });

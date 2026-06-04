@@ -34,11 +34,51 @@ CORS(app)
 
 DB_PATH = 'cognicore.db'
 
+# 4-Tier Cognitive Domain Categorization Framework Configuration Mapping
+GAME_TO_DOMAIN = {
+    "MemoryMatch": "spatial_visual_memory",
+    "memory_match": "spatial_visual_memory",
+    "LogicLink": "logical_mathematical",
+    "logic_link": "logical_mathematical",
+    "SpeedTap": "reflexes_and_focus",
+    "speed_tap": "reflexes_and_focus",
+    "FocusFinder": "reflexes_and_focus",
+    "focus_finder": "reflexes_and_focus",
+    "MazeEscape": "executive_strategy",
+    "maze_escape": "executive_strategy",
+    "MatrixRecall": "spatial_visual_memory",
+    "matrix_recall": "spatial_visual_memory"
+}
+
 # Helper function to get database connection
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+# Programmatic Schema Migration / Initialization
+def init_db():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("PRAGMA table_info(performance_metrics)")
+    columns = [row['name'] for row in cursor.fetchall()]
+    
+    if "cognitive_domain" not in columns:
+        cursor.execute("ALTER TABLE performance_metrics ADD COLUMN cognitive_domain TEXT")
+    if "game_type" not in columns:
+        cursor.execute("ALTER TABLE performance_metrics ADD COLUMN game_type TEXT")
+    if "error_count" not in columns:
+        cursor.execute("ALTER TABLE performance_metrics ADD COLUMN error_count INTEGER")
+    if "hesitation_ms" not in columns:
+        cursor.execute("ALTER TABLE performance_metrics ADD COLUMN hesitation_ms REAL")
+    if "spam_click_count" not in columns:
+        cursor.execute("ALTER TABLE performance_metrics ADD COLUMN spam_click_count INTEGER")
+    
+    conn.commit()
+    conn.close()
+
+# Run database schema migration on startup
+init_db()
 
 # Helper function to map difficulty levels to gameplay parameters
 def calculate_dda_parameters(difficulty_level, game_type='SpeedTap'):
@@ -181,6 +221,45 @@ def calculate_dda_parameters(difficulty_level, game_type='SpeedTap'):
                 "blocked_ratio": 0.25
             }
         }
+    elif game_type in ['MatrixRecall', 'matrix_recall']:
+        # Map levels to game-specific variables for the Matrix Recall game (Spatial-Visual Memory)
+        configs = {
+            1: {
+                "difficulty_level": 1,
+                "grid_cols": 3,
+                "grid_rows": 3,
+                "target_count": 3,
+                "flash_duration": 1200
+            },
+            2: {
+                "difficulty_level": 2,
+                "grid_cols": 3,
+                "grid_rows": 4,
+                "target_count": 4,
+                "flash_duration": 1000
+            },
+            3: {
+                "difficulty_level": 3,
+                "grid_cols": 4,
+                "grid_rows": 4,
+                "target_count": 5,
+                "flash_duration": 800
+            },
+            4: {
+                "difficulty_level": 4,
+                "grid_cols": 5,
+                "grid_rows": 5,
+                "target_count": 6,
+                "flash_duration": 700
+            },
+            5: {
+                "difficulty_level": 5,
+                "grid_cols": 6,
+                "grid_rows": 6,
+                "target_count": 7,
+                "flash_duration": 600
+            }
+        }
     else:
         # Map levels to game-specific variables for the Speed Tap game
         configs = {
@@ -268,11 +347,31 @@ def start_session():
             (user_id, game_type)
         )
         session_id = cursor.lastrowid
+        
+        # Get initial DDA parameters based on parent domain history for this user
+        domain = GAME_TO_DOMAIN.get(game_type, "reflexes_and_focus")
+        domain_games = [g for g, d in GAME_TO_DOMAIN.items() if d == domain]
+        placeholders = ",".join("?" for _ in domain_games)
+        
+        query = f"""
+            SELECT pm.difficulty_level 
+            FROM performance_metrics pm
+            JOIN game_sessions gs ON pm.session_id = gs.id
+            WHERE gs.user_id = ? AND (pm.cognitive_domain = ? OR gs.game_type IN ({placeholders}))
+            ORDER BY pm.timestamp DESC, pm.id DESC LIMIT 1
+        """
+        cursor.execute(query, [user_id, domain] + domain_games)
+        row = cursor.fetchone()
+        if row:
+            initial_difficulty = row['difficulty_level']
+        else:
+            initial_difficulty = 1
+            
         conn.commit()
         conn.close()
         
         # Get initial DDA parameters
-        initial_params = calculate_dda_parameters(1, game_type)
+        initial_params = calculate_dda_parameters(initial_difficulty, game_type)
         
         return jsonify({
             "status": "success",
@@ -309,17 +408,32 @@ def adjust_difficulty():
         user_id = session['user_id']
         game_type = session['game_type']
         
-        # Fetch the last 5 performance metrics for this session
+        domain = GAME_TO_DOMAIN.get(game_type, "reflexes_and_focus")
+
+        # Fetch the last 5 performance metrics for this session and specific cognitive domain
         cursor.execute(
             """
             SELECT reaction_time_ms, accuracy_rate, difficulty_level 
             FROM performance_metrics 
-            WHERE session_id = ? 
+            WHERE session_id = ? AND (cognitive_domain = ? OR game_type = ?)
             ORDER BY timestamp DESC LIMIT 5
             """,
-            (session_id,)
+            (session_id, domain, game_type)
         )
         metrics = cursor.fetchall()
+        
+        # Fallback if no matching records found with domain
+        if not metrics:
+            cursor.execute(
+                """
+                SELECT reaction_time_ms, accuracy_rate, difficulty_level 
+                FROM performance_metrics 
+                WHERE session_id = ? 
+                ORDER BY timestamp DESC LIMIT 5
+                """,
+                (session_id,)
+            )
+            metrics = cursor.fetchall()
         
         # Default difficulty configuration
         if not metrics:
@@ -400,19 +514,49 @@ def submit_metrics():
         data = request.get_json() or {}
         
         session_id = data.get('session_id')
-        reaction_time = data.get('reaction_time')
-        accuracy = data.get('accuracy')
-        difficulty = data.get('difficulty')
+        
+        # Support reaction_time and reaction_time_ms
+        reaction_time = data.get('reaction_time') if data.get('reaction_time') is not None else data.get('reaction_time_ms')
+        
+        # Support accuracy_rate and accuracy
+        accuracy = data.get('accuracy_rate') if data.get('accuracy_rate') is not None else data.get('accuracy')
+        
+        # Support difficulty and difficulty_level
+        difficulty = data.get('difficulty') if data.get('difficulty') is not None else data.get('difficulty_level')
+        
+        cognitive_domain = data.get('cognitive_domain')
+        game_type = data.get('game_type')
+        error_count = data.get('error_count')
+        hesitation_ms = data.get('hesitation_ms', 0.0)
+        spam_click_count = data.get('spam_click_count', 0)
         
         if session_id is None or reaction_time is None or accuracy is None or difficulty is None:
             return jsonify({"status": "error", "message": "Missing required fields"}), 400
 
-        # Insert performance metric
+        # Infer game_type and cognitive_domain if not provided
         conn = get_db_connection()
         cursor = conn.cursor()
+        
+        if not game_type:
+            cursor.execute("SELECT game_type FROM game_sessions WHERE id = ?", (session_id,))
+            session_row = cursor.fetchone()
+            if session_row:
+                game_type = session_row['game_type']
+                
+        if game_type and not cognitive_domain:
+            cognitive_domain = GAME_TO_DOMAIN.get(game_type)
+            
+        if error_count is None:
+            error_count = 0
+
+        # Insert performance metric
         cursor.execute(
-            "INSERT INTO performance_metrics (session_id, reaction_time_ms, accuracy_rate, difficulty_level) VALUES (?, ?, ?, ?)",
-            (session_id, reaction_time, accuracy, difficulty)
+            """
+            INSERT INTO performance_metrics 
+            (session_id, reaction_time_ms, accuracy_rate, difficulty_level, cognitive_domain, game_type, error_count, hesitation_ms, spam_click_count) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (session_id, reaction_time, accuracy, difficulty, cognitive_domain, game_type, error_count, hesitation_ms, spam_click_count)
         )
         conn.commit()
         conn.close()

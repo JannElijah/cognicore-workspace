@@ -37,6 +37,13 @@ export default class FocusFinderScene extends Phaser.Scene {
         this.gameDuration = 30000; // 30 seconds
         this.timeLeft = this.gameDuration;
 
+        // Micro-behavior metrics
+        this.stimulusSpawnTime = 0;
+        this.firstInteractionRegistered = false;
+        this.firstInteractionLatency = 0;
+        this.spamClickCount = 0;
+        this.lastMissTime = 0;
+
         // Shapes & Colors dictionaries
         this.shapesList = ['circle', 'square', 'triangle', 'star', 'hexagon'];
         this.colorsMap = {
@@ -133,6 +140,22 @@ export default class FocusFinderScene extends Phaser.Scene {
         });
 
         this.generateWave();
+
+        // Micro-behavior tracking listeners
+        this.input.on('pointerdown', (pointer, gameObjects) => {
+            this.registerFirstInteraction();
+            if (gameObjects.length === 0) {
+                const now = this.time.now;
+                if (now - this.lastMissTime < 200) {
+                    this.spamClickCount++;
+                }
+                this.lastMissTime = now;
+            }
+        });
+
+        this.input.on('pointermove', () => {
+            this.registerFirstInteraction();
+        });
     }
 
     updateTimer() {
@@ -149,6 +172,10 @@ export default class FocusFinderScene extends Phaser.Scene {
         // Clear existing wave items
         this.spawnedObjects.forEach(obj => obj.destroy());
         this.spawnedObjects = [];
+
+        this.stimulusSpawnTime = this.time.now;
+        this.firstInteractionRegistered = false;
+        this.firstInteractionLatency = 0;
 
         // 1. Pick a random target shape and color
         this.targetShape = Phaser.Utils.Array.GetRandom(this.shapesList);
@@ -491,9 +518,14 @@ export default class FocusFinderScene extends Phaser.Scene {
 
         const payload = {
             session_id: this.sessionId,
+            cognitive_domain: "reflexes_and_focus",
+            game_type: "focus_finder",
             reaction_time: searchTimeMs,
-            accuracy: clickAccuracy,
-            difficulty: this.difficultyLevel
+            accuracy_rate: clickAccuracy,
+            difficulty: this.difficultyLevel,
+            error_count: clickAccuracy === 1.0 ? 0 : 1,
+            hesitation_ms: this.firstInteractionLatency || 0,
+            spam_click_count: this.spamClickCount
         };
 
         try {
@@ -505,6 +537,13 @@ export default class FocusFinderScene extends Phaser.Scene {
             });
         } catch (e) {
             console.warn('[Telemetry Dispatch] Database offline, telemetry buffered.', e);
+        }
+    }
+
+    registerFirstInteraction() {
+        if (!this.firstInteractionRegistered && this.stimulusSpawnTime > 0) {
+            this.firstInteractionLatency = this.time.now - this.stimulusSpawnTime;
+            this.firstInteractionRegistered = true;
         }
     }
 

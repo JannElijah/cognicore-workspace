@@ -36,6 +36,13 @@ export default class MazeEscapeScene extends Phaser.Scene {
         this.puzzleStartTime = 0;
 
         this.countdownTimer = null;
+
+        // Micro-behavior metrics
+        this.stimulusSpawnTime = 0;
+        this.firstInteractionRegistered = false;
+        this.firstInteractionLatency = 0;
+        this.spamClickCount = 0;
+        this.lastMissTime = 0;
     }
 
     create() {
@@ -138,6 +145,22 @@ export default class MazeEscapeScene extends Phaser.Scene {
 
         // Draw first maze
         this.startNewPuzzle();
+
+        // Micro-behavior tracking listeners
+        this.input.on('pointerdown', (pointer, gameObjects) => {
+            this.registerFirstInteraction();
+            if (gameObjects.length === 0) {
+                const now = this.time.now;
+                if (now - this.lastMissTime < 200) {
+                    this.spamClickCount++;
+                }
+                this.lastMissTime = now;
+            }
+        });
+
+        this.input.on('pointermove', () => {
+            this.registerFirstInteraction();
+        });
     }
 
     updateTimer() {
@@ -160,6 +183,10 @@ export default class MazeEscapeScene extends Phaser.Scene {
         this.movesLeft = this.maxMoves;
         this.statusText.setText('ESCAPE THE LABYRINTH!').setFill('#e2e8f0');
         this.updateHUD();
+
+        this.stimulusSpawnTime = this.time.now;
+        this.firstInteractionRegistered = false;
+        this.firstInteractionLatency = 0;
 
         const width = this.scale.width;
 
@@ -515,9 +542,14 @@ export default class MazeEscapeScene extends Phaser.Scene {
 
         const payload = {
             session_id: this.sessionId,
+            cognitive_domain: "executive_strategy",
+            game_type: "maze_escape",
             reaction_time: solveTimeMs,
-            accuracy: roundAccuracy,
-            difficulty: this.difficultyLevel
+            accuracy_rate: roundAccuracy,
+            difficulty: this.difficultyLevel,
+            error_count: roundAccuracy === 1.0 ? 0 : 1,
+            hesitation_ms: this.firstInteractionLatency || 0,
+            spam_click_count: this.spamClickCount
         };
 
         try {
@@ -529,6 +561,13 @@ export default class MazeEscapeScene extends Phaser.Scene {
             });
         } catch (e) {
             console.warn('[Telemetry Dispatch] Connection failed, logging locally.', e);
+        }
+    }
+
+    registerFirstInteraction() {
+        if (!this.firstInteractionRegistered && this.stimulusSpawnTime > 0) {
+            this.firstInteractionLatency = this.time.now - this.stimulusSpawnTime;
+            this.firstInteractionRegistered = true;
         }
     }
 

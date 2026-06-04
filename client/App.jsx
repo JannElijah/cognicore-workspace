@@ -4,6 +4,7 @@ import MemoryMatchGame from './components/MemoryMatchGame';
 import FocusFinderGame from './components/FocusFinderGame';
 import LogicLinkGame from './components/LogicLinkGame';
 import MazeEscapeGame from './components/MazeEscapeGame';
+import MatrixRecallGame from './components/MatrixRecallGame';
 
 export default function App() {
   const [activeGame, setActiveGame] = useState(null);
@@ -253,6 +254,15 @@ export default function App() {
             </button>
             <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
               <MazeEscapeGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />
+            </div>
+          </div>
+        ) : activeGame === 'MatrixRecall' ? (
+          <div className="game-screen-wrapper">
+            <button className="back-btn" onClick={handleBackToLobby}>
+              ← Back to Training Hub
+            </button>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
+              <MatrixRecallGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />
             </div>
           </div>
         ) : showDashboard ? (
@@ -538,6 +548,15 @@ export default function App() {
                 <div className="card-icon">🧩</div>
                 <h3>Memory Match</h3>
                 <p>Designed to analyze short-term working memory capacity and retention patterns.</p>
+                <button className="play-btn">Launch Module</button>
+              </div>
+
+              {/* Matrix Recall Active Card */}
+              <div className="game-card active" onClick={() => setActiveGame('MatrixRecall')}>
+                <div className="card-badge">Memory</div>
+                <div className="card-icon">🔲</div>
+                <h3>Matrix Recall</h3>
+                <p>Designed to train spatial-visual memory recall and grid pattern retention capacity.</p>
                 <button className="play-btn">Launch Module</button>
               </div>
 
