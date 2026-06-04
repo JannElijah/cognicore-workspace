@@ -557,7 +557,9 @@ export default class MemoryMatchScene extends Phaser.Scene {
                 hits: this.correctSequences,
                 misses: this.totalAttempts - this.correctSequences,
                 accuracy: this.accuracy,
-                difficultyLevel: this.difficultyLevel
+                difficultyLevel: this.difficultyLevel,
+                hesitation_ms: this.firstInteractionLatency || 0,
+                spam_click_count: this.spamClickCount
             });
         }
     }

@@ -1,13 +1,15 @@
 import requests
 import json
 import sys
+import uuid
 
 API_URL = "http://127.0.0.1:5000"
 
 def test_domain_inheritance():
     print("=== Step 1: Starting SpeedTap Session (Domain: reflexes_and_focus) ===")
+    unique_user = f"domain_test_user_{uuid.uuid4().hex[:8]}"
     payload_start1 = {
-        "username": "domain_test_user",
+        "username": unique_user,
         "game_type": "SpeedTap"
     }
     
@@ -53,7 +55,7 @@ def test_domain_inheritance():
     
     print("\n=== Step 4: Starting FocusFinder Session (Same Domain: reflexes_and_focus) ===")
     payload_start2 = {
-        "username": "domain_test_user",
+        "username": unique_user,
         "game_type": "FocusFinder"
     }
     

@@ -96,6 +96,7 @@ export default function MatrixRecallGame({ username = 'default_player', apiUrl =
             onGameOver: async (stats) => {
                 setFinalStats(stats);
                 
+                let profileInfo = null;
                 // Fetch final cognitive profile archetype updates from the database
                 try {
                     const profileRes = await fetch(`${apiUrl}/api/dda`, {
@@ -109,6 +110,7 @@ export default function MatrixRecallGame({ username = 'default_player', apiUrl =
                         const profileData = await profileRes.json();
                         if (profileData.status === 'success' && profileData.cognitive_profile) {
                             setCognitiveProfile(profileData.cognitive_profile);
+                            profileInfo = profileData.cognitive_profile;
                         }
                     }
                 } catch (e) {
@@ -117,7 +119,7 @@ export default function MatrixRecallGame({ username = 'default_player', apiUrl =
 
                 setGameState('FINISHED');
                 if (onGameFinished) {
-                    onGameFinished(stats);
+                    onGameFinished({ ...stats, cognitiveProfile: profileInfo });
                 }
             }
         });

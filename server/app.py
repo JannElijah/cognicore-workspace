@@ -47,7 +47,9 @@ GAME_TO_DOMAIN = {
     "MazeEscape": "executive_strategy",
     "maze_escape": "executive_strategy",
     "MatrixRecall": "spatial_visual_memory",
-    "matrix_recall": "spatial_visual_memory"
+    "matrix_recall": "spatial_visual_memory",
+    "StroopShift": "reflexes_and_focus",
+    "stroop_shift": "reflexes_and_focus"
 }
 
 # Helper function to get database connection
@@ -260,6 +262,50 @@ def calculate_dda_parameters(difficulty_level, game_type='SpeedTap'):
                 "flash_duration": 600
             }
         }
+    elif game_type in ['StroopShift', 'stroop_shift']:
+        # Map levels to game-specific variables for the Stroop Shift game (Attention/Reflex)
+        configs = {
+            1: {
+                "difficulty_level": 1,
+                "spawn_delay": 2500,
+                "conflict_probability": 0.0,
+                "static_text_rotation": False,
+                "dynamic_text_spin": False,
+                "distractor_flashes": False
+            },
+            2: {
+                "difficulty_level": 2,
+                "spawn_delay": 2000,
+                "conflict_probability": 0.5,
+                "static_text_rotation": False,
+                "dynamic_text_spin": False,
+                "distractor_flashes": False
+            },
+            3: {
+                "difficulty_level": 3,
+                "spawn_delay": 1500,
+                "conflict_probability": 0.8,
+                "static_text_rotation": False,
+                "dynamic_text_spin": False,
+                "distractor_flashes": False
+            },
+            4: {
+                "difficulty_level": 4,
+                "spawn_delay": 1100,
+                "conflict_probability": 1.0,
+                "static_text_rotation": True,
+                "dynamic_text_spin": False,
+                "distractor_flashes": False
+            },
+            5: {
+                "difficulty_level": 5,
+                "spawn_delay": 800,
+                "conflict_probability": 1.0,
+                "static_text_rotation": True,
+                "dynamic_text_spin": True,
+                "distractor_flashes": True
+            }
+        }
     else:
         # Map levels to game-specific variables for the Speed Tap game
         configs = {
@@ -416,7 +462,7 @@ def adjust_difficulty():
             SELECT reaction_time_ms, accuracy_rate, difficulty_level 
             FROM performance_metrics 
             WHERE session_id = ? AND (cognitive_domain = ? OR game_type = ?)
-            ORDER BY timestamp DESC LIMIT 5
+            ORDER BY timestamp DESC, id DESC LIMIT 5
             """,
             (session_id, domain, game_type)
         )
@@ -429,7 +475,7 @@ def adjust_difficulty():
                 SELECT reaction_time_ms, accuracy_rate, difficulty_level 
                 FROM performance_metrics 
                 WHERE session_id = ? 
-                ORDER BY timestamp DESC LIMIT 5
+                ORDER BY timestamp DESC, id DESC LIMIT 5
                 """,
                 (session_id,)
             )

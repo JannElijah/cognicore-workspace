@@ -634,7 +634,9 @@ export default class MazeEscapeScene extends Phaser.Scene {
                 hits: this.hits,
                 misses: this.misses,
                 accuracy: this.accuracy,
-                difficultyLevel: this.difficultyLevel
+                difficultyLevel: this.difficultyLevel,
+                hesitation_ms: this.firstInteractionLatency || 0,
+                spam_click_count: this.spamClickCount
             });
         }
     }

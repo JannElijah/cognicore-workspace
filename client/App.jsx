@@ -1,76 +1,90 @@
 import React, { useState, useEffect } from 'react';
+import {
+  Chart as ChartJS,
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  Tooltip,
+  Legend
+} from 'chart.js';
+import { Radar } from 'react-chartjs-2';
+
 import SpeedTapGame from './components/SpeedTapGame';
 import MemoryMatchGame from './components/MemoryMatchGame';
 import FocusFinderGame from './components/FocusFinderGame';
 import LogicLinkGame from './components/LogicLinkGame';
 import MazeEscapeGame from './components/MazeEscapeGame';
 import MatrixRecallGame from './components/MatrixRecallGame';
+import StroopShiftGame from './components/StroopShiftGame';
+
+// Register Chart.js modules
+ChartJS.register(
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  Tooltip,
+  Legend
+);
 
 export default function App() {
   const [activeGame, setActiveGame] = useState(null);
   const [showDashboard, setShowDashboard] = useState(false);
   const [lastGameStats, setLastGameStats] = useState(null);
-  
-  // Thesis Cohort evaluation states
+  const [portalView, setPortalView] = useState('participant'); // 'participant' | 'researcher'
+
+  // Thesis Cohort evaluation states (Clinical Researcher)
   const [pretestInput, setPretestInput] = useState('72, 68, 75, 80, 65, 78, 70, 74, 82, 69');
   const [posttestInput, setPosttestInput] = useState('84, 76, 85, 88, 78, 88, 82, 84, 91, 80');
   const [evalResult, setEvalResult] = useState(null);
   const [evalError, setEvalError] = useState(null);
   const [evalLoading, setEvalLoading] = useState(false);
 
-  // Dynamic Skill Scores
-  // Memory, Attention, Processing Speed, Problem Solving
-  const [skills, setSkills] = useState({
-    memory: 76,
-    attention: 64,
-    processingSpeed: 70,
-    problemSolving: 68
+  // Classified cognitive profile archetype
+  const [cognitiveProfile, setCognitiveProfile] = useState({
+    archetype: 'Standard',
+    confidence_score: 0.65
   });
 
-  // Update dynamic skills based on the player's game telemetry
+  // Dynamic Skill Scores mapped to 4 core academic domains
+  const [skills, setSkills] = useState({
+    spatial_visual_memory: 75,
+    logical_mathematical: 70,
+    reflexes_and_focus: 65,
+    executive_strategy: 60
+  });
+
+  // Update dynamic skills based on player game telemetry
   useEffect(() => {
     if (lastGameStats) {
-      if (lastGameStats.gameType === 'MemoryMatch') {
-        // Scale memory game performance
-        const baseAccuracy = lastGameStats.accuracy * 70; // up to 70 pts
-        const difficultyBonus = lastGameStats.difficultyLevel * 6; // up to 30 pts
-        const memoryScore = Math.round(baseAccuracy + difficultyBonus);
-        
+      const calculatedScore = Math.round(lastGameStats.accuracy * 70 + lastGameStats.difficultyLevel * 6);
+      
+      if (lastGameStats.gameType === 'MemoryMatch' || lastGameStats.gameType === 'MatrixRecall') {
         setSkills(prev => ({
           ...prev,
-          memory: Math.max(memoryScore, prev.memory)
+          spatial_visual_memory: Math.max(calculatedScore, prev.spatial_visual_memory)
         }));
-      } else if (lastGameStats.gameType === 'FocusFinder') {
-        // Scale attention game performance
-        const baseAccuracy = lastGameStats.accuracy * 70; // up to 70 pts
-        const difficultyBonus = lastGameStats.difficultyLevel * 6; // up to 30 pts
-        const attentionScore = Math.round(baseAccuracy + difficultyBonus);
-        
+      } else if (lastGameStats.gameType === 'LogicLink') {
         setSkills(prev => ({
           ...prev,
-          attention: Math.max(attentionScore, prev.attention)
+          logical_mathematical: Math.max(calculatedScore, prev.logical_mathematical)
         }));
-      } else if (lastGameStats.gameType === 'LogicLink' || lastGameStats.gameType === 'MazeEscape') {
-        // Scale problem solving game performance
-        const baseAccuracy = lastGameStats.accuracy * 70; // up to 70 pts
-        const difficultyBonus = lastGameStats.difficultyLevel * 6; // up to 30 pts
-        const problemSolvingScore = Math.round(baseAccuracy + difficultyBonus);
-        
+      } else if (lastGameStats.gameType === 'SpeedTap' || lastGameStats.gameType === 'FocusFinder' || lastGameStats.gameType === 'StroopShift') {
         setSkills(prev => ({
           ...prev,
-          problemSolving: Math.max(problemSolvingScore, prev.problemSolving)
+          reflexes_and_focus: Math.max(calculatedScore, prev.reflexes_and_focus)
         }));
-      } else {
-        // Scale game performance (accuracy & score) into a 0-100 score for Processing Speed
-        const baseAccuracyFactor = lastGameStats.accuracy * 60; // Up to 60 pts
-        const speedFactor = Math.min(40, (lastGameStats.score / Math.max(1, lastGameStats.hits)) / 15); // Up to 40 pts
-        const calculatedSpeed = Math.round(baseAccuracyFactor + speedFactor);
-        
+      } else if (lastGameStats.gameType === 'MazeEscape') {
         setSkills(prev => ({
           ...prev,
-          processingSpeed: Math.max(calculatedSpeed, prev.processingSpeed),
-          attention: Math.max(Math.round(lastGameStats.accuracy * 100), prev.attention)
+          executive_strategy: Math.max(calculatedScore, prev.executive_strategy)
         }));
+      }
+
+      // Update classifier profile info
+      if (lastGameStats.cognitiveProfile) {
+        setCognitiveProfile(lastGameStats.cognitiveProfile);
       }
     }
   }, [lastGameStats]);
@@ -81,10 +95,6 @@ export default function App() {
 
   const handleBackToLobby = () => {
     setActiveGame(null);
-  };
-
-  const startSpeedTap = () => {
-    setActiveGame('SpeedTap');
   };
 
   // Run Paired t-test request on Flask backend
@@ -146,45 +156,148 @@ export default function App() {
     setEvalError(null);
   };
 
-  // Determine low score for personalized recommendation
+  // Determine lowest score for personalized recommendation
   const getRecommendation = () => {
     const lowestKey = Object.keys(skills).reduce((a, b) => skills[a] < skills[b] ? a : b);
     const recommendations = {
-      memory: {
-        game: "Memory Match",
-        reason: "Working Memory Capacity is below baseline",
-        action: "train visual recall sequences"
+      spatial_visual_memory: {
+        game: "Matrix Recall",
+        reason: "Working spatial-visual memory capacity is below baseline",
+        action: "train visual grid recall sequences"
       },
-      attention: {
-        game: "Focus Finder",
-        reason: "Selective Vigilance and visual search rate can be optimized",
-        action: "train continuous target selection"
+      logical_mathematical: {
+        game: "Logic Link",
+        reason: "Logical and sequential reasoning rate can be optimized",
+        action: "train sequential node connection links"
       },
-      processingSpeed: {
+      reflexes_and_focus: {
         game: "Speed Tap",
-        reason: "Motor processing response time is currently your primary growth domain",
-        action: "play visual reaction speed assessments"
+        reason: "Vigilance reflexes and focus response time are your primary growth domains",
+        action: "play speed tap target selection"
       },
-      problemSolving: {
+      executive_strategy: {
         game: "Maze Escape",
-        reason: "Executive spatial logic pathways show potential for optimization",
-        action: "play spatial navigation matrices"
+        reason: "Executive spatial navigation and path planning show potential for optimization",
+        action: "play maze escape spatial pathways"
       }
     };
-    return recommendations[lowestKey];
+    return recommendations[lowestKey] || recommendations.spatial_visual_memory;
   };
 
   const rec = getRecommendation();
+
+  // Radar Chart Configuration data
+  const radarData = {
+    labels: [
+      'Spatial-Visual Memory',
+      'Logical-Mathematical Reasoning',
+      'Reflexes & Attentional Focus',
+      'Executive Strategy'
+    ],
+    datasets: [
+      {
+        label: 'Cognitive Proficiency',
+        data: [
+          skills.spatial_visual_memory,
+          skills.logical_mathematical,
+          skills.reflexes_and_focus,
+          skills.executive_strategy
+        ],
+        backgroundColor: 'rgba(168, 85, 247, 0.2)',
+        borderColor: '#a855f7',
+        borderWidth: 2,
+        pointBackgroundColor: '#38bdf8',
+        pointBorderColor: '#ffffff',
+        pointHoverBackgroundColor: '#ffffff',
+        pointHoverBorderColor: '#38bdf8'
+      }
+    ]
+  };
+
+  const radarOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      r: {
+        grid: {
+          color: 'rgba(255, 255, 255, 0.08)'
+        },
+        angleLines: {
+          color: 'rgba(255, 255, 255, 0.08)'
+        },
+        pointLabels: {
+          color: '#94a3b8',
+          font: {
+            family: 'system-ui, -apple-system, sans-serif',
+            size: 11,
+            weight: 'bold'
+          }
+        },
+        ticks: {
+          color: '#64748b',
+          backdropColor: 'transparent',
+          font: {
+            size: 9
+          },
+          stepSize: 20
+        },
+        min: 0,
+        max: 100
+      }
+    },
+    plugins: {
+      legend: {
+        display: false
+      }
+    }
+  };
 
   return (
     <div className="portal-container">
       {/* Top Header */}
       <header className="portal-header">
-        <div className="logo-glow" onClick={() => { setActiveGame(null); setShowDashboard(false); }} style={{ cursor: 'pointer' }}>
+        <div className="logo-glow" onClick={() => { setActiveGame(null); setShowDashboard(false); setPortalView('participant'); }} style={{ cursor: 'pointer' }}>
           🧠 COGNICORE
         </div>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           {activeGame === null && (
+            <div style={{ display: 'flex', gap: '0.5rem', background: 'rgba(255, 255, 255, 0.05)', padding: '0.25rem', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <button 
+                onClick={() => { setPortalView('participant'); }}
+                style={{
+                  background: portalView === 'participant' ? 'linear-gradient(to right, #38bdf8, #a855f7)' : 'transparent',
+                  border: 'none',
+                  color: '#ffffff',
+                  padding: '0.4rem 0.8rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '0.85rem',
+                  transition: 'all 0.2s'
+                }}
+              >
+                🎮 Participant Portal
+              </button>
+              <button 
+                onClick={() => { setPortalView('researcher'); }}
+                style={{
+                  background: portalView === 'researcher' ? 'linear-gradient(to right, #38bdf8, #a855f7)' : 'transparent',
+                  border: 'none',
+                  color: '#ffffff',
+                  padding: '0.4rem 0.8rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '0.85rem',
+                  transition: 'all 0.2s'
+                }}
+              >
+                🔬 Researcher Portal
+              </button>
+            </div>
+          )}
+          
+          {activeGame === null && portalView === 'participant' && (
             <button 
               className="dashboard-toggle-btn" 
               onClick={() => setShowDashboard(!showDashboard)}
@@ -203,6 +316,7 @@ export default function App() {
               {showDashboard ? '← Back to Training Hub' : '📊 Analytics Dashboard'}
             </button>
           )}
+
           <div className="portal-status">
             <span className="status-dot"></span> Secure Telemetry Hub
           </div>
@@ -265,132 +379,27 @@ export default function App() {
               <MatrixRecallGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />
             </div>
           </div>
-        ) : showDashboard ? (
+        ) : activeGame === 'StroopShift' ? (
+          <div className="game-screen-wrapper">
+            <button className="back-btn" onClick={handleBackToLobby}>
+              ← Back to Training Hub
+            </button>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
+              <StroopShiftGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />
+            </div>
+          </div>
+        ) : portalView === 'researcher' ? (
           // ==========================================
-          // PILLAR-DRIVEN ANALYTICS DASHBOARD
+          // CLINICAL RESEARCHER VIEW
           // ==========================================
           <div className="dashboard-content" style={{ animation: 'fadeIn 0.4s ease-out' }}>
             <div className="intro-card" style={{ padding: '2rem', marginBottom: '2rem' }}>
-              <h1 style={{ fontSize: '2.25rem' }}>Cognitive Performance Analytics</h1>
-              <p>Real-time analytics collected across validated cognitive tracks. Evaluate skill scores, track multi-session trends, and verify statistical improvement cohorts.</p>
+              <h1 style={{ fontSize: '2.25rem' }}>🔬 Clinical Research Portal</h1>
+              <p>Execute Scipy-backed paired t-test cohort verifications and review statistical significance reports for experimental serious game evaluations.</p>
             </div>
 
-            {/* Cognitive Skills Score Row */}
-            <h2 className="section-title">Cognitive Domain Profiling</h2>
-            <div className="game-grid" style={{ marginBottom: '3rem' }}>
-              <div className="game-card" style={{ padding: '1.5rem', borderLeft: '4px solid #38bdf8' }}>
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Memory Domain</span>
-                <h3 style={{ fontSize: '2.5rem', margin: '0.5rem 0', color: '#38bdf8' }}>{skills.memory}/100</h3>
-                <p style={{ margin: '0', fontSize: '0.85rem' }}>Short-Term sequence recall and spatial working capacity.</p>
-              </div>
-              <div className="game-card" style={{ padding: '1.5rem', borderLeft: '4px solid #a855f7' }}>
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Attention & Focus</span>
-                <h3 style={{ fontSize: '2.5rem', margin: '0.5rem 0', color: '#a855f7' }}>{skills.attention}/100</h3>
-                <p style={{ margin: '0', fontSize: '0.85rem' }}>Target search efficiency, visual vigilance, and distractor rejection.</p>
-              </div>
-              <div className="game-card" style={{ padding: '1.5rem', borderLeft: '4px solid #4ade80' }}>
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Processing Speed</span>
-                <h3 style={{ fontSize: '2.5rem', margin: '0.5rem 0', color: '#4ade80' }}>{skills.processingSpeed}/100</h3>
-                <p style={{ margin: '0', fontSize: '0.85rem' }}>Visuomotor reaction time and rapid-fire stimulus classification.</p>
-              </div>
-              <div className="game-card" style={{ padding: '1.5rem', borderLeft: '4px solid #f59e0b' }}>
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Problem Solving</span>
-                <h3 style={{ fontSize: '2.5rem', margin: '0.5rem 0', color: '#f59e0b' }}>{skills.problemSolving}/100</h3>
-                <p style={{ margin: '0', fontSize: '0.85rem' }}>Spatial navigation planning, matrix logic, and path optimization.</p>
-              </div>
-            </div>
-
-            {/* Middle Row: Trend Vector SVG + Diagnostics */}
-            <div className="dashboard-row-grid" style={{ gap: '2rem', marginBottom: '3rem' }}>
-              
-              {/* Trend Vector SVG */}
-              <div className="game-card" style={{ width: '100%', alignItems: 'stretch' }}>
-                <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>📈 Multi-Session Progress Trend</h3>
-                <div style={{ position: 'relative', height: '180px', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px', padding: '10px' }}>
-                  {/* Glowing Vector Graph */}
-                  <svg viewBox="0 0 500 150" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
-                    <defs>
-                      <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#a855f7" stopOpacity="0.4"/>
-                        <stop offset="100%" stopColor="#a855f7" stopOpacity="0"/>
-                      </linearGradient>
-                    </defs>
-                    {/* Grid lines */}
-                    <line x1="0" y1="30" x2="500" y2="30" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-                    <line x1="0" y1="75" x2="500" y2="75" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-                    <line x1="0" y1="120" x2="500" y2="120" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-                    
-                    {/* Area under curve */}
-                    <path d="M 10 120 L 90 95 L 170 110 L 250 80 L 330 65 L 410 75 L 490 35 L 490 120 Z" fill="url(#chartGrad)" />
-                    
-                    {/* Trend Line */}
-                    <path 
-                      d="M 10 120 Q 90 95 170 110 T 250 80 T 330 65 T 410 75 T 490 35" 
-                      fill="none" 
-                      stroke="url(#chartGrad)" 
-                      strokeWidth="0" 
-                    />
-                    <path 
-                      d="M 10 120 L 90 95 L 170 110 L 250 80 L 330 65 L 410 75 L 490 35" 
-                      fill="none" 
-                      stroke="#a855f7" 
-                      strokeWidth="3.5" 
-                      filter="drop-shadow(0px 0px 5px rgba(168, 85, 247, 0.8))"
-                    />
-                    
-                    {/* Nodes */}
-                    <circle cx="10" cy="120" r="4" fill="#ffffff" stroke="#a855f7" strokeWidth="2"/>
-                    <circle cx="90" cy="95" r="4" fill="#ffffff" stroke="#a855f7" strokeWidth="2"/>
-                    <circle cx="170" cy="110" r="4" fill="#ffffff" stroke="#a855f7" strokeWidth="2"/>
-                    <circle cx="250" cy="80" r="4" fill="#ffffff" stroke="#a855f7" strokeWidth="2"/>
-                    <circle cx="330" cy="65" r="4" fill="#ffffff" stroke="#a855f7" strokeWidth="2"/>
-                    <circle cx="410" cy="75" r="4" fill="#ffffff" stroke="#a855f7" strokeWidth="2"/>
-                    <circle cx="490" cy="35" r="5" fill="#ffffff" stroke="#38bdf8" strokeWidth="2.5" filter="drop-shadow(0px 0px 5px #38bdf8)"/>
-                  </svg>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b', marginTop: '0.75rem' }}>
-                  <span>Session 1</span>
-                  <span>Session 3</span>
-                  <span>Session 5</span>
-                  <span>Latest Training (DDA Active)</span>
-                </div>
-              </div>
-
-              {/* Skill Diagnostics & Recommendations */}
-              <div className="game-card" style={{ justifyContent: 'space-between' }}>
-                <div>
-                  <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>🔍 Diagnostic Report</h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    <div style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)', padding: '0.75rem', borderRadius: '8px' }}>
-                      <span style={{ fontWeight: 'bold', color: '#22c55e', fontSize: '0.85rem' }}>💪 SKILL STRENGTH:</span>
-                      <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#e2e8f0' }}>
-                        {skills.processingSpeed >= 70 ? 'Rapid Visuomotor Processing Speed. High reflexive reaction times and rapid selection.' : 'Standard motor control latency. Stabilizing baseline performance.'}
-                      </p>
-                    </div>
-                    <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '0.75rem', borderRadius: '8px' }}>
-                      <span style={{ fontWeight: 'bold', color: '#ef4444', fontSize: '0.85rem' }}>⚠️ SKILL WEAKNESS:</span>
-                      <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#e2e8f0' }}>
-                        {skills.attention < 70 ? 'Selective Attention Vigilance. Accuracy decreases under visual distractor noise.' : 'Working Memory retention logic is currently your secondary optimization track.'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem', marginTop: '1rem' }}>
-                  <div style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>💡 Personalized Adviser Recommendation</div>
-                  <div style={{ fontWeight: '700', color: '#c084fc', marginTop: '0.25rem', fontSize: '0.95rem' }}>
-                    Train with <span style={{ textDecoration: 'underline' }}>{rec.game}</span>:
-                  </div>
-                  <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
-                    {rec.reason}. Launch module to {rec.action}.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* PILLAR 1: Defensible Evaluation Framework Tool Panel */}
-            <h2 className="section-title">Thesis Verification Panel (Pillar 1 Research Design)</h2>
-            <div className="game-card" style={{ width: '100%', alignItems: 'stretch', padding: '2rem' }}>
+            <h2 className="section-title">Thesis Verification Engine (Pillar 1 Research Design)</h2>
+            <div className="game-card" style={{ width: '100%', alignItems: 'stretch', padding: '2rem', marginBottom: '2rem' }}>
               <div style={{ background: 'rgba(124, 58, 237, 0.08)', border: '1px solid rgba(124, 58, 237, 0.2)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
                 <span style={{ fontWeight: 'bold', color: '#c084fc', fontSize: '0.9rem' }}>Pillar 1: Empirical Cognitive Improvement (Pretest-Posttest Design)</span>
                 <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: '0.25rem 0 0 0' }}>
@@ -400,7 +409,7 @@ export default function App() {
 
               {evalError && <div style={{ color: '#ef4444', background: 'rgba(239, 68, 68, 0.1)', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.875rem' }}>{evalError}</div>}
 
-              <div className="eval-inputs-grid" style={{ gap: '2rem', marginBottom: '1.5rem' }}>
+              <div className="eval-inputs-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem', marginBottom: '1.5rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.5rem', fontWeight: '600' }}>Pretest Scores (comma separated)</label>
                   <input 
@@ -415,7 +424,8 @@ export default function App() {
                       borderRadius: '8px',
                       color: '#ffffff',
                       fontSize: '0.9rem',
-                      outline: 'none'
+                      outline: 'none',
+                      boxSizing: 'border-box'
                     }}
                   />
                 </div>
@@ -433,7 +443,8 @@ export default function App() {
                       borderRadius: '8px',
                       color: '#ffffff',
                       fontSize: '0.9rem',
-                      outline: 'none'
+                      outline: 'none',
+                      boxSizing: 'border-box'
                     }}
                   />
                 </div>
@@ -521,6 +532,194 @@ export default function App() {
               )}
             </div>
           </div>
+        ) : showDashboard ? (
+          // ==========================================
+          // PARTICIPANT ANALYTICS DASHBOARD
+          // ==========================================
+          <div className="dashboard-content" style={{ animation: 'fadeIn 0.4s ease-out' }}>
+            <div className="intro-card" style={{ padding: '2rem', marginBottom: '2rem' }}>
+              <h1 style={{ fontSize: '2.25rem' }}>Cognitive Performance Analytics</h1>
+              <p>Real-time analytics collected across validated cognitive tracks. Evaluate skill scores, track multi-session trends, and view personalized reports.</p>
+            </div>
+
+            {/* Cognitive Skills Score Row */}
+            <h2 className="section-title">Cognitive Domain Profiling</h2>
+            <div className="game-grid" style={{ marginBottom: '3rem' }}>
+              <div className="game-card" style={{ padding: '1.5rem', borderLeft: '4px solid #38bdf8' }}>
+                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Spatial-Visual Memory</span>
+                <h3 style={{ fontSize: '2.5rem', margin: '0.5rem 0', color: '#38bdf8' }}>{skills.spatial_visual_memory}/100</h3>
+                <p style={{ margin: '0', fontSize: '0.85rem' }}>Short-Term grid sequence recall and spatial working capacity.</p>
+              </div>
+              <div className="game-card" style={{ padding: '1.5rem', borderLeft: '4px solid #f59e0b' }}>
+                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Logical Reasoning</span>
+                <h3 style={{ fontSize: '2.5rem', margin: '0.5rem 0', color: '#f59e0b' }}>{skills.logical_mathematical}/100</h3>
+                <p style={{ margin: '0', fontSize: '0.85rem' }}>Logical sequencing, path optimization, and relational connections.</p>
+              </div>
+              <div className="game-card" style={{ padding: '1.5rem', borderLeft: '4px solid #a855f7' }}>
+                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Reflexes & Focus</span>
+                <h3 style={{ fontSize: '2.5rem', margin: '0.5rem 0', color: '#a855f7' }}>{skills.reflexes_and_focus}/100</h3>
+                <p style={{ margin: '0', fontSize: '0.85rem' }}>Continuous visual search, rapid target identification, and motor response.</p>
+              </div>
+              <div className="game-card" style={{ padding: '1.5rem', borderLeft: '4px solid #10b981' }}>
+                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Executive Strategy</span>
+                <h3 style={{ fontSize: '2.5rem', margin: '0.5rem 0', color: '#10b981' }}>{skills.executive_strategy}/100</h3>
+                <p style={{ margin: '0', fontSize: '0.85rem' }}>Multi-step pathfinding and spatial maze escape navigation planning.</p>
+              </div>
+            </div>
+
+            {/* Middle Row: Trend Vector SVG + Radar Chart */}
+            <div className="dashboard-row-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
+              
+              {/* Trend Vector SVG */}
+              <div className="game-card" style={{ width: '100%', alignItems: 'stretch', boxSizing: 'border-box' }}>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>📈 Multi-Session Progress Trend</h3>
+                <div style={{ position: 'relative', height: '240px', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px', padding: '10px' }}>
+                  <svg viewBox="0 0 500 150" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
+                    <defs>
+                      <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#a855f7" stopOpacity="0.4"/>
+                        <stop offset="100%" stopColor="#a855f7" stopOpacity="0"/>
+                      </linearGradient>
+                    </defs>
+                    <line x1="0" y1="30" x2="500" y2="30" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+                    <line x1="0" y1="75" x2="500" y2="75" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+                    <line x1="0" y1="120" x2="500" y2="120" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+                    
+                    <path d="M 10 120 L 90 95 L 170 110 L 250 80 L 330 65 L 410 75 L 490 35 L 490 120 Z" fill="url(#chartGrad)" />
+                    <path 
+                      d="M 10 120 L 90 95 L 170 110 L 250 80 L 330 65 L 410 75 L 490 35" 
+                      fill="none" 
+                      stroke="#a855f7" 
+                      strokeWidth="3.5" 
+                      filter="drop-shadow(0px 0px 5px rgba(168, 85, 247, 0.8))"
+                    />
+                    
+                    <circle cx="10" cy="120" r="4" fill="#ffffff" stroke="#a855f7" strokeWidth="2"/>
+                    <circle cx="90" cy="95" r="4" fill="#ffffff" stroke="#a855f7" strokeWidth="2"/>
+                    <circle cx="170" cy="110" r="4" fill="#ffffff" stroke="#a855f7" strokeWidth="2"/>
+                    <circle cx="250" cy="80" r="4" fill="#ffffff" stroke="#a855f7" strokeWidth="2"/>
+                    <circle cx="330" cy="65" r="4" fill="#ffffff" stroke="#a855f7" strokeWidth="2"/>
+                    <circle cx="410" cy="75" r="4" fill="#ffffff" stroke="#a855f7" strokeWidth="2"/>
+                    <circle cx="490" cy="35" r="5" fill="#ffffff" stroke="#38bdf8" strokeWidth="2.5" filter="drop-shadow(0px 0px 5px #38bdf8)"/>
+                  </svg>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b', marginTop: '0.75rem' }}>
+                  <span>Session 1</span>
+                  <span>Session 3</span>
+                  <span>Session 5</span>
+                  <span>Latest (DDA Active)</span>
+                </div>
+              </div>
+
+              {/* Cognitive Radar Chart */}
+              <div className="game-card" style={{ width: '100%', alignItems: 'stretch', boxSizing: 'border-box' }}>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>🕸️ Cognitive Domain Radar Chart</h3>
+                <div style={{ position: 'relative', height: '240px' }}>
+                  <Radar data={radarData} options={radarOptions} />
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Row: Behavioral Insights and Recommendations */}
+            <div className="dashboard-row-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
+              
+              {/* Cognitive Profile Card & Behavioral Insights */}
+              <div className="game-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxSizing: 'border-box' }}>
+                <div>
+                  <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>👤 Classifier Profile & Behavioral Insights</h3>
+                  <div style={{ textAlign: 'center', padding: '1rem 0 1.5rem 0', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                    <div style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Classified Cognitive Profile Archetype</div>
+                    <div style={{
+                      display: 'inline-block',
+                      padding: '0.5rem 1.5rem',
+                      borderRadius: '9999px',
+                      background: 'rgba(56, 189, 248, 0.15)',
+                      border: '1px solid rgba(56, 189, 248, 0.3)',
+                      color: '#38bdf8',
+                      fontWeight: 'bold',
+                      marginTop: '0.5rem',
+                      fontSize: '1.3rem'
+                    }}>
+                      {cognitiveProfile.archetype}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.4rem', fontWeight: '500' }}>
+                      Random Forest Model Confidence: {Math.round(cognitiveProfile.confidence_score * 100)}%
+                    </div>
+                  </div>
+
+                  {/* Behavioral Analytics Insight Alerts */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1.25rem' }}>
+                    {lastGameStats && lastGameStats.hesitation_ms >= 800 && lastGameStats.accuracy >= 0.85 && (
+                      <div style={{ 
+                        background: 'rgba(6, 182, 212, 0.08)', 
+                        border: '1px solid rgba(6, 182, 212, 0.25)', 
+                        padding: '0.85rem', 
+                        borderRadius: '8px', 
+                        color: '#22d3ee', 
+                        fontSize: '0.825rem',
+                        textAlign: 'left',
+                        boxShadow: '0 0 10px rgba(6, 182, 212, 0.15)',
+                        lineHeight: '1.4'
+                      }}>
+                        <strong>⚡ Methodical Assessment:</strong> Deliberate Processor: Exhibits methodical stimulus assessment patterns, prioritizing low-error execution over speed.
+                      </div>
+                    )}
+                    {lastGameStats && lastGameStats.spam_click_count >= 3 && (
+                      <div style={{ 
+                        background: 'rgba(249, 115, 22, 0.08)', 
+                        border: '1px solid rgba(249, 115, 22, 0.25)', 
+                        padding: '0.85rem', 
+                        borderRadius: '8px', 
+                        color: '#fb923c', 
+                        fontSize: '0.825rem',
+                        textAlign: 'left',
+                        boxShadow: '0 0 10px rgba(249, 115, 22, 0.15)',
+                        lineHeight: '1.4'
+                      }}>
+                        <strong>⚠️ Frustration Alert:</strong> Impulsive Task Friction Identified: Real-time kinetic feedback indicates panic-driven or non-target execution behaviors during accelerated DDA challenge thresholds.
+                      </div>
+                    )}
+                    {(!lastGameStats || (lastGameStats.hesitation_ms < 800 && lastGameStats.spam_click_count < 3)) && (
+                      <div style={{ fontSize: '0.825rem', color: '#64748b', textAlign: 'center', padding: '1rem 0' }}>
+                        No acute behavioral anomalies or kinetic friction registered in current session. Play modules to stream live telemetry.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Skill Diagnostics & Recommendations */}
+              <div className="game-card" style={{ justifyContent: 'space-between', boxSizing: 'border-box' }}>
+                <div>
+                  <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>🔍 Diagnostic Report</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <div style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)', padding: '0.75rem', borderRadius: '8px' }}>
+                      <span style={{ fontWeight: 'bold', color: '#22c55e', fontSize: '0.85rem' }}>💪 SKILL STRENGTH:</span>
+                      <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#e2e8f0' }}>
+                        {skills.reflexes_and_focus >= 70 ? 'Rapid Visuomotor Attentional Focus. High reflexive reaction times and rapid target selection.' : 'Standard motor control latency. Stabilizing baseline performance.'}
+                      </p>
+                    </div>
+                    <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '0.75rem', borderRadius: '8px' }}>
+                      <span style={{ fontWeight: 'bold', color: '#ef4444', fontSize: '0.85rem' }}>⚠️ SKILL WEAKNESS:</span>
+                      <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#e2e8f0' }}>
+                        {skills.spatial_visual_memory < 70 ? 'Short-Term Spatial sequence recall vigilance can be optimized under distractor noise.' : 'Working Memory retention logic is currently your secondary optimization track.'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem', marginTop: '1rem' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>💡 Personalized Adviser Recommendation</div>
+                  <div style={{ fontWeight: '700', color: '#c084fc', marginTop: '0.25rem', fontSize: '0.95rem' }}>
+                    Train with <span style={{ textDecoration: 'underline' }}>{rec.game}</span>:
+                  </div>
+                  <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
+                    {rec.reason}. Launch module to {rec.action}.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         ) : (
           // ==========================================
           // ORIGINAL GAME LOBBY
@@ -534,7 +733,7 @@ export default function App() {
             <h2 className="section-title">Available Training Modules</h2>
             <div className="game-grid">
               {/* Speed Tap Active Card */}
-              <div className="game-card active" onClick={startSpeedTap}>
+              <div className="game-card active" onClick={() => setActiveGame('SpeedTap')}>
                 <div className="card-badge">Reflex</div>
                 <div className="card-icon">⚡</div>
                 <h3>Speed Tap</h3>
@@ -566,6 +765,15 @@ export default function App() {
                 <div className="card-icon">🎯</div>
                 <h3>Focus Finder</h3>
                 <p>Designed to test continuous visual vigilance and search efficiency in cluttered visual fields.</p>
+                <button className="play-btn">Launch Module</button>
+              </div>
+
+              {/* Stroop Shift Active Card */}
+              <div className="game-card active" onClick={() => setActiveGame('StroopShift')}>
+                <div className="card-badge">Reflex & Focus</div>
+                <div className="card-icon">🎨</div>
+                <h3>Stroop Shift</h3>
+                <p>Measures selective attention and cognitive control. Tap the ink/font color, override reading impulse.</p>
                 <button className="play-btn">Launch Module</button>
               </div>
 

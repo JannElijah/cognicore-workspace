@@ -6,16 +6,16 @@
  * - Separation of Concerns: Renders the UI wrapper, manages React lifecycle states,
  *   initializes/cleans up the Phaser game engine instance, and mediates between React
  *   state and Phaser scenes.
- * - Error Handling: Captures network unreachable scenarios, alerting users with
- *   clear warning labels.
+ * - Error Handling: Implements catch blocks for initial API connections, presenting
+ *   user-friendly warning overlays if the Flask server is unreachable.
  * ================================================================================
  */
 
 import React, { useState, useEffect, useRef } from 'react';
 import Phaser from 'phaser';
-import FocusFinderScene from '../games/FocusFinderScene';
+import StroopShiftScene from '../games/StroopShiftScene';
 
-export default function FocusFinderGame({ username = 'default_player', apiUrl = 'http://127.0.0.1:5000', onGameFinished }) {
+export default function StroopShiftGame({ username = 'default_player', apiUrl = 'http://127.0.0.1:5000', onGameFinished }) {
     const gameContainerRef = useRef(null);
     const phaserInstanceRef = useRef(null);
 
@@ -33,7 +33,7 @@ export default function FocusFinderGame({ username = 'default_player', apiUrl = 
         setError(null);
 
         try {
-            console.log('[React FF Wrapper] Initializing session on Flask API...');
+            console.log('[React Wrapper] Initializing StroopShift session on Flask API...');
             const response = await fetch(`${apiUrl}/api/start-session`, {
                 method: 'POST',
                 headers: {
@@ -41,7 +41,7 @@ export default function FocusFinderGame({ username = 'default_player', apiUrl = 
                 },
                 body: JSON.stringify({
                     username: inputUsername,
-                    game_type: 'FocusFinder'
+                    game_type: 'StroopShift'
                 })
             });
 
@@ -58,7 +58,7 @@ export default function FocusFinderGame({ username = 'default_player', apiUrl = 
                 throw new Error(data.message || 'Unknown server error');
             }
         } catch (err) {
-            console.error('[React FF Wrapper] Connection to database API failed:', err);
+            console.error('[React Wrapper] Connection to database API failed:', err);
             setError('Could not connect to the database server. Please verify the Flask server is running.');
             setGameState('IDLE');
         }
@@ -70,13 +70,13 @@ export default function FocusFinderGame({ username = 'default_player', apiUrl = 
             return;
         }
 
-        console.log('[React FF Wrapper] Starting Phaser game instance...');
+        console.log('[React Wrapper] Starting StroopShift Phaser game instance...');
         
         // Phaser configuration with auto-scaling Scale Manager for mobile responsiveness
         const config = {
             type: Phaser.AUTO,
             parent: gameContainerRef.current,
-            backgroundColor: '#09090b',
+            backgroundColor: '#0f172a',
             scale: {
                 mode: Phaser.Scale.FIT,
                 autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -87,15 +87,15 @@ export default function FocusFinderGame({ username = 'default_player', apiUrl = 
                 default: 'arcade',
                 arcade: { debug: false }
             },
-            scene: [FocusFinderScene]
+            scene: [StroopShiftScene]
         };
 
         // Instantiate Phaser
         const game = new Phaser.Game(config);
         phaserInstanceRef.current = game;
 
-        // Boot and pass the state objects to Phaser FocusFinderScene
-        game.scene.start('FocusFinderScene', {
+        // Boot and pass the state objects to Phaser StroopShiftScene
+        game.scene.start('StroopShiftScene', {
             sessionId: sessionId,
             apiUrl: apiUrl,
             ddaParameters: ddaParameters,
@@ -120,7 +120,7 @@ export default function FocusFinderGame({ username = 'default_player', apiUrl = 
                         }
                     }
                 } catch (e) {
-                    console.warn('[React FF Wrapper] Failed to fetch final cognitive profile:', e);
+                    console.warn('[React Wrapper] Failed to fetch final cognitive profile:', e);
                 }
 
                 setGameState('FINISHED');
@@ -131,9 +131,10 @@ export default function FocusFinderGame({ username = 'default_player', apiUrl = 
         });
 
         // Cleanup: destroy Phaser instance on component unmount
+        // This is critical to avoid multiple canvas tags and memory leaks!
         return () => {
             if (phaserInstanceRef.current) {
-                console.log('[React FF Wrapper] Destroying Phaser instance...');
+                console.log('[React Wrapper] Destroying StroopShift Phaser instance...');
                 phaserInstanceRef.current.destroy(true);
                 phaserInstanceRef.current = null;
             }
@@ -159,7 +160,7 @@ export default function FocusFinderGame({ username = 'default_player', apiUrl = 
             maxWidth: '800px',
             minHeight: '600px',
             height: 'auto',
-            background: 'linear-gradient(135deg, #09090b 0%, #1e1b4b 100%)',
+            background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)',
             color: '#f8fafc',
             fontFamily: 'system-ui, -apple-system, sans-serif',
             borderRadius: '12px',
@@ -199,7 +200,7 @@ export default function FocusFinderGame({ username = 'default_player', apiUrl = 
         input: {
             width: '100%',
             padding: '0.75rem 1rem',
-            background: '#09090b',
+            background: '#0f172a',
             border: '1.5px solid #334155',
             borderRadius: '8px',
             color: '#ffffff',
@@ -267,8 +268,8 @@ export default function FocusFinderGame({ username = 'default_player', apiUrl = 
         return (
             <div style={styles.overlay}>
                 <div style={styles.card}>
-                    <h1 style={styles.title}>FOCUS FINDER</h1>
-                    <p style={styles.subtitle}>Vigilance & Visual Selective Attention Training</p>
+                    <h1 style={styles.title}>STROOP SHIFT</h1>
+                    <p style={styles.subtitle}>Selective Attention & Cognitive Conflict Control</p>
                     
                     {error && <div style={styles.errorMessage}>{error}</div>}
 
@@ -338,7 +339,7 @@ export default function FocusFinderGame({ username = 'default_player', apiUrl = 
                         WebkitBackgroundClip: 'text',
                         backgroundClip: 'text' 
                     }}>SESSION COMPLETE</h1>
-                    <p style={styles.subtitle}>Attention telemetry successfully synced to database.</p>
+                    <p style={styles.subtitle}>Telemetry successfully synced to database.</p>
 
                     <div style={{ marginBottom: '2rem', textAlign: 'left' }}>
                         <div style={styles.statRow}>
@@ -346,15 +347,15 @@ export default function FocusFinderGame({ username = 'default_player', apiUrl = 
                             <span style={{ ...styles.statVal, color: '#4ade80' }}>{finalStats?.score}</span>
                         </div>
                         <div style={styles.statRow}>
-                            <span>Targets Found</span>
+                            <span>Correct Selections</span>
                             <span style={styles.statVal}>{finalStats?.hits}</span>
                         </div>
                         <div style={styles.statRow}>
-                            <span>Distractor Click Errors</span>
+                            <span>Errors / Timeouts</span>
                             <span style={{ ...styles.statVal, color: '#ef4444' }}>{finalStats?.misses}</span>
                         </div>
                         <div style={styles.statRow}>
-                            <span>Vigilance Accuracy</span>
+                            <span>Response Accuracy</span>
                             <span style={styles.statVal}>{Math.round((finalStats?.accuracy || 0) * 100)}%</span>
                         </div>
                         <div style={styles.statRow}>

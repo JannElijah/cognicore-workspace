@@ -102,6 +102,7 @@ export default function SpeedTapGame({ username = 'default_player', apiUrl = 'ht
             onGameOver: async (stats) => {
                 setFinalStats(stats);
                 
+                let profileInfo = null;
                 // Fetch final cognitive profile archetype updates from the database
                 try {
                     const profileRes = await fetch(`${apiUrl}/api/dda`, {
@@ -115,6 +116,7 @@ export default function SpeedTapGame({ username = 'default_player', apiUrl = 'ht
                         const profileData = await profileRes.json();
                         if (profileData.status === 'success' && profileData.cognitive_profile) {
                             setCognitiveProfile(profileData.cognitive_profile);
+                            profileInfo = profileData.cognitive_profile;
                         }
                     }
                 } catch (e) {
@@ -123,7 +125,7 @@ export default function SpeedTapGame({ username = 'default_player', apiUrl = 'ht
 
                 setGameState('FINISHED');
                 if (onGameFinished) {
-                    onGameFinished(stats);
+                    onGameFinished({ ...stats, cognitiveProfile: profileInfo });
                 }
             }
         });

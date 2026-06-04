@@ -99,6 +99,7 @@ export default function LogicLinkGame({ username = 'default_player', apiUrl = 'h
             onGameOver: async (stats) => {
                 setFinalStats(stats);
                 
+                let profileInfo = null;
                 // Fetch final cognitive profile archetype updates from the database
                 try {
                     const profileRes = await fetch(`${apiUrl}/api/dda`, {
@@ -112,6 +113,7 @@ export default function LogicLinkGame({ username = 'default_player', apiUrl = 'h
                         const profileData = await profileRes.json();
                         if (profileData.status === 'success' && profileData.cognitive_profile) {
                             setCognitiveProfile(profileData.cognitive_profile);
+                            profileInfo = profileData.cognitive_profile;
                         }
                     }
                 } catch (e) {
@@ -120,7 +122,7 @@ export default function LogicLinkGame({ username = 'default_player', apiUrl = 'h
 
                 setGameState('FINISHED');
                 if (onGameFinished) {
-                    onGameFinished(stats);
+                    onGameFinished({ ...stats, cognitiveProfile: profileInfo });
                 }
             }
         });
