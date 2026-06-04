@@ -1,0 +1,573 @@
+/**
+ * ================================================================================
+ * Chapter 2 Methodology Compliance: Software Engineering Architecture Patterns
+ * - Pattern: Model-View-Controller (MVC) / Client-Server Communication (Bridge Pattern)
+ * - Component: View & Controller (Phaser Game Loop) / Data Dispatcher (Service Bridge)
+ * - Modular Independence: Self-contained Focus Finder attention search scene.
+ * - Dynamic Difficulty Adjustment (DDA): Implements hot-swapping game variables
+ *   (distractors count, movement speed, visual similarity) updated via REST API.
+ * ================================================================================
+ */
+import Phaser from 'phaser';
+
+export default class FocusFinderScene extends Phaser.Scene {
+    constructor() {
+        super('FocusFinderScene');
+    }
+
+    init(data) {
+        // Core configuration passed from React
+        this.sessionId = data.sessionId || null;
+        this.apiUrl = data.apiUrl || 'http://127.0.0.1:5000';
+        this.onGameOver = data.onGameOver || null;
+
+        // DDA variables (Attention & Concentration)
+        const dda = data.ddaParameters || {};
+        this.difficultyLevel = dda.difficulty_level || 1;
+        this.distractorCount = dda.distractors || 5;
+        this.movementSpeed = dda.speed || 0;
+        this.visualSimilarity = dda.similarity || 'low'; // low | medium | high
+
+        // Session Stats
+        this.score = 0;
+        this.hits = 0;
+        this.misses = 0;
+        this.totalClicks = 0;
+        this.accuracy = 1.0;
+        this.gameDuration = 30000; // 30 seconds
+        this.timeLeft = this.gameDuration;
+
+        // Shapes & Colors dictionaries
+        this.shapesList = ['circle', 'square', 'triangle', 'star', 'hexagon'];
+        this.colorsMap = {
+            'teal': 0x06b6d4,
+            'purple': 0xa855f7,
+            'yellow': 0xf59e0b,
+            'coral': 0xf97316,
+            'green': 0x10b981
+        };
+        this.colorsList = Object.keys(this.colorsMap);
+
+        // Target settings
+        this.targetShape = '';
+        this.targetColor = '';
+        this.targetSpawnTime = 0;
+
+        // Active game objects
+        this.spawnedObjects = [];
+        this.countdownTimer = null;
+        this.targetGraphicPreview = null;
+    }
+
+    create() {
+        const width = this.scale.width;
+        const height = this.scale.height;
+
+        // 1. Sleek Background with Gradient (Premium Tech Look)
+        const bg = this.add.graphics();
+        bg.fillGradientStyle(0x09090b, 0x09090b, 0x1e1b4b, 0x1e1b4b, 1);
+        bg.fillRect(0, 0, width, height);
+
+        // Tech grid lines
+        const grid = this.add.grid(width / 2, height / 2, width, height, 80, 80, 0x000000, 0, 0x3b82f6, 0.03);
+        grid.setOrigin(0.5);
+
+        // Set physics bounds (prevent elements floating off screen, account for header/HUD)
+        this.physics.world.setBounds(20, 100, width - 40, height - 120);
+
+        // 2. HUD Setup
+        this.scoreText = this.add.text(20, 20, 'SCORE: 0', {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '24px',
+            fontWeight: 'bold',
+            fill: '#38bdf8'
+        });
+
+        this.accuracyText = this.add.text(20, 50, 'ACCURACY: 100%', {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '16px',
+            fill: '#94a3b8'
+        });
+
+        this.difficultyText = this.add.text(width - 20, 20, `DIFFICULTY: LEVEL ${this.difficultyLevel}`, {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '24px',
+            fontWeight: 'bold',
+            fill: '#a855f7'
+        }).setOrigin(1, 0);
+
+        this.timerText = this.add.text(width / 2 - 120, 20, '00:30', {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '32px',
+            fontWeight: 'bold',
+            fill: '#ffffff'
+        }).setOrigin(0.5, 0);
+
+        // Target panel header (instruction banner)
+        this.instructionPanel = this.add.graphics();
+        this.instructionPanel.fillStyle(0x1e293b, 0.6);
+        this.instructionPanel.lineStyle(1.5, 0xffffff, 0.1);
+        this.instructionPanel.fillRoundedRect(width / 2 - 80, 12, 170, 76, 8);
+        this.instructionPanel.strokeRoundedRect(width / 2 - 80, 12, 170, 76, 8);
+
+        this.instructionText = this.add.text(width / 2 + 5, 26, 'FIND:', {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '11px',
+            fontWeight: 'bold',
+            fill: '#94a3b8'
+        }).setOrigin(0.5);
+
+        this.targetNameText = this.add.text(width / 2 + 5, 46, '', {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '13px',
+            fontWeight: '900',
+            fill: '#ffffff'
+        }).setOrigin(0.5);
+
+        // 3. Spawning Loops
+        this.countdownTimer = this.time.addEvent({
+            delay: 1000,
+            callback: this.updateTimer,
+            callbackScope: this,
+            loop: true
+        });
+
+        this.generateWave();
+    }
+
+    updateTimer() {
+        this.timeLeft -= 1000;
+        const seconds = Math.ceil(this.timeLeft / 1000);
+        this.timerText.setText(`00:${seconds < 10 ? '0' : ''}${seconds}`);
+
+        if (this.timeLeft <= 0) {
+            this.endGame();
+        }
+    }
+
+    generateWave() {
+        // Clear existing wave items
+        this.spawnedObjects.forEach(obj => obj.destroy());
+        this.spawnedObjects = [];
+
+        // 1. Pick a random target shape and color
+        this.targetShape = Phaser.Utils.Array.GetRandom(this.shapesList);
+        this.targetColor = Phaser.Utils.Array.GetRandom(this.colorsList);
+
+        // Update target HUD display
+        const colorLabel = this.targetColor.toUpperCase();
+        const shapeLabel = this.targetShape.toUpperCase();
+        this.targetNameText.setText(`${colorLabel} ${shapeLabel}`).setFill(this.colorsMap[this.targetColor]);
+
+        // Draw HUD target graphic preview
+        if (this.targetGraphicPreview) this.targetGraphicPreview.destroy();
+        this.targetGraphicPreview = this.add.graphics();
+        this.targetGraphicPreview.setPosition(this.scale.width / 2 - 50, 50);
+        this.drawShapeGraphic(this.targetGraphicPreview, this.targetShape, this.colorsMap[this.targetColor], 28);
+
+        // 2. Spawn correct target
+        this.spawnTargetObject();
+
+        // 3. Spawn distractors based on DDA count & similarity rules
+        for (let i = 0; i < this.distractorCount; i++) {
+            this.spawnDistractorObject();
+        }
+
+        // Mark target spawn time for search metrics calculations
+        this.targetSpawnTime = this.time.now;
+    }
+
+    spawnTargetObject() {
+        const width = this.scale.width;
+        const height = this.scale.height;
+
+        // Keep position clear of HUD overlay
+        const x = Phaser.Math.Between(60, width - 60);
+        const y = Phaser.Math.Between(130, height - 60);
+
+        const container = this.add.container(x, y);
+        const size = 52;
+
+        const graphic = this.add.graphics();
+        this.drawShapeGraphic(graphic, this.targetShape, this.colorsMap[this.targetColor], size);
+        container.add(graphic);
+
+        // Setup interaction
+        graphic.setInteractive(new Phaser.Geom.Circle(0, 0, size / 2), Phaser.Geom.Circle.Contains);
+        graphic.on('pointerdown', () => {
+            this.handleTargetClick(container);
+        });
+
+        // Enable Arcade Physics for movement
+        this.physics.add.existing(container);
+        container.body.setSize(size, size);
+        container.body.setOffset(-size / 2, -size / 2);
+        container.body.setCollideWorldBounds(true);
+
+        if (this.movementSpeed > 0) {
+            const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
+            container.body.setVelocity(
+                Math.cos(angle) * this.movementSpeed,
+                Math.sin(angle) * this.movementSpeed
+            );
+            container.body.setBounce(1, 1);
+        }
+
+        container.setData('isTarget', true);
+        this.spawnedObjects.push(container);
+    }
+
+    spawnDistractorObject() {
+        const width = this.scale.width;
+        const height = this.scale.height;
+
+        const x = Phaser.Math.Between(60, width - 60);
+        const y = Phaser.Math.Between(130, height - 60);
+
+        let dShape = '';
+        let dColor = '';
+
+        // Apply visual similarity matrices (low | medium | high search interference)
+        if (this.visualSimilarity === 'low') {
+            // Distractors have completely different shapes AND colors
+            dShape = Phaser.Utils.Array.GetRandom(this.shapesList.filter(s => s !== this.targetShape));
+            dColor = Phaser.Utils.Array.GetRandom(this.colorsList.filter(c => c !== this.targetColor));
+        } else if (this.visualSimilarity === 'medium') {
+            // Distractors share either target shape OR target color, but not both
+            if (Math.random() < 0.5) {
+                dShape = this.targetShape;
+                dColor = Phaser.Utils.Array.GetRandom(this.colorsList.filter(c => c !== this.targetColor));
+            } else {
+                dShape = Phaser.Utils.Array.GetRandom(this.shapesList.filter(s => s !== this.targetShape));
+                dColor = this.targetColor;
+            }
+        } else {
+            // High similarity: distractors share shapes, colors, or extremely close hues
+            if (Math.random() < 0.6) {
+                // Same shape, close color tint (Coral looks like yellow/orange)
+                dShape = this.targetShape;
+                const closeColors = {
+                    'teal': ['green', 'purple'],
+                    'purple': ['teal', 'coral'],
+                    'yellow': ['coral', 'green'],
+                    'coral': ['yellow', 'purple'],
+                    'green': ['teal', 'yellow']
+                };
+                dColor = Phaser.Utils.Array.GetRandom(closeColors[this.targetColor] || this.colorsList);
+            } else {
+                // Similar complex shapes (hexagon vs circle), same color
+                const complexShapes = {
+                    'star': ['hexagon', 'triangle'],
+                    'circle': ['hexagon', 'square'],
+                    'hexagon': ['circle', 'star'],
+                    'square': ['hexagon', 'circle'],
+                    'triangle': ['star', 'hexagon']
+                };
+                dShape = Phaser.Utils.Array.GetRandom(complexShapes[this.targetShape] || this.shapesList);
+                dColor = this.targetColor;
+            }
+        }
+
+        const container = this.add.container(x, y);
+        const size = 52;
+
+        const graphic = this.add.graphics();
+        this.drawShapeGraphic(graphic, dShape, this.colorsMap[dColor], size);
+        container.add(graphic);
+
+        // Setup interaction
+        graphic.setInteractive(new Phaser.Geom.Circle(0, 0, size / 2), Phaser.Geom.Circle.Contains);
+        graphic.on('pointerdown', () => {
+            this.handleDistractorClick(container);
+        });
+
+        // Enable Arcade Physics
+        this.physics.add.existing(container);
+        container.body.setSize(size, size);
+        container.body.setOffset(-size / 2, -size / 2);
+        container.body.setCollideWorldBounds(true);
+
+        if (this.movementSpeed > 0) {
+            const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
+            container.body.setVelocity(
+                Math.cos(angle) * this.movementSpeed,
+                Math.sin(angle) * this.movementSpeed
+            );
+            container.body.setBounce(1, 1);
+        }
+
+        container.setData('isTarget', false);
+        this.spawnedObjects.push(container);
+    }
+
+    handleTargetClick(container) {
+        this.totalClicks++;
+        this.hits++;
+
+        const searchTime = this.time.now - this.targetSpawnTime;
+        const waveScore = Math.max(100, Math.round(1500 - searchTime / 2));
+        this.score += waveScore;
+
+        this.showFloatingText(container.x, container.y, `+${waveScore} FOUND!`, '#22c55e');
+        this.cameras.main.flash(100, 34, 197, 94, 0.15); // gentle green screen pop
+
+        this.updateHUD();
+
+        // Dispatch telemetry
+        this.dispatchMetricTelemetry(searchTime, 1.0);
+
+        // Periodically scale difficulty every 5 targets
+        if (this.hits % 5 === 0) {
+            this.adaptDifficulty();
+        } else {
+            this.generateWave();
+        }
+    }
+
+    handleDistractorClick(container) {
+        this.totalClicks++;
+        this.misses++;
+
+        const searchTime = this.time.now - this.targetSpawnTime;
+        this.score = Math.max(0, this.score - 50); // score penalty
+
+        this.showFloatingText(container.x, container.y, 'FALSE ALARM!', '#ef4444');
+        this.cameras.main.shake(100, 0.005); // shake on mistake
+
+        this.updateHUD();
+
+        // Dispatch telemetry with 0 accuracy for distractor selection
+        this.dispatchMetricTelemetry(searchTime, 0.0);
+
+        // Fade distractor out
+        this.tweens.add({
+            targets: container,
+            alpha: 0,
+            scale: 0.2,
+            duration: 200,
+            onComplete: () => {
+                this.spawnedObjects = this.spawnedObjects.filter(obj => obj !== container);
+                container.destroy();
+            }
+        });
+    }
+
+    updateHUD() {
+        this.scoreText.setText(`SCORE: ${this.score}`);
+        
+        if (this.totalClicks > 0) {
+            this.accuracy = this.hits / this.totalClicks;
+        } else {
+            this.accuracy = 1.0;
+        }
+        
+        this.accuracyText.setText(`ACCURACY: ${Math.round(this.accuracy * 100)}%`);
+    }
+
+    showFloatingText(x, y, text, color) {
+        const txt = this.add.text(x, y - 20, text, {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            fill: color
+        }).setOrigin(0.5);
+
+        this.tweens.add({
+            targets: txt,
+            y: y - 50,
+            alpha: 0,
+            duration: 600,
+            onComplete: () => txt.destroy()
+        });
+    }
+
+    // ==========================================
+    // GEOMETRIC SHAPES VECTOR DRAWING SERVICES
+    // ==========================================
+
+    drawShapeGraphic(graphic, shapeType, colorHex, size) {
+        graphic.clear();
+        graphic.fillStyle(colorHex, 0.45);
+        graphic.lineStyle(2.5, colorHex, 0.95);
+
+        const r = size / 2;
+
+        if (shapeType === 'circle') {
+            graphic.fillCircle(0, 0, r);
+            graphic.strokeCircle(0, 0, r);
+            // inner ring decoration
+            graphic.lineStyle(1.5, 0xffffff, 0.5);
+            graphic.strokeCircle(0, 0, r * 0.55);
+        } 
+        else if (shapeType === 'square') {
+            graphic.fillRoundedRect(-r, -r, size, size, 8);
+            graphic.strokeRoundedRect(-r, -r, size, size, 8);
+            
+            graphic.lineStyle(1.5, 0xffffff, 0.5);
+            graphic.strokeRoundedRect(-r * 0.6, -r * 0.6, size * 0.6, size * 0.6, 4);
+        } 
+        else if (shapeType === 'triangle') {
+            // Draw equilateral triangle
+            graphic.beginPath();
+            graphic.moveTo(0, -r);
+            graphic.lineTo(r * 1.1, r);
+            graphic.lineTo(-r * 1.1, r);
+            graphic.closePath();
+            graphic.fillPath();
+            graphic.strokePath();
+
+            graphic.lineStyle(1.5, 0xffffff, 0.5);
+            graphic.beginPath();
+            graphic.moveTo(0, -r * 0.5);
+            graphic.lineTo(r * 0.55, r * 0.5);
+            graphic.lineTo(-r * 0.55, r * 0.5);
+            graphic.closePath();
+            graphic.strokePath();
+        } 
+        else if (shapeType === 'star') {
+            // 5-pointed star
+            const points = [];
+            const spikes = 5;
+            const outerRadius = r;
+            const innerRadius = r * 0.4;
+            
+            let rot = (Math.PI / 2) * 3;
+            const step = Math.PI / spikes;
+
+            for (let i = 0; i < spikes; i++) {
+                points.push(new Phaser.Math.Vector2(Math.cos(rot) * outerRadius, Math.sin(rot) * outerRadius));
+                rot += step;
+                points.push(new Phaser.Math.Vector2(Math.cos(rot) * innerRadius, Math.sin(rot) * innerRadius));
+                rot += step;
+            }
+
+            graphic.beginPath();
+            graphic.moveTo(points[0].x, points[0].y);
+            for (let k = 1; k < points.length; k++) {
+                graphic.lineTo(points[k].x, points[k].y);
+            }
+            graphic.closePath();
+            graphic.fillPath();
+            graphic.strokePath();
+
+            // inner star dot
+            graphic.lineStyle(1.5, 0xffffff, 0.6);
+            graphic.strokeCircle(0, 0, 4);
+        } 
+        else if (shapeType === 'hexagon') {
+            // 6-sided hexagon
+            graphic.beginPath();
+            for (let side = 0; side < 6; side++) {
+                const angle = (Math.PI / 3) * side;
+                const px = Math.cos(angle) * r;
+                const py = Math.sin(angle) * r;
+                if (side === 0) graphic.moveTo(px, py);
+                else graphic.lineTo(px, py);
+            }
+            graphic.closePath();
+            graphic.fillPath();
+            graphic.strokePath();
+
+            graphic.lineStyle(1.5, 0xffffff, 0.5);
+            graphic.beginPath();
+            for (let side = 0; side < 6; side++) {
+                const angle = (Math.PI / 3) * side;
+                const px = Math.cos(angle) * r * 0.6;
+                const py = Math.sin(angle) * r * 0.6;
+                if (side === 0) graphic.moveTo(px, py);
+                else graphic.lineTo(px, py);
+            }
+            graphic.closePath();
+            graphic.strokePath();
+        }
+    }
+
+    // ==========================================
+    // CLOSED-LOOP DDA & TELEMETRY BRIDGE
+    // ==========================================
+
+    async dispatchMetricTelemetry(searchTimeMs, clickAccuracy) {
+        if (!this.sessionId) return;
+
+        const payload = {
+            session_id: this.sessionId,
+            reaction_time: searchTimeMs,
+            accuracy: clickAccuracy,
+            difficulty: this.difficultyLevel
+        };
+
+        try {
+            console.log('[Telemetry Dispatch] Sending metrics...', payload);
+            await fetch(`${this.apiUrl}/api/submit-metrics`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+        } catch (e) {
+            console.warn('[Telemetry Dispatch] Database offline, telemetry buffered.', e);
+        }
+    }
+
+    async adaptDifficulty() {
+        if (!this.sessionId) return;
+
+        try {
+            console.log('[DDA Bridge] Checking focus scaling profiles...');
+            const response = await fetch(`${this.apiUrl}/api/dda`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ session_id: this.sessionId })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.status === 'success' && data.dda_parameters) {
+                    const params = data.dda_parameters;
+                    const difficultyChanged = this.difficultyLevel !== params.difficulty_level;
+
+                    this.difficultyLevel = params.difficulty_level;
+                    this.distractorCount = params.distractors;
+                    this.movementSpeed = params.speed;
+                    this.visualSimilarity = params.similarity;
+
+                    this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);
+
+                    if (difficultyChanged) {
+                        const direction = params.difficulty_level > this.difficultyLevel ? 'INCREASED' : 'ADJUSTED';
+                        this.showFloatingText(this.scale.width / 2, this.scale.height / 2, `DIFFICULTY ${direction}! LEVEL ${this.difficultyLevel}`, '#a855f7');
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('[DDA Bridge] Connection failed, using current configurations.', e);
+        }
+
+        // Generate next wave
+        this.generateWave();
+    }
+
+    endGame() {
+        if (this.countdownTimer) this.countdownTimer.remove();
+
+        this.spawnedObjects.forEach(obj => obj.destroy());
+        this.spawnedObjects = [];
+        if (this.targetGraphicPreview) this.targetGraphicPreview.destroy();
+
+        console.log('[Focus Finder Game Over] Telemetry summary:', {
+            score: this.score,
+            hits: this.hits,
+            misses: this.misses,
+            accuracy: this.accuracy
+        });
+
+        if (this.onGameOver) {
+            this.onGameOver({
+                score: this.score,
+                hits: this.hits,
+                misses: this.misses,
+                accuracy: this.accuracy,
+                difficultyLevel: this.difficultyLevel
+            });
+        }
+    }
+}
