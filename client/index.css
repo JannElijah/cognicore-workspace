@@ -433,3 +433,131 @@ svg circle:hover {
     text-align: center;
   }
 }
+
+/* Cognitive Category Layouts */
+.category-container {
+  margin-bottom: 4rem;
+}
+
+.category-header-wrapper {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid var(--theme-color);
+  padding-left: 1rem;
+}
+
+.category-title {
+  font-family: var(--font-title);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--theme-color);
+  text-shadow: 0 0 12px var(--theme-color-glow);
+}
+
+.category-description {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+  line-height: 1.4;
+}
+
+/* Domain specific theme variables */
+.theme-reflex {
+  --theme-color: #38bdf8;
+  --theme-color-glow: rgba(56, 189, 248, 0.2);
+}
+
+.theme-memory {
+  --theme-color: #4ade80;
+  --theme-color-glow: rgba(74, 222, 128, 0.2);
+}
+
+.theme-reasoning {
+  --theme-color: #f59e0b;
+  --theme-color-glow: rgba(245, 158, 11, 0.2);
+}
+
+.theme-executive {
+  --theme-color: #a855f7;
+  --theme-color-glow: rgba(168, 85, 247, 0.2);
+}
+
+/* Card details adjustments override */
+.game-card.theme-reflex.active:hover {
+  border-color: rgba(56, 189, 248, 0.4) !important;
+  box-shadow: 0 20px 40px rgba(56, 189, 248, 0.15), 0 0 1px 1px rgba(56, 189, 248, 0.2) !important;
+}
+
+.game-card.theme-memory.active:hover {
+  border-color: rgba(74, 222, 128, 0.4) !important;
+  box-shadow: 0 20px 40px rgba(74, 222, 128, 0.15), 0 0 1px 1px rgba(74, 222, 128, 0.2) !important;
+}
+
+.game-card.theme-reasoning.active:hover {
+  border-color: rgba(245, 158, 11, 0.4) !important;
+  box-shadow: 0 20px 40px rgba(245, 158, 11, 0.15), 0 0 1px 1px rgba(245, 158, 11, 0.2) !important;
+}
+
+.game-card.theme-executive.active:hover {
+  border-color: rgba(168, 85, 247, 0.4) !important;
+  box-shadow: 0 20px 40px rgba(168, 85, 247, 0.15), 0 0 1px 1px rgba(168, 85, 247, 0.2) !important;
+}
+
+.card-target-tag {
+  font-size: 0.725rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  background: var(--theme-color-glow);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--theme-color);
+  margin-bottom: 0.75rem;
+}
+
+.card-section-label {
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #e2e8f0;
+  margin-bottom: 0.25rem;
+  margin-top: 1rem;
+}
+
+.card-purpose-list {
+  list-style-type: none;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.card-purpose-list li {
+  position: relative;
+  padding-left: 1rem;
+}
+
+.card-purpose-list li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--theme-color);
+}
+
+.card-benefit-box {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-glass);
+  border-left: 3px solid var(--theme-color);
+  border-radius: 6px;
+  padding: 0.65rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+  margin-bottom: 1.5rem;
+  width: 100%;
+  text-align: left;
+}
+

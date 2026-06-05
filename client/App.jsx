@@ -22,6 +22,7 @@ import MazeEscapeGame from './components/MazeEscapeGame';
 import MatrixRecallGame from './components/MatrixRecallGame';
 import StroopShiftGame from './components/StroopShiftGame';
 import MentalFlexGame from './components/MentalFlexGame';
+import EquationBalanceGame from './components/EquationBalanceGame';
 
 // Register Chart.js modules
 ChartJS.register(
@@ -721,6 +722,15 @@ export default function App() {
             </button>
             <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
               <MentalFlexGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />
+            </div>
+          </div>
+        ) : activeGame === 'EquationBalance' ? (
+          <div className="game-screen-wrapper">
+            <button className="back-btn" onClick={handleBackToLobby}>
+              ← Back to Training Hub
+            </button>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
+              <EquationBalanceGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />
             </div>
           </div>
         ) : portalView === 'researcher' ? (
@@ -1546,80 +1556,216 @@ export default function App() {
               <p>Welcome to CogniCore. Access clinically validated serious game modules designed to assess cognitive processing speed, selective attention, and executive function. Real-time telemetry is recorded to construct your adaptive cognitive profile.</p>
             </div>
 
-            <h2 className="section-title">Available Training Modules</h2>
-            <div className="game-grid">
-              {/* Speed Tap Active Card */}
-              <div className="game-card active" onClick={() => setActiveGame('SpeedTap')}>
-                <div className="card-badge">Reflex</div>
-                <div className="card-icon">⚡</div>
-                <h3>Speed Tap</h3>
-                <p>Measures visual reaction times and selective response inhibition. Avoid distractors, tap active targets.</p>
-                <button className="play-btn">Launch Module</button>
-              </div>
+            <h2 className="section-title">Available Training Modules by Domain</h2>
 
-              {/* Memory Match Active Card */}
-              <div className="game-card active" onClick={() => setActiveGame('MemoryMatch')}>
-                <div className="card-badge">Memory</div>
-                <div className="card-icon">🧩</div>
-                <h3>Memory Match</h3>
-                <p>Designed to analyze short-term working memory capacity and retention patterns.</p>
-                <button className="play-btn">Launch Module</button>
+            {/* Category 1: Reflexes & Focus */}
+            <div className="category-container theme-reflex">
+              <div className="category-header-wrapper">
+                <span className="category-title">⚡ Reflexes & Attentional Focus</span>
+                <p className="category-description">Assesses visuomotor response latencies, continuous visual search efficiency, and response inhibition control in variable-distractor environments.</p>
               </div>
+              <div className="game-grid" style={{ marginBottom: '3.5rem' }}>
+                <div className="game-card theme-reflex active" onClick={() => setActiveGame('SpeedTap')}>
+                  <div className="card-target-tag">Processing Speed</div>
+                  <div className="card-icon">⚡</div>
+                  <h3>Speed Tap</h3>
+                  
+                  <div className="card-section-label">Objective & Goal</div>
+                  <ul className="card-purpose-list">
+                    <li>Identify and select highlighted target boxes under a ticking clock.</li>
+                    <li>Exercise rapid response inhibition by avoiding distractor elements.</li>
+                  </ul>
 
-              {/* Matrix Recall Active Card */}
-              <div className="game-card active" onClick={() => setActiveGame('MatrixRecall')}>
-                <div className="card-badge">Memory</div>
-                <div className="card-icon">🔲</div>
-                <h3>Matrix Recall</h3>
-                <p>Designed to train spatial-visual memory recall and grid pattern retention capacity.</p>
-                <button className="play-btn">Launch Module</button>
-              </div>
+                  <div className="card-section-label">How it helps us</div>
+                  <div className="card-benefit-box">
+                    Speeds up motor reflexes and decision making under time pressure, reducing error rate when multi-tasking.
+                  </div>
+                  
+                  <button className="play-btn">Launch Module</button>
+                </div>
 
-              {/* Focus Finder Active Card */}
-              <div className="game-card active" onClick={() => setActiveGame('FocusFinder')}>
-                <div className="card-badge">Attention</div>
-                <div className="card-icon">🎯</div>
-                <h3>Focus Finder</h3>
-                <p>Designed to test continuous visual vigilance and search efficiency in cluttered visual fields.</p>
-                <button className="play-btn">Launch Module</button>
-              </div>
+                <div className="game-card theme-reflex active" onClick={() => setActiveGame('FocusFinder')}>
+                  <div className="card-target-tag">Selective Attention</div>
+                  <div className="card-icon">🎯</div>
+                  <h3>Focus Finder</h3>
+                  
+                  <div className="card-section-label">Objective & Goal</div>
+                  <ul className="card-purpose-list">
+                    <li>Scan cluttered graphical fields to identify active target points.</li>
+                    <li>Train continuous visual vigilance under distracting layouts.</li>
+                  </ul>
 
-              {/* Stroop Shift Active Card */}
-              <div className="game-card active" onClick={() => setActiveGame('StroopShift')}>
-                <div className="card-badge">Reflex & Focus</div>
-                <div className="card-icon">🎨</div>
-                <h3>Stroop Shift</h3>
-                <p>Measures selective attention and cognitive control. Tap the ink/font color, override reading impulse.</p>
-                <button className="play-btn">Launch Module</button>
-              </div>
+                  <div className="card-section-label">How it helps us</div>
+                  <div className="card-benefit-box">
+                    Enhances selective visual search in busy environments (e.g. scanning files or finding objects on store shelves).
+                  </div>
+                  
+                  <button className="play-btn">Launch Module</button>
+                </div>
 
-              {/* Logic Link Active Card */}
-              <div className="game-card active" onClick={() => setActiveGame('LogicLink')}>
-                <div className="card-badge">Reasoning</div>
-                <div className="card-icon">🔗</div>
-                <h3>Logic Link</h3>
-                <p>Designed to analyze ascending numerical sequencing and spatial path planning.</p>
-                <button className="play-btn">Launch Module</button>
-              </div>
+                <div className="game-card theme-reflex active" onClick={() => setActiveGame('StroopShift')}>
+                  <div className="card-target-tag">Cognitive Control</div>
+                  <div className="card-icon">🎨</div>
+                  <h3>Stroop Shift</h3>
+                  
+                  <div className="card-section-label">Objective & Goal</div>
+                  <ul className="card-purpose-list">
+                    <li>Override standard reading impulse and select the font/ink color.</li>
+                    <li>Resist semantic word distractions during cognitive conflict.</li>
+                  </ul>
 
-              {/* Maze Escape Active Card */}
-              <div className="game-card active" onClick={() => setActiveGame('MazeEscape')}>
-                <div className="card-badge">Problem Solving</div>
-                <div className="card-icon">🧭</div>
-                <h3>Maze Escape</h3>
-                <p>Designed to analyze spatial maze navigation, planning, and multi-step execution maps.</p>
-                <button className="play-btn">Launch Module</button>
-              </div>
-
-              {/* Mental Flex Active Card */}
-              <div className="game-card active" onClick={() => setActiveGame('MentalFlex')}>
-                <div className="card-badge">Flexibility</div>
-                <div className="card-icon">🌀</div>
-                <h3>Mental Flex</h3>
-                <p>Designed to train cognitive flexibility, set-shifting, and executive control.</p>
-                <button className="play-btn">Launch Module</button>
+                  <div className="card-section-label">How it helps us</div>
+                  <div className="card-benefit-box">
+                    Filters out conversational background noise or notifications to maintain high attentional focus on primary work tasks.
+                  </div>
+                  
+                  <button className="play-btn">Launch Module</button>
+                </div>
               </div>
             </div>
+
+            {/* Category 2: Spatial-Visual Memory */}
+            <div className="category-container theme-memory">
+              <div className="category-header-wrapper">
+                <span className="category-title">🧩 Spatial-Visual Memory</span>
+                <p className="category-description">Assesses working memory capacity, spatial orientation, and visual retention of short-term pattern arrays.</p>
+              </div>
+              <div className="game-grid" style={{ marginBottom: '3.5rem' }}>
+                <div className="game-card theme-memory active" onClick={() => setActiveGame('MemoryMatch')}>
+                  <div className="card-target-tag">Working Memory</div>
+                  <div className="card-icon">🧩</div>
+                  <h3>Memory Match</h3>
+                  
+                  <div className="card-section-label">Objective & Goal</div>
+                  <ul className="card-purpose-list">
+                    <li>Flip tiles to find matching pairs in a grid layout.</li>
+                    <li>Recall tile positions and track matching trials.</li>
+                  </ul>
+
+                  <div className="card-section-label">How it helps us</div>
+                  <div className="card-benefit-box">
+                    Strengthens visual recall and short-term working retention, supporting mental math calculations and instructions list retention.
+                  </div>
+                  
+                  <button className="play-btn">Launch Module</button>
+                </div>
+
+                <div className="game-card theme-memory active" onClick={() => setActiveGame('MatrixRecall')}>
+                  <div className="card-target-tag">Spatial Retention</div>
+                  <div className="card-icon">🔲</div>
+                  <h3>Matrix Recall</h3>
+                  
+                  <div className="card-section-label">Objective & Goal</div>
+                  <ul className="card-purpose-list">
+                    <li>Observe grid pattern sequences highlighted for brief intervals.</li>
+                    <li>Reconstruct pattern coordinates in exact visual order.</li>
+                  </ul>
+
+                  <div className="card-section-label">How it helps us</div>
+                  <div className="card-benefit-box">
+                    Improves spatial orientation and mental navigation mapping, aiding recall of location coordinates and physical layouts.
+                  </div>
+                  
+                  <button className="play-btn">Launch Module</button>
+                </div>
+              </div>
+            </div>
+
+            {/* Category 3: Logical Reasoning */}
+            <div className="category-container theme-reasoning">
+              <div className="category-header-wrapper">
+                <span className="category-title">🔗 Logical Reasoning & Sequence Logic</span>
+                <p className="category-description">Assesses analytical sequencing abilities, logical node linking, and spatial path calculation.</p>
+              </div>
+              <div className="game-grid" style={{ marginBottom: '3.5rem' }}>
+                <div className="game-card theme-reasoning active" onClick={() => setActiveGame('LogicLink')}>
+                  <div className="card-target-tag">Inductive Logic</div>
+                  <div className="card-icon">🔗</div>
+                  <h3>Logic Link</h3>
+                  
+                  <div className="card-section-label">Objective & Goal</div>
+                  <ul className="card-purpose-list">
+                    <li>Connect nodes in exact ascending sequence.</li>
+                    <li>Calculate path layouts avoiding node collisions.</li>
+                  </ul>
+
+                  <div className="card-section-label">How it helps us</div>
+                  <div className="card-benefit-box">
+                    Exercises logical path planning, pattern recognition, and mathematical structured problem solving in complex systems.
+                  </div>
+                  
+                  <button className="play-btn">Launch Module</button>
+                </div>
+
+                {/* Equation Balance Card */}
+                <div className="game-card theme-reasoning active" onClick={() => setActiveGame('EquationBalance')}>
+                  <div className="card-target-tag">Deductive Logic</div>
+                  <div className="card-icon">🧮</div>
+                  <h3>Equation Balance</h3>
+                  
+                  <div className="card-section-label">Objective & Goal</div>
+                  <ul className="card-purpose-list">
+                    <li>Select the correct operator or number to balance equations.</li>
+                    <li>Solve procedural arithmetic equations under a ticking clock.</li>
+                  </ul>
+
+                  <div className="card-section-label">How it helps us</div>
+                  <div className="card-benefit-box">
+                    Accelerates mental math estimation, improves quantitative deduction speeds, and supports quick numerical calculations.
+                  </div>
+                  
+                  <button className="play-btn">Launch Module</button>
+                </div>
+              </div>
+            </div>
+
+            {/* Category 4: Executive Strategy & Flexibility */}
+            <div className="category-container theme-executive">
+              <div className="category-header-wrapper">
+                <span className="category-title">🌀 Executive Strategy & Flexibility</span>
+                <p className="category-description">Assesses set-shifting abilities, pathfinding strategies, and adaptability to sudden rules modifications.</p>
+              </div>
+              <div className="game-grid" style={{ marginBottom: '1.5rem' }}>
+                <div className="game-card theme-executive active" onClick={() => setActiveGame('MazeEscape')}>
+                  <div className="card-target-tag">Problem Solving</div>
+                  <div className="card-icon">🧭</div>
+                  <h3>Maze Escape</h3>
+                  
+                  <div className="card-section-label">Objective & Goal</div>
+                  <ul className="card-purpose-list">
+                    <li>Navigate a character through complex visual grids.</li>
+                    <li>Solve optimal escape routes and bypass barrier elements.</li>
+                  </ul>
+
+                  <div className="card-section-label">How it helps us</div>
+                  <div className="card-benefit-box">
+                    Builds strategic path planning and forward-looking executive thinking for spatial navigation and route optimization.
+                  </div>
+                  
+                  <button className="play-btn">Launch Module</button>
+                </div>
+
+                <div className="game-card theme-executive active" onClick={() => setActiveGame('MentalFlex')}>
+                  <div className="card-target-tag">Set-Shifting</div>
+                  <div className="card-icon">🌀</div>
+                  <h3>Mental Flex</h3>
+                  
+                  <div className="card-section-label">Objective & Goal</div>
+                  <ul className="card-purpose-list">
+                    <li>Match a central target query against multiple selection options.</li>
+                    <li>Adapt swiftly to changing matching rules (color, shape, or count).</li>
+                  </ul>
+
+                  <div className="card-section-label">How it helps us</div>
+                  <div className="card-benefit-box">
+                    Reduces cognitive friction during rapid task switching, allowing you to transition between topics or tools seamlessly.
+                  </div>
+                  
+                  <button className="play-btn">Launch Module</button>
+                </div>
+              </div>
+            </div>
+
           </div>
         )}
       </main>

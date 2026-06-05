@@ -40,6 +40,8 @@ GAME_TO_DOMAIN = {
     "memory_match": "spatial_visual_memory",
     "LogicLink": "logical_mathematical",
     "logic_link": "logical_mathematical",
+    "EquationBalance": "logical_mathematical",
+    "equation_balance": "logical_mathematical",
     "SpeedTap": "reflexes_and_focus",
     "speed_tap": "reflexes_and_focus",
     "FocusFinder": "reflexes_and_focus",
@@ -372,6 +374,45 @@ def calculate_dda_parameters(difficulty_level, game_type='SpeedTap'):
                 "choices_count": 4,
                 "time_limit": 1500,             # Extremely fast reaction required
                 "rules_pool": ["color", "shape", "count"]
+            }
+        }
+    elif game_type in ['EquationBalance', 'equation_balance']:
+        # Map levels to game-specific variables for the Equation Balance game
+        configs = {
+            1: {
+                "difficulty_level": 1,
+                "num_range": 10,
+                "operators": ["+", "-"],
+                "missing_type": "operator",
+                "time_limit": 10000
+            },
+            2: {
+                "difficulty_level": 2,
+                "num_range": 20,
+                "operators": ["+", "-", "*"],
+                "missing_type": "operand",
+                "time_limit": 8000
+            },
+            3: {
+                "difficulty_level": 3,
+                "num_range": 30,
+                "operators": ["+", "-", "*"],
+                "missing_type": "random",
+                "time_limit": 6000
+            },
+            4: {
+                "difficulty_level": 4,
+                "num_range": 50,
+                "operators": ["+", "-", "*", "/"],
+                "missing_type": "complex",
+                "time_limit": 5000
+            },
+            5: {
+                "difficulty_level": 5,
+                "num_range": 100,
+                "operators": ["+", "-", "*", "/"],
+                "missing_type": "complex_random",
+                "time_limit": 4000
             }
         }
     else:
