@@ -76,6 +76,19 @@ def init_db():
     if "spam_click_count" not in columns:
         cursor.execute("ALTER TABLE performance_metrics ADD COLUMN spam_click_count INTEGER")
     
+    # Create iso_evaluations table if it doesn't exist
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS iso_evaluations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            functionality_score INTEGER NOT NULL,
+            usability_score INTEGER NOT NULL,
+            reliability_score INTEGER NOT NULL,
+            efficiency_score INTEGER NOT NULL,
+            ux_score INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
     conn.commit()
     conn.close()
 
@@ -692,6 +705,251 @@ def evaluate_thesis():
     except Exception as e:
         app.logger.error(f"Error in evaluate_thesis: {e}")
         return jsonify({"status": "error", "message": f"Statistical engine error: {str(e)}"}), 500
+
+@app.route('/api/iso-evaluations', methods=['POST'])
+def submit_iso_evaluation():
+    try:
+        data = request.get_json() or {}
+        
+        # Extract scores
+        f_score = data.get('functionality_score')
+        u_score = data.get('usability_score')
+        r_score = data.get('reliability_score')
+        e_score = data.get('efficiency_score')
+        ux_score = data.get('ux_score')
+        
+        # Validate that all exist and are integers between 1 and 5
+        scores = [f_score, u_score, r_score, e_score, ux_score]
+        if any(x is None for x in scores):
+            return jsonify({"status": "error", "message": "All scores are required (functionality, usability, reliability, efficiency, ux)."}), 400
+            
+        try:
+            scores = [int(x) for x in scores]
+        except (ValueError, TypeError):
+            return jsonify({"status": "error", "message": "All scores must be integers."}), 400
+            
+        if any(x < 1 or x > 5 for x in scores):
+            return jsonify({"status": "error", "message": "All scores must be between 1 and 5 (Likert scale)."}), 400
+            
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO iso_evaluations 
+            (functionality_score, usability_score, reliability_score, efficiency_score, ux_score) 
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            scores
+        )
+        conn.commit()
+        conn.close()
+        
+        return jsonify({"status": "success", "message": "ISO 25010 evaluation recorded successfully."}), 201
+        
+    except Exception as e:
+        app.logger.error(f"Error in submit_iso_evaluation: {e}")
+        return jsonify({"status": "error", "message": f"Database or server error: {str(e)}"}), 500
+
+@app.route('/api/iso-evaluations', methods=['GET'])
+def get_iso_evaluations():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT id, functionality_score, usability_score, reliability_score, efficiency_score, ux_score, created_at FROM iso_evaluations ORDER BY created_at DESC"
+        )
+        rows = cursor.fetchall()
+        conn.close()
+        
+        evaluations = []
+        for r in rows:
+            evaluations.append({
+                "id": r["id"],
+                "functionality_score": r["functionality_score"],
+                "usability_score": r["usability_score"],
+                "reliability_score": r["reliability_score"],
+                "efficiency_score": r["efficiency_score"],
+                "ux_score": r["ux_score"],
+                "created_at": r["created_at"]
+            })
+            
+        return jsonify({
+            "status": "success",
+            "evaluations": evaluations
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f"Error in get_iso_evaluations: {e}")
+        return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
+
+@app.route('/api/iso-evaluations/summary', methods=['GET'])
+def get_iso_evaluations_summary():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT 
+                AVG(functionality_score) as avg_func,
+                AVG(usability_score) as avg_usab,
+                AVG(reliability_score) as avg_rel,
+                AVG(efficiency_score) as avg_eff,
+                AVG(ux_score) as avg_ux,
+                COUNT(*) as count
+            FROM iso_evaluations
+            """
+        )
+        row = cursor.fetchone()
+        conn.close()
+        
+        if row and row["count"] > 0:
+            summary = {
+                "avg_functionality": round(row["avg_func"], 2),
+                "avg_usability": round(row["avg_usab"], 2),
+                "avg_reliability": round(row["avg_rel"], 2),
+                "avg_efficiency": round(row["avg_eff"], 2),
+                "avg_ux": round(row["avg_ux"], 2),
+                "count": row["count"]
+            }
+        else:
+            summary = {
+                "avg_functionality": 0.0,
+                "avg_usability": 0.0,
+                "avg_reliability": 0.0,
+                "avg_efficiency": 0.0,
+                "avg_ux": 0.0,
+                "count": 0
+            }
+            
+        return jsonify({
+            "status": "success",
+            "summary": summary
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f"Error in get_iso_evaluations_summary: {e}")
+        return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
+
+@app.route('/api/cohort-db-scores', methods=['GET'])
+def get_cohort_db_scores():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get all users starting with clinical_subject_
+        cursor.execute("SELECT id, username FROM users WHERE username LIKE 'clinical_subject_%' ORDER BY username ASC")
+        users = cursor.fetchall()
+        
+        pretest_scores = []
+        posttest_scores = []
+        
+        for u in users:
+            uid = u['id']
+            # Fetch all performance metrics for this user
+            cursor.execute(
+                """
+                SELECT pm.accuracy_rate 
+                FROM performance_metrics pm
+                JOIN game_sessions gs ON pm.session_id = gs.id
+                WHERE gs.user_id = ?
+                ORDER BY gs.start_time ASC, pm.id ASC
+                """,
+                (uid,)
+            )
+            rows = cursor.fetchall()
+            accuracies = [r['accuracy_rate'] for r in rows]
+            
+            if len(accuracies) >= 10:
+                # Pretest is average of first 5 rounds (Session 1)
+                pre_avg = sum(accuracies[:5]) / 5.0 * 100
+                # Posttest is average of last 5 rounds (Session 8)
+                post_avg = sum(accuracies[-5:]) / 5.0 * 100
+                
+                pretest_scores.append(round(pre_avg, 1))
+                posttest_scores.append(round(post_avg, 1))
+            elif len(accuracies) > 0:
+                # Fallback if less than 10
+                pretest_scores.append(round(accuracies[0] * 100, 1))
+                posttest_scores.append(round(accuracies[-1] * 100, 1))
+                
+        conn.close()
+        
+        return jsonify({
+            "status": "success",
+            "pretest_scores": pretest_scores,
+            "posttest_scores": posttest_scores,
+            "count": len(pretest_scores)
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f"Error in get_cohort_db_scores: {e}")
+        return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
+
+@app.route('/api/export-csv', methods=['GET'])
+def export_csv():
+    try:
+        from flask import Response
+        import csv
+        import io
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        query = """
+            SELECT 
+                pm.id AS metric_id,
+                pm.session_id,
+                gs.user_id,
+                u.username,
+                pm.cognitive_domain,
+                pm.game_type,
+                pm.reaction_time_ms,
+                pm.accuracy_rate,
+                pm.difficulty_level,
+                pm.error_count,
+                pm.hesitation_ms,
+                pm.spam_click_count,
+                pm.timestamp
+            FROM performance_metrics pm
+            JOIN game_sessions gs ON pm.session_id = gs.id
+            JOIN users u ON gs.user_id = u.id
+            ORDER BY pm.timestamp DESC, pm.id DESC
+        """
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        conn.close()
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Headers matching professor telemetry specifications
+        writer.writerow([
+            "Metric ID", "Session ID", "User ID", "Username", 
+            "Cognitive Domain", "Game Type", "Reaction Time (ms)", 
+            "Accuracy Rate", "Difficulty Level", "Error Count", 
+            "Hesitation (ms)", "Spam Click Count", "Timestamp"
+        ])
+        
+        for r in rows:
+            writer.writerow([
+                r["metric_id"], r["session_id"], r["user_id"], r["username"],
+                r["cognitive_domain"], r["game_type"], r["reaction_time_ms"],
+                r["accuracy_rate"], r["difficulty_level"], r["error_count"],
+                r["hesitation_ms"], r["spam_click_count"], r["timestamp"]
+            ])
+            
+        output.seek(0)
+        csv_data = output.getvalue()
+        
+        return Response(
+            csv_data,
+            mimetype="text/csv",
+            headers={"Content-disposition": "attachment; filename=cohort_telemetry_report.csv"}
+        )
+    except Exception as e:
+        app.logger.error(f"Error in export_csv: {e}")
+        return jsonify({"status": "error", "message": f"Export failed: {str(e)}"}), 500
+
 
 if __name__ == '__main__':
     if not os.path.exists(DB_PATH):
