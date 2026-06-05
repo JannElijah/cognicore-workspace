@@ -49,7 +49,9 @@ GAME_TO_DOMAIN = {
     "MatrixRecall": "spatial_visual_memory",
     "matrix_recall": "spatial_visual_memory",
     "StroopShift": "reflexes_and_focus",
-    "stroop_shift": "reflexes_and_focus"
+    "stroop_shift": "reflexes_and_focus",
+    "MentalFlex": "executive_strategy",
+    "mental_flex": "executive_strategy"
 }
 
 # Helper function to get database connection
@@ -86,6 +88,20 @@ def init_db():
             efficiency_score INTEGER NOT NULL,
             ux_score INTEGER NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
+    # Create archetype_history table if it doesn't exist
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS archetype_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            session_id INTEGER,
+            archetype_name TEXT NOT NULL,
+            confidence_score REAL NOT NULL,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (session_id) REFERENCES game_sessions(id)
         )
     """)
     
@@ -319,6 +335,45 @@ def calculate_dda_parameters(difficulty_level, game_type='SpeedTap'):
                 "distractor_flashes": True
             }
         }
+    elif game_type in ['MentalFlex', 'mental_flex']:
+        # Map levels to game-specific variables for the Mental Flex game
+        configs = {
+            1: {
+                "difficulty_level": 1,
+                "rule_shift_frequency": 5,      # Shift rule every 5 correct matches
+                "choices_count": 2,             # 2 cards to choose from
+                "time_limit": 4000,             # ms to make a decision
+                "rules_pool": ["color", "shape"] # Only two potential rules
+            },
+            2: {
+                "difficulty_level": 2,
+                "rule_shift_frequency": 4,
+                "choices_count": 3,
+                "time_limit": 3200,
+                "rules_pool": ["color", "shape"]
+            },
+            3: {
+                "difficulty_level": 3,
+                "rule_shift_frequency": 3,
+                "choices_count": 3,
+                "time_limit": 2500,
+                "rules_pool": ["color", "shape", "count"] # Introduces count rule
+            },
+            4: {
+                "difficulty_level": 4,
+                "rule_shift_frequency": 3,
+                "choices_count": 4,
+                "time_limit": 2000,
+                "rules_pool": ["color", "shape", "count"]
+            },
+            5: {
+                "difficulty_level": 5,
+                "rule_shift_frequency": 2,      # Shifting rules very frequently
+                "choices_count": 4,
+                "time_limit": 1500,             # Extremely fast reaction required
+                "rules_pool": ["color", "shape", "count"]
+            }
+        }
     else:
         # Map levels to game-specific variables for the Speed Tap game
         configs = {
@@ -547,6 +602,15 @@ def adjust_difficulty():
                 """,
                 (user_id, archetype, confidence)
             )
+            
+        # Log this archetype classification in archetype_history for longitudinal tracking
+        cursor.execute(
+            """
+            INSERT INTO archetype_history (user_id, session_id, archetype_name, confidence_score) 
+            VALUES (?, ?, ?, ?)
+            """,
+            (user_id, session_id, archetype, confidence)
+        )
             
         conn.commit()
         conn.close()
@@ -949,6 +1013,203 @@ def export_csv():
     except Exception as e:
         app.logger.error(f"Error in export_csv: {e}")
         return jsonify({"status": "error", "message": f"Export failed: {str(e)}"}), 500
+
+@app.route('/api/user-session-history/<username>', methods=['GET'])
+def get_user_session_history(username):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get user
+        cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+        user = cursor.fetchone()
+        if not user:
+            conn.close()
+            return jsonify({"status": "success", "sessions": []}), 200
+        user_id = user['id']
+        
+        # Fetch sessions
+        cursor.execute(
+            """
+            SELECT id, game_type, start_time 
+            FROM game_sessions 
+            WHERE user_id = ? 
+            ORDER BY start_time DESC
+            """,
+            (user_id,)
+        )
+        sessions_rows = cursor.fetchall()
+        
+        sessions = []
+        for s in sessions_rows:
+            sid = s['id']
+            # Get summary stats for this session
+            cursor.execute(
+                """
+                SELECT 
+                    AVG(reaction_time_ms) as avg_rt,
+                    AVG(accuracy_rate) as avg_acc,
+                    MAX(difficulty_level) as max_diff,
+                    COUNT(*) as count
+                FROM performance_metrics
+                WHERE session_id = ?
+                """,
+                (sid,)
+            )
+            stats = cursor.fetchone()
+            
+            sessions.append({
+                "session_id": sid,
+                "game_type": s["game_type"],
+                "start_time": s["start_time"],
+                "avg_rt": round(stats["avg_rt"], 2) if stats["avg_rt"] is not None else 0.0,
+                "avg_acc": round(stats["avg_acc"], 4) if stats["avg_acc"] is not None else 0.0,
+                "max_diff": stats["max_diff"] if stats["max_diff"] is not None else 1,
+                "rounds_count": stats["count"]
+            })
+            
+        conn.close()
+        return jsonify({"status": "success", "sessions": sessions}), 200
+        
+    except Exception as e:
+        app.logger.error(f"Error in get_user_session_history: {e}")
+        return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
+
+@app.route('/api/session-metrics/<int:session_id>', methods=['GET'])
+def get_session_metrics(session_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute(
+            """
+            SELECT id, reaction_time_ms, accuracy_rate, difficulty_level, timestamp
+            FROM performance_metrics
+            WHERE session_id = ?
+            ORDER BY id ASC
+            """,
+            (session_id,)
+        )
+        rows = cursor.fetchall()
+        conn.close()
+        
+        metrics = []
+        for r in rows:
+            metrics.append({
+                "metric_id": r["id"],
+                "reaction_time_ms": r["reaction_time_ms"],
+                "accuracy_rate": r["accuracy_rate"],
+                "difficulty_level": r["difficulty_level"],
+                "timestamp": r["timestamp"]
+            })
+            
+        return jsonify({"status": "success", "session_id": session_id, "metrics": metrics}), 200
+        
+    except Exception as e:
+        app.logger.error(f"Error in get_session_metrics: {e}")
+        return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
+
+@app.route('/api/cohort-comparison/<username>', methods=['GET'])
+def get_cohort_comparison(username):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get active user averages
+        cursor.execute(
+            """
+            SELECT 
+                AVG(pm.reaction_time_ms) as avg_rt,
+                AVG(pm.accuracy_rate) as avg_acc
+            FROM performance_metrics pm
+            JOIN game_sessions gs ON pm.session_id = gs.id
+            JOIN users u ON gs.user_id = u.id
+            WHERE u.username = ?
+            """,
+            (username,)
+        )
+        user_stats = cursor.fetchone()
+        user_rt = round(user_stats["avg_rt"], 2) if user_stats and user_stats["avg_rt"] is not None else 0.0
+        user_acc = round(user_stats["avg_acc"], 4) if user_stats and user_stats["avg_acc"] is not None else 0.0
+        
+        # Get clinical cohort averages (seeded clinical_subject_%)
+        cursor.execute(
+            """
+            SELECT 
+                AVG(pm.reaction_time_ms) as avg_rt,
+                AVG(pm.accuracy_rate) as avg_acc
+            FROM performance_metrics pm
+            JOIN game_sessions gs ON pm.session_id = gs.id
+            JOIN users u ON gs.user_id = u.id
+            WHERE u.username LIKE 'clinical_subject_%'
+            """
+        )
+        cohort_stats = cursor.fetchone()
+        cohort_rt = round(cohort_stats["avg_rt"], 2) if cohort_stats and cohort_stats["avg_rt"] is not None else 0.0
+        cohort_acc = round(cohort_stats["avg_acc"], 4) if cohort_stats and cohort_stats["avg_acc"] is not None else 0.0
+        
+        conn.close()
+        return jsonify({
+            "status": "success",
+            "username": username,
+            "user_averages": {
+                "reaction_time_ms": user_rt,
+                "accuracy_rate": user_acc
+            },
+            "cohort_averages": {
+                "reaction_time_ms": cohort_rt,
+                "accuracy_rate": cohort_acc
+            }
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f"Error in get_cohort_comparison: {e}")
+        return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
+
+@app.route('/api/archetype-progression/<username>', methods=['GET'])
+def get_archetype_progression(username):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get user
+        cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+        user = cursor.fetchone()
+        if not user:
+            conn.close()
+            return jsonify({"status": "success", "history": []}), 200
+        user_id = user['id']
+        
+        # Fetch progression history joined with game_sessions to know what game they played
+        cursor.execute(
+            """
+            SELECT ah.id, ah.session_id, gs.game_type, ah.archetype_name, ah.confidence_score, ah.timestamp
+            FROM archetype_history ah
+            LEFT JOIN game_sessions gs ON ah.session_id = gs.id
+            WHERE ah.user_id = ?
+            ORDER BY ah.timestamp ASC, ah.id ASC
+            """,
+            (user_id,)
+        )
+        rows = cursor.fetchall()
+        conn.close()
+        
+        history = []
+        for r in rows:
+            history.append({
+                "id": r["id"],
+                "session_id": r["session_id"],
+                "game_type": r["game_type"] or "Unknown",
+                "archetype_name": r["archetype_name"],
+                "confidence_score": r["confidence_score"],
+                "timestamp": r["timestamp"]
+            })
+            
+        return jsonify({"status": "success", "history": history}), 200
+        
+    except Exception as e:
+        app.logger.error(f"Error in get_archetype_progression: {e}")
+        return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
 
 
 if __name__ == '__main__':

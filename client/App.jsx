@@ -6,9 +6,13 @@ import {
   LineElement,
   Filler,
   Tooltip,
-  Legend
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title
 } from 'chart.js';
-import { Radar } from 'react-chartjs-2';
+import { Radar, Line, Bar } from 'react-chartjs-2';
 
 import SpeedTapGame from './components/SpeedTapGame';
 import MemoryMatchGame from './components/MemoryMatchGame';
@@ -17,6 +21,7 @@ import LogicLinkGame from './components/LogicLinkGame';
 import MazeEscapeGame from './components/MazeEscapeGame';
 import MatrixRecallGame from './components/MatrixRecallGame';
 import StroopShiftGame from './components/StroopShiftGame';
+import MentalFlexGame from './components/MentalFlexGame';
 
 // Register Chart.js modules
 ChartJS.register(
@@ -25,7 +30,11 @@ ChartJS.register(
   LineElement,
   Filler,
   Tooltip,
-  Legend
+  Legend,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title
 );
 
 export default function App() {
@@ -68,6 +77,64 @@ export default function App() {
     executive_strategy: 60
   });
 
+  // Dashboard Visualizations (Option 2)
+  const [activeDashboardUser, setActiveDashboardUser] = useState('player_one');
+  const [sessionHistory, setSessionHistory] = useState([]);
+  const [latestSessionMetrics, setLatestSessionMetrics] = useState([]);
+  const [cohortComparison, setCohortComparison] = useState(null);
+  const [archetypeHistory, setArchetypeHistory] = useState([]);
+  const [chartsLoading, setChartsLoading] = useState(false);
+  const [chartsError, setChartsError] = useState(null);
+
+  const fetchDashboardData = async (username) => {
+    setChartsLoading(true);
+    setChartsError(null);
+    try {
+      // 1. Fetch user session history
+      const historyRes = await fetch(`http://127.0.0.1:5000/api/user-session-history/${username}`);
+      if (!historyRes.ok) throw new Error('Failed to load session history.');
+      const historyData = await historyRes.json();
+      const sessions = historyData.sessions || [];
+      setSessionHistory(sessions);
+
+      // 2. Fetch latest session metrics if a session exists
+      if (sessions.length > 0) {
+        const latestSid = sessions[0].session_id;
+        const metricsRes = await fetch(`http://127.0.0.1:5000/api/session-metrics/${latestSid}`);
+        if (!metricsRes.ok) throw new Error('Failed to load latest session metrics.');
+        const metricsData = await metricsRes.json();
+        setLatestSessionMetrics(metricsData.metrics || []);
+      } else {
+        setLatestSessionMetrics([]);
+      }
+
+      // 3. Fetch cohort comparison
+      const compRes = await fetch(`http://127.0.0.1:5000/api/cohort-comparison/${username}`);
+      if (!compRes.ok) throw new Error('Failed to load cohort comparison.');
+      const compData = await compRes.json();
+      setCohortComparison(compData);
+
+      // 4. Fetch archetype history progression (Option 3)
+      const progressionRes = await fetch(`http://127.0.0.1:5000/api/archetype-progression/${username}`);
+      if (!progressionRes.ok) throw new Error('Failed to load archetype progression.');
+      const progressionData = await progressionRes.json();
+      setArchetypeHistory(progressionData.history || []);
+
+    } catch (err) {
+      console.error('[Dashboard Charts] Data fetch failed:', err);
+      setChartsError(err.message);
+    } finally {
+      setChartsLoading(false);
+    }
+  };
+
+  // Fetch charts data when dashboard is opened or when new game is finished (updates stats) or activeUser changes
+  useEffect(() => {
+    if (showDashboard && activeDashboardUser) {
+      fetchDashboardData(activeDashboardUser);
+    }
+  }, [showDashboard, activeDashboardUser, lastGameStats]);
+
   // Update dynamic skills based on player game telemetry
   useEffect(() => {
     if (lastGameStats) {
@@ -88,7 +155,7 @@ export default function App() {
           ...prev,
           reflexes_and_focus: Math.max(calculatedScore, prev.reflexes_and_focus)
         }));
-      } else if (lastGameStats.gameType === 'MazeEscape') {
+      } else if (lastGameStats.gameType === 'MazeEscape' || lastGameStats.gameType === 'MentalFlex') {
         setSkills(prev => ({
           ...prev,
           executive_strategy: Math.max(calculatedScore, prev.executive_strategy)
@@ -357,6 +424,160 @@ export default function App() {
     }
   };
 
+  const lineChartData = {
+    labels: latestSessionMetrics.map((_, index) => `R${index + 1}`),
+    datasets: [
+      {
+        label: 'Difficulty Level',
+        data: latestSessionMetrics.map(m => m.difficulty_level),
+        borderColor: '#a855f7',
+        backgroundColor: 'rgba(168, 85, 247, 0.15)',
+        borderWidth: 3,
+        yAxisID: 'yDiff',
+        tension: 0.15,
+        pointBackgroundColor: '#a855f7',
+        pointRadius: 4
+      },
+      {
+        label: 'Reaction Time (ms)',
+        data: latestSessionMetrics.map(m => m.reaction_time_ms),
+        borderColor: '#38bdf8',
+        backgroundColor: 'rgba(56, 189, 248, 0.05)',
+        borderWidth: 2,
+        yAxisID: 'yRt',
+        tension: 0.2,
+        pointBackgroundColor: '#38bdf8',
+        pointRadius: 3,
+        borderDash: [5, 5]
+      }
+    ]
+  };
+
+  const lineChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: { color: '#e2e8f0', boxWidth: 10, font: { size: 10 } }
+      }
+    },
+    scales: {
+      x: {
+        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+        ticks: { color: '#94a3b8', font: { size: 9 } }
+      },
+      yDiff: {
+        type: 'linear',
+        display: true,
+        position: 'left',
+        min: 1,
+        max: 5,
+        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+        ticks: { 
+          color: '#c084fc',
+          stepSize: 1,
+          font: { size: 9 }
+        },
+        title: {
+          display: true,
+          text: 'Level',
+          color: '#c084fc',
+          font: { size: 10, weight: 'bold' }
+        }
+      },
+      yRt: {
+        type: 'linear',
+        display: true,
+        position: 'right',
+        min: 0,
+        grid: { drawOnChartArea: false },
+        ticks: { color: '#38bdf8', font: { size: 9 } },
+        title: {
+          display: true,
+          text: 'RT (ms)',
+          color: '#38bdf8',
+          font: { size: 10, weight: 'bold' }
+        }
+      }
+    }
+  };
+
+  const userRt = cohortComparison?.user_averages?.reaction_time_ms || 0;
+  const userAcc = (cohortComparison?.user_averages?.accuracy_rate || 0) * 100;
+  const cohortRt = cohortComparison?.cohort_averages?.reaction_time_ms || 0;
+  const cohortAcc = (cohortComparison?.cohort_averages?.accuracy_rate || 0) * 100;
+
+  const barChartData = {
+    labels: ['Active User', 'Cohort Avg'],
+    datasets: [
+      {
+        label: 'RT (ms)',
+        data: [userRt, cohortRt],
+        backgroundColor: 'rgba(56, 189, 248, 0.75)',
+        borderColor: '#38bdf8',
+        borderWidth: 1.5,
+        yAxisID: 'yRt',
+        borderRadius: 4
+      },
+      {
+        label: 'Accuracy (%)',
+        data: [userAcc, cohortAcc],
+        backgroundColor: 'rgba(34, 197, 94, 0.75)',
+        borderColor: '#22c55e',
+        borderWidth: 1.5,
+        yAxisID: 'yAcc',
+        borderRadius: 4
+      }
+    ]
+  };
+
+  const barChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: { color: '#e2e8f0', boxWidth: 10, font: { size: 10 } }
+      }
+    },
+    scales: {
+      x: {
+        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+        ticks: { color: '#94a3b8', font: { size: 10 } }
+      },
+      yRt: {
+        type: 'linear',
+        display: true,
+        position: 'left',
+        min: 0,
+        grid: { color: 'rgba(255, 255, 255, 0.05)' },
+        ticks: { color: '#38bdf8', font: { size: 9 } },
+        title: {
+          display: true,
+          text: 'RT (ms)',
+          color: '#38bdf8',
+          font: { size: 10, weight: 'bold' }
+        }
+      },
+      yAcc: {
+        type: 'linear',
+        display: true,
+        position: 'right',
+        min: 0,
+        max: 100,
+        grid: { drawOnChartArea: false },
+        ticks: { color: '#22c55e', font: { size: 9 } },
+        title: {
+          display: true,
+          text: 'Accuracy (%)',
+          color: '#22c55e',
+          font: { size: 10, weight: 'bold' }
+        }
+      }
+    }
+  };
+
   return (
     <div className="portal-container">
       {/* Top Header */}
@@ -491,6 +712,15 @@ export default function App() {
             </button>
             <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
               <StroopShiftGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />
+            </div>
+          </div>
+        ) : activeGame === 'MentalFlex' ? (
+          <div className="game-screen-wrapper">
+            <button className="back-btn" onClick={handleBackToLobby}>
+              ← Back to Training Hub
+            </button>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
+              <MentalFlexGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />
             </div>
           </div>
         ) : portalView === 'researcher' ? (
@@ -980,9 +1210,52 @@ export default function App() {
           // PARTICIPANT ANALYTICS DASHBOARD
           // ==========================================
           <div className="dashboard-content" style={{ animation: 'fadeIn 0.4s ease-out' }}>
-            <div className="intro-card" style={{ padding: '2rem', marginBottom: '2rem' }}>
-              <h1 style={{ fontSize: '2.25rem' }}>Cognitive Performance Analytics</h1>
-              <p>Real-time analytics collected across validated cognitive tracks. Evaluate skill scores, track multi-session trends, and view personalized reports.</p>
+            <div className="intro-card" style={{ padding: '2rem', marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', alignItems: 'stretch' }}>
+              <div>
+                <h1 style={{ fontSize: '2.25rem', margin: 0 }}>Cognitive Performance Analytics</h1>
+                <p style={{ margin: '0.5rem 0 0 0' }}>Real-time analytics collected across validated cognitive tracks. Evaluate skill scores, track multi-session trends, and view personalized reports.</p>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1rem', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '0.75rem 1.25rem', borderRadius: '10px', width: 'fit-content', marginTop: '0.25rem' }}>
+                <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 'bold' }}>👤 Participant Selector:</span>
+                <input 
+                  type="text" 
+                  value={activeDashboardUser} 
+                  onChange={(e) => setActiveDashboardUser(e.target.value)} 
+                  placeholder="e.g. player_one" 
+                  style={{
+                    background: '#09090b',
+                    border: '1.5px solid #4c1d95',
+                    borderRadius: '6px',
+                    color: '#ffffff',
+                    padding: '0.4rem 0.75rem',
+                    fontSize: '0.875rem',
+                    outline: 'none',
+                    width: '180px',
+                    transition: 'border-color 0.2s'
+                  }}
+                />
+                <button
+                  onClick={() => fetchDashboardData(activeDashboardUser)}
+                  disabled={chartsLoading}
+                  style={{
+                    background: 'linear-gradient(to right, #a855f7, #38bdf8)',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '0.45rem 1.25rem',
+                    fontSize: '0.875rem',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    opacity: chartsLoading ? 0.6 : 1,
+                    transition: 'all 0.2s',
+                    boxShadow: '0 4px 10px rgba(168, 85, 247, 0.2)'
+                  }}
+                  onMouseOver={(e) => e.target.style.filter = 'brightness(1.1)'}
+                  onMouseOut={(e) => e.target.style.filter = 'brightness(1.0)'}
+                >
+                  {chartsLoading ? 'Loading...' : '🔄 Load Metrics'}
+                </button>
+              </div>
             </div>
 
             {/* Cognitive Skills Score Row */}
@@ -1013,44 +1286,41 @@ export default function App() {
             {/* Middle Row: Trend Vector SVG + Radar Chart */}
             <div className="dashboard-row-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
               
-              {/* Trend Vector SVG */}
+              {/* Difficulty Adaptation Plot */}
               <div className="game-card" style={{ width: '100%', alignItems: 'stretch', boxSizing: 'border-box' }}>
-                <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>📈 Multi-Session Progress Trend</h3>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>📈 Difficulty Adaptation History</h3>
                 <div style={{ position: 'relative', height: '240px', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px', padding: '10px' }}>
-                  <svg viewBox="0 0 500 150" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
-                    <defs>
-                      <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#a855f7" stopOpacity="0.4"/>
-                        <stop offset="100%" stopColor="#a855f7" stopOpacity="0"/>
-                      </linearGradient>
-                    </defs>
-                    <line x1="0" y1="30" x2="500" y2="30" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-                    <line x1="0" y1="75" x2="500" y2="75" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-                    <line x1="0" y1="120" x2="500" y2="120" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-                    
-                    <path d="M 10 120 L 90 95 L 170 110 L 250 80 L 330 65 L 410 75 L 490 35 L 490 120 Z" fill="url(#chartGrad)" />
-                    <path 
-                      d="M 10 120 L 90 95 L 170 110 L 250 80 L 330 65 L 410 75 L 490 35" 
-                      fill="none" 
-                      stroke="#a855f7" 
-                      strokeWidth="3.5" 
-                      filter="drop-shadow(0px 0px 5px rgba(168, 85, 247, 0.8))"
-                    />
-                    
-                    <circle cx="10" cy="120" r="4" fill="#ffffff" stroke="#a855f7" strokeWidth="2"/>
-                    <circle cx="90" cy="95" r="4" fill="#ffffff" stroke="#a855f7" strokeWidth="2"/>
-                    <circle cx="170" cy="110" r="4" fill="#ffffff" stroke="#a855f7" strokeWidth="2"/>
-                    <circle cx="250" cy="80" r="4" fill="#ffffff" stroke="#a855f7" strokeWidth="2"/>
-                    <circle cx="330" cy="65" r="4" fill="#ffffff" stroke="#a855f7" strokeWidth="2"/>
-                    <circle cx="410" cy="75" r="4" fill="#ffffff" stroke="#a855f7" strokeWidth="2"/>
-                    <circle cx="490" cy="35" r="5" fill="#ffffff" stroke="#38bdf8" strokeWidth="2.5" filter="drop-shadow(0px 0px 5px #38bdf8)"/>
-                  </svg>
+                  {chartsLoading ? (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8' }}>
+                      Loading line metrics...
+                    </div>
+                  ) : latestSessionMetrics.length === 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#64748b', fontSize: '0.85rem', textAlign: 'center' }}>
+                      <span>No play metrics found in current session.</span>
+                      <span style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: '#4b5563' }}>Launch and play a game to stream DDA data.</span>
+                    </div>
+                  ) : (
+                    <Line data={lineChartData} options={lineChartOptions} />
+                  )}
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b', marginTop: '0.75rem' }}>
-                  <span>Session 1</span>
-                  <span>Session 3</span>
-                  <span>Session 5</span>
-                  <span>Latest (DDA Active)</span>
+              </div>
+
+              {/* Cohort Comparison Plot */}
+              <div className="game-card" style={{ width: '100%', alignItems: 'stretch', boxSizing: 'border-box' }}>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>📊 Cohort Comparison (vs Clinical)</h3>
+                <div style={{ position: 'relative', height: '240px', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px', padding: '10px' }}>
+                  {chartsLoading ? (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8' }}>
+                      Loading comparison data...
+                    </div>
+                  ) : !cohortComparison || (cohortComparison.user_averages.reaction_time_ms === 0 && cohortComparison.user_averages.accuracy_rate === 0) ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#64748b', fontSize: '0.85rem', textAlign: 'center' }}>
+                      <span>No user averages computed yet.</span>
+                      <span style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: '#4b5563' }}>Complete sessions to compare vs clinical database.</span>
+                    </div>
+                  ) : (
+                    <Bar data={barChartData} options={barChartOptions} />
+                  )}
                 </div>
               </div>
 
@@ -1161,6 +1431,109 @@ export default function App() {
                   </p>
                 </div>
               </div>
+
+              {/* Archetype Progression Timeline Card (Option 3) */}
+              <div className="game-card" style={{ display: 'flex', flexDirection: 'column', boxSizing: 'border-box', minHeight: '320px', justifyContent: 'flex-start' }}>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>⏱️ Archetype Progression Timeline</h3>
+                
+                {chartsLoading ? (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8' }}>
+                    Loading progression timeline...
+                  </div>
+                ) : archetypeHistory.length === 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#64748b', fontSize: '0.85rem', textAlign: 'center', padding: '1rem', flex: 1 }}>
+                    <span>No historical progression logs recorded.</span>
+                    <span style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: '#4b5563' }}>Complete adaptive training sessions to trace profile progression.</span>
+                  </div>
+                ) : (
+                  <div style={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: '1.25rem', 
+                    maxHeight: '260px', 
+                    overflowY: 'auto', 
+                    paddingRight: '0.5rem',
+                    textAlign: 'left',
+                    flex: 1
+                  }}>
+                    {archetypeHistory.map((item, idx) => {
+                      // Color mapping for archetypes
+                      let badgeColor = 'rgba(168, 85, 247, 0.15)'; // purple
+                      let textColor = '#c084fc';
+                      let borderColor = 'rgba(168, 85, 247, 0.3)';
+
+                      if (item.archetype_name === 'Advanced') {
+                        badgeColor = 'rgba(34, 197, 94, 0.15)'; // green
+                        textColor = '#4ade80';
+                        borderColor = 'rgba(34, 197, 94, 0.3)';
+                      } else if (item.archetype_name === 'Beginner') {
+                        badgeColor = 'rgba(239, 68, 68, 0.15)'; // red
+                        textColor = '#f87171';
+                        borderColor = 'rgba(239, 68, 68, 0.3)';
+                      } else if (item.archetype_name === 'Standard') {
+                        badgeColor = 'rgba(56, 189, 248, 0.15)'; // blue
+                        textColor = '#38bdf8';
+                        borderColor = 'rgba(56, 189, 248, 0.3)';
+                      }
+
+                      return (
+                        <div key={item.id} style={{ display: 'flex', gap: '0.75rem', position: 'relative' }}>
+                          {/* Timeline vertical connector line */}
+                          {idx < archetypeHistory.length - 1 && (
+                            <div style={{
+                              position: 'absolute',
+                              left: '9px',
+                              top: '20px',
+                              bottom: '-25px',
+                              width: '2px',
+                              background: 'rgba(255, 255, 255, 0.08)'
+                            }} />
+                          )}
+
+                          {/* Dot indicator */}
+                          <div style={{
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            background: textColor,
+                            marginTop: '6px',
+                            boxShadow: `0 0 8px ${textColor}`,
+                            flexShrink: 0,
+                            marginLeft: '5px'
+                          }} />
+
+                          {/* Content block */}
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                              <span style={{ 
+                                display: 'inline-block',
+                                padding: '0.15rem 0.5rem',
+                                borderRadius: '4px',
+                                background: badgeColor,
+                                border: `1.5px solid ${borderColor}`,
+                                color: textColor,
+                                fontSize: '0.725rem',
+                                fontWeight: 'bold'
+                              }}>
+                                {item.archetype_name}
+                              </span>
+                              <span style={{ fontSize: '0.675rem', color: '#64748b' }}>
+                                {item.timestamp ? item.timestamp.split(' ')[0] : ''}
+                              </span>
+                            </div>
+                            <div style={{ fontSize: '0.8rem', color: '#e2e8f0', marginTop: '0.25rem' }}>
+                              Played <strong style={{ color: '#ffffff' }}>{item.game_type}</strong> (Session {item.session_id})
+                            </div>
+                            <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+                              Model Confidence: {Math.round(item.confidence_score * 100)}%
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ) : (
@@ -1238,13 +1611,13 @@ export default function App() {
                 <button className="play-btn">Launch Module</button>
               </div>
 
-              {/* Mental Flex Locked Card */}
-              <div className="game-card disabled">
-                <div className="card-badge">Locked</div>
+              {/* Mental Flex Active Card */}
+              <div className="game-card active" onClick={() => setActiveGame('MentalFlex')}>
+                <div className="card-badge">Flexibility</div>
                 <div className="card-icon">🌀</div>
                 <h3>Mental Flex</h3>
                 <p>Designed to train cognitive flexibility, set-shifting, and executive control.</p>
-                <span className="lock-label">Development Sprint 5</span>
+                <button className="play-btn">Launch Module</button>
               </div>
             </div>
           </div>

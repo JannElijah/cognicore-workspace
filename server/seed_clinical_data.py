@@ -41,6 +41,7 @@ def seed_clinical_data():
     if user_ids:
         placeholders = ",".join(str(uid) for uid in user_ids)
         cursor.execute(f"DELETE FROM cognitive_profiles WHERE user_id IN ({placeholders})")
+        cursor.execute(f"DELETE FROM archetype_history WHERE user_id IN ({placeholders})")
         
         cursor.execute(f"SELECT id FROM game_sessions WHERE user_id IN ({placeholders})")
         session_rows = cursor.fetchall()
@@ -124,6 +125,25 @@ def seed_clinical_data():
                     """,
                     (session_id, reaction_time_ms, accuracy_rate, difficulty_level, round_time.strftime("%Y-%m-%d %H:%M:%S"), domain, game_type, error_count, hesitation_ms, spam_click_count)
                 )
+
+            # Seed archetype history progression for this session based on performance phase
+            if phase == "early":
+                session_archetype = "Beginner"
+                session_conf = round(random.uniform(0.80, 0.98), 2)
+            elif phase == "mid":
+                session_archetype = "Intermediate" if random.random() > 0.4 else "Standard"
+                session_conf = round(random.uniform(0.65, 0.85), 2)
+            else: # "late"
+                session_archetype = "Advanced" if random.random() > 0.3 else "Intermediate"
+                session_conf = round(random.uniform(0.80, 0.95), 2)
+
+            cursor.execute(
+                """
+                INSERT INTO archetype_history (user_id, session_id, archetype_name, confidence_score, timestamp) 
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (user_id, session_id, session_archetype, session_conf, session_time.strftime("%Y-%m-%d %H:%M:%S"))
+            )
 
         # After data seeding, calculate user cognitive profile to show classifier execution
         # Let's seed a profile for this subject reflecting their late-stage advanced/intermediate capabilities
