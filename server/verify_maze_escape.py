@@ -1,14 +1,16 @@
 import requests
 import json
 import sys
+import uuid
 
 API_URL = "http://127.0.0.1:5000"
 
 def run_maze_escape_tests():
     print("=== Step 1: Starting Maze Escape Session Handshake ===")
     
+    unique_user = f"maze_test_user_{uuid.uuid4().hex[:8]}"
     payload_start = {
-        "username": "maze_test_user",
+        "username": unique_user,
         "game_type": "MazeEscape"
     }
     
@@ -45,6 +47,9 @@ def run_maze_escape_tests():
             "accuracy": 1.0,          # escaped successfully
             "difficulty": 1
         }
+        if i == 0:
+            payload_metric["path_efficiency"] = 0.85
+            
         metric_res = requests.post(f"{API_URL}/api/submit-metrics", json=payload_metric)
         assert metric_res.status_code == 201
         print(f"  Metric {i+1} submitted successfully.")
@@ -98,6 +103,16 @@ def run_maze_escape_tests():
     assert adapted_params2["max_moves"] == 20
     assert abs(adapted_params2["blocked_ratio"] - 0.1) < 0.001
     print("Downward difficulty adaptation assertion PASSED.")
+    
+    print("\n=== Step 6: Verifying path_efficiency is recorded correctly ===")
+    metrics_res = requests.get(f"{API_URL}/api/session-metrics/{session_id}")
+    assert metrics_res.status_code == 200
+    metrics_data = metrics_res.json()["metrics"]
+    
+    # The first submitted metric should have path_efficiency = 0.85
+    first_metric = metrics_data[0]
+    assert first_metric["path_efficiency"] == 0.85
+    print(f"Asserted path_efficiency is returned correctly: {first_metric['path_efficiency']}")
     
     print("\n=== SUCCESS: All automated Maze Escape backend tests passed! ===")
 

@@ -1,14 +1,16 @@
 import requests
 import json
 import sys
+import uuid
 
 API_URL = "http://127.0.0.1:5000"
 
 def run_matrix_recall_tests():
     print("=== Step 1: Starting Matrix Recall Session Handshake ===")
     
+    unique_user = f"matrix_test_user_{uuid.uuid4().hex[:8]}"
     payload_start = {
-        "username": "matrix_test_user",
+        "username": unique_user,
         "game_type": "MatrixRecall"
     }
     

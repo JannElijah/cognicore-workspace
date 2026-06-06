@@ -73,6 +73,20 @@ def init_db():
     cursor.execute("PRAGMA table_info(performance_metrics)")
     columns = [row['name'] for row in cursor.fetchall()]
     
+    # Programmatic column migrations:
+    # 1. Rename reaction_time_ms to reaction_time if it exists and reaction_time does not
+    if "reaction_time_ms" in columns and "reaction_time" not in columns:
+        cursor.execute("ALTER TABLE performance_metrics RENAME COLUMN reaction_time_ms TO reaction_time")
+        print("[DB Migration] Renamed reaction_time_ms to reaction_time")
+    # 2. Rename timestamp to recorded_at if it exists and recorded_at does not
+    if "timestamp" in columns and "recorded_at" not in columns:
+        cursor.execute("ALTER TABLE performance_metrics RENAME COLUMN timestamp TO recorded_at")
+        print("[DB Migration] Renamed timestamp to recorded_at")
+        
+    # Re-fetch table info after potential renaming
+    cursor.execute("PRAGMA table_info(performance_metrics)")
+    columns = [row['name'] for row in cursor.fetchall()]
+
     if "cognitive_domain" not in columns:
         cursor.execute("ALTER TABLE performance_metrics ADD COLUMN cognitive_domain TEXT")
     if "game_type" not in columns:
@@ -83,6 +97,10 @@ def init_db():
         cursor.execute("ALTER TABLE performance_metrics ADD COLUMN hesitation_ms REAL")
     if "spam_click_count" not in columns:
         cursor.execute("ALTER TABLE performance_metrics ADD COLUMN spam_click_count INTEGER")
+    if "rule_shift_latency_ms" not in columns:
+        cursor.execute("ALTER TABLE performance_metrics ADD COLUMN rule_shift_latency_ms REAL")
+    if "path_efficiency" not in columns:
+        cursor.execute("ALTER TABLE performance_metrics ADD COLUMN path_efficiency REAL")
     
     # Create iso_evaluations table if it doesn't exist
     cursor.execute("""
@@ -595,7 +613,7 @@ def start_session():
             FROM performance_metrics pm
             JOIN game_sessions gs ON pm.session_id = gs.id
             WHERE gs.user_id = ? AND (pm.cognitive_domain = ? OR gs.game_type IN ({placeholders}))
-            ORDER BY pm.timestamp DESC, pm.id DESC LIMIT 1
+            ORDER BY pm.recorded_at DESC, pm.id DESC LIMIT 1
         """
         cursor.execute(query, [user_id, domain] + domain_games)
         row = cursor.fetchone()
@@ -647,15 +665,23 @@ def adjust_difficulty():
         
         domain = GAME_TO_DOMAIN.get(game_type, "reflexes_and_focus")
 
-        # Fetch the last 5 performance metrics for this session and specific cognitive domain
+        # Determine sliding window size k based on game type (Option C Volatility Windows)
+        if game_type in ("SpeedTap", "StroopShift", "speed_tap", "stroop_shift"):
+            k = 10
+        elif game_type in ("MazeEscape", "RouteOptimizer", "maze_escape", "route_optimizer"):
+            k = 3
+        else:
+            k = 5
+
+        # Fetch the last k performance metrics for this session and specific cognitive domain
         cursor.execute(
             """
-            SELECT reaction_time_ms, accuracy_rate, difficulty_level 
+            SELECT reaction_time, accuracy_rate, difficulty_level 
             FROM performance_metrics 
             WHERE session_id = ? AND (cognitive_domain = ? OR game_type = ?)
-            ORDER BY timestamp DESC, id DESC LIMIT 5
+            ORDER BY recorded_at DESC, id DESC LIMIT ?
             """,
-            (session_id, domain, game_type)
+            (session_id, domain, game_type, k)
         )
         metrics = cursor.fetchall()
         
@@ -663,12 +689,12 @@ def adjust_difficulty():
         if not metrics:
             cursor.execute(
                 """
-                SELECT reaction_time_ms, accuracy_rate, difficulty_level 
+                SELECT reaction_time, accuracy_rate, difficulty_level 
                 FROM performance_metrics 
                 WHERE session_id = ? 
-                ORDER BY timestamp DESC, id DESC LIMIT 5
+                ORDER BY recorded_at DESC, id DESC LIMIT ?
                 """,
-                (session_id,)
+                (session_id, k)
             )
             metrics = cursor.fetchall()
         
@@ -681,7 +707,7 @@ def adjust_difficulty():
             }), 200
             
         # Calculate averages
-        avg_rt = sum(m['reaction_time_ms'] for m in metrics) / len(metrics)
+        avg_rt = sum(m['reaction_time'] for m in metrics) / len(metrics)
         avg_accuracy = sum(m['accuracy_rate'] for m in metrics) / len(metrics)
         current_difficulty = metrics[0]['difficulty_level']
         
@@ -776,6 +802,9 @@ def submit_metrics():
         hesitation_ms = data.get('hesitation_ms', 0.0)
         spam_click_count = data.get('spam_click_count', 0)
         
+        rule_shift_latency_ms = data.get('rule_shift_latency_ms')
+        path_efficiency = data.get('path_efficiency')
+        
         if session_id is None or reaction_time is None or accuracy is None or difficulty is None:
             return jsonify({"status": "error", "message": "Missing required fields"}), 400
 
@@ -799,10 +828,10 @@ def submit_metrics():
         cursor.execute(
             """
             INSERT INTO performance_metrics 
-            (session_id, reaction_time_ms, accuracy_rate, difficulty_level, cognitive_domain, game_type, error_count, hesitation_ms, spam_click_count) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            (session_id, reaction_time, accuracy_rate, difficulty_level, cognitive_domain, game_type, error_count, hesitation_ms, spam_click_count, rule_shift_latency_ms, path_efficiency) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (session_id, reaction_time, accuracy, difficulty, cognitive_domain, game_type, error_count, hesitation_ms, spam_click_count)
+            (session_id, reaction_time, accuracy, difficulty, cognitive_domain, game_type, error_count, hesitation_ms, spam_click_count, rule_shift_latency_ms, path_efficiency)
         )
         conn.commit()
         conn.close()
@@ -854,6 +883,7 @@ def evaluate_thesis():
         overall_improvement_rate = ((mean_post - mean_pre) / mean_pre * 100) if mean_pre != 0 else 0.0
         
         # Compute Paired t-test t-statistic and p-value
+        import math
         if SCIPY_AVAILABLE:
             t_stat, p_val = stats.ttest_rel(posttest, pretest)
         else:
@@ -868,11 +898,38 @@ def evaluate_thesis():
             p_val = 0.01 if abs(t_stat) > 2.0 else 0.45
             
         # Handle nan/inf cases in float formatting
-        import math
         if math.isnan(t_stat) or math.isinf(t_stat):
             t_stat = 0.0
         if math.isnan(p_val) or math.isinf(p_val):
             p_val = 1.0
+
+        # Calculate Cohen's d effect size for paired samples
+        mean_diff_d = sum(diffs) / n
+        if n > 1:
+            var_diff_d = sum((d_val - mean_diff_d) ** 2 for d_val in diffs) / (n - 1)
+            sd_diff_d = math.sqrt(var_diff_d)
+        else:
+            sd_diff_d = 0.0
+
+        if sd_diff_d > 0:
+            cohens_d = mean_diff_d / sd_diff_d
+        else:
+            cohens_d = 0.0
+
+        # Handle nan/inf cases for Cohen's d
+        if math.isnan(cohens_d) or math.isinf(cohens_d):
+            cohens_d = 0.0
+
+        # Determine effect size magnitude interpretation
+        abs_d = abs(cohens_d)
+        if abs_d < 0.2:
+            effect_magnitude = "negligible"
+        elif abs_d < 0.5:
+            effect_magnitude = "small"
+        elif abs_d < 0.8:
+            effect_magnitude = "medium"
+        else:
+            effect_magnitude = "large"
             
         significant = p_val < 0.05
         
@@ -885,6 +942,8 @@ def evaluate_thesis():
             "overall_improvement_rate_pct": round(overall_improvement_rate, 2),
             "t_statistic": round(t_stat, 4),
             "p_value": round(p_val, 6),
+            "cohens_d": round(cohens_d, 4),
+            "effect_size_magnitude": effect_magnitude,
             "statistically_significant": bool(significant),
             "hypothesis_result": "Reject Null Hypothesis: Significant improvement detected!" if significant else "Fail to Reject Null Hypothesis: Improvement is not statistically significant."
         }), 200
@@ -1090,17 +1149,19 @@ def export_csv():
                 u.username,
                 pm.cognitive_domain,
                 pm.game_type,
-                pm.reaction_time_ms,
+                pm.reaction_time,
                 pm.accuracy_rate,
                 pm.difficulty_level,
                 pm.error_count,
                 pm.hesitation_ms,
                 pm.spam_click_count,
-                pm.timestamp
+                pm.rule_shift_latency_ms,
+                pm.path_efficiency,
+                pm.recorded_at
             FROM performance_metrics pm
             JOIN game_sessions gs ON pm.session_id = gs.id
             JOIN users u ON gs.user_id = u.id
-            ORDER BY pm.timestamp DESC, pm.id DESC
+            ORDER BY pm.recorded_at DESC, pm.id DESC
         """
         cursor.execute(query)
         rows = cursor.fetchall()
@@ -1114,15 +1175,15 @@ def export_csv():
             "Metric ID", "Session ID", "User ID", "Username", 
             "Cognitive Domain", "Game Type", "Reaction Time (ms)", 
             "Accuracy Rate", "Difficulty Level", "Error Count", 
-            "Hesitation (ms)", "Spam Click Count", "Timestamp"
+            "Hesitation (ms)", "Spam Click Count", "Rule-Shift Latency (ms)", "Path Efficiency", "Timestamp"
         ])
         
         for r in rows:
             writer.writerow([
                 r["metric_id"], r["session_id"], r["user_id"], r["username"],
-                r["cognitive_domain"], r["game_type"], r["reaction_time_ms"],
+                r["cognitive_domain"], r["game_type"], r["reaction_time"],
                 r["accuracy_rate"], r["difficulty_level"], r["error_count"],
-                r["hesitation_ms"], r["spam_click_count"], r["timestamp"]
+                r["hesitation_ms"], r["spam_click_count"], r["rule_shift_latency_ms"], r["path_efficiency"], r["recorded_at"]
             ])
             
         output.seek(0)
@@ -1170,7 +1231,7 @@ def get_user_session_history(username):
             cursor.execute(
                 """
                 SELECT 
-                    AVG(reaction_time_ms) as avg_rt,
+                    AVG(reaction_time) as avg_rt,
                     AVG(accuracy_rate) as avg_acc,
                     MAX(difficulty_level) as max_diff,
                     COUNT(*) as count
@@ -1206,7 +1267,7 @@ def get_session_metrics(session_id):
         
         cursor.execute(
             """
-            SELECT id, reaction_time_ms, accuracy_rate, difficulty_level, timestamp
+            SELECT id, reaction_time, accuracy_rate, difficulty_level, recorded_at, rule_shift_latency_ms, path_efficiency
             FROM performance_metrics
             WHERE session_id = ?
             ORDER BY id ASC
@@ -1220,10 +1281,14 @@ def get_session_metrics(session_id):
         for r in rows:
             metrics.append({
                 "metric_id": r["id"],
-                "reaction_time_ms": r["reaction_time_ms"],
+                "reaction_time": r["reaction_time"],
+                "reaction_time_ms": r["reaction_time"],  # legacy compatibility
                 "accuracy_rate": r["accuracy_rate"],
                 "difficulty_level": r["difficulty_level"],
-                "timestamp": r["timestamp"]
+                "recorded_at": r["recorded_at"],
+                "timestamp": r["recorded_at"],  # legacy compatibility
+                "rule_shift_latency_ms": r["rule_shift_latency_ms"],
+                "path_efficiency": r["path_efficiency"]
             })
             
         return jsonify({"status": "success", "session_id": session_id, "metrics": metrics}), 200
@@ -1242,7 +1307,7 @@ def get_cohort_comparison(username):
         cursor.execute(
             """
             SELECT 
-                AVG(pm.reaction_time_ms) as avg_rt,
+                AVG(pm.reaction_time) as avg_rt,
                 AVG(pm.accuracy_rate) as avg_acc
             FROM performance_metrics pm
             JOIN game_sessions gs ON pm.session_id = gs.id
@@ -1259,7 +1324,7 @@ def get_cohort_comparison(username):
         cursor.execute(
             """
             SELECT 
-                AVG(pm.reaction_time_ms) as avg_rt,
+                AVG(pm.reaction_time) as avg_rt,
                 AVG(pm.accuracy_rate) as avg_acc
             FROM performance_metrics pm
             JOIN game_sessions gs ON pm.session_id = gs.id
@@ -1276,11 +1341,13 @@ def get_cohort_comparison(username):
             "status": "success",
             "username": username,
             "user_averages": {
-                "reaction_time_ms": user_rt,
+                "reaction_time": user_rt,
+                "reaction_time_ms": user_rt,  # legacy compatibility
                 "accuracy_rate": user_acc
             },
             "cohort_averages": {
-                "reaction_time_ms": cohort_rt,
+                "reaction_time": cohort_rt,
+                "reaction_time_ms": cohort_rt,  # legacy compatibility
                 "accuracy_rate": cohort_acc
             }
         }), 200

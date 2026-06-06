@@ -43,6 +43,7 @@ export default class MentalFlexScene extends Phaser.Scene {
         this.currentRule = "color"; // Active rule: "color" | "shape" | "count"
         this.consecutiveHits = 0;
         this.timeLeftInRound = this.timeLimit;
+        this.ruleShiftOccurred = false;
         
         // Micro-behavior tracking metrics
         this.stimulusSpawnTime = 0;
@@ -429,6 +430,11 @@ export default class MentalFlexScene extends Phaser.Scene {
         this.totalAttempts++;
 
         const reactionTime = this.time.now - this.stimulusSpawnTime;
+        let ruleShiftLatency = null;
+        if (this.ruleShiftOccurred) {
+            ruleShiftLatency = reactionTime;
+            this.ruleShiftOccurred = false;
+        }
         
         if (isCorrect) {
             this.hits++;
@@ -456,7 +462,7 @@ export default class MentalFlexScene extends Phaser.Scene {
             });
 
             // Dispatch Metrics Telemetry
-            this.dispatchMetricTelemetry(reactionTime, 1.0);
+            this.dispatchMetricTelemetry(reactionTime, 1.0, ruleShiftLatency);
 
             // Trigger DDA check after every 5 correct matches
             if (this.hits % 5 === 0) {
@@ -492,7 +498,7 @@ export default class MentalFlexScene extends Phaser.Scene {
             });
 
             // Dispatch Metrics Telemetry
-            this.dispatchMetricTelemetry(reactionTime, 0.0);
+            this.dispatchMetricTelemetry(reactionTime, 0.0, ruleShiftLatency);
         }
 
         this.updateHUD();
@@ -506,8 +512,14 @@ export default class MentalFlexScene extends Phaser.Scene {
         this.showFeedbackText(this.scale.width / 2, this.scale.height / 2, 'TIMEOUT!', "#ef4444");
         this.cameras.main.shake(120, 0.005);
 
+        let ruleShiftLatency = null;
+        if (this.ruleShiftOccurred) {
+            ruleShiftLatency = this.timeLimit;
+            this.ruleShiftOccurred = false;
+        }
+
         // Dispatch Telemetry Metrics
-        this.dispatchMetricTelemetry(this.timeLimit, 0.0);
+        this.dispatchMetricTelemetry(this.timeLimit, 0.0, ruleShiftLatency);
 
         this.updateHUD();
         this.spawnCards();
@@ -521,6 +533,7 @@ export default class MentalFlexScene extends Phaser.Scene {
             const otherRules = this.rulesPool.filter(r => r !== this.currentRule);
             if (otherRules.length > 0) {
                 this.currentRule = otherRules[Phaser.Math.Between(0, otherRules.length - 1)];
+                this.ruleShiftOccurred = true;
             }
             
             this.updateRuleDisplay();
@@ -620,7 +633,7 @@ export default class MentalFlexScene extends Phaser.Scene {
     // TELEMETRY SERVICE DISPATCHER & DDA ENGINE
     // ==========================================
 
-    async dispatchMetricTelemetry(reactionTimeMs, roundAccuracy) {
+    async dispatchMetricTelemetry(reactionTimeMs, roundAccuracy, ruleShiftLatencyMs = null) {
         if (!this.sessionId) return;
 
         const payload = {
@@ -634,6 +647,10 @@ export default class MentalFlexScene extends Phaser.Scene {
             hesitation_ms: this.firstInteractionLatency || 0,
             spam_click_count: this.spamClickCount
         };
+
+        if (ruleShiftLatencyMs !== null) {
+            payload.rule_shift_latency_ms = ruleShiftLatencyMs;
+        }
 
         try {
             console.log('[Telemetry MentalFlex] Dispatching metrics...', payload);

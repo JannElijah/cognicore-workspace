@@ -1,14 +1,16 @@
 import requests
 import json
 import sys
+import uuid
 
 API_URL = "http://127.0.0.1:5000"
 
 def run_focus_finder_tests():
     print("=== Step 1: Starting Focus Finder Session Handshake ===")
     
+    unique_user = f"focus_test_user_{uuid.uuid4().hex[:8]}"
     payload_start = {
-        "username": "focus_test_user",
+        "username": unique_user,
         "game_type": "FocusFinder"
     }
     

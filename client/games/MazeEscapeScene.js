@@ -34,6 +34,8 @@ export default class MazeEscapeScene extends Phaser.Scene {
         this.isMoving = false;
         this.gamePhase = 'PLAYING'; // PLAYING | FEEDBACK | GAMEOVER
         this.puzzleStartTime = 0;
+        this.optimalMoves = 0;
+        this.actualMoves = 0;
 
         this.countdownTimer = null;
 
@@ -327,6 +329,11 @@ export default class MazeEscapeScene extends Phaser.Scene {
             this.gridCells.push(rowCells);
         }
 
+        // Calculate optimal moves and reset actual moves
+        const optimalPath = this.findBFSPath(0, 0, this.gridSize - 1, this.gridSize - 1);
+        this.optimalMoves = optimalPath ? (optimalPath.length - 1) : 0;
+        this.actualMoves = 0;
+
         // Draw Player Sprite Core (cyan-glowing orb)
         this.playerSprite = this.add.graphics();
         this.playerSprite.setPosition(startX, startY);
@@ -407,6 +414,7 @@ export default class MazeEscapeScene extends Phaser.Scene {
 
             const [nx, ny] = path.shift();
             this.movesLeft--;
+            this.actualMoves++;
             this.updateHUD();
 
             const cell = this.gridCells[ny][nx];
@@ -459,7 +467,8 @@ export default class MazeEscapeScene extends Phaser.Scene {
         this.updateHUD();
 
         // Dispatch telemetry
-        this.dispatchMetricTelemetry(solveTime, 1.0);
+        const pathEfficiency = this.actualMoves > 0 ? (this.optimalMoves / this.actualMoves) : 0.0;
+        this.dispatchMetricTelemetry(solveTime, 1.0, pathEfficiency);
 
         this.scheduleNextRound();
     }
@@ -488,7 +497,7 @@ export default class MazeEscapeScene extends Phaser.Scene {
         this.updateHUD();
 
         // Dispatch telemetry with 0 accuracy
-        this.dispatchMetricTelemetry(solveTime, 0.0);
+        this.dispatchMetricTelemetry(solveTime, 0.0, 0.0);
 
         this.scheduleNextRound();
     }
@@ -537,7 +546,7 @@ export default class MazeEscapeScene extends Phaser.Scene {
         });
     }
 
-    async dispatchMetricTelemetry(solveTimeMs, roundAccuracy) {
+    async dispatchMetricTelemetry(solveTimeMs, roundAccuracy, pathEfficiency = 0.0) {
         if (!this.sessionId) return;
 
         const payload = {
@@ -549,7 +558,8 @@ export default class MazeEscapeScene extends Phaser.Scene {
             difficulty: this.difficultyLevel,
             error_count: roundAccuracy === 1.0 ? 0 : 1,
             hesitation_ms: this.firstInteractionLatency || 0,
-            spam_click_count: this.spamClickCount
+            spam_click_count: this.spamClickCount,
+            path_efficiency: pathEfficiency
         };
 
         try {

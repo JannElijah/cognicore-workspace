@@ -906,13 +906,30 @@ export default function App() {
                         +{evalResult.overall_improvement_rate_pct}%
                       </div>
                     </div>
-                    <div>
+                    <div style={{ borderRight: '1px solid rgba(255,255,255,0.05)', paddingRight: '1rem' }}>
                       <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Paired t-test Statistics</div>
                       <div style={{ fontSize: '1.2rem', fontWeight: 'bold', marginTop: '0.25rem' }}>
                         t = {evalResult.t_statistic}
                       </div>
                       <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.1rem' }}>
                         p = {evalResult.p_value}
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Effect Size (Cohen's d)</div>
+                      <div style={{ fontSize: '1.2rem', fontWeight: 'bold', marginTop: '0.25rem', color: '#ffffff' }}>
+                        d = {evalResult.cohens_d !== undefined ? evalResult.cohens_d : '0.0000'}
+                      </div>
+                      <div style={{ fontSize: '0.8rem', marginTop: '0.1rem' }}>
+                        Magnitude: <span style={{
+                          fontWeight: 'bold',
+                          textTransform: 'capitalize',
+                          color: evalResult.effect_size_magnitude === 'large' ? '#4ade80' :
+                                 evalResult.effect_size_magnitude === 'medium' ? '#f59e0b' :
+                                 evalResult.effect_size_magnitude === 'small' ? '#06b6d4' : '#64748b'
+                        }}>
+                          {evalResult.effect_size_magnitude || 'negligible'}
+                        </span>
                       </div>
                     </div>
                   </div>

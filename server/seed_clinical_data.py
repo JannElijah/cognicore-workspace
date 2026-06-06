@@ -16,7 +16,8 @@ GAME_TO_DOMAIN = {
     "FocusFinder": "reflexes_and_focus",
     "MazeEscape": "executive_strategy",
     "MatrixRecall": "spatial_visual_memory",
-    "StroopShift": "reflexes_and_focus"
+    "StroopShift": "reflexes_and_focus",
+    "MentalFlex": "executive_strategy"
 }
 
 def seed_clinical_data():
@@ -67,13 +68,13 @@ def seed_clinical_data():
     session_plan = [
         # (GameType, Domain, Phase: 'early' | 'mid' | 'late')
         ("SpeedTap", "reflexes_and_focus", "early"),
-        ("MemoryMatch", "spatial_visual_memory", "early"),
+        ("MentalFlex", "executive_strategy", "early"),
         ("LogicLink", "logical_mathematical", "mid"),
         ("MazeEscape", "executive_strategy", "mid"),
-        ("FocusFinder", "reflexes_and_focus", "mid"),
+        ("RouteOptimizer", "logical_mathematical", "mid"),
         ("MatrixRecall", "spatial_visual_memory", "mid"),
         ("StroopShift", "reflexes_and_focus", "late"),
-        ("MazeEscape", "executive_strategy", "late")
+        ("MentalFlex", "executive_strategy", "late")
     ]
 
     for i in range(1, 31):
@@ -120,13 +121,32 @@ def seed_clinical_data():
                     spam_click_count = 0
                     difficulty_level = random.randint(4, 5)
                 
+                rule_shift_latency_ms = None
+                path_efficiency = None
+                
+                if game_type == "MentalFlex":
+                    if phase == "early":
+                        rule_shift_latency_ms = round(random.uniform(1200.0, 2200.0), 2)
+                    elif phase == "mid":
+                        rule_shift_latency_ms = round(random.uniform(800.0, 1400.0), 2)
+                    else:
+                        rule_shift_latency_ms = round(random.uniform(400.0, 800.0), 2)
+                
+                if game_type in ("MazeEscape", "RouteOptimizer"):
+                    if phase == "early":
+                        path_efficiency = round(random.uniform(0.40, 0.70), 2)
+                    elif phase == "mid":
+                        path_efficiency = round(random.uniform(0.70, 0.90), 2)
+                    else:
+                        path_efficiency = round(random.uniform(0.90, 1.00), 2)
+
                 cursor.execute(
                     """
                     INSERT INTO performance_metrics 
-                    (session_id, reaction_time_ms, accuracy_rate, difficulty_level, timestamp, cognitive_domain, game_type, error_count, hesitation_ms, spam_click_count) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    (session_id, reaction_time, accuracy_rate, difficulty_level, recorded_at, cognitive_domain, game_type, error_count, hesitation_ms, spam_click_count, rule_shift_latency_ms, path_efficiency) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
-                    (session_id, reaction_time_ms, accuracy_rate, difficulty_level, round_time.strftime("%Y-%m-%d %H:%M:%S"), domain, game_type, error_count, hesitation_ms, spam_click_count)
+                    (session_id, reaction_time_ms, accuracy_rate, difficulty_level, round_time.strftime("%Y-%m-%d %H:%M:%S"), domain, game_type, error_count, hesitation_ms, spam_click_count, rule_shift_latency_ms, path_efficiency)
                 )
 
             # Seed archetype history progression for this session based on performance phase

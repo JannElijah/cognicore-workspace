@@ -610,7 +610,8 @@ export default class RouteOptimizerScene extends Phaser.Scene {
 
         this.score += scorePoints;
         this.updateHUD();
-        this.dispatchRoundTelemetry(solveTime, isHit ? 1.0 : ratio <= 1.3 ? 0.5 : 0.0);
+        const pathEfficiency = this.playerCost > 0 ? (this.graph.optimalCost / this.playerCost) : 0.0;
+        this.dispatchRoundTelemetry(solveTime, isHit ? 1.0 : ratio <= 1.3 ? 0.5 : 0.0, pathEfficiency);
 
         // Reveal optimal path after brief pause
         this.time.delayedCall(500, () => this._showOptimalPath());
@@ -656,7 +657,7 @@ export default class RouteOptimizerScene extends Phaser.Scene {
         this.cameras.main.shake(110, 0.007);
 
         this.updateHUD();
-        this.dispatchRoundTelemetry(this.roundTimeLimit, 0.0);
+        this.dispatchRoundTelemetry(this.roundTimeLimit, 0.0, 0.0);
         this.time.delayedCall(500, () => this._showOptimalPath());
         this.scheduleNextRound();
     }
@@ -706,7 +707,7 @@ export default class RouteOptimizerScene extends Phaser.Scene {
     //  DDA & TELEMETRY
     // ══════════════════════════════════════════════════════
 
-    async dispatchRoundTelemetry(solveTimeMs, roundAccuracy) {
+    async dispatchRoundTelemetry(solveTimeMs, roundAccuracy, pathEfficiency = 0.0) {
         if (!this.sessionId) return;
         const payload = {
             session_id: this.sessionId,
@@ -717,7 +718,8 @@ export default class RouteOptimizerScene extends Phaser.Scene {
             difficulty: this.difficultyLevel,
             error_count: roundAccuracy === 1.0 ? 0 : 1,
             hesitation_ms: this.firstInteractionLatency || 0,
-            spam_click_count: this.spamClickCount + this.backtrackCount
+            spam_click_count: this.spamClickCount + this.backtrackCount,
+            path_efficiency: pathEfficiency
         };
         try {
             await fetch(`${this.apiUrl}/api/submit-metrics`, {

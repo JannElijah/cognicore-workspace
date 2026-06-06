@@ -53,6 +53,9 @@ def run_mental_flex_tests():
             "hesitation_ms": 150.0,
             "spam_click_count": 0
         }
+        if i == 0:
+            payload_metric["rule_shift_latency_ms"] = 950.0
+            
         metric_res = requests.post(f"{API_URL}/api/submit-metrics", json=payload_metric)
         assert metric_res.status_code == 201
         print(f"  Metric {i+1} submitted successfully.")
@@ -113,6 +116,16 @@ def run_mental_flex_tests():
     assert adapted_params2["time_limit"] == 4000
     assert adapted_params2["rules_pool"] == ["color", "shape"]
     print("Downward difficulty adaptation assertion PASSED.")
+    
+    print("\n=== Step 6: Verifying rule_shift_latency_ms is recorded correctly ===")
+    metrics_res = requests.get(f"{API_URL}/api/session-metrics/{session_id}")
+    assert metrics_res.status_code == 200
+    metrics_data = metrics_res.json()["metrics"]
+    
+    # The first submitted metric should have rule_shift_latency_ms = 950.0
+    first_metric = metrics_data[0]
+    assert first_metric["rule_shift_latency_ms"] == 950.0
+    print(f"Asserted rule_shift_latency_ms is returned correctly: {first_metric['rule_shift_latency_ms']}")
     
     print("\n=== SUCCESS: All automated Mental Flex backend tests passed! ===")
 

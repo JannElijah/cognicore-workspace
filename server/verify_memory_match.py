@@ -1,6 +1,7 @@
 import requests
 import json
 import sys
+import uuid
 
 API_URL = "http://127.0.0.1:5000"
 
@@ -8,8 +9,9 @@ def run_memory_match_tests():
     print("=== Step 1: Starting Memory Match Session Handshake ===")
     
     # 1. Start session for MemoryMatch
+    unique_user = f"memory_test_user_{uuid.uuid4().hex[:8]}"
     payload_start = {
-        "username": "memory_test_user",
+        "username": unique_user,
         "game_type": "MemoryMatch"
     }
     
