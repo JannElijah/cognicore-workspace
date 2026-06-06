@@ -31,52 +31,55 @@ class ArchetypeModel:
 
     def train_model(self):
         try:
-            # Generate synthetic datasets for 3 archetypes
+            # Generate synthetic datasets for 3 longitudinal archetypes
             np.random.seed(42)
             X = []
             y = []
 
-            # 1. Advanced (High speed, high accuracy, low error)
+            # 1. Fast Learner (Improving accuracy, decreasing RT/getting faster)
             for _ in range(60):
-                accuracy = np.random.uniform(0.91, 1.0)
-                rt = np.random.uniform(180.0, 420.0)
-                error_rate = 1.0 - accuracy
-                X.append([accuracy, rt, error_rate])
-                y.append("Advanced")
+                accuracy = np.random.uniform(0.80, 1.0)
+                rt = np.random.uniform(200.0, 600.0)
+                acc_slope = np.random.uniform(0.015, 0.08)
+                rt_slope = np.random.uniform(-40.0, -10.0)
+                X.append([accuracy, rt, acc_slope, rt_slope])
+                y.append("Fast Learner")
 
-            # 2. Intermediate (Medium speed, medium accuracy, medium error)
+            # 2. Plateauing (Steady accuracy, steady RT)
             for _ in range(60):
                 accuracy = np.random.uniform(0.70, 0.90)
-                rt = np.random.uniform(420.0, 780.0)
-                error_rate = 1.0 - accuracy
-                X.append([accuracy, rt, error_rate])
-                y.append("Intermediate")
+                rt = np.random.uniform(400.0, 800.0)
+                acc_slope = np.random.uniform(-0.01, 0.01)
+                rt_slope = np.random.uniform(-10.0, 10.0)
+                X.append([accuracy, rt, acc_slope, rt_slope])
+                y.append("Plateauing")
 
-            # 3. Beginner (Slow speed, low accuracy, high error)
+            # 3. High Fatigue (Declining accuracy, increasing RT/getting slower)
             for _ in range(60):
-                accuracy = np.random.uniform(0.30, 0.69)
-                rt = np.random.uniform(780.0, 1600.0)
-                error_rate = 1.0 - accuracy
-                X.append([accuracy, rt, error_rate])
-                y.append("Beginner")
+                accuracy = np.random.uniform(0.50, 0.80)
+                rt = np.random.uniform(600.0, 1200.0)
+                acc_slope = np.random.uniform(-0.08, -0.015)
+                rt_slope = np.random.uniform(15.0, 60.0)
+                X.append([accuracy, rt, acc_slope, rt_slope])
+                y.append("High Fatigue")
 
             # Train the Scikit-Learn Random Forest Classifier
             self.model = RandomForestClassifier(n_estimators=50, max_depth=5, random_state=42)
             self.model.fit(X, y)
-            print("[ML Model Service] Random Forest Classifier successfully trained on synthetic cohort.")
+            print("[ML Model Service] Random Forest Longitudinal Classifier trained successfully.")
         except Exception as e:
             print(f"[ML Model Service] Error training Random Forest Model: {e}. Reverting to rule-based engine.")
             self.model = None
 
-    def predict(self, avg_accuracy, avg_rt_ms, error_rate):
+    def predict(self, avg_accuracy, avg_rt_ms, acc_slope, rt_slope):
         """
-        Predicts player archetype based on performance metrics.
+        Predicts player longitudinal archetype based on session averages and slopes.
         Returns a dict: {"archetype": str, "confidence_score": float}
         """
         # If the ML model is successfully trained
         if SKLEARN_AVAILABLE and self.model is not None:
             try:
-                features = [[avg_accuracy, avg_rt_ms, error_rate]]
+                features = [[avg_accuracy, avg_rt_ms, acc_slope, rt_slope]]
                 prediction = self.model.predict(features)[0]
                 probabilities = self.model.predict_proba(features)[0]
                 class_index = list(self.model.classes_).index(prediction)
@@ -89,13 +92,12 @@ class ArchetypeModel:
                 print(f"[ML Model Service] Inference failed, using fallback rules: {e}")
 
         # Fallback Heuristics (Deterministic Heuristic Engine)
-        # Matches the boundaries of the synthetic dataset
-        if avg_accuracy >= 0.90 and avg_rt_ms <= 450:
-            return {"archetype": "Advanced", "confidence_score": 0.85}
-        elif avg_accuracy >= 0.70 and avg_rt_ms <= 800:
-            return {"archetype": "Intermediate", "confidence_score": 0.75}
+        if acc_slope > 0.01 and rt_slope < -10.0:
+            return {"archetype": "Fast Learner", "confidence_score": 0.85}
+        elif acc_slope < -0.01 and rt_slope > 10.0:
+            return {"archetype": "High Fatigue", "confidence_score": 0.80}
         else:
-            return {"archetype": "Beginner", "confidence_score": 0.70}
+            return {"archetype": "Plateauing", "confidence_score": 0.75}
 
 # Instantiate the global model instance
 archetype_classifier = ArchetypeModel()

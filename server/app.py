@@ -639,6 +639,26 @@ def start_session():
         app.logger.error(f"Error in start_session: {e}")
         return jsonify({"status": "error", "message": f"Database or server error: {str(e)}"}), 500
 
+def calculate_ols_slope(y_vals):
+    """
+    Computes the slope of the OLS linear regression for sequence y_vals,
+    where x_vals is index list [0, 1, ..., len(y_vals)-1].
+    """
+    n = len(y_vals)
+    if n < 2:
+        return 0.0
+    x_vals = list(range(n))
+    sum_x = sum(x_vals)
+    sum_y = sum(y_vals)
+    sum_xx = sum(x ** 2 for x in x_vals)
+    sum_xy = sum(x_vals[i] * y_vals[i] for i in range(n))
+    
+    denominator = n * sum_xx - sum_x ** 2
+    if denominator == 0:
+        return 0.0
+    slope = (n * sum_xy - sum_x * sum_y) / denominator
+    return slope
+
 @app.route('/api/dda', methods=['POST'])
 def adjust_difficulty():
     """
@@ -725,9 +745,45 @@ def adjust_difficulty():
         dda_params = calculate_dda_parameters(new_difficulty, game_type)
         
         # Cognitive Profiling Archetype Determination using Random Forest
-        # Features: avg_accuracy, avg_rt_ms, error_rate (1.0 - avg_accuracy)
-        error_rate = 1.0 - avg_accuracy
-        pred_res = archetype_classifier.predict(avg_accuracy, avg_rt, error_rate)
+        # Features: avg_accuracy, avg_rt, acc_slope, rt_slope
+        
+        # Query preceding and current session averages for this user to compute slopes
+        cursor.execute(
+            """
+            SELECT 
+                gs.id AS session_id,
+                AVG(pm.accuracy_rate) AS avg_accuracy,
+                AVG(pm.reaction_time) AS avg_rt
+            FROM game_sessions gs
+            JOIN performance_metrics pm ON gs.id = pm.session_id
+            WHERE gs.user_id = ? AND gs.id <= ?
+            GROUP BY gs.id
+            ORDER BY gs.id ASC
+            """,
+            (user_id, session_id)
+        )
+        session_rows = cursor.fetchall()
+        
+        history_acc = []
+        history_rt = []
+        found_current = False
+        for r in session_rows:
+            if r['session_id'] == session_id:
+                found_current = True
+                history_acc.append(avg_accuracy)
+                history_rt.append(avg_rt)
+            else:
+                history_acc.append(r['avg_accuracy'])
+                history_rt.append(r['avg_rt'])
+        
+        if not found_current:
+            history_acc.append(avg_accuracy)
+            history_rt.append(avg_rt)
+            
+        acc_slope = calculate_ols_slope(history_acc)
+        rt_slope = calculate_ols_slope(history_rt)
+        
+        pred_res = archetype_classifier.predict(avg_accuracy, avg_rt, acc_slope, rt_slope)
         archetype = pred_res["archetype"]
         confidence = pred_res["confidence_score"]
                 
@@ -769,7 +825,11 @@ def adjust_difficulty():
             "dda_parameters": dda_params,
             "cognitive_profile": {
                 "archetype": archetype,
-                "confidence_score": confidence
+                "confidence_score": confidence,
+                "accuracy_slope": acc_slope,
+                "reaction_time_slope": rt_slope,
+                "history_accuracy": history_acc,
+                "history_reaction_time": history_rt
             }
         }), 200
         

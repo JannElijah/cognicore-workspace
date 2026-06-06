@@ -35,7 +35,7 @@ def test_archetype_progression_endpoint():
         assert "archetype_name" in item
         assert "confidence_score" in item
         assert "timestamp" in item
-        assert item["archetype_name"] in ["Beginner", "Standard", "Intermediate", "Advanced"]
+        assert item["archetype_name"] in ["Beginner", "Standard", "Intermediate", "Advanced", "Fast Learner", "Plateauing", "High Fatigue"]
         assert 0.0 <= item["confidence_score"] <= 1.0
 
     # Assert logical progression: first session must be Beginner

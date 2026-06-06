@@ -25,6 +25,7 @@ import MentalFlexGame from './components/MentalFlexGame';
 import EquationBalanceGame from './components/EquationBalanceGame';
 import SequenceDecoderGame from './components/SequenceDecoderGame';
 import RouteOptimizerGame from './components/RouteOptimizerGame';
+import LiveDdaHud from './components/LiveDdaHud';
 
 // Register Chart.js modules
 ChartJS.register(
@@ -88,6 +89,74 @@ export default function App() {
   const [archetypeHistory, setArchetypeHistory] = useState([]);
   const [chartsLoading, setChartsLoading] = useState(false);
   const [chartsError, setChartsError] = useState(null);
+
+  // Live Game DDA HUD States (Phase 2)
+  const [activeSessionId, setActiveSessionId] = useState(null);
+  const [liveDdaParams, setLiveDdaParams] = useState(null);
+  const [liveCognitiveProfile, setLiveCognitiveProfile] = useState(null);
+  const [liveMetrics, setLiveMetrics] = useState([]);
+
+  // Fetch interceptor to capture telemetry during active gameplay sessions (Phase 2)
+  useEffect(() => {
+    const originalFetch = window.fetch;
+    window.fetch = async (...args) => {
+      const response = await originalFetch(...args);
+      const url = args[0];
+      if (typeof url === 'string') {
+        if (url.includes('/api/start-session') && response.ok) {
+          try {
+            const cloned = response.clone();
+            cloned.json().then(data => {
+              if (data && data.status === 'success') {
+                setActiveSessionId(data.session_id);
+                setLiveDdaParams(data.dda_parameters);
+                setLiveCognitiveProfile(null);
+                setLiveMetrics([]);
+              }
+            });
+          } catch (e) {
+            console.error('[Telemetry HUD] Error parsing start-session', e);
+          }
+        }
+        if (url.includes('/api/submit-metrics')) {
+          try {
+            const options = args[1] || {};
+            if (options.body) {
+              const body = JSON.parse(options.body);
+              const accuracy = body.accuracy_rate !== undefined ? body.accuracy_rate : body.accuracy;
+              const rt = body.reaction_time !== undefined ? body.reaction_time : body.reaction_time_ms;
+              if (accuracy !== undefined && rt !== undefined) {
+                setLiveMetrics(prev => [...prev, { accuracy, rt }]);
+              }
+            }
+          } catch (e) {
+            console.error('[Telemetry HUD] Error parsing submit-metrics', e);
+          }
+        }
+        if (url.includes('/api/dda') && response.ok) {
+          try {
+            const cloned = response.clone();
+            cloned.json().then(data => {
+              if (data && data.status === 'success') {
+                if (data.dda_parameters) {
+                  setLiveDdaParams(data.dda_parameters);
+                }
+                if (data.cognitive_profile) {
+                  setLiveCognitiveProfile(data.cognitive_profile);
+                }
+              }
+            });
+          } catch (e) {
+            console.error('[Telemetry HUD] Error parsing dda', e);
+          }
+        }
+      }
+      return response;
+    };
+    return () => {
+      window.fetch = originalFetch;
+    };
+  }, []);
 
   const fetchDashboardData = async (username) => {
     setChartsLoading(true);
@@ -174,10 +243,18 @@ export default function App() {
 
   const handleGameFinished = (stats) => {
     setLastGameStats({ ...stats, gameType: activeGame });
+    setActiveSessionId(null);
+    setLiveDdaParams(null);
+    setLiveCognitiveProfile(null);
+    setLiveMetrics([]);
   };
 
   const handleBackToLobby = () => {
     setActiveGame(null);
+    setActiveSessionId(null);
+    setLiveDdaParams(null);
+    setLiveCognitiveProfile(null);
+    setLiveMetrics([]);
   };
 
   // Run Paired t-test request on Flask backend
@@ -654,103 +731,44 @@ export default function App() {
 
       {/* Main Container */}
       <main className="portal-main">
-        {activeGame === 'SpeedTap' ? (
+        {activeGame ? (
           <div className="game-screen-wrapper">
             <button className="back-btn" onClick={handleBackToLobby}>
               ← Back to Training Hub
             </button>
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
-              <SpeedTapGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />
-            </div>
-          </div>
-        ) : activeGame === 'MemoryMatch' ? (
-          <div className="game-screen-wrapper">
-            <button className="back-btn" onClick={handleBackToLobby}>
-              ← Back to Training Hub
-            </button>
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
-              <MemoryMatchGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />
-            </div>
-          </div>
-        ) : activeGame === 'FocusFinder' ? (
-          <div className="game-screen-wrapper">
-            <button className="back-btn" onClick={handleBackToLobby}>
-              ← Back to Training Hub
-            </button>
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
-              <FocusFinderGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />
-            </div>
-          </div>
-        ) : activeGame === 'LogicLink' ? (
-          <div className="game-screen-wrapper">
-            <button className="back-btn" onClick={handleBackToLobby}>
-              ← Back to Training Hub
-            </button>
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
-              <LogicLinkGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />
-            </div>
-          </div>
-        ) : activeGame === 'MazeEscape' ? (
-          <div className="game-screen-wrapper">
-            <button className="back-btn" onClick={handleBackToLobby}>
-              ← Back to Training Hub
-            </button>
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
-              <MazeEscapeGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />
-            </div>
-          </div>
-        ) : activeGame === 'MatrixRecall' ? (
-          <div className="game-screen-wrapper">
-            <button className="back-btn" onClick={handleBackToLobby}>
-              ← Back to Training Hub
-            </button>
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
-              <MatrixRecallGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />
-            </div>
-          </div>
-        ) : activeGame === 'StroopShift' ? (
-          <div className="game-screen-wrapper">
-            <button className="back-btn" onClick={handleBackToLobby}>
-              ← Back to Training Hub
-            </button>
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
-              <StroopShiftGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />
-            </div>
-          </div>
-        ) : activeGame === 'MentalFlex' ? (
-          <div className="game-screen-wrapper">
-            <button className="back-btn" onClick={handleBackToLobby}>
-              ← Back to Training Hub
-            </button>
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
-              <MentalFlexGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />
-            </div>
-          </div>
-        ) : activeGame === 'EquationBalance' ? (
-          <div className="game-screen-wrapper">
-            <button className="back-btn" onClick={handleBackToLobby}>
-              ← Back to Training Hub
-            </button>
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
-              <EquationBalanceGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />
-            </div>
-          </div>
-        ) : activeGame === 'SequenceDecoder' ? (
-          <div className="game-screen-wrapper">
-            <button className="back-btn" onClick={handleBackToLobby}>
-              ← Back to Training Hub
-            </button>
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
-              <SequenceDecoderGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />
-            </div>
-          </div>
-        ) : activeGame === 'RouteOptimizer' ? (
-          <div className="game-screen-wrapper">
-            <button className="back-btn" onClick={handleBackToLobby}>
-              ← Back to Training Hub
-            </button>
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
-              <RouteOptimizerGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />
+            <div style={{
+              display: 'flex',
+              flexDirection: 'row',
+              gap: '2rem',
+              width: '100%',
+              maxWidth: '1200px',
+              margin: '1rem auto 0 auto',
+              alignItems: 'flex-start',
+              justifyContent: 'center',
+              flexWrap: 'wrap'
+            }}>
+              <div style={{ flex: '1', display: 'flex', justifyContent: 'center', minWidth: '600px' }}>
+                {activeGame === 'SpeedTap' && <SpeedTapGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                {activeGame === 'MemoryMatch' && <MemoryMatchGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                {activeGame === 'FocusFinder' && <FocusFinderGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                {activeGame === 'LogicLink' && <LogicLinkGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                {activeGame === 'MazeEscape' && <MazeEscapeGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                {activeGame === 'MatrixRecall' && <MatrixRecallGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                {activeGame === 'StroopShift' && <StroopShiftGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                {activeGame === 'MentalFlex' && <MentalFlexGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                {activeGame === 'EquationBalance' && <EquationBalanceGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                {activeGame === 'SequenceDecoder' && <SequenceDecoderGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                {activeGame === 'RouteOptimizer' && <RouteOptimizerGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+              </div>
+              
+              {activeSessionId && (
+                <LiveDdaHud
+                  gameType={activeGame}
+                  ddaParameters={liveDdaParams}
+                  cognitiveProfile={liveCognitiveProfile}
+                  liveMetrics={liveMetrics}
+                />
+              )}
             </div>
           </div>
         ) : portalView === 'researcher' ? (
