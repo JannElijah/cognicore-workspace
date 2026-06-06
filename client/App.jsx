@@ -23,6 +23,8 @@ import MatrixRecallGame from './components/MatrixRecallGame';
 import StroopShiftGame from './components/StroopShiftGame';
 import MentalFlexGame from './components/MentalFlexGame';
 import EquationBalanceGame from './components/EquationBalanceGame';
+import SequenceDecoderGame from './components/SequenceDecoderGame';
+import RouteOptimizerGame from './components/RouteOptimizerGame';
 
 // Register Chart.js modules
 ChartJS.register(
@@ -146,7 +148,7 @@ export default function App() {
           ...prev,
           spatial_visual_memory: Math.max(calculatedScore, prev.spatial_visual_memory)
         }));
-      } else if (lastGameStats.gameType === 'LogicLink') {
+      } else if (lastGameStats.gameType === 'LogicLink' || lastGameStats.gameType === 'EquationBalance' || lastGameStats.gameType === 'SequenceDecoder' || lastGameStats.gameType === 'RouteOptimizer') {
         setSkills(prev => ({
           ...prev,
           logical_mathematical: Math.max(calculatedScore, prev.logical_mathematical)
@@ -731,6 +733,24 @@ export default function App() {
             </button>
             <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
               <EquationBalanceGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />
+            </div>
+          </div>
+        ) : activeGame === 'SequenceDecoder' ? (
+          <div className="game-screen-wrapper">
+            <button className="back-btn" onClick={handleBackToLobby}>
+              ← Back to Training Hub
+            </button>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
+              <SequenceDecoderGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />
+            </div>
+          </div>
+        ) : activeGame === 'RouteOptimizer' ? (
+          <div className="game-screen-wrapper">
+            <button className="back-btn" onClick={handleBackToLobby}>
+              ← Back to Training Hub
+            </button>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }}>
+              <RouteOptimizerGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />
             </div>
           </div>
         ) : portalView === 'researcher' ? (
@@ -1714,6 +1734,46 @@ export default function App() {
                     Accelerates mental math estimation, improves quantitative deduction speeds, and supports quick numerical calculations.
                   </div>
                   
+                  <button className="play-btn">Launch Module</button>
+                </div>
+
+                {/* Sequence Decoder Card */}
+                <div className="game-card theme-reasoning active" onClick={() => setActiveGame('SequenceDecoder')}>
+                  <div className="card-target-tag">Inductive Reasoning</div>
+                  <div className="card-icon">🧩</div>
+                  <h3>Sequence Decoder</h3>
+                  
+                  <div className="card-section-label">Objective & Goal</div>
+                  <ul className="card-purpose-list">
+                    <li>Observe a series of values following a hidden rule.</li>
+                    <li>Identify the pattern and select the correct missing element.</li>
+                  </ul>
+
+                  <div className="card-section-label">How it helps us</div>
+                  <div className="card-benefit-box">
+                    Trains inductive abstraction: the ability to extract a general rule from specific observations — critical for analytical and scientific reasoning.
+                  </div>
+                  
+                  <button className="play-btn">Launch Module</button>
+                </div>
+
+                {/* Route Optimizer Card */}
+                <div className="game-card theme-reasoning active" onClick={() => setActiveGame('RouteOptimizer')}>
+                  <div className="card-target-tag">Combinatorial Logic</div>
+                  <div className="card-icon">🕸️</div>
+                  <h3>Route Optimizer</h3>
+
+                  <div className="card-section-label">Objective & Goal</div>
+                  <ul className="card-purpose-list">
+                    <li>Navigate a weighted network from START to END.</li>
+                    <li>Click through nodes to build the lowest-cost route.</li>
+                  </ul>
+
+                  <div className="card-section-label">How it helps us</div>
+                  <div className="card-benefit-box">
+                    Builds combinatorial optimization reasoning: evaluating multiple path trade-offs simultaneously — a skill used in logistics, resource planning, and decision analysis.
+                  </div>
+
                   <button className="play-btn">Launch Module</button>
                 </div>
               </div>

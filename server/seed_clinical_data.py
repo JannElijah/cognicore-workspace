@@ -10,6 +10,8 @@ GAME_TO_DOMAIN = {
     "MemoryMatch": "spatial_visual_memory",
     "LogicLink": "logical_mathematical",
     "EquationBalance": "logical_mathematical",
+    "SequenceDecoder": "logical_mathematical",
+    "RouteOptimizer": "logical_mathematical",
     "SpeedTap": "reflexes_and_focus",
     "FocusFinder": "reflexes_and_focus",
     "MazeEscape": "executive_strategy",

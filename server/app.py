@@ -42,6 +42,10 @@ GAME_TO_DOMAIN = {
     "logic_link": "logical_mathematical",
     "EquationBalance": "logical_mathematical",
     "equation_balance": "logical_mathematical",
+    "SequenceDecoder": "logical_mathematical",
+    "sequence_decoder": "logical_mathematical",
+    "RouteOptimizer": "logical_mathematical",
+    "route_optimizer": "logical_mathematical",
     "SpeedTap": "reflexes_and_focus",
     "speed_tap": "reflexes_and_focus",
     "FocusFinder": "reflexes_and_focus",
@@ -413,6 +417,84 @@ def calculate_dda_parameters(difficulty_level, game_type='SpeedTap'):
                 "operators": ["+", "-", "*", "/"],
                 "missing_type": "complex_random",
                 "time_limit": 4000
+            }
+        }
+    elif game_type in ['SequenceDecoder', 'sequence_decoder']:
+        # Map levels to game-specific variables for the Sequence Decoder game (Inductive Pattern Reasoning)
+        configs = {
+            1: {
+                "difficulty_level": 1,
+                "sequence_length": 4,             # tiles shown including the ? tile
+                "pattern_types": ["arithmetic"],  # only simple +d patterns
+                "missing_position": "last",        # always the last tile is hidden
+                "time_limit": 12000               # 12 seconds per round
+            },
+            2: {
+                "difficulty_level": 2,
+                "sequence_length": 5,
+                "pattern_types": ["arithmetic", "geometric"],
+                "missing_position": "last",
+                "time_limit": 10000
+            },
+            3: {
+                "difficulty_level": 3,
+                "sequence_length": 5,
+                "pattern_types": ["arithmetic", "geometric", "alternating"],
+                "missing_position": "last",
+                "time_limit": 9000
+            },
+            4: {
+                "difficulty_level": 4,
+                "sequence_length": 6,
+                "pattern_types": ["arithmetic", "geometric", "alternating", "fibonacci"],
+                "missing_position": "second_last",  # harder: missing element is not the last
+                "time_limit": 8000
+            },
+            5: {
+                "difficulty_level": 5,
+                "sequence_length": 6,
+                "pattern_types": ["arithmetic", "geometric", "alternating", "fibonacci", "dual_rule"],
+                "missing_position": "second_last",
+                "time_limit": 6000              # 6 seconds - expert speed
+            }
+        }
+    elif game_type in ['RouteOptimizer', 'route_optimizer']:
+        # Map levels to game-specific variables for the Route Optimizer (Combinatorial Network Logic)
+        configs = {
+            1: {
+                "difficulty_level": 1,
+                "node_count": 4,          # 4 nodes: simple fork topology
+                "min_weight": 1,
+                "max_weight": 9,
+                "time_limit": 30000       # 30 seconds per round
+            },
+            2: {
+                "difficulty_level": 2,
+                "node_count": 5,
+                "min_weight": 1,
+                "max_weight": 12,
+                "time_limit": 27000
+            },
+            3: {
+                "difficulty_level": 3,
+                "node_count": 6,          # grid topology, 3 paths
+                "min_weight": 1,
+                "max_weight": 15,
+                "time_limit": 24000
+            },
+            4: {
+                "difficulty_level": 4,
+                "node_count": 7,          # diamond with bypass shortcuts
+                "min_weight": 2,
+                "max_weight": 20,
+                "time_limit": 22000
+            },
+            5: {
+                "difficulty_level": 5,
+                "node_count": 8,          # complex 8-node web
+                "min_weight": 2,
+                "max_weight": 25,
+                "time_limit": 18000       # 18 seconds - expert speed
             }
         }
     else:
