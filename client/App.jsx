@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Chart as ChartJS,
   RadialLinearScale,
@@ -10,9 +10,10 @@ import {
   CategoryScale,
   LinearScale,
   BarElement,
-  Title
+  Title,
+  ScatterController
 } from 'chart.js';
-import { Radar, Line, Bar } from 'react-chartjs-2';
+import { Radar, Line, Bar, Scatter } from 'react-chartjs-2';
 
 import SpeedTapGame from './components/SpeedTapGame';
 import MemoryMatchGame from './components/MemoryMatchGame';
@@ -26,6 +27,7 @@ import EquationBalanceGame from './components/EquationBalanceGame';
 import SequenceDecoderGame from './components/SequenceDecoderGame';
 import RouteOptimizerGame from './components/RouteOptimizerGame';
 import LiveDdaHud from './components/LiveDdaHud';
+import { audioDda } from './utils/audioSynth';
 
 // Register Chart.js modules
 ChartJS.register(
@@ -38,8 +40,61 @@ ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
-  Title
+  Title,
+  ScatterController
 );
+
+const ProgressRing = ({ radius, stroke, progress, color }) => {
+  const normalizedRadius = radius - stroke * 2;
+  const circumference = normalizedRadius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (Math.min(1, Math.max(0, progress)) * circumference);
+
+  return (
+    <svg
+      height={radius * 2}
+      width={radius * 2}
+      style={{ transform: 'rotate(-90deg)', display: 'block' }}
+    >
+      <circle
+        stroke="rgba(255, 255, 255, 0.05)"
+        fill="transparent"
+        strokeWidth={stroke}
+        r={normalizedRadius}
+        cx={radius}
+        cy={radius}
+      />
+      <circle
+        stroke={color}
+        fill="transparent"
+        strokeWidth={stroke}
+        strokeDasharray={circumference + ' ' + circumference}
+        style={{ strokeDashoffset, transition: 'stroke-dashoffset 0.5s ease-in-out' }}
+        r={normalizedRadius}
+        cx={radius}
+        cy={radius}
+      />
+    </svg>
+  );
+};
+
+const DOMAIN_INFO = {
+  reflexes_and_focus: { title: 'Reflexes & Focus', color: '#a855f7', icon: '⚡' },
+  spatial_visual_memory: { title: 'Memory & Recall', color: '#38bdf8', icon: '🧠' },
+  logical_mathematical: { title: 'Logical Reasoning', color: '#f59e0b', icon: '🔢' },
+  executive_strategy: { title: 'Executive Strategy', color: '#10b981', icon: '🧭' }
+};
+
+const getGoalProgress = (goal) => {
+  if (goal.is_completed) return 1.0;
+  if (!goal.current_value) return 0.0;
+  
+  if (goal.metric_type === 'reaction_time') {
+    if (goal.current_value <= goal.target_value) return 1.0;
+    return goal.target_value / goal.current_value;
+  }
+  
+  return goal.current_value / goal.target_value;
+};
 
 export default function App() {
   const [activeGame, setActiveGame] = useState(null);
@@ -90,13 +145,37 @@ export default function App() {
   const [chartsLoading, setChartsLoading] = useState(false);
   const [chartsError, setChartsError] = useState(null);
 
+  // Advanced Researcher Sandbox (Option B)
+  const [sandboxVar1, setSandboxVar1] = useState('rule_shift_latency_ms');
+  const [sandboxVar2, setSandboxVar2] = useState('spam_click_count');
+  const [sandboxCohort, setSandboxCohort] = useState('all'); // 'all' | 'clinical' | 'active'
+  const [correlationResult, setCorrelationResult] = useState(null);
+  const [learningCurves, setLearningCurves] = useState(null);
+  const [curveMetric, setCurveMetric] = useState('accuracy'); // 'accuracy' | 'reaction_time'
+  const [sandboxLoading, setSandboxLoading] = useState(false);
+  const [sandboxError, setSandboxError] = useState(null);
+
+  // Cognitive Goal Tracker (Option C)
+  const [goals, setGoals] = useState([]);
+  const [goalDomain, setGoalDomain] = useState('reflexes_and_focus');
+  const [goalMetric, setGoalMetric] = useState('accuracy');
+  const [goalTarget, setGoalTarget] = useState('80');
+  const [milestoneNotification, setMilestoneNotification] = useState(null);
+  const [goalsLoading, setGoalsLoading] = useState(false);
+  const [goalsError, setGoalsError] = useState(null);
+  const [showGoalForm, setShowGoalForm] = useState(false);
+
+  // Live DDA Advisor States (Option D)
+  const [ddaAdvisorLogs, setDdaAdvisorLogs] = useState([]);
+  const [ddaAdvisorMessage, setDdaAdvisorMessage] = useState(null);
+  const prevDdaParamsRef = useRef(null);
+
   // Live Game DDA HUD States (Phase 2)
   const [activeSessionId, setActiveSessionId] = useState(null);
   const [liveDdaParams, setLiveDdaParams] = useState(null);
   const [liveCognitiveProfile, setLiveCognitiveProfile] = useState(null);
   const [liveMetrics, setLiveMetrics] = useState([]);
 
-  // Fetch interceptor to capture telemetry during active gameplay sessions (Phase 2)
   useEffect(() => {
     const originalFetch = window.fetch;
     window.fetch = async (...args) => {
@@ -112,6 +191,15 @@ export default function App() {
                 setLiveDdaParams(data.dda_parameters);
                 setLiveCognitiveProfile(null);
                 setLiveMetrics([]);
+                setDdaAdvisorLogs([]);
+                setDdaAdvisorMessage(null);
+                prevDdaParamsRef.current = null;
+                
+                // Initialize Audio DDA Synthesizer
+                audioDda.init();
+                if (data.dda_parameters && data.dda_parameters.difficulty_level) {
+                  audioDda.setDifficulty(data.dda_parameters.difficulty_level);
+                }
               }
             });
           } catch (e) {
@@ -125,8 +213,19 @@ export default function App() {
               const body = JSON.parse(options.body);
               const accuracy = body.accuracy_rate !== undefined ? body.accuracy_rate : body.accuracy;
               const rt = body.reaction_time !== undefined ? body.reaction_time : body.reaction_time_ms;
+              const spamClicks = body.spam_click_count || 0;
+              const hesitation = body.hesitation_ms || 0;
+              
               if (accuracy !== undefined && rt !== undefined) {
                 setLiveMetrics(prev => [...prev, { accuracy, rt }]);
+                
+                // Play success (blip) / failure (buzz) synthesized audio tones
+                audioDda.playFeedback(accuracy === 1.0);
+                
+                // Trigger low-pass calming mode when player shows panic or high hesitation latency
+                if (spamClicks > 2 || hesitation > 1500) {
+                  audioDda.setFrustration(true);
+                }
               }
             }
           } catch (e) {
@@ -140,10 +239,16 @@ export default function App() {
               if (data && data.status === 'success') {
                 if (data.dda_parameters) {
                   setLiveDdaParams(data.dda_parameters);
+                  if (data.dda_parameters.difficulty_level) {
+                    audioDda.setDifficulty(data.dda_parameters.difficulty_level);
+                  }
                 }
                 if (data.cognitive_profile) {
                   setLiveCognitiveProfile(data.cognitive_profile);
                 }
+                
+                // Revert low-pass soothing filter back to standard focus mode when difficulty updates
+                audioDda.setFrustration(false);
               }
             });
           } catch (e) {
@@ -157,6 +262,67 @@ export default function App() {
       window.fetch = originalFetch;
     };
   }, []);
+
+  // Track DDA Parameter changes for Option D Advisor
+  useEffect(() => {
+    if (liveDdaParams) {
+      if (prevDdaParamsRef.current) {
+        const prev = prevDdaParamsRef.current;
+        const curr = liveDdaParams;
+        
+        let changes = [];
+        let reason = "";
+        
+        // 1. Difficulty Level change
+        if (curr.difficulty_level !== prev.difficulty_level) {
+          const dir = curr.difficulty_level > prev.difficulty_level ? 'increased' : 'decreased';
+          changes.push(`Difficulty ${dir} to Level ${curr.difficulty_level}`);
+          
+          if (dir === 'increased') {
+            reason = "Your recent metrics indicate strong response accuracy and rapid execution speeds. The DDA engine has adjusted parameters upward to maintain your flow zone.";
+          } else {
+            reason = "A rise in latency or error rate has been detected. The DDA engine has scaled back active difficulty parameters to allow you to restabilize focus and prevent cognitive fatigue.";
+          }
+        }
+        
+        // 2. Specific gameplay parameters
+        const trackedKeys = [
+          'grid_size', 'speed_multiplier', 'target_count', 'has_distractors', 
+          'sequence_length', 'spawn_interval_ms', 'time_limit_ms', 'delay_ms',
+          'card_count', 'grid_rows', 'grid_cols', 'max_path_length', 'ideal_steps'
+        ];
+        
+        trackedKeys.forEach(key => {
+          if (curr[key] !== undefined && prev[key] !== undefined && curr[key] !== prev[key]) {
+            const cleanKey = key.replace(/_/g, ' ');
+            changes.push(`${cleanKey} tuned to ${curr[key]}`);
+          }
+        });
+        
+        if (changes.length > 0) {
+          const newLog = {
+            id: Date.now(),
+            timestamp: new Date().toLocaleTimeString(),
+            changes: changes,
+            reason: reason || "Engine adjusted real-time parameters dynamically to balance task difficulty with your current cognitive flow profile."
+          };
+          
+          setDdaAdvisorLogs(prevLogs => [newLog, ...prevLogs].slice(0, 10));
+          setDdaAdvisorMessage(newLog);
+          
+          // Auto clear notification after 6 seconds
+          const timerId = setTimeout(() => {
+            setDdaAdvisorMessage(current => current && current.id === newLog.id ? null : current);
+          }, 6000);
+          
+          return () => clearTimeout(timerId);
+        }
+      }
+      prevDdaParamsRef.current = liveDdaParams;
+    } else {
+      prevDdaParamsRef.current = null;
+    }
+  }, [liveDdaParams]);
 
   const fetchDashboardData = async (username) => {
     setChartsLoading(true);
@@ -247,6 +413,7 @@ export default function App() {
     setLiveDdaParams(null);
     setLiveCognitiveProfile(null);
     setLiveMetrics([]);
+    audioDda.stop();
   };
 
   const handleBackToLobby = () => {
@@ -255,6 +422,7 @@ export default function App() {
     setLiveDdaParams(null);
     setLiveCognitiveProfile(null);
     setLiveMetrics([]);
+    audioDda.stop();
   };
 
   // Run Paired t-test request on Flask backend
@@ -357,12 +525,332 @@ export default function App() {
     }
   };
 
-  // Run ISO fetch when switching to researcher view
+  const fetchSandboxData = async (var1 = sandboxVar1, var2 = sandboxVar2, cohort = sandboxCohort) => {
+    setSandboxLoading(true);
+    setSandboxError(null);
+    try {
+      const corrRes = await fetch(`http://127.0.0.1:5000/api/research/correlations?var1=${var1}&var2=${var2}&cohort=${cohort}&username=${activeDashboardUser}`);
+      if (!corrRes.ok) throw new Error('Failed to compute correlation statistics.');
+      const corrData = await corrRes.json();
+      if (corrData.status === 'success') {
+        setCorrelationResult(corrData);
+      } else {
+        throw new Error(corrData.message || 'Correlation computation failed.');
+      }
+
+      const curveRes = await fetch(`http://127.0.0.1:5000/api/research/learning-curves/${activeDashboardUser}`);
+      if (!curveRes.ok) throw new Error('Failed to load learning curve statistics.');
+      const curveData = await curveRes.json();
+      if (curveData.status === 'success') {
+        setLearningCurves(curveData.curves);
+      } else {
+        throw new Error(curveData.message || 'Learning curves fetch failed.');
+      }
+    } catch (e) {
+      console.error("[Sandbox Fetch] Failed:", e);
+      setSandboxError(e.message);
+    } finally {
+      setSandboxLoading(false);
+    }
+  };
+
+  const getScatterChartData = () => {
+    if (!correlationResult || !correlationResult.data_points || correlationResult.data_points.length === 0) {
+      return { datasets: [] };
+    }
+
+    const pts = correlationResult.data_points.map(p => ({ x: p.x, y: p.y }));
+    const n = pts.length;
+    let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+    pts.forEach(p => {
+      sumX += p.x;
+      sumY += p.y;
+      sumXY += p.x * p.y;
+      sumXX += p.x * p.x;
+    });
+
+    const m = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX || 1);
+    const b = (sumY - m * sumX) / (n || 1);
+
+    const minX = Math.min(...pts.map(p => p.x));
+    const maxX = Math.max(...pts.map(p => p.x));
+
+    const linePoints = [
+      { x: minX, y: m * minX + b },
+      { x: maxX, y: m * maxX + b }
+    ];
+
+    return {
+      datasets: [
+        {
+          label: 'Observed Telemetry Points',
+          data: pts,
+          backgroundColor: '#38bdf8',
+          borderColor: 'rgba(56, 189, 248, 0.4)',
+          borderWidth: 1,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          type: 'scatter'
+        },
+        {
+          label: 'Linear Regression Fit',
+          data: linePoints,
+          borderColor: '#a855f7',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          pointRadius: 0,
+          showLine: true,
+          type: 'line',
+          fill: false
+        }
+      ]
+    };
+  };
+
+  const scatterChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: sandboxVar1.replace(/_/g, ' ').toUpperCase(),
+          color: '#94a3b8'
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.05)'
+        },
+        ticks: {
+          color: '#94a3b8'
+        }
+      },
+      y: {
+        title: {
+          display: true,
+          text: sandboxVar2.replace(/_/g, ' ').toUpperCase(),
+          color: '#94a3b8'
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.05)'
+        },
+        ticks: {
+          color: '#94a3b8'
+        }
+      }
+    },
+    plugins: {
+      legend: {
+        labels: {
+          color: '#f8fafc'
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            return `(${context.raw.x.toFixed(2)}, ${context.raw.y.toFixed(2)})`;
+          }
+        }
+      }
+    }
+  };
+
+  const getLearningCurvesChartData = () => {
+    if (!learningCurves) {
+      return { labels: [], datasets: [] };
+    }
+
+    const maxSessions = Math.max(
+      learningCurves.active_user.length,
+      learningCurves.clinical_cohort.length,
+      learningCurves.all_cohort.length
+    );
+
+    const labels = Array.from({ length: maxSessions }, (_, i) => `Session ${i + 1}`);
+
+    const activeData = learningCurves.active_user.map(p => 
+      curveMetric === 'accuracy' ? p.accuracy * 100 : p.reaction_time
+    );
+    const clinicalData = learningCurves.clinical_cohort.map(p => 
+      curveMetric === 'accuracy' ? p.accuracy * 100 : p.reaction_time
+    );
+    const allData = learningCurves.all_cohort.map(p => 
+      curveMetric === 'accuracy' ? p.accuracy * 100 : p.reaction_time
+    );
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: `${activeDashboardUser.toUpperCase()} (Active Subject)`,
+          data: activeData,
+          borderColor: '#38bdf8',
+          backgroundColor: 'rgba(56, 189, 248, 0.1)',
+          borderWidth: 3,
+          tension: 0.15,
+          fill: false,
+          pointRadius: 4
+        },
+        {
+          label: 'Clinical Research Cohort (Avg)',
+          data: clinicalData,
+          borderColor: '#4ade80',
+          backgroundColor: 'rgba(74, 222, 128, 0.1)',
+          borderWidth: 2,
+          borderDash: [5, 5],
+          tension: 0.15,
+          fill: false,
+          pointRadius: 3
+        },
+        {
+          label: 'General Cohort (All Users Avg)',
+          data: allData,
+          borderColor: '#fb923c',
+          backgroundColor: 'rgba(251, 146, 60, 0.1)',
+          borderWidth: 2,
+          tension: 0.15,
+          fill: false,
+          pointRadius: 3
+        }
+      ]
+    };
+  };
+
+  const learningCurvesChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        grid: {
+          color: 'rgba(255, 255, 255, 0.05)'
+        },
+        ticks: {
+          color: '#94a3b8'
+        }
+      },
+      y: {
+        title: {
+          display: true,
+          text: curveMetric === 'accuracy' ? 'ACCURACY RATE (%)' : 'REACTION TIME (ms)',
+          color: '#94a3b8'
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.05)'
+        },
+        ticks: {
+          color: '#94a3b8'
+        }
+      }
+    },
+    plugins: {
+      legend: {
+        labels: {
+          color: '#f8fafc'
+        }
+      }
+    }
+  };
+
+  // Run ISO & Sandbox fetch when switching to researcher view
   useEffect(() => {
     if (portalView === 'researcher') {
       fetchIsoSummary();
+      fetchSandboxData(sandboxVar1, sandboxVar2, sandboxCohort);
     }
-  }, [portalView]);
+  }, [portalView, sandboxVar1, sandboxVar2, sandboxCohort, activeDashboardUser]);
+
+  // Cognitive Goal Tracker Methods (Option C)
+  const fetchGoals = async (username = activeDashboardUser) => {
+    setGoalsLoading(true);
+    setGoalsError(null);
+    try {
+      const response = await fetch(`http://127.0.0.1:5000/api/training-goals/${username}`);
+      if (!response.ok) throw new Error('Failed to load training goals.');
+      const data = await response.json();
+      if (data.status === 'success') {
+        setGoals(data.goals || []);
+        
+        const completed = data.goals.filter(g => g.just_completed);
+        if (completed.length > 0) {
+          completed.forEach(g => {
+            const cleanDomain = g.domain.replace(/_/g, ' ').toUpperCase();
+            triggerMilestoneToast(`🏆 Goal Achieved in ${cleanDomain}: Reached ${g.metric_type} target of ${g.target_value}!`);
+          });
+        }
+      } else {
+        throw new Error(data.message || 'Failed to fetch goals.');
+      }
+    } catch (e) {
+      console.error("[Goals Fetch] Failed:", e);
+      setGoalsError(e.message);
+    } finally {
+      setGoalsLoading(false);
+    }
+  };
+
+  const createGoal = async (e) => {
+    if (e) e.preventDefault();
+    if (!goalTarget || isNaN(parseFloat(goalTarget))) {
+      alert("Please enter a valid target value.");
+      return;
+    }
+    try {
+      const response = await fetch('http://127.0.0.1:5000/api/training-goals', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username: activeDashboardUser,
+          domain: goalDomain,
+          metric_type: goalMetric,
+          target_value: parseFloat(goalTarget)
+        })
+      });
+      if (!response.ok) throw new Error('Failed to save goal.');
+      const data = await response.json();
+      if (data.status === 'success') {
+        fetchGoals(activeDashboardUser);
+        setGoalTarget('');
+      } else {
+        throw new Error(data.message || 'Failed to create goal.');
+      }
+    } catch (e) {
+      console.error("[Goal Create] Failed:", e);
+      alert(`Error creating goal: ${e.message}`);
+    }
+  };
+
+  const deleteGoal = async (goalId) => {
+    try {
+      const response = await fetch(`http://127.0.0.1:5000/api/training-goals/${goalId}`, {
+        method: 'DELETE'
+      });
+      if (!response.ok) throw new Error('Failed to delete goal.');
+      const data = await response.json();
+      if (data.status === 'success') {
+        fetchGoals(activeDashboardUser);
+      } else {
+        throw new Error(data.message || 'Failed to delete goal.');
+      }
+    } catch (e) {
+      console.error("[Goal Delete] Failed:", e);
+      alert(`Error deleting goal: ${e.message}`);
+    }
+  };
+
+  const triggerMilestoneToast = (msg) => {
+    setMilestoneNotification(msg);
+    setTimeout(() => {
+      setMilestoneNotification(null);
+    }, 5000);
+  };
+
+  // Fetch training goals on user or game update
+  useEffect(() => {
+    if (activeDashboardUser) {
+      fetchGoals(activeDashboardUser);
+    }
+  }, [activeDashboardUser, lastGameStats]);
 
   // Submit ISO Evaluation
   const submitIsoEvaluation = async (e) => {
@@ -659,7 +1147,66 @@ export default function App() {
   };
 
   return (
-    <div className="portal-container">
+    <div className="portal-container" style={{ position: 'relative' }}>
+      {milestoneNotification && (
+        <div className="milestone-toast-container" style={{
+          position: 'fixed',
+          top: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'linear-gradient(135deg, #1e1b4b, #115e59)',
+          border: '2px solid #a855f7',
+          boxShadow: '0 0 25px rgba(168, 85, 247, 0.6), 0 10px 40px rgba(0,0,0,0.6)',
+          borderRadius: '12px',
+          padding: '1rem 2rem',
+          color: '#ffffff',
+          zIndex: 99999,
+          fontWeight: 'bold',
+          fontSize: '1.05rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          animation: 'slideDownFadeIn 0.5s ease-out'
+        }}>
+          <span style={{ fontSize: '1.5rem' }}>🏆</span>
+          <span>{milestoneNotification}</span>
+        </div>
+      )}
+      {ddaAdvisorMessage && (
+        <div className="dda-advisor-overlay" style={{
+          position: 'fixed',
+          top: '90px',
+          right: '20px',
+          width: '320px',
+          background: 'rgba(15, 23, 42, 0.85)',
+          backdropFilter: 'blur(20px)',
+          border: '1.5px solid #a855f7',
+          boxShadow: '0 0 25px rgba(168, 85, 247, 0.4), 0 10px 40px rgba(0,0,0,0.6)',
+          borderRadius: '12px',
+          padding: '1rem 1.25rem',
+          color: '#ffffff',
+          zIndex: 99999,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.5rem'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
+            <span style={{ fontSize: '1.25rem' }}>🧠</span>
+            <strong style={{ fontSize: '0.9rem', color: '#c084fc', letterSpacing: '0.05em' }}>DDA ADVISOR REPORT</strong>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.8rem', fontWeight: 'bold' }}>
+            {ddaAdvisorMessage.changes.map((ch, idx) => (
+              <div key={idx} style={{ color: '#4ade80', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <span>🔧</span>
+                <span>{ch}</span>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: '0.25rem 0 0 0', lineHeight: '1.4' }}>
+            {ddaAdvisorMessage.reason}
+          </p>
+        </div>
+      )}
       {/* Top Header */}
       <header className="portal-header">
         <div className="logo-glow" onClick={() => { setActiveGame(null); setShowDashboard(false); setPortalView('participant'); }} style={{ cursor: 'pointer' }}>
@@ -748,17 +1295,17 @@ export default function App() {
               flexWrap: 'wrap'
             }}>
               <div style={{ flex: '1', display: 'flex', justifyContent: 'center', minWidth: '600px' }}>
-                {activeGame === 'SpeedTap' && <SpeedTapGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                {activeGame === 'MemoryMatch' && <MemoryMatchGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                {activeGame === 'FocusFinder' && <FocusFinderGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                {activeGame === 'LogicLink' && <LogicLinkGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                {activeGame === 'MazeEscape' && <MazeEscapeGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                {activeGame === 'MatrixRecall' && <MatrixRecallGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                {activeGame === 'StroopShift' && <StroopShiftGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                {activeGame === 'MentalFlex' && <MentalFlexGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                {activeGame === 'EquationBalance' && <EquationBalanceGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                {activeGame === 'SequenceDecoder' && <SequenceDecoderGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                {activeGame === 'RouteOptimizer' && <RouteOptimizerGame username="player_one" apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                {activeGame === 'SpeedTap' && <SpeedTapGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                {activeGame === 'MemoryMatch' && <MemoryMatchGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                {activeGame === 'FocusFinder' && <FocusFinderGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                {activeGame === 'LogicLink' && <LogicLinkGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                {activeGame === 'MazeEscape' && <MazeEscapeGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                {activeGame === 'MatrixRecall' && <MatrixRecallGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                {activeGame === 'StroopShift' && <StroopShiftGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                {activeGame === 'MentalFlex' && <MentalFlexGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                {activeGame === 'EquationBalance' && <EquationBalanceGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                {activeGame === 'SequenceDecoder' && <SequenceDecoderGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                {activeGame === 'RouteOptimizer' && <RouteOptimizerGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
               </div>
               
               {activeSessionId && (
@@ -767,6 +1314,7 @@ export default function App() {
                   ddaParameters={liveDdaParams}
                   cognitiveProfile={liveCognitiveProfile}
                   liveMetrics={liveMetrics}
+                  advisorLogs={ddaAdvisorLogs}
                 />
               )}
             </div>
@@ -964,6 +1512,165 @@ export default function App() {
                     textAlign: 'center'
                   }}>
                     {evalResult.statistically_significant ? '✅ ' : '❌ '} {evalResult.hypothesis_result} (p &lt; 0.05)
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <h2 className="section-title" style={{ marginTop: '2.5rem' }}>🔬 Interactive Statistical Sandbox & Correlation Tool</h2>
+            <div className="game-card" style={{ width: '100%', alignItems: 'stretch', padding: '2rem', marginBottom: '2rem', boxSizing: 'border-box' }}>
+              <div style={{ background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.2)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
+                <span style={{ fontWeight: 'bold', color: '#38bdf8', fontSize: '0.9rem' }}>Pillar 1 Dynamic Correlation Analysis & Cohort Comparison</span>
+                <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: '0.25rem 0 0 0' }}>
+                  Analyze relationships between cognitive micro-behaviors and performance telemetry on-the-fly. Select any two parameters to compute the Pearson Correlation Coefficient (r), R-squared (R²), and statistical significance (p-value).
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', marginBottom: '2rem', background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ flex: '1', minWidth: '200px', textAlign: 'left' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.4rem', fontWeight: 'bold' }}>X-Axis Variable (Var 1):</label>
+                  <select
+                    value={sandboxVar1}
+                    onChange={(e) => setSandboxVar1(e.target.value)}
+                    style={{ background: '#09090b', color: '#fff', border: '1.5px solid #334155', borderRadius: '6px', padding: '0.5rem', width: '100%', outline: 'none' }}
+                  >
+                    <option value="reaction_time">Reaction Time (ms)</option>
+                    <option value="accuracy_rate">Accuracy Rate</option>
+                    <option value="difficulty_level">Challenge Level</option>
+                    <option value="error_count">Error Count</option>
+                    <option value="hesitation_ms">Hesitation Latency (ms)</option>
+                    <option value="spam_click_count">Spam Click Count</option>
+                    <option value="rule_shift_latency_ms">Rule-Shift Latency (ms)</option>
+                    <option value="path_efficiency">Path Efficiency</option>
+                  </select>
+                </div>
+
+                <div style={{ flex: '1', minWidth: '200px', textAlign: 'left' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.4rem', fontWeight: 'bold' }}>Y-Axis Variable (Var 2):</label>
+                  <select
+                    value={sandboxVar2}
+                    onChange={(e) => setSandboxVar2(e.target.value)}
+                    style={{ background: '#09090b', color: '#fff', border: '1.5px solid #334155', borderRadius: '6px', padding: '0.5rem', width: '100%', outline: 'none' }}
+                  >
+                    <option value="spam_click_count">Spam Click Count</option>
+                    <option value="rule_shift_shift_ms">Rule-Shift Latency (ms)</option>
+                    <option value="rule_shift_latency_ms">Rule-Shift Latency (ms)</option>
+                    <option value="reaction_time">Reaction Time (ms)</option>
+                    <option value="accuracy_rate">Accuracy Rate</option>
+                    <option value="difficulty_level">Challenge Level</option>
+                    <option value="error_count">Error Count</option>
+                    <option value="hesitation_ms">Hesitation Latency (ms)</option>
+                    <option value="path_efficiency">Path Efficiency</option>
+                  </select>
+                </div>
+
+                <div style={{ flex: '1', minWidth: '200px', textAlign: 'left' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.4rem', fontWeight: 'bold' }}>Select Analysis Cohort:</label>
+                  <select
+                    value={sandboxCohort}
+                    onChange={(e) => setSandboxCohort(e.target.value)}
+                    style={{ background: '#09090b', color: '#fff', border: '1.5px solid #334155', borderRadius: '6px', padding: '0.5rem', width: '100%', outline: 'none' }}
+                  >
+                    <option value="all">All Subjects Cohort (General)</option>
+                    <option value="clinical">Clinical Research Cohort (clinical_subject_*)</option>
+                    <option value="active">Active Participant ({activeDashboardUser})</option>
+                  </select>
+                </div>
+              </div>
+
+              {sandboxLoading && <div style={{ textAlign: 'center', padding: '2rem', color: '#94a3b8' }}>Recalculating Pearson Correlation Matrices...</div>}
+              {sandboxError && <div style={{ color: '#ef4444', background: 'rgba(239, 68, 68, 0.1)', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem' }}>{sandboxError}</div>}
+
+              {!sandboxLoading && correlationResult && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', alignItems: 'stretch' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', textAlign: 'left' }}>
+                    <div style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '1.5rem' }}>
+                      <h4 style={{ color: '#38bdf8', fontSize: '1.05rem', margin: '0 0 1rem 0', fontWeight: 'bold' }}>📉 Pearson Correlation Coefficient</h4>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+                        <div style={{ borderRight: '1px solid rgba(255,255,255,0.05)', paddingRight: '0.5rem' }}>
+                          <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Pearson r Coefficient</span>
+                          <span style={{ fontSize: '2rem', fontWeight: '900', color: correlationResult.r >= 0 ? '#38bdf8' : '#fb923c' }}>{correlationResult.r}</span>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>R-squared (R²)</span>
+                          <span style={{ fontSize: '2rem', fontWeight: '900', color: '#ffffff' }}>{correlationResult.r_squared}</span>
+                        </div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
+                        <div style={{ borderRight: '1px solid rgba(255,255,255,0.05)', paddingRight: '0.5rem' }}>
+                          <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>p-value Significance</span>
+                          <span style={{ fontSize: '1.2rem', fontWeight: 'bold', color: correlationResult.p_value < 0.05 ? '#4ade80' : '#f87171' }}>p = {correlationResult.p_value}</span>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Correlation Magnitude</span>
+                          <span style={{ fontSize: '1.2rem', fontWeight: 'bold', textTransform: 'capitalize', color: correlationResult.magnitude === 'strong' ? '#4ade80' : correlationResult.magnitude === 'moderate' ? '#f59e0b' : '#94a3b8' }}>
+                            {correlationResult.magnitude} ({correlationResult.direction})
+                          </span>
+                        </div>
+                      </div>
+                      <div style={{ marginTop: '1.5rem', padding: '0.85rem', borderRadius: '8px', fontSize: '0.85rem', lineHeight: '1.45', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: '#e2e8f0' }}>
+                        <strong>💡 Interpretation:</strong> {correlationResult.interpretation}
+                      </div>
+                    </div>
+
+                    {learningCurves && (
+                      <div style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '1.5rem' }}>
+                        <h4 style={{ color: '#4ade80', fontSize: '1.05rem', margin: '0 0 0.75rem 0', fontWeight: 'bold' }}>📈 Learning Curves Analysis</h4>
+                        <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: '0 0 1.25rem 0' }}>
+                          Compare training progression rates side-by-side. View longitudinal improvement over sessions.
+                        </p>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button
+                            onClick={() => setCurveMetric('accuracy')}
+                            style={{
+                              flex: 1,
+                              padding: '0.45rem',
+                              borderRadius: '6px',
+                              border: '1px solid ' + (curveMetric === 'accuracy' ? 'transparent' : 'rgba(255,255,255,0.1)'),
+                              background: curveMetric === 'accuracy' ? 'linear-gradient(to right, #4ade80, #38bdf8)' : 'rgba(255,255,255,0.03)',
+                              color: '#fff',
+                              fontWeight: 'bold',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            Accuracy Rate (%)
+                          </button>
+                          <button
+                            onClick={() => setCurveMetric('reaction_time')}
+                            style={{
+                              flex: 1,
+                              padding: '0.45rem',
+                              borderRadius: '6px',
+                              border: '1px solid ' + (curveMetric === 'reaction_time' ? 'transparent' : 'rgba(255,255,255,0.1)'),
+                              background: curveMetric === 'reaction_time' ? 'linear-gradient(to right, #4ade80, #38bdf8)' : 'rgba(255,255,255,0.03)',
+                              color: '#fff',
+                              fontWeight: 'bold',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            Reaction Time (ms)
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '1.5rem', display: 'flex', flexDirection: 'column', height: '320px', boxSizing: 'border-box' }}>
+                      <h4 style={{ color: '#e2e8f0', fontSize: '1rem', margin: '0 0 1rem 0', fontWeight: 'bold', textAlign: 'left' }}>Scatter Plot & Regression Line</h4>
+                      <div style={{ flex: 1, position: 'relative', height: 'calc(100% - 30px)' }}>
+                        <Scatter data={getScatterChartData()} options={scatterChartOptions} />
+                      </div>
+                    </div>
+
+                    {learningCurves && (
+                      <div style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '1.5rem', display: 'flex', flexDirection: 'column', height: '320px', boxSizing: 'border-box' }}>
+                        <h4 style={{ color: '#e2e8f0', fontSize: '1rem', margin: '0 0 1rem 0', fontWeight: 'bold', textAlign: 'left' }}>Longitudinal Cohort Comparison Curves</h4>
+                        <div style={{ flex: 1, position: 'relative', height: 'calc(100% - 30px)' }}>
+                          <Line data={getLearningCurvesChartData()} options={learningCurvesChartOptions} />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -1609,6 +2316,326 @@ export default function App() {
             <div className="intro-card">
               <h1>Adaptive Neuro-Training Portal</h1>
               <p>Welcome to CogniCore. Access clinically validated serious game modules designed to assess cognitive processing speed, selective attention, and executive function. Real-time telemetry is recorded to construct your adaptive cognitive profile.</p>
+            </div>
+
+            {/* Cognitive Targets & Milestones (Option C) */}
+            <div className="goals-section-container" style={{ marginBottom: '3.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h2 className="section-title" style={{ margin: 0 }}>🎯 Cognitive Targets & Milestones</h2>
+                <button
+                  onClick={() => setShowGoalForm(!showGoalForm)}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    padding: '0.5rem 1rem',
+                    fontSize: '0.875rem',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}
+                  onMouseOver={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.1)'}
+                  onMouseOut={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.05)'}
+                >
+                  {showGoalForm ? 'Close Target Creator' : '➕ Create New Target'}
+                </button>
+              </div>
+
+              {/* Collapsible Glassmorphic Goal Form */}
+              {showGoalForm && (
+                <form onSubmit={createGoal} className="game-card" style={{
+                  padding: '1.5rem',
+                  marginBottom: '1.5rem',
+                  background: 'rgba(15, 23, 42, 0.6)',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(168, 85, 247, 0.2)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '1rem',
+                  animation: 'fadeInDown 0.3s ease-out'
+                }}>
+                  <h3 style={{ fontSize: '1.1rem', margin: 0, color: '#c084fc' }}>Configure Personal Training Goal</h3>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+                    
+                    {/* Domain Selector */}
+                    <div style={{ flex: '1', minWidth: '200px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <label style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 'bold' }}>Cognitive Domain</label>
+                      <select
+                        value={goalDomain}
+                        onChange={(e) => setGoalDomain(e.target.value)}
+                        style={{
+                          background: '#09090b',
+                          border: '1.5px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '6px',
+                          color: '#ffffff',
+                          padding: '0.5rem',
+                          fontSize: '0.875rem',
+                          outline: 'none'
+                        }}
+                      >
+                        <option value="reflexes_and_focus">⚡ Reflexes & Focus</option>
+                        <option value="spatial_visual_memory">🧠 Memory & Recall</option>
+                        <option value="logical_mathematical">🔢 Logical Reasoning</option>
+                        <option value="executive_strategy">🧭 Executive Strategy</option>
+                      </select>
+                    </div>
+
+                    {/* Metric Selector */}
+                    <div style={{ flex: '1', minWidth: '150px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <label style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 'bold' }}>Performance Metric</label>
+                      <select
+                        value={goalMetric}
+                        onChange={(e) => {
+                          setGoalMetric(e.target.value);
+                          if (e.target.value === 'accuracy') setGoalTarget('80');
+                          else if (e.target.value === 'reaction_time') setGoalTarget('600');
+                          else if (e.target.value === 'difficulty') setGoalTarget('3');
+                        }}
+                        style={{
+                          background: '#09090b',
+                          border: '1.5px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '6px',
+                          color: '#ffffff',
+                          padding: '0.5rem',
+                          fontSize: '0.875rem',
+                          outline: 'none'
+                        }}
+                      >
+                        <option value="accuracy">Accuracy Rate (%)</option>
+                        <option value="reaction_time">Average Response Latency (ms)</option>
+                        <option value="difficulty">Challenge Level (1-5)</option>
+                      </select>
+                    </div>
+
+                    {/* Target Value Input */}
+                    <div style={{ flex: '1', minWidth: '120px', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <label style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 'bold' }}>
+                        Target Value {goalMetric === 'accuracy' ? '(%)' : goalMetric === 'reaction_time' ? '(ms)' : '(1-5)'}
+                      </label>
+                      <input
+                        type="number"
+                        min={goalMetric === 'accuracy' ? '1' : '1'}
+                        max={goalMetric === 'accuracy' ? '100' : goalMetric === 'difficulty' ? '5' : '10000'}
+                        step={goalMetric === 'difficulty' ? '1' : '0.1'}
+                        value={goalTarget}
+                        onChange={(e) => setGoalTarget(e.target.value)}
+                        style={{
+                          background: '#09090b',
+                          border: '1.5px solid rgba(255, 255, 255, 0.1)',
+                          borderRadius: '6px',
+                          color: '#ffffff',
+                          padding: '0.5rem',
+                          fontSize: '0.875rem',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                    <button
+                      type="submit"
+                      style={{
+                        background: 'linear-gradient(to right, #a855f7, #38bdf8)',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '6px',
+                        padding: '0.5rem 1.5rem',
+                        fontSize: '0.875rem',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 10px rgba(168, 85, 247, 0.25)',
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseOver={(e) => e.target.style.filter = 'brightness(1.1)'}
+                      onMouseOut={(e) => e.target.style.filter = 'brightness(1.0)'}
+                    >
+                      Establish Target Goal
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* Grid Layout containing active goals and milestones */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1.5rem' }}>
+                
+                {/* Active Goals Section */}
+                <div className="game-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <h3 style={{ fontSize: '1.1rem', margin: 0, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>🎯 Active Targets</h3>
+                  
+                  {goalsLoading ? (
+                    <div style={{ color: '#94a3b8', fontSize: '0.875rem', textAlign: 'center', padding: '2rem 0' }}>
+                      Loading personal cognitive goals...
+                    </div>
+                  ) : goalsError ? (
+                    <div style={{ color: '#f87171', fontSize: '0.875rem', textAlign: 'center', padding: '2rem 0' }}>
+                      ⚠️ Error loading goals: {goalsError}
+                    </div>
+                  ) : goals.filter(g => !g.is_completed).length === 0 ? (
+                    <div style={{ color: '#64748b', fontSize: '0.85rem', textAlign: 'center', padding: '2rem 0' }}>
+                      No active goals set. Click "Create New Target" above to define your next neuro-training milestone!
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+                      {goals.filter(g => !g.is_completed).map(goal => {
+                        const domainObj = DOMAIN_INFO[goal.domain] || { title: goal.domain, color: '#a855f7', icon: '🎯' };
+                        const progress = getGoalProgress(goal);
+                        const displayProgress = Math.min(100, Math.round(progress * 100));
+                        
+                        return (
+                          <div
+                            key={goal.id}
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.02)',
+                              border: `1.5px solid rgba(255, 255, 255, 0.05)`,
+                              borderRadius: '12px',
+                              padding: '1rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              gap: '1rem',
+                              position: 'relative'
+                            }}
+                          >
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', flex: 1 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                <span style={{ fontSize: '1.1rem' }}>{domainObj.icon}</span>
+                                <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: domainObj.color }}>
+                                  {domainObj.title}
+                                </span>
+                              </div>
+                              <div style={{ fontSize: '0.75rem', color: '#cbd5e1', marginTop: '0.25rem' }}>
+                                Target: <strong style={{ color: '#ffffff' }}>{goal.target_value}{goal.metric_type === 'accuracy' ? '%' : goal.metric_type === 'reaction_time' ? 'ms' : ''}</strong> ({goal.metric_type.replace(/_/g, ' ')})
+                              </div>
+                              <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
+                                Current Avg/Max: <strong style={{ color: '#ffffff' }}>{goal.current_value || '0'}{goal.metric_type === 'accuracy' ? '%' : goal.metric_type === 'reaction_time' ? 'ms' : ''}</strong>
+                              </div>
+                            </div>
+
+                            {/* SVG Circular Progress Ring */}
+                            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '64px', height: '64px' }}>
+                              <ProgressRing radius={32} stroke={3} progress={progress} color={domainObj.color} />
+                              <span style={{
+                                position: 'absolute',
+                                fontSize: '0.75rem',
+                                fontWeight: 'bold',
+                                color: '#ffffff'
+                              }}>
+                                {displayProgress}%
+                              </span>
+                            </div>
+
+                            {/* Delete Button */}
+                            <button
+                              onClick={() => deleteGoal(goal.id)}
+                              style={{
+                                position: 'absolute',
+                                top: '6px',
+                                right: '6px',
+                                background: 'transparent',
+                                border: 'none',
+                                color: '#64748b',
+                                fontSize: '1.1rem',
+                                cursor: 'pointer',
+                                transition: 'color 0.2s'
+                              }}
+                              onMouseOver={(e) => e.target.style.color = '#ef4444'}
+                              onMouseOut={(e) => e.target.style.color = '#64748b'}
+                              title="Delete goal"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Milestone Badges Section */}
+                <div className="game-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <h3 style={{ fontSize: '1.1rem', margin: 0, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>🏆 Completed Milestones</h3>
+                  
+                  {goalsLoading ? (
+                    <div style={{ color: '#94a3b8', fontSize: '0.875rem', textAlign: 'center', padding: '2rem 0' }}>
+                      Loading completed milestones...
+                    </div>
+                  ) : goals.filter(g => g.is_completed).length === 0 ? (
+                    <div style={{ color: '#64748b', fontSize: '0.85rem', textAlign: 'center', padding: '2rem 0' }}>
+                      No completed milestones yet. Complete training targets during gameplay to unlock permanent achievement badges!
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+                      {goals.filter(g => g.is_completed).map(goal => {
+                        const domainObj = DOMAIN_INFO[goal.domain] || { title: goal.domain, color: '#a855f7', icon: '🏆' };
+                        
+                        // Dynamic badge name/class based on domain and metric
+                        let badgeTitle = "Novice Challenger";
+                        if (goal.metric_type === 'accuracy') {
+                          badgeTitle = `${domainObj.title.split(' ')[0]} Marksman`;
+                        } else if (goal.metric_type === 'reaction_time') {
+                          badgeTitle = `${domainObj.title.split(' ')[0]} Speedster`;
+                        } else if (goal.metric_type === 'difficulty') {
+                          badgeTitle = `${domainObj.title.split(' ')[0]} Master`;
+                        }
+
+                        return (
+                          <div
+                            key={goal.id}
+                            style={{
+                              background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.4), rgba(17, 94, 89, 0.4))',
+                              border: `2px solid #a855f7`,
+                              borderRadius: '12px',
+                              padding: '0.75rem 1.25rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.75rem',
+                              boxShadow: '0 0 15px rgba(168, 85, 247, 0.2), inset 0 1px 1px rgba(255,255,255,0.05)',
+                              animation: 'pulseGlow 2.5s infinite alternate',
+                              position: 'relative'
+                            }}
+                          >
+                            <span style={{ fontSize: '1.8rem', filter: 'drop-shadow(0 0 5px #a855f7)' }}>🏅</span>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                              <span style={{ fontSize: '0.85rem', fontWeight: '800', color: '#ffffff' }}>
+                                {badgeTitle}
+                              </span>
+                              <span style={{ fontSize: '0.7rem', color: '#cbd5e1' }}>
+                                Completed {goal.metric_type.replace(/_/g, ' ')}: {goal.target_value}{goal.metric_type === 'accuracy' ? '%' : goal.metric_type === 'reaction_time' ? 'ms' : ''} target ({domainObj.title})
+                              </span>
+                            </div>
+                            
+                            {/* Delete Completed Goal Button */}
+                            <button
+                              onClick={() => deleteGoal(goal.id)}
+                              style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: 'rgba(255,255,255,0.3)',
+                                fontSize: '0.9rem',
+                                cursor: 'pointer',
+                                marginLeft: '0.5rem',
+                                alignSelf: 'center',
+                                transition: 'color 0.2s'
+                              }}
+                              onMouseOver={(e) => e.target.style.color = '#ef4444'}
+                              onMouseOut={(e) => e.target.style.color = 'rgba(255,255,255,0.3)'}
+                              title="Delete milestone"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+              </div>
             </div>
 
             <h2 className="section-title">Available Training Modules by Domain</h2>

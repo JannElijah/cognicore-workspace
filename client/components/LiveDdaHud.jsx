@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function LiveDdaHud({ gameType = 'Game', ddaParameters, cognitiveProfile, liveMetrics = [] }) {
+export default function LiveDdaHud({ gameType = 'Game', ddaParameters, cognitiveProfile, liveMetrics = [], advisorLogs = [] }) {
     // Determine archetype details
     const archetype = cognitiveProfile?.archetype || 'Plateauing';
     const confidence = cognitiveProfile?.confidence_score !== undefined ? Math.round(cognitiveProfile.confidence_score * 100) : 75;
@@ -215,6 +215,45 @@ export default function LiveDdaHud({ gameType = 'Game', ddaParameters, cognitive
                             }}>
                                 <span>Round {liveMetrics.length - index}</span>
                                 <span style={{ color: '#e2e8f0' }}>Acc: {Math.round(m.accuracy * 100)}% | RT: {m.rt.toFixed(0)}ms</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* DDA Advisor Log Feed */}
+            {advisorLogs && advisorLogs.length > 0 && (
+                <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.05)', paddingTop: '0.75rem', marginTop: '0.75rem' }}>
+                    <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: '600', display: 'block', marginBottom: '0.35rem' }}>🧠 DDA ADVISOR LOGS</span>
+                    <div style={{
+                        background: 'rgba(0, 0, 0, 0.25)',
+                        border: '1px solid rgba(255, 255, 255, 0.04)',
+                        borderRadius: '8px',
+                        padding: '0.5rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.5rem',
+                        maxHeight: '120px',
+                        overflowY: 'auto'
+                    }}>
+                        {advisorLogs.map((log) => (
+                            <div key={log.id} style={{
+                                fontSize: '0.75rem',
+                                color: '#94a3b8',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                borderBottom: '1px solid rgba(255, 255, 255, 0.03)',
+                                paddingBottom: '4px',
+                                gap: '2px',
+                                textAlign: 'left'
+                            }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#a855f7', fontWeight: 'bold' }}>
+                                    <span>Tuned @ {log.timestamp}</span>
+                                </div>
+                                <div style={{ color: '#4ade80', fontWeight: '600' }}>
+                                    {log.changes.join(', ')}
+                                </div>
+                                <span style={{ color: '#cbd5e1', fontSize: '0.7rem', fontStyle: 'italic', lineHeight: '1.3' }}>{log.reason}</span>
                             </div>
                         ))}
                     </div>

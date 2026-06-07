@@ -128,6 +128,20 @@ def init_db():
             FOREIGN KEY (session_id) REFERENCES game_sessions(id)
         )
     """)
+
+    # Create training_goals table if it doesn't exist (Option C)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS training_goals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            domain TEXT NOT NULL,
+            metric_type TEXT NOT NULL,
+            target_value REAL NOT NULL,
+            is_completed INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
     
     conn.commit()
     conn.close()
@@ -1460,6 +1474,386 @@ def get_archetype_progression(username):
     except Exception as e:
         app.logger.error(f"Error in get_archetype_progression: {e}")
         return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
+
+
+def calculate_pearson_r(x, y):
+    n = len(x)
+    if n <= 1:
+        return 0.0, 1.0  # (r, p-value)
+    
+    sum_x = sum(x)
+    sum_y = sum(y)
+    sum_x2 = sum(xi * xi for xi in x)
+    sum_y2 = sum(yi * yi for yi in y)
+    sum_xy = sum(xi * yi for xi, yi in zip(x, y))
+    
+    numerator = n * sum_xy - sum_x * sum_y
+    denominator = ((n * sum_x2 - sum_x * sum_x) * (n * sum_y2 - sum_y * sum_y)) ** 0.5
+    
+    if denominator == 0:
+        return 0.0, 1.0
+        
+    r = numerator / denominator
+    
+    # Calculate simple p-value using t-statistic
+    p_val = 1.0
+    if SCIPY_AVAILABLE:
+        try:
+            r_exact, p_val = stats.pearsonr(x, y)
+            return float(r_exact), float(p_val)
+        except Exception:
+            pass
+            
+    # Simple mathematical approximation or fallback for p-value if scipy is missing:
+    try:
+        df = n - 2
+        if df > 0 and abs(r) < 1.0:
+            t = r * ((df / (1 - r * r)) ** 0.5)
+            z = abs(t)
+            # Standard normal CDF approximation (Abramowitz and Stegun)
+            t_approx = 1 / (1 + 0.2316419 * z)
+            d = 0.3989423 * (2.7182818 ** (-z * z / 2))
+            prob = d * t_approx * (0.3193815 + t_approx * (-0.3565638 + t_approx * (1.7814779 + t_approx * (-1.821256 + t_approx * 1.330274))))
+            p_val = 2.0 * prob
+            p_val = max(0.0, min(1.0, p_val))
+    except Exception:
+        p_val = 0.05 if abs(r) > 0.3 else 0.5
+        
+    return float(r), float(p_val)
+
+
+@app.route('/api/research/correlations', methods=['GET'])
+def get_research_correlations():
+    try:
+        var1 = request.args.get('var1', 'rule_shift_latency_ms')
+        var2 = request.args.get('var2', 'spam_click_count')
+        cohort = request.args.get('cohort', 'all')  # 'all', 'clinical', 'active'
+        active_username = request.args.get('username', '')
+
+        # Valid numeric variables for correlation matrix comparison
+        valid_vars = {
+            'reaction_time', 'accuracy_rate', 'difficulty_level', 
+            'error_count', 'hesitation_ms', 'spam_click_count', 
+            'rule_shift_latency_ms', 'path_efficiency'
+        }
+        if var1 not in valid_vars or var2 not in valid_vars:
+            return jsonify({"status": "error", "message": "Invalid variables selected"}), 400
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        if cohort == 'active' and active_username:
+            query = f"""
+                SELECT pm.{var1}, pm.{var2}, u.username
+                FROM performance_metrics pm
+                JOIN game_sessions gs ON pm.session_id = gs.id
+                JOIN users u ON gs.user_id = u.id
+                WHERE u.username = ? AND pm.{var1} IS NOT NULL AND pm.{var2} IS NOT NULL
+            """
+            cursor.execute(query, (active_username,))
+        elif cohort == 'clinical':
+            query = f"""
+                SELECT pm.{var1}, pm.{var2}, u.username
+                FROM performance_metrics pm
+                JOIN game_sessions gs ON pm.session_id = gs.id
+                JOIN users u ON gs.user_id = u.id
+                WHERE u.username LIKE 'clinical_subject_%' AND pm.{var1} IS NOT NULL AND pm.{var2} IS NOT NULL
+            """
+            cursor.execute(query)
+        else:  # all
+            query = f"""
+                SELECT pm.{var1}, pm.{var2}, u.username
+                FROM performance_metrics pm
+                JOIN game_sessions gs ON pm.session_id = gs.id
+                JOIN users u ON gs.user_id = u.id
+                WHERE pm.{var1} IS NOT NULL AND pm.{var2} IS NOT NULL
+            """
+            cursor.execute(query)
+
+        rows = cursor.fetchall()
+        conn.close()
+
+        x_vals = []
+        y_vals = []
+        data_points = []
+
+        for r in rows:
+            val1 = r[var1]
+            val2 = r[var2]
+            if val1 is not None and val2 is not None:
+                x_vals.append(float(val1))
+                y_vals.append(float(val2))
+                data_points.append({
+                    "x": float(val1),
+                    "y": float(val2),
+                    "username": r["username"]
+                })
+
+        r_coeff, p_value = calculate_pearson_r(x_vals, y_vals)
+        r_squared = r_coeff * r_coeff
+
+        abs_r = abs(r_coeff)
+        if abs_r >= 0.7:
+            magnitude = "strong"
+        elif abs_r >= 0.4:
+            magnitude = "moderate"
+        elif abs_r >= 0.1:
+            magnitude = "weak"
+        else:
+            magnitude = "negligible"
+
+        direction = "positive" if r_coeff >= 0 else "negative"
+        interpretation = f"There is a {magnitude} {direction} correlation between {var1.replace('_', ' ')} and {var2.replace('_', ' ')} (r = {r_coeff:.4f}, p = {p_value:.4f})."
+
+        return jsonify({
+            "status": "success",
+            "var1": var1,
+            "var2": var2,
+            "cohort": cohort,
+            "r": round(r_coeff, 4),
+            "r_squared": round(r_squared, 4),
+            "p_value": round(p_value, 4),
+            "magnitude": magnitude,
+            "direction": direction,
+            "interpretation": interpretation,
+            "data_points": data_points
+        }), 200
+    except Exception as e:
+        app.logger.error(f"Error in get_research_correlations: {e}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+
+
+@app.route('/api/research/learning-curves/<username>', methods=['GET'])
+def get_learning_curves(username):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT gs.user_id, u.username, gs.id AS session_id, gs.start_time,
+                   AVG(pm.accuracy_rate) as avg_acc,
+                   AVG(pm.reaction_time) as avg_rt
+            FROM game_sessions gs
+            JOIN users u ON gs.user_id = u.id
+            LEFT JOIN performance_metrics pm ON pm.session_id = gs.id
+            GROUP BY gs.id
+            ORDER BY gs.user_id, gs.start_time ASC
+        """)
+        rows = cursor.fetchall()
+        conn.close()
+
+        user_sessions = {}
+        for r in rows:
+            uid = r["user_id"]
+            if uid not in user_sessions:
+                user_sessions[uid] = []
+            user_sessions[uid].append({
+                "username": r["username"],
+                "avg_acc": r["avg_acc"] if r["avg_acc"] is not None else 0.0,
+                "avg_rt": r["avg_rt"] if r["avg_rt"] is not None else 0.0
+            })
+
+        active_user_curve = []
+        clinical_cohort_curves = {}
+        all_cohort_curves = {}
+
+        for uid, sessions in user_sessions.items():
+            is_active = (sessions[0]["username"] == username) if sessions else False
+            is_clinical = sessions[0]["username"].startswith("clinical_subject_") if sessions else False
+            
+            for idx, s in enumerate(sessions):
+                session_num = idx + 1
+                
+                if is_active:
+                    active_user_curve.append({
+                        "session_index": session_num,
+                        "accuracy": round(s["avg_acc"], 4),
+                        "reaction_time": round(s["avg_rt"], 2)
+                    })
+                
+                if is_clinical:
+                    if session_num not in clinical_cohort_curves:
+                        clinical_cohort_curves[session_num] = []
+                    clinical_cohort_curves[session_num].append(s)
+                
+                if session_num not in all_cohort_curves:
+                    all_cohort_curves[session_num] = []
+                all_cohort_curves[session_num].append(s)
+
+        clinical_curve = []
+        for idx in sorted(clinical_cohort_curves.keys()):
+            s_list = clinical_cohort_curves[idx]
+            avg_acc = sum(x["avg_acc"] for x in s_list) / len(s_list)
+            avg_rt = sum(x["avg_rt"] for x in s_list) / len(s_list)
+            clinical_curve.append({
+                "session_index": idx,
+                "accuracy": round(avg_acc, 4),
+                "reaction_time": round(avg_rt, 2)
+            })
+
+        all_curve = []
+        for idx in sorted(all_cohort_curves.keys()):
+            s_list = all_cohort_curves[idx]
+            avg_acc = sum(x["avg_acc"] for x in s_list) / len(s_list)
+            avg_rt = sum(x["avg_rt"] for x in s_list) / len(s_list)
+            all_curve.append({
+                "session_index": idx,
+                "accuracy": round(avg_acc, 4),
+                "reaction_time": round(avg_rt, 2)
+            })
+
+        return jsonify({
+            "status": "success",
+            "username": username,
+            "curves": {
+                "active_user": active_user_curve,
+                "clinical_cohort": clinical_curve,
+                "all_cohort": all_curve
+            }
+        }), 200
+
+    except Exception as e:
+        app.logger.error(f"Error in get_learning_curves: {e}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+
+
+@app.route('/api/training-goals/<username>', methods=['GET'])
+def get_training_goals(username):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+        user = cursor.fetchone()
+        if not user:
+            cursor.execute("INSERT INTO users (username) VALUES (?)", (username,))
+            conn.commit()
+            cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+            user = cursor.fetchone()
+        
+        user_id = user['id']
+
+        cursor.execute("SELECT id, domain, metric_type, target_value, is_completed FROM training_goals WHERE user_id = ?", (user_id,))
+        goals_rows = cursor.fetchall()
+
+        goals = []
+        for g in goals_rows:
+            gid = g['id']
+            domain = g['domain']
+            metric_type = g['metric_type']
+            target_value = g['target_value']
+            is_completed_db = g['is_completed']
+
+            cursor.execute(
+                """
+                SELECT 
+                    AVG(pm.accuracy_rate) as avg_acc,
+                    AVG(pm.reaction_time) as avg_rt,
+                    MAX(pm.difficulty_level) as max_diff
+                FROM performance_metrics pm
+                JOIN game_sessions gs ON pm.session_id = gs.id
+                WHERE gs.user_id = ? AND pm.cognitive_domain = ?
+                """,
+                (user_id, domain)
+            )
+            stats = cursor.fetchone()
+            
+            current_value = 0.0
+            achieved = False
+
+            if stats:
+                if metric_type == 'accuracy':
+                    avg_acc = stats['avg_acc'] if stats['avg_acc'] is not None else 0.0
+                    current_value = round(avg_acc * 100, 1)
+                    achieved = (current_value >= target_value)
+                elif metric_type == 'reaction_time':
+                    avg_rt = stats['avg_rt'] if stats['avg_rt'] is not None else 0.0
+                    current_value = round(avg_rt, 1)
+                    achieved = (0 < current_value <= target_value)
+                elif metric_type == 'difficulty':
+                    max_diff = stats['max_diff'] if stats['max_diff'] is not None else 1
+                    current_value = float(max_diff)
+                    achieved = (current_value >= target_value)
+
+            just_completed = False
+            if achieved and is_completed_db == 0:
+                cursor.execute("UPDATE training_goals SET is_completed = 1 WHERE id = ?", (gid,))
+                conn.commit()
+                just_completed = True
+                is_completed_db = 1
+
+            goals.append({
+                "id": gid,
+                "domain": domain,
+                "metric_type": metric_type,
+                "target_value": target_value,
+                "current_value": current_value,
+                "is_completed": is_completed_db,
+                "just_completed": just_completed
+            })
+
+        conn.close()
+        return jsonify({"status": "success", "goals": goals}), 200
+
+    except Exception as e:
+        app.logger.error(f"Error in get_training_goals: {e}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+
+
+@app.route('/api/training-goals', methods=['POST'])
+def create_training_goal():
+    try:
+        data = request.json or {}
+        username = data.get('username')
+        domain = data.get('domain')
+        metric_type = data.get('metric_type')
+        target_value = data.get('target_value')
+
+        if not username or not domain or not metric_type or target_value is None:
+            return jsonify({"status": "error", "message": "Missing required parameters"}), 400
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+        user = cursor.fetchone()
+        if not user:
+            cursor.execute("INSERT INTO users (username) VALUES (?)", (username,))
+            conn.commit()
+            cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+            user = cursor.fetchone()
+
+        user_id = user['id']
+
+        cursor.execute(
+            """
+            INSERT INTO training_goals (user_id, domain, metric_type, target_value, is_completed)
+            VALUES (?, ?, ?, ?, 0)
+            """,
+            (user_id, domain, metric_type, float(target_value))
+        )
+        conn.commit()
+        conn.close()
+
+        return jsonify({"status": "success", "message": "Goal created successfully"}), 201
+
+    except Exception as e:
+        app.logger.error(f"Error in create_training_goal: {e}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+
+
+@app.route('/api/training-goals/<int:goal_id>', methods=['DELETE'])
+def delete_training_goal(goal_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM training_goals WHERE id = ?", (goal_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({"status": "success", "message": "Goal deleted successfully"}), 200
+    except Exception as e:
+        app.logger.error(f"Error in delete_training_goal: {e}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
 
 
 if __name__ == '__main__':
