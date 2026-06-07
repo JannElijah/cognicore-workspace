@@ -175,6 +175,7 @@ export default function App() {
   const [liveDdaParams, setLiveDdaParams] = useState(null);
   const [liveCognitiveProfile, setLiveCognitiveProfile] = useState(null);
   const [liveMetrics, setLiveMetrics] = useState([]);
+  const [globalMuted, setGlobalMuted] = useState(audioDda.isMuted);
 
   useEffect(() => {
     const originalFetch = window.fetch;
@@ -1270,6 +1271,34 @@ export default function App() {
             </button>
           )}
 
+          <button 
+            onClick={() => {
+              const nextMute = !globalMuted;
+              audioDda.setMuted(nextMute);
+              setGlobalMuted(nextMute);
+            }}
+            title={globalMuted ? "Unmute Ambient Synthesizer" : "Mute Ambient Synthesizer"}
+            style={{
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '8px',
+              color: globalMuted ? '#94a3b8' : '#38bdf8',
+              padding: '0.4rem',
+              fontSize: '1rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s',
+              width: '32px',
+              height: '32px'
+            }}
+            onMouseOver={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.1)'}
+            onMouseOut={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.05)'}
+          >
+            {globalMuted ? '🔇' : '🔊'}
+          </button>
+
           <div className="portal-status">
             <span className="status-dot"></span> Secure Telemetry Hub
           </div>
@@ -1315,6 +1344,12 @@ export default function App() {
                   cognitiveProfile={liveCognitiveProfile}
                   liveMetrics={liveMetrics}
                   advisorLogs={ddaAdvisorLogs}
+                  isMuted={globalMuted}
+                  onToggleMute={() => {
+                    const nextMute = !globalMuted;
+                    audioDda.setMuted(nextMute);
+                    setGlobalMuted(nextMute);
+                  }}
                 />
               )}
             </div>

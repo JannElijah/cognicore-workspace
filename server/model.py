@@ -13,6 +13,8 @@ Chapter 2 Methodology Compliance: Software Engineering Architecture Patterns
 """
 
 import numpy as np
+import os
+import pickle
 
 # Try importing scikit-learn
 try:
@@ -24,8 +26,20 @@ except ImportError:
 class ArchetypeModel:
     def __init__(self):
         self.model = None
+        self.is_loaded_from_disk = False
         if SKLEARN_AVAILABLE:
-            self.train_model()
+            model_path = os.path.join(os.path.dirname(__file__), 'cognitive_model.pkl') if '__file__' in globals() else 'cognitive_model.pkl'
+            if os.path.exists(model_path):
+                try:
+                    with open(model_path, 'rb') as f:
+                        self.model = pickle.load(f)
+                    self.is_loaded_from_disk = True
+                    print("[ML Model Service] Pre-trained RandomForestClassifier loaded successfully from cognitive_model.pkl")
+                except Exception as e:
+                    print(f"[ML Model Service] Failed to load cognitive_model.pkl: {e}. Retraining...")
+                    self.train_model()
+            else:
+                self.train_model()
         else:
             print("[ML Model Service] scikit-learn not available. Falling back to rule-based engine.")
 

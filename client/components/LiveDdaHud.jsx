@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { audioDda } from '../utils/audioSynth';
 
-export default function LiveDdaHud({ gameType = 'Game', ddaParameters, cognitiveProfile, liveMetrics = [], advisorLogs = [] }) {
+export default function LiveDdaHud({ gameType = 'Game', ddaParameters, cognitiveProfile, liveMetrics = [], advisorLogs = [], isMuted = false, onToggleMute }) {
+    const handleToggleMute = onToggleMute;
+
     // Determine archetype details
     const archetype = cognitiveProfile?.archetype || 'Plateauing';
     const confidence = cognitiveProfile?.confidence_score !== undefined ? Math.round(cognitiveProfile.confidence_score * 100) : 75;
@@ -86,7 +89,27 @@ export default function LiveDdaHud({ gameType = 'Game', ddaParameters, cognitive
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', paddingBottom: '0.75rem' }}>
                 <div>
                     <h2 style={{ fontSize: '1.1rem', fontWeight: '800', letterSpacing: '-0.02em', margin: 0, background: 'linear-gradient(to right, #a855f7, #38bdf8)', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' }}>DDA ENGINE HUD</h2>
-                    <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '500' }}>GAME: {gameType.toUpperCase()}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.15rem' }}>
+                        <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: '500' }}>GAME: {gameType.toUpperCase()}</span>
+                        <button 
+                            onClick={handleToggleMute}
+                            title={isMuted ? "Unmute Synthesizer" : "Mute Synthesizer"}
+                            style={{
+                                background: 'transparent',
+                                border: 'none',
+                                cursor: 'pointer',
+                                fontSize: '0.9rem',
+                                color: isMuted ? '#64748b' : '#38bdf8',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                padding: 0,
+                                margin: 0,
+                                transition: 'color 0.2s'
+                            }}
+                        >
+                            {isMuted ? '🔇' : '🔊'}
+                        </button>
+                    </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', background: 'rgba(74, 222, 128, 0.1)', border: '1px solid rgba(74, 222, 128, 0.2)', padding: '0.25rem 0.5rem', borderRadius: '9999px' }}>
                     <span style={{

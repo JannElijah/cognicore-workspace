@@ -8,6 +8,7 @@ class AcousticDdaEngine {
     this.isPlaying = false;
     this.currentDifficulty = 1;
     this.isCalmingMode = false;
+    this.isMuted = localStorage.getItem('cognicore_audio_muted') === 'true';
   }
 
   init() {
@@ -37,15 +38,22 @@ class AcousticDdaEngine {
       
       this.isPlaying = true;
       this.startAmbientPulse();
-      console.log("[Audio Synth] Acoustic DDA Engine initialized successfully.");
+      console.log("[Audio Synth] Acoustic DDA Engine initialized successfully. Muted:", this.isMuted);
     } catch (e) {
       console.error("[Audio Synth] Failed to initialize AudioContext", e);
     }
   }
 
+  setMuted(muted) {
+    this.isMuted = muted;
+    localStorage.setItem('cognicore_audio_muted', String(muted));
+    console.log("[Audio Synth] Audio set to", muted ? "MUTED" : "UNMUTED");
+  }
+
   startAmbientPulse() {
     const playTick = () => {
       try {
+        if (this.isMuted) return;
         if (!this.ctx || this.ctx.state === 'suspended') return;
         
         const t = this.ctx.currentTime;
@@ -115,6 +123,7 @@ class AcousticDdaEngine {
 
   playCalmingHum() {
     try {
+      if (this.isMuted) return;
       if (!this.ctx) return;
       const t = this.ctx.currentTime;
       const osc = this.ctx.createOscillator();
@@ -139,6 +148,7 @@ class AcousticDdaEngine {
 
   playFeedback(success) {
     try {
+      if (this.isMuted) return;
       if (!this.ctx) return;
       if (this.ctx.state === 'suspended') {
         this.ctx.resume();
