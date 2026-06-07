@@ -8,6 +8,47 @@ export default function LiveDdaHud({ gameType = 'Game', ddaParameters, cognitive
     const archetype = cognitiveProfile?.archetype || 'Plateauing';
     const confidence = cognitiveProfile?.confidence_score !== undefined ? Math.round(cognitiveProfile.confidence_score * 100) : 75;
     
+    // Calculate real-time Cognitive Load state
+    let cognitiveLoad = 'Optimal'; // 'Optimal', 'Moderate', 'High'
+    let loadColor = '#4ade80'; // Flow 🟢
+    let loadLabel = 'Flow Zone';
+    let coachMessage = 'Maintain a steady rhythm to enter your flow zone.';
+
+    if (liveMetrics && liveMetrics.length > 0) {
+        const lastMetric = liveMetrics[liveMetrics.length - 1];
+        const last3Metrics = liveMetrics.slice(-3);
+        const avgAccuracy = last3Metrics.reduce((sum, m) => sum + m.accuracy, 0) / last3Metrics.length;
+
+        const isHighFriction = lastMetric.spamClicks > 2 || avgAccuracy < 0.7;
+        const isModerateFocus = !isHighFriction && avgAccuracy === 1.0 && (lastMetric.rt > 1500 || lastMetric.hesitation > 1200);
+
+        if (isHighFriction) {
+            cognitiveLoad = 'High';
+            loadColor = '#f87171'; // Red 🔴
+            loadLabel = 'Cognitive Friction';
+        } else if (isModerateFocus) {
+            cognitiveLoad = 'Moderate';
+            loadColor = '#fbbf24'; // Orange/Yellow 🟡
+            loadLabel = 'Methodical Focus';
+        } else {
+            cognitiveLoad = 'Optimal';
+            loadColor = '#4ade80'; // Green 🟢
+            loadLabel = 'Flow Zone';
+        }
+
+        // Coach message rules
+        const last2Metrics = liveMetrics.slice(-2);
+        const isPerfectStreak = last2Metrics.length >= 2 && last2Metrics.every(m => m.accuracy === 1.0);
+
+        if (lastMetric.spamClicks > 2) {
+            coachMessage = "Kinetic friction detected. Slow down your selections to focus on accuracy.";
+        } else if (isPerfectStreak && lastMetric.rt <= 1500) {
+            coachMessage = "Perfect streak! Try tapping targets faster to trigger the next challenge tier.";
+        } else if (cognitiveLoad === 'Moderate') {
+            coachMessage = "Response latency is steady. Scan the board carefully before choosing.";
+        }
+    }
+
     // OLS Slopes
     const accSlope = cognitiveProfile?.accuracy_slope || 0;
     const rtSlope = cognitiveProfile?.reaction_time_slope || 0;
@@ -140,6 +181,89 @@ export default function LiveDdaHud({ gameType = 'Game', ddaParameters, cognitive
                             transition: 'all 0.3s ease'
                         }} />
                     ))}
+                </div>
+            </div>
+
+            {/* Cognitive Load Indicator */}
+            <div style={{
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+                borderRadius: '12px',
+                padding: '0.85rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.5rem'
+            }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: '600' }}>COGNITIVE LOAD</span>
+                    <span style={{ fontSize: '0.9rem', color: loadColor, fontWeight: 'bold', textShadow: `0 0 8px ${loadColor}40` }}>{loadLabel}</span>
+                </div>
+                
+                {/* 3-segment visual bar */}
+                <div style={{ display: 'flex', gap: '6px', width: '100%', height: '6px' }}>
+                    <div style={{
+                        flex: 1,
+                        borderRadius: '3px',
+                        backgroundColor: '#4ade80',
+                        opacity: cognitiveLoad === 'Optimal' ? 1.0 : 0.2,
+                        boxShadow: cognitiveLoad === 'Optimal' ? '0 0 10px rgba(74, 222, 128, 0.6)' : 'none',
+                        transition: 'all 0.3s ease'
+                    }} title="Flow Zone" />
+                    <div style={{
+                        flex: 1,
+                        borderRadius: '3px',
+                        backgroundColor: '#fbbf24',
+                        opacity: cognitiveLoad === 'Moderate' ? 1.0 : 0.2,
+                        boxShadow: cognitiveLoad === 'Moderate' ? '0 0 10px rgba(251, 191, 36, 0.6)' : 'none',
+                        transition: 'all 0.3s ease'
+                    }} title="Methodical Focus" />
+                    <div style={{
+                        flex: 1,
+                        borderRadius: '3px',
+                        backgroundColor: '#f87171',
+                        opacity: cognitiveLoad === 'High' ? 1.0 : 0.2,
+                        boxShadow: cognitiveLoad === 'High' ? '0 0 10px rgba(248, 113, 113, 0.6)' : 'none',
+                        transition: 'all 0.3s ease'
+                    }} title="Cognitive Friction" />
+                </div>
+            </div>
+
+            {/* Focus Coach Chatbox */}
+            <div style={{
+                background: 'rgba(56, 189, 248, 0.05)',
+                border: '1px solid rgba(56, 189, 248, 0.15)',
+                borderRadius: '12px',
+                padding: '0.85rem',
+                display: 'flex',
+                gap: '0.75rem',
+                alignItems: 'flex-start',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)'
+            }}>
+                <div style={{
+                    fontSize: '1.5rem',
+                    background: 'rgba(56, 189, 248, 0.1)',
+                    borderRadius: '8px',
+                    width: '36px',
+                    height: '36px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    border: '1px solid rgba(56, 189, 248, 0.2)'
+                }}>
+                    🤖
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem', textAlign: 'left' }}>
+                    <span style={{ fontSize: '0.75rem', color: '#38bdf8', fontWeight: 'bold', letterSpacing: '0.03em' }}>FOCUS COACH</span>
+                    <p style={{
+                        fontSize: '0.8rem',
+                        color: '#e2e8f0',
+                        margin: 0,
+                        lineHeight: '1.4',
+                        fontStyle: 'italic'
+                    }}>
+                        "{coachMessage}"
+                    </p>
                 </div>
             </div>
 

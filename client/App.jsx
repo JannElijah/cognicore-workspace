@@ -176,6 +176,9 @@ export default function App() {
   const [liveCognitiveProfile, setLiveCognitiveProfile] = useState(null);
   const [liveMetrics, setLiveMetrics] = useState([]);
   const [globalMuted, setGlobalMuted] = useState(audioDda.isMuted);
+  const [oscillatorType, setOscillatorType] = useState(audioDda.oscillatorType);
+  const [bpmMultiplier, setBpmMultiplier] = useState(audioDda.bpmMultiplier);
+  const [showSoundTuner, setShowSoundTuner] = useState(false);
 
   useEffect(() => {
     const originalFetch = window.fetch;
@@ -218,7 +221,7 @@ export default function App() {
               const hesitation = body.hesitation_ms || 0;
               
               if (accuracy !== undefined && rt !== undefined) {
-                setLiveMetrics(prev => [...prev, { accuracy, rt }]);
+                setLiveMetrics(prev => [...prev, { accuracy, rt, spamClicks, hesitation }]);
                 
                 // Play success (blip) / failure (buzz) synthesized audio tones
                 audioDda.playFeedback(accuracy === 1.0);
@@ -1299,7 +1302,32 @@ export default function App() {
             {globalMuted ? '🔇' : '🔊'}
           </button>
 
-          <div className="portal-status">
+          <button 
+            onClick={() => setShowSoundTuner(!showSoundTuner)}
+            title="Ambient Soundscape Tuner"
+            style={{
+              background: showSoundTuner ? 'rgba(168, 85, 247, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+              border: showSoundTuner ? '1px solid #a855f7' : '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '8px',
+              color: showSoundTuner ? '#c084fc' : '#38bdf8',
+              padding: '0.4rem',
+              fontSize: '1rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s',
+              width: '32px',
+              height: '32px',
+              marginLeft: '0.5rem'
+            }}
+            onMouseOver={(e) => { if (!showSoundTuner) e.target.style.background = 'rgba(255, 255, 255, 0.1)' }}
+            onMouseOut={(e) => { if (!showSoundTuner) e.target.style.background = 'rgba(255, 255, 255, 0.05)' }}
+          >
+            🎛️
+          </button>
+
+          <div className="portal-status" style={{ marginLeft: '1rem' }}>
             <span className="status-dot"></span> Secure Telemetry Hub
           </div>
         </div>
@@ -1307,6 +1335,107 @@ export default function App() {
 
       {/* Main Container */}
       <main className="portal-main">
+        {showSoundTuner && (
+          <div className="game-card" style={{
+            padding: '1.5rem',
+            marginBottom: '2rem',
+            background: 'rgba(15, 23, 42, 0.6)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(168, 85, 247, 0.3)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+            animation: 'fadeInDown 0.3s ease-out',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+            width: '100%',
+            alignItems: 'stretch'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '1.25rem' }}>🎛️</span>
+                <strong style={{ fontSize: '1rem', color: '#c084fc', letterSpacing: '0.05em' }}>AMBIENT SOUNDSCAPE TUNER</strong>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '3px', height: '12px' }}>
+                {[1, 2, 3, 4, 5].map(i => (
+                  <div key={i} style={{
+                    width: '3px',
+                    height: '100%',
+                    backgroundColor: '#38bdf8',
+                    borderRadius: '1px',
+                    animation: `pulseGlow 1.2s infinite ease-in-out alternate`,
+                    animationDelay: `${i * 0.15}s`
+                  }} />
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', alignItems: 'center' }}>
+              <div style={{ flex: '1', minWidth: '240px', display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-start' }}>
+                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Waveform Shape</span>
+                <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
+                  {['sine', 'triangle', 'square'].map(type => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => {
+                        audioDda.setOscillatorType(type);
+                        setOscillatorType(type);
+                      }}
+                      style={{
+                        flex: 1,
+                        background: oscillatorType === type ? 'rgba(56, 189, 248, 0.15)' : 'rgba(255, 255, 255, 0.02)',
+                        border: oscillatorType === type ? '1.5px solid #38bdf8' : '1.5px solid rgba(255, 255, 255, 0.08)',
+                        borderRadius: '8px',
+                        color: oscillatorType === type ? '#38bdf8' : '#e2e8f0',
+                        padding: '0.5rem',
+                        fontSize: '0.85rem',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        textTransform: 'uppercase'
+                      }}
+                    >
+                      {type === 'sine' ? '🔵 Sine' : type === 'triangle' ? '🔺 Triangle' : '⬛ Square'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ flex: '2', minWidth: '280px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                  <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Tempo Multiplier</span>
+                  <span style={{ fontSize: '0.9rem', color: '#38bdf8', fontweight: 'bold' }}>{bpmMultiplier.toFixed(2)}x</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b' }}>0.5x</span>
+                  <input
+                    type="range"
+                    min="0.5"
+                    max="2.0"
+                    step="0.05"
+                    value={bpmMultiplier}
+                    onChange={(e) => {
+                      const mult = parseFloat(e.target.value);
+                      audioDda.setBpmMultiplier(mult);
+                      setBpmMultiplier(mult);
+                    }}
+                    style={{
+                      flex: 1,
+                      accentColor: '#38bdf8',
+                      height: '5px',
+                      borderRadius: '3px',
+                      background: 'rgba(255,255,255,0.1)',
+                      outline: 'none',
+                      cursor: 'pointer'
+                    }}
+                  />
+                  <span style={{ fontSize: '0.75rem', color: '#64748b' }}>2.0x</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {activeGame ? (
           <div className="game-screen-wrapper">
             <button className="back-btn" onClick={handleBackToLobby}>

@@ -1,6 +1,6 @@
 # Chapter 4 Statistical Verification Report
 
-*Generated on: 2026-06-07 20:53:00*
+*Generated on: 2026-06-07 21:11:09*
 
 This report provides automated statistical evaluations matching Chapter 4 manuscript requirements. A Paired t-test is applied over the 30 clinical cohort subjects to verify cognitive improvement, along with micro-behavioral Pearson correlation coefficients.
 
@@ -10,10 +10,10 @@ Below is the Paired t-test summary comparing pre-intervention baselines against 
 
 | Performance Metric | Sample Size (N) | Pretest Mean (SD) | Posttest Mean (SD) | Mean Difference | t-Statistic | p-value | Cohen's d | Effect Magnitude |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Accuracy Rate (%)** | 30 | 59.22% (2.90) | 94.30% (1.29) | +35.08% | 57.3595 | 0.000000 | 10.4724 | LARGE |
-| **Reaction Time (ms)** | 30 | 1109.40 ms (60.96) | 334.41 ms (21.21) | +774.99 ms | 63.5618 | 0.000000 | 11.6047 | LARGE |
+| **Accuracy Rate (%)** | 30 | 59.64% (2.50) | 95.52% (1.33) | +35.88% | 73.5419 | 0.000000 | 13.4268 | LARGE |
+| **Reaction Time (ms)** | 30 | 1114.76 ms (69.21) | 330.58 ms (27.53) | +784.18 ms | 58.8897 | 0.000000 | 10.7517 | LARGE |
 
-> **Interpretation:** A statistically significant accuracy improvement is detected ($t(29) = 57.359$, $p < 0.05$) with a **large** effect size ($d = 10.472$). Similarly, a statistically significant processing latency speedup is observed ($t(29) = 63.562$, $p < 0.05$) with a **large** effect size ($d = 11.605$).
+> **Interpretation:** A statistically significant accuracy improvement is detected ($t(29) = 73.542$, $p < 0.05$) with a **large** effect size ($d = 13.427$). Similarly, a statistically significant processing latency speedup is observed ($t(29) = 58.890$, $p < 0.05$) with a **large** effect size ($d = 10.752$).
 
 ## 2. Micro-Behavioral Telemetry Correlation Matrix (Pillar 2)
 
@@ -21,8 +21,8 @@ Pearson correlation analysis of micro-behavioral metrics captured during game ex
 
 | Variable 1 (X) | Variable 2 (Y) | Correlation Coefficient ($r$) | Coefficient of Determination ($R^2$) | p-value | Significance | Interpretation |
 | :--- | :--- | :---: | :---: | :---: | :---: | :--- |
-| Rule-Shift Latency | Spam Click Count | 0.8619 | 0.7429 | 6.632582e-90 | Significant (p < 0.05) | There is a strong positive correlation. |
-| Hesitation (ms) | Reaction Time (ms) | 0.5756 | 0.3314 | 2.538587e-158 | Significant (p < 0.05) | There is a moderate positive correlation. |
+| Rule-Shift Latency | Spam Click Count | 0.8279 | 0.6855 | 7.950304e-77 | Significant (p < 0.05) | There is a strong positive correlation. |
+| Hesitation (ms) | Reaction Time (ms) | 0.5825 | 0.3393 | 7.918122e-166 | Significant (p < 0.05) | There is a moderate positive correlation. |
 
 ## 3. Generated Chapter 4 Figures
 

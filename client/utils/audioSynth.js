@@ -9,6 +9,8 @@ class AcousticDdaEngine {
     this.currentDifficulty = 1;
     this.isCalmingMode = false;
     this.isMuted = localStorage.getItem('cognicore_audio_muted') === 'true';
+    this.oscillatorType = localStorage.getItem('cognicore_osc_type') || 'sine';
+    this.bpmMultiplier = parseFloat(localStorage.getItem('cognicore_bpm_mult') || '1.0');
   }
 
   init() {
@@ -38,7 +40,7 @@ class AcousticDdaEngine {
       
       this.isPlaying = true;
       this.startAmbientPulse();
-      console.log("[Audio Synth] Acoustic DDA Engine initialized successfully. Muted:", this.isMuted);
+      console.log("[Audio Synth] Acoustic DDA Engine initialized successfully. Muted:", this.isMuted, "Osc:", this.oscillatorType, "BpmMult:", this.bpmMultiplier);
     } catch (e) {
       console.error("[Audio Synth] Failed to initialize AudioContext", e);
     }
@@ -48,6 +50,21 @@ class AcousticDdaEngine {
     this.isMuted = muted;
     localStorage.setItem('cognicore_audio_muted', String(muted));
     console.log("[Audio Synth] Audio set to", muted ? "MUTED" : "UNMUTED");
+  }
+
+  setOscillatorType(type) {
+    this.oscillatorType = type;
+    localStorage.setItem('cognicore_osc_type', type);
+    console.log("[Audio Synth] Oscillator type set to", type);
+  }
+
+  setBpmMultiplier(mult) {
+    this.bpmMultiplier = parseFloat(mult) || 1.0;
+    localStorage.setItem('cognicore_bpm_mult', String(this.bpmMultiplier));
+    console.log("[Audio Synth] BPM multiplier set to", this.bpmMultiplier);
+    if (this.resetTempo) {
+      this.resetTempo();
+    }
   }
 
   startAmbientPulse() {
@@ -60,13 +77,17 @@ class AcousticDdaEngine {
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         
-        osc.type = 'sine';
+        osc.type = this.oscillatorType;
         // Pitch scales slightly with difficulty
         const baseFreq = 110 + (this.currentDifficulty * 10); // low A-ish focus hum
         osc.frequency.setValueAtTime(baseFreq, t);
         
+        // Scale down square/triangle waves to avoid loudness spikes
+        const volScale = this.oscillatorType === 'square' ? 0.25 : this.oscillatorType === 'triangle' ? 0.7 : 1.0;
+        const targetGain = (this.isCalmingMode ? 0.04 : 0.08) * volScale;
+        
         gain.gain.setValueAtTime(0, t);
-        gain.gain.linearRampToValueAtTime(this.isCalmingMode ? 0.04 : 0.08, t + 0.05);
+        gain.gain.linearRampToValueAtTime(targetGain, t + 0.05);
         gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
         
         osc.connect(gain);
@@ -83,7 +104,8 @@ class AcousticDdaEngine {
       if (this.tempoInterval) clearInterval(this.tempoInterval);
       if (!this.isPlaying) return;
       
-      const bpm = 60 + (this.currentDifficulty - 1) * 15; // 60, 75, 90, 105, 120 BPM
+      const baseBpm = 60 + (this.currentDifficulty - 1) * 15; // 60, 75, 90, 105, 120 BPM
+      const bpm = baseBpm * this.bpmMultiplier;
       const intervalMs = (60 / bpm) * 1000;
       
       this.tempoInterval = setInterval(() => {
