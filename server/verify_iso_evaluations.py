@@ -4,7 +4,7 @@ import sqlite3
 import os
 
 API_URL = "http://127.0.0.1:5000"
-DB_PATH = "cognicore.db"
+DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cognicore.db")
 
 def run_tests():
     print("=== Step 1: Checking if SQLite table 'iso_evaluations' exists ===")

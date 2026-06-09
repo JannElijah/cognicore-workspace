@@ -12,9 +12,9 @@ plt.rcParams['font.size'] = 10
 plt.rcParams['axes.edgecolor'] = '#cbd5e1'
 plt.rcParams['axes.linewidth'] = 0.8
 
-DB_PATH = 'cognicore.db'
-OUTPUT_DIR = 'thesis_plots'
-REPORT_PATH = 'chapter_4_report.md'
+DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cognicore.db')
+OUTPUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'thesis_plots')
+REPORT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'chapter_4_report.md')
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
@@ -431,13 +431,13 @@ def generate_reports():
         f.write("## 3. Generated Chapter 4 Figures\n\n")
         f.write("The following figures have been rendered to `server/thesis_plots/` for manuscript insertion:\n\n")
         f.write("### Figure 1: Clinical Cohort Pre- vs Post-Intervention Improvement\n")
-        f.write("![Pretest vs Posttest Scores Comparison](file:///d:/cognicore-workspace/server/thesis_plots/pretest_posttest_comparison.png)\n\n")
+        f.write("![Pretest vs Posttest Scores Comparison](thesis_plots/pretest_posttest_comparison.png)\n\n")
         f.write("### Figure 2: Micro-behavioral Friction Scatter Plot\n")
-        f.write("![Behavioral Metric Correlation](file:///d:/cognicore-workspace/server/thesis_plots/behavioral_correlation.png)\n\n")
+        f.write("![Behavioral Metric Correlation](thesis_plots/behavioral_correlation.png)\n\n")
         f.write("### Figure 3: Longitudinal Learning Curves\n")
-        f.write("![Longitudinal Learning Curves Comparison](file:///d:/cognicore-workspace/server/thesis_plots/learning_curves.png)\n\n")
+        f.write("![Longitudinal Learning Curves Comparison](thesis_plots/learning_curves.png)\n\n")
         f.write("### Figure 4: Classified Cognitive Archetype Distributions\n")
-        f.write("![Classified Archetype Distribution](file:///d:/cognicore-workspace/server/thesis_plots/cognitive_archetypes_dist.png)\n")
+        f.write("![Classified Archetype Distribution](thesis_plots/cognitive_archetypes_dist.png)\n")
         
     print("All reports and visualizations generated successfully.")
     conn.close()

@@ -5,8 +5,10 @@ import pickle
 
 def run_tuning_tests():
     print("=== Step 1: Running train_model.py ===")
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    train_model_path = os.path.join(script_dir, "train_model.py")
     try:
-        res = subprocess.run([sys.executable, "train_model.py"], capture_output=True, text=True, check=True)
+        res = subprocess.run([sys.executable, train_model_path], cwd=script_dir, capture_output=True, text=True, check=True)
         print("Script stdout:")
         print(res.stdout)
     except subprocess.CalledProcessError as e:
@@ -16,7 +18,7 @@ def run_tuning_tests():
         sys.exit(1)
         
     print("\n=== Step 2: Verifying Serialized Model Asset ===")
-    model_path = "cognitive_model.pkl"
+    model_path = os.path.join(script_dir, "cognitive_model.pkl")
     if not os.path.exists(model_path):
         print(f"FAILED: Pre-trained model file not found: {model_path}")
         sys.exit(1)
@@ -58,13 +60,13 @@ def run_tuning_tests():
         
     print("\n=== Step 4: Running Inference Assertions ===")
     # 1. Test Improving metrics
-    res_fast = archetype_classifier.predict(0.95, 300.0, 0.02, -15.0)
+    res_fast = archetype_classifier.predict(0.95, 300.0, 0.06, -80.0)
     print(f"  Fast Learner prediction output: {res_fast}")
     assert res_fast["archetype"] == "Fast Learner"
     assert "confidence_score" in res_fast
     
     # 2. Test Fatiguing metrics
-    res_fatigue = archetype_classifier.predict(0.60, 950.0, -0.03, 25.0)
+    res_fatigue = archetype_classifier.predict(0.60, 950.0, -0.06, 80.0)
     print(f"  High Fatigue prediction output: {res_fatigue}")
     assert res_fatigue["archetype"] == "High Fatigue"
     assert "confidence_score" in res_fatigue

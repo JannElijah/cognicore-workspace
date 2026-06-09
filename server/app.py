@@ -32,7 +32,7 @@ app = Flask(__name__)
 # CORS allows your React/Phaser frontend to communicate with this backend
 CORS(app) 
 
-DB_PATH = 'cognicore.db'
+DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cognicore.db')
 
 # 4-Tier Cognitive Domain Categorization Framework Configuration Mapping
 GAME_TO_DOMAIN = {
@@ -70,6 +70,49 @@ def get_db_connection():
 def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
+    
+    # Ensure core tables exist before running migrations
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS game_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            game_type TEXT NOT NULL,
+            start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        )
+    """)
+    
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS performance_metrics (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id INTEGER,
+            reaction_time REAL,
+            accuracy_rate REAL,
+            difficulty_level INTEGER,
+            recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(session_id) REFERENCES game_sessions(id)
+        )
+    """)
+    
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS cognitive_profiles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            archetype_name TEXT,
+            confidence_score REAL,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(id)
+        )
+    """)
+    
     cursor.execute("PRAGMA table_info(performance_metrics)")
     columns = [row['name'] for row in cursor.fetchall()]
     

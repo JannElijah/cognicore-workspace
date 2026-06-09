@@ -5,8 +5,10 @@ import subprocess
 
 def test_report_generation():
     print("=== Step 1: Running generate_thesis_reports.py script ===")
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    report_script_path = os.path.join(script_dir, "generate_thesis_reports.py")
     try:
-        res = subprocess.run([sys.executable, "generate_thesis_reports.py"], capture_output=True, text=True, check=True)
+        res = subprocess.run([sys.executable, report_script_path], cwd=script_dir, capture_output=True, text=True, check=True)
         print("Script stdout:")
         print(res.stdout)
     except subprocess.CalledProcessError as e:
@@ -17,8 +19,8 @@ def test_report_generation():
         
     print("\n=== Step 2: Verifying Output File Assets ===")
     
-    plots_dir = "thesis_plots"
-    report_file = "chapter_4_report.md"
+    plots_dir = os.path.join(script_dir, "thesis_plots")
+    report_file = os.path.join(script_dir, "chapter_4_report.md")
     
     expected_files = [
         report_file,

@@ -6,8 +6,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.metrics import classification_report, accuracy_score
 
-DB_PATH = 'cognicore.db'
-MODEL_OUT_PATH = 'cognitive_model.pkl'
+DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cognicore.db')
+MODEL_OUT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cognitive_model.pkl')
 
 def get_db_connection():
     return sqlite3.connect(DB_PATH)

@@ -3,7 +3,7 @@ import random
 import os
 from datetime import datetime, timedelta
 
-DB_PATH = 'cognicore.db'
+DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cognicore.db')
 
 # 4-Tier Cognitive Domain Categorization Configuration Mapping
 GAME_TO_DOMAIN = {
@@ -22,14 +22,9 @@ GAME_TO_DOMAIN = {
 
 def seed_clinical_data():
     if not os.path.exists(DB_PATH):
-        # Fallback if DB is one level up or down
-        if os.path.exists('../server/cognicore.db'):
-            db_file = '../server/cognicore.db'
-        else:
-            print(f"Error: Database file not found. Please run this script in the server directory containing '{DB_PATH}'")
-            return
-    else:
-        db_file = DB_PATH
+        print(f"Error: Database file not found. Please ensure the Flask app has run at least once to initialize '{DB_PATH}'")
+        return
+    db_file = DB_PATH
 
     conn = sqlite3.connect(db_file)
     conn.row_factory = sqlite3.Row
