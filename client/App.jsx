@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Chart as ChartJS,
   RadialLinearScale,
@@ -411,14 +411,14 @@ export default function App() {
     }
   }, [lastGameStats]);
 
-  const handleGameFinished = (stats) => {
+  const handleGameFinished = useCallback((stats) => {
     setLastGameStats({ ...stats, gameType: activeGame });
     setActiveSessionId(null);
     setLiveDdaParams(null);
     setLiveCognitiveProfile(null);
     setLiveMetrics([]);
     audioDda.stop();
-  };
+  }, [activeGame]);
 
   const handleBackToLobby = () => {
     setActiveGame(null);
