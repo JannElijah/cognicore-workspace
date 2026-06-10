@@ -194,6 +194,14 @@ def init_db():
         )
     """)
     
+    # Programmatic column migrations:
+    # Add current_smooth_difficulty to game_sessions if it doesn't exist
+    try:
+        cursor.execute("ALTER TABLE game_sessions ADD COLUMN current_smooth_difficulty REAL DEFAULT 1.0")
+        print("[DB Migration] Added current_smooth_difficulty column to game_sessions")
+    except sqlite3.OperationalError:
+        pass
+    
     conn.commit()
     conn.close()
 
@@ -753,6 +761,12 @@ def start_session():
         else:
             initial_difficulty = 1
             
+        # Initialize smooth difficulty state for the session
+        cursor.execute(
+            "UPDATE game_sessions SET current_smooth_difficulty = ? WHERE id = ?",
+            (float(initial_difficulty), session_id)
+        )
+            
         conn.commit()
         conn.close()
         
@@ -862,15 +876,39 @@ def adjust_difficulty():
         avg_accuracy = sum(m['accuracy_rate'] for m in metrics) / len(metrics)
         current_difficulty = metrics[0]['difficulty_level']
         
-        # Strict 3-Tier DDA rules matching professor's specifications
-        new_difficulty = current_difficulty
+        # Retrieve smoothing alpha coefficient (Option C Volatility Damping filter)
+        # Default: 1.0 (no smoothing, backwards compatible)
+        alpha = float(data.get('smoothing_alpha', 1.0))
+        alpha = max(0.1, min(1.0, alpha))
+        
+        # Fetch current smooth difficulty from session
+        cursor.execute("SELECT current_smooth_difficulty FROM game_sessions WHERE id = ?", (session_id,))
+        sess_row = cursor.fetchone()
+        if sess_row and sess_row['current_smooth_difficulty'] is not None:
+            current_smooth_difficulty = sess_row['current_smooth_difficulty']
+        else:
+            current_smooth_difficulty = float(current_difficulty)
+            
+        # Calculate raw target difficulty level based on standard 3-tier rules
         if avg_accuracy > 0.90:
-            # Performance Tier 1 (Accuracy > 90%): Upgrade difficulty level
-            new_difficulty = min(5, current_difficulty + 1)
+            raw_diff = min(5.0, float(current_difficulty) + 1.0)
         elif avg_accuracy < 0.70:
-            # Performance Tier 3 (Accuracy < 70%): De-escalate difficulty level
-            new_difficulty = max(1, current_difficulty - 1)
-        # Tier 2 (Accuracy 70% - 90%): Stagnate current challenge (equilibrium)
+            raw_diff = max(1.0, float(current_difficulty) - 1.0)
+        else:
+            raw_diff = float(current_difficulty)
+            
+        # Apply EMA filter
+        smooth_diff = alpha * raw_diff + (1.0 - alpha) * current_smooth_difficulty
+        
+        # Clamp and round
+        new_difficulty = int(round(smooth_diff))
+        new_difficulty = max(1, min(5, new_difficulty))
+        
+        # Save updated smooth difficulty to database
+        cursor.execute(
+            "UPDATE game_sessions SET current_smooth_difficulty = ? WHERE id = ?",
+            (smooth_diff, session_id)
+        )
             
         # Calculate new parameters
         dda_params = calculate_dda_parameters(new_difficulty, game_type)

@@ -186,12 +186,35 @@ export default function App() {
   const [oscillatorType, setOscillatorType] = useState(audioDda.oscillatorType);
   const [bpmMultiplier, setBpmMultiplier] = useState(audioDda.bpmMultiplier);
   const [showSoundTuner, setShowSoundTuner] = useState(false);
+  const [smoothingAlpha, setSmoothingAlpha] = useState(1.0);
+  const smoothingAlphaRef = useRef(1.0);
+
+  useEffect(() => {
+    smoothingAlphaRef.current = smoothingAlpha;
+  }, [smoothingAlpha]);
 
   useEffect(() => {
     const originalFetch = window.fetch;
     window.fetch = async (...args) => {
-      const response = await originalFetch(...args);
       const url = args[0];
+      if (typeof url === 'string' && url.includes('/api/dda')) {
+        const options = args[1] || {};
+        if (options.method === 'POST') {
+          try {
+            let body = {};
+            if (options.body) {
+              body = JSON.parse(options.body);
+            }
+            body.smoothing_alpha = smoothingAlphaRef.current;
+            options.body = JSON.stringify(body);
+            args[1] = options;
+          } catch (e) {
+            console.error('[Fetch Interceptor] Failed to inject smoothing_alpha', e);
+          }
+        }
+      }
+
+      const response = await originalFetch(...args);
       if (typeof url === 'string') {
         if (url.includes('/api/start-session') && response.ok) {
           try {
@@ -1411,7 +1434,7 @@ export default function App() {
               <div style={{ flex: '2', minWidth: '280px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                   <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Tempo Multiplier</span>
-                  <span style={{ fontSize: '0.9rem', color: '#38bdf8', fontweight: 'bold' }}>{bpmMultiplier.toFixed(2)}x</span>
+                  <span style={{ fontSize: '0.9rem', color: '#38bdf8', fontWeight: 'bold' }}>{bpmMultiplier.toFixed(2)}x</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <span style={{ fontSize: '0.75rem', color: '#64748b' }}>0.5x</span>
@@ -1437,6 +1460,36 @@ export default function App() {
                     }}
                   />
                   <span style={{ fontSize: '0.75rem', color: '#64748b' }}>2.0x</span>
+                </div>
+              </div>
+
+              <div style={{ flex: '2', minWidth: '280px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                  <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>DDA Smoothing Damping</span>
+                  <span style={{ fontSize: '0.9rem', color: '#a855f7', fontWeight: 'bold' }}>
+                    {smoothingAlpha === 1.0 ? 'Instant (1.0)' : smoothingAlpha <= 0.3 ? `Heavy Damping (${smoothingAlpha.toFixed(2)})` : `EMA Filter (${smoothingAlpha.toFixed(2)})`}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#64748b' }}>0.1 (Heavy)</span>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="1.0"
+                    step="0.05"
+                    value={smoothingAlpha}
+                    onChange={(e) => setSmoothingAlpha(parseFloat(e.target.value))}
+                    style={{
+                      flex: 1,
+                      accentColor: '#a855f7',
+                      height: '5px',
+                      borderRadius: '3px',
+                      background: 'rgba(255,255,255,0.1)',
+                      outline: 'none',
+                      cursor: 'pointer'
+                    }}
+                  />
+                  <span style={{ fontSize: '0.75rem', color: '#64748b' }}>1.0 (None)</span>
                 </div>
               </div>
             </div>
