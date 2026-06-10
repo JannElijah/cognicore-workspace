@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Suspense, lazy } from 'react';
 import {
   Chart as ChartJS,
   RadialLinearScale,
@@ -15,22 +15,24 @@ import {
 } from 'chart.js';
 import { Radar, Line, Bar, Scatter } from 'react-chartjs-2';
 
-import SpeedTapGame from './components/SpeedTapGame';
-import MemoryMatchGame from './components/MemoryMatchGame';
-import FocusFinderGame from './components/FocusFinderGame';
-import LogicLinkGame from './components/LogicLinkGame';
-import MazeEscapeGame from './components/MazeEscapeGame';
-import MatrixRecallGame from './components/MatrixRecallGame';
-import StroopShiftGame from './components/StroopShiftGame';
-import MentalFlexGame from './components/MentalFlexGame';
-import EquationBalanceGame from './components/EquationBalanceGame';
-import SequenceDecoderGame from './components/SequenceDecoderGame';
-import RouteOptimizerGame from './components/RouteOptimizerGame';
-import NeuroMazeGame from './components/NeuroMazeGame';
-import NeuralNBackGame from './components/NeuralNBackGame';
-import SynapseSpinGame from './components/SynapseSpinGame';
-import NexusMapperGame from './components/NexusMapperGame';
 import LiveDdaHud from './components/LiveDdaHud';
+import ErrorBoundary from './components/ErrorBoundary';
+
+const SpeedTapGame = lazy(() => import('./components/SpeedTapGame'));
+const MemoryMatchGame = lazy(() => import('./components/MemoryMatchGame'));
+const FocusFinderGame = lazy(() => import('./components/FocusFinderGame'));
+const LogicLinkGame = lazy(() => import('./components/LogicLinkGame'));
+const MazeEscapeGame = lazy(() => import('./components/MazeEscapeGame'));
+const MatrixRecallGame = lazy(() => import('./components/MatrixRecallGame'));
+const StroopShiftGame = lazy(() => import('./components/StroopShiftGame'));
+const MentalFlexGame = lazy(() => import('./components/MentalFlexGame'));
+const EquationBalanceGame = lazy(() => import('./components/EquationBalanceGame'));
+const SequenceDecoderGame = lazy(() => import('./components/SequenceDecoderGame'));
+const RouteOptimizerGame = lazy(() => import('./components/RouteOptimizerGame'));
+const NeuroMazeGame = lazy(() => import('./components/NeuroMazeGame'));
+const NeuralNBackGame = lazy(() => import('./components/NeuralNBackGame'));
+const SynapseSpinGame = lazy(() => import('./components/SynapseSpinGame'));
+const NexusMapperGame = lazy(() => import('./components/NexusMapperGame'));
 import { audioDda } from './utils/audioSynth';
 
 
@@ -1458,21 +1460,43 @@ export default function App() {
               flexWrap: 'wrap'
             }}>
               <div style={{ flex: '1', display: 'flex', justifyContent: 'center', minWidth: '600px' }}>
-                {activeGame === 'SpeedTap' && <SpeedTapGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                {activeGame === 'MemoryMatch' && <MemoryMatchGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                {activeGame === 'FocusFinder' && <FocusFinderGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                {activeGame === 'LogicLink' && <LogicLinkGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                {activeGame === 'MazeEscape' && <MazeEscapeGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                {activeGame === 'MatrixRecall' && <MatrixRecallGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                {activeGame === 'StroopShift' && <StroopShiftGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                {activeGame === 'MentalFlex' && <MentalFlexGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                {activeGame === 'EquationBalance' && <EquationBalanceGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                {activeGame === 'SequenceDecoder' && <SequenceDecoderGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                {activeGame === 'RouteOptimizer' && <RouteOptimizerGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                {activeGame === 'NeuroMaze' && <NeuroMazeGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                {activeGame === 'NeuralNBack' && <NeuralNBackGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                {activeGame === 'SynapseSpin' && <SynapseSpinGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                {activeGame === 'NexusMapper' && <NexusMapperGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                <ErrorBoundary onReset={handleBackToLobby}>
+                  <Suspense fallback={
+                    <div style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '100%',
+                      maxWidth: '800px',
+                      minHeight: '400px',
+                      background: 'rgba(15, 23, 42, 0.4)',
+                      backdropFilter: 'blur(12px)',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      color: '#94a3b8'
+                    }}>
+                      <div style={{ fontSize: '2.5rem', marginBottom: '1.5rem', animation: 'pulse 1.5s infinite ease-in-out' }}>🧠</div>
+                      <div style={{ fontWeight: 'bold', fontSize: '1.1rem', letterSpacing: '0.05em', color: '#38bdf8' }}>LOADING NEURAL WORKSPACE...</div>
+                    </div>
+                  }>
+                    {activeGame === 'SpeedTap' && <SpeedTapGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                    {activeGame === 'MemoryMatch' && <MemoryMatchGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                    {activeGame === 'FocusFinder' && <FocusFinderGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                    {activeGame === 'LogicLink' && <LogicLinkGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                    {activeGame === 'MazeEscape' && <MazeEscapeGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                    {activeGame === 'MatrixRecall' && <MatrixRecallGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                    {activeGame === 'StroopShift' && <StroopShiftGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                    {activeGame === 'MentalFlex' && <MentalFlexGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                    {activeGame === 'EquationBalance' && <EquationBalanceGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                    {activeGame === 'SequenceDecoder' && <SequenceDecoderGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                    {activeGame === 'RouteOptimizer' && <RouteOptimizerGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                    {activeGame === 'NeuroMaze' && <NeuroMazeGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                    {activeGame === 'NeuralNBack' && <NeuralNBackGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                    {activeGame === 'SynapseSpin' && <SynapseSpinGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                    {activeGame === 'NexusMapper' && <NexusMapperGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                  </Suspense>
+                </ErrorBoundary>
               </div>
               
               {activeSessionId && (
