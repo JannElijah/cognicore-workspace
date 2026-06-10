@@ -81,6 +81,11 @@ class ArchetypeModel:
             self.model = RandomForestClassifier(n_estimators=50, max_depth=5, random_state=42)
             self.model.fit(X, y)
             print("[ML Model Service] Random Forest Longitudinal Classifier trained successfully.")
+            # Save the trained model to disk for future boot speedups
+            model_path = os.path.join(os.path.dirname(__file__), 'cognitive_model.pkl') if '__file__' in globals() else 'cognitive_model.pkl'
+            with open(model_path, 'wb') as f:
+                pickle.dump(self.model, f)
+            print(f"[ML Model Service] Model serialized to {model_path} successfully.")
         except Exception as e:
             print(f"[ML Model Service] Error training Random Forest Model: {e}. Reverting to rule-based engine.")
             self.model = None

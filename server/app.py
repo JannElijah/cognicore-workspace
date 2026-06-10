@@ -34,6 +34,68 @@ CORS(app)
 
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cognicore.db')
 
+def safe_float(val, default=None):
+    try:
+        return float(val) if val is not None else default
+    except (ValueError, TypeError):
+        return default
+
+def safe_int(val, default=None):
+    try:
+        return int(val) if val is not None else default
+    except (ValueError, TypeError):
+        return default
+
+def calculate_approx_t_p_value(t_stat, df):
+    """
+    Computes a highly accurate mathematical approximation of the two-sided p-value
+    for a Student's t-distribution with given degrees of freedom, without external libraries.
+    """
+    import math
+    if df < 1:
+        return 1.0
+        
+    t_abs = abs(t_stat)
+    
+    # Exact calculation for df = 1 (Cauchy distribution)
+    if df == 1:
+        return 1.0 - (2.0 / math.pi) * math.atan(t_abs)
+    # Exact calculation for df = 2
+    if df == 2:
+        return 1.0 - t_abs / math.sqrt(2.0 + t_abs * t_abs)
+    # Exact calculation for df = 3
+    if df == 3:
+        term1 = t_abs / (math.pi * math.sqrt(3.0) * (1.0 + t_abs * t_abs / 3.0))
+        term2 = math.atan(t_abs / math.sqrt(3.0)) / math.pi
+        return max(0.0, min(1.0, 2.0 * (0.5 - term1 - term2)))
+    # Exact calculation for df = 4
+    if df == 4:
+        term = (t_abs / (2.0 * math.sqrt(4.0 + t_abs * t_abs))) * (1.0 + 2.0 / (4.0 + t_abs * t_abs))
+        return max(0.0, min(1.0, 2.0 * (0.5 - term)))
+        
+    # Peizer-Pratt adjusted normal approximation for df >= 5
+    # Highly accurate transformation from t-statistic to standard normal z-score
+    z = t_abs * (1.0 - 1.0 / (4.0 * df)) / math.sqrt(1.0 + t_abs * t_abs / (2.0 * df))
+    
+    # Standard normal CDF approximation (Abramowitz & Stegun formula 26.2.17, error < 7.5e-8)
+    p = 0.2316419
+    b1 = 0.319381530
+    b2 = -0.356563782
+    b3 = 1.781477937
+    b4 = -1.821255978
+    b5 = 1.330274429
+    
+    t = 1.0 / (1.0 + p * z)
+    exponential = math.exp(-0.5 * z * z)
+    prob = 1.0 - (1.0 / math.sqrt(2.0 * math.pi)) * exponential * (
+        b1 * t + b2 * (t ** 2) + b3 * (t ** 3) + b4 * (t ** 4) + b5 * (t ** 5)
+    )
+    
+    # Return two-sided p-value
+    two_sided_p = 2.0 * (1.0 - prob)
+    return max(0.0, min(1.0, two_sided_p))
+
+
 # 4-Tier Cognitive Domain Categorization Framework Configuration Mapping
 GAME_TO_DOMAIN = {
     "MemoryMatch": "spatial_visual_memory",
@@ -70,7 +132,9 @@ GAME_TO_DOMAIN = {
 
 # Helper function to get database connection
 def get_db_connection():
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=30.0)
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA synchronous=NORMAL")
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -720,55 +784,58 @@ def start_session():
     """
     try:
         data = request.get_json() or {}
-        username = data.get('username', 'default_player')
-        game_type = data.get('game_type', 'SpeedTap')
+        username = str(data.get('username', 'default_player')).strip()
+        if not username:
+            username = 'default_player'
+        game_type = str(data.get('game_type', 'SpeedTap')).strip()
         
         conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Get or create user
-        cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
-        user = cursor.fetchone()
-        if user:
-            user_id = user['id']
-        else:
-            cursor.execute("INSERT INTO users (username) VALUES (?)", (username,))
-            user_id = cursor.lastrowid
-            
-        # Create game session
-        cursor.execute(
-            "INSERT INTO game_sessions (user_id, game_type) VALUES (?, ?)",
-            (user_id, game_type)
-        )
-        session_id = cursor.lastrowid
-        
-        # Get initial DDA parameters based on parent domain history for this user
-        domain = GAME_TO_DOMAIN.get(game_type, "reflexes_and_focus")
-        domain_games = [g for g, d in GAME_TO_DOMAIN.items() if d == domain]
-        placeholders = ",".join("?" for _ in domain_games)
-        
-        query = f"""
-            SELECT pm.difficulty_level 
-            FROM performance_metrics pm
-            JOIN game_sessions gs ON pm.session_id = gs.id
-            WHERE gs.user_id = ? AND (pm.cognitive_domain = ? OR gs.game_type IN ({placeholders}))
-            ORDER BY pm.recorded_at DESC, pm.id DESC LIMIT 1
-        """
-        cursor.execute(query, [user_id, domain] + domain_games)
-        row = cursor.fetchone()
-        if row:
-            initial_difficulty = row['difficulty_level']
-        else:
-            initial_difficulty = 1
-            
-        # Initialize smooth difficulty state for the session
-        cursor.execute(
-            "UPDATE game_sessions SET current_smooth_difficulty = ? WHERE id = ?",
-            (float(initial_difficulty), session_id)
-        )
-            
-        conn.commit()
-        conn.close()
+        try:
+            with conn:
+                cursor = conn.cursor()
+                
+                # Get or create user
+                cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+                user = cursor.fetchone()
+                if user:
+                    user_id = user['id']
+                else:
+                    cursor.execute("INSERT INTO users (username) VALUES (?)", (username,))
+                    user_id = cursor.lastrowid
+                    
+                # Create game session
+                cursor.execute(
+                    "INSERT INTO game_sessions (user_id, game_type) VALUES (?, ?)",
+                    (user_id, game_type)
+                )
+                session_id = cursor.lastrowid
+                
+                # Get initial DDA parameters based on parent domain history for this user
+                domain = GAME_TO_DOMAIN.get(game_type, "reflexes_and_focus")
+                domain_games = [g for g, d in GAME_TO_DOMAIN.items() if d == domain]
+                placeholders = ",".join("?" for _ in domain_games)
+                
+                query = f"""
+                    SELECT pm.difficulty_level 
+                    FROM performance_metrics pm
+                    JOIN game_sessions gs ON pm.session_id = gs.id
+                    WHERE gs.user_id = ? AND (pm.cognitive_domain = ? OR gs.game_type IN ({placeholders}))
+                    ORDER BY pm.recorded_at DESC, pm.id DESC LIMIT 1
+                """
+                cursor.execute(query, [user_id, domain] + domain_games)
+                row = cursor.fetchone()
+                if row:
+                    initial_difficulty = row['difficulty_level']
+                else:
+                    initial_difficulty = 1
+                    
+                # Initialize smooth difficulty state for the session
+                cursor.execute(
+                    "UPDATE game_sessions SET current_smooth_difficulty = ? WHERE id = ?",
+                    (float(initial_difficulty), session_id)
+                )
+        finally:
+            conn.close()
         
         # Get initial DDA parameters
         initial_params = calculate_dda_parameters(initial_difficulty, game_type)
@@ -812,182 +879,181 @@ def adjust_difficulty():
     """
     try:
         data = request.get_json() or {}
-        session_id = data.get('session_id')
-        if not session_id:
-            return jsonify({"status": "error", "message": "session_id is required"}), 400
+        session_id = safe_int(data.get('session_id'))
+        if not session_id or session_id <= 0:
+            return jsonify({"status": "error", "message": "Valid positive session_id is required."}), 400
             
         conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Verify session and get user_id and game_type
-        cursor.execute("SELECT user_id, game_type FROM game_sessions WHERE id = ?", (session_id,))
-        session = cursor.fetchone()
-        if not session:
-            conn.close()
-            return jsonify({"status": "error", "message": "Invalid session_id"}), 404
-        user_id = session['user_id']
-        game_type = session['game_type']
-        
-        domain = GAME_TO_DOMAIN.get(game_type, "reflexes_and_focus")
-
-        # Determine sliding window size k based on game type (Option C Volatility Windows)
-        if game_type in ("SpeedTap", "StroopShift", "speed_tap", "stroop_shift"):
-            k = 10
-        elif game_type in ("MazeEscape", "RouteOptimizer", "maze_escape", "route_optimizer"):
-            k = 3
-        else:
-            k = 5
-
-        # Fetch the last k performance metrics for this session and specific cognitive domain
-        cursor.execute(
-            """
-            SELECT reaction_time, accuracy_rate, difficulty_level 
-            FROM performance_metrics 
-            WHERE session_id = ? AND (cognitive_domain = ? OR game_type = ?)
-            ORDER BY recorded_at DESC, id DESC LIMIT ?
-            """,
-            (session_id, domain, game_type, k)
-        )
-        metrics = cursor.fetchall()
-        
-        # Fallback if no matching records found with domain
-        if not metrics:
-            cursor.execute(
-                """
-                SELECT reaction_time, accuracy_rate, difficulty_level 
-                FROM performance_metrics 
-                WHERE session_id = ? 
-                ORDER BY recorded_at DESC, id DESC LIMIT ?
-                """,
-                (session_id, k)
-            )
-            metrics = cursor.fetchall()
-        
-        # Default difficulty configuration
-        if not metrics:
-            conn.close()
-            return jsonify({
-                "status": "success",
-                "dda_parameters": calculate_dda_parameters(1, game_type)
-            }), 200
-            
-        # Calculate averages
-        avg_rt = sum(m['reaction_time'] for m in metrics) / len(metrics)
-        avg_accuracy = sum(m['accuracy_rate'] for m in metrics) / len(metrics)
-        current_difficulty = metrics[0]['difficulty_level']
-        
-        # Retrieve smoothing alpha coefficient (Option C Volatility Damping filter)
-        # Default: 1.0 (no smoothing, backwards compatible)
-        alpha = float(data.get('smoothing_alpha', 1.0))
-        alpha = max(0.1, min(1.0, alpha))
-        
-        # Fetch current smooth difficulty from session
-        cursor.execute("SELECT current_smooth_difficulty FROM game_sessions WHERE id = ?", (session_id,))
-        sess_row = cursor.fetchone()
-        if sess_row and sess_row['current_smooth_difficulty'] is not None:
-            current_smooth_difficulty = sess_row['current_smooth_difficulty']
-        else:
-            current_smooth_difficulty = float(current_difficulty)
-            
-        # Calculate raw target difficulty level based on standard 3-tier rules
-        if avg_accuracy > 0.90:
-            raw_diff = min(5.0, float(current_difficulty) + 1.0)
-        elif avg_accuracy < 0.70:
-            raw_diff = max(1.0, float(current_difficulty) - 1.0)
-        else:
-            raw_diff = float(current_difficulty)
-            
-        # Apply EMA filter
-        smooth_diff = alpha * raw_diff + (1.0 - alpha) * current_smooth_difficulty
-        
-        # Clamp and round
-        new_difficulty = int(round(smooth_diff))
-        new_difficulty = max(1, min(5, new_difficulty))
-        
-        # Save updated smooth difficulty to database
-        cursor.execute(
-            "UPDATE game_sessions SET current_smooth_difficulty = ? WHERE id = ?",
-            (smooth_diff, session_id)
-        )
-            
-        # Calculate new parameters
-        dda_params = calculate_dda_parameters(new_difficulty, game_type)
-        
-        # Cognitive Profiling Archetype Determination using Random Forest
-        # Features: avg_accuracy, avg_rt, acc_slope, rt_slope
-        
-        # Query preceding and current session averages for this user to compute slopes
-        cursor.execute(
-            """
-            SELECT 
-                gs.id AS session_id,
-                AVG(pm.accuracy_rate) AS avg_accuracy,
-                AVG(pm.reaction_time) AS avg_rt
-            FROM game_sessions gs
-            JOIN performance_metrics pm ON gs.id = pm.session_id
-            WHERE gs.user_id = ? AND gs.id <= ?
-            GROUP BY gs.id
-            ORDER BY gs.id ASC
-            """,
-            (user_id, session_id)
-        )
-        session_rows = cursor.fetchall()
-        
-        history_acc = []
-        history_rt = []
-        found_current = False
-        for r in session_rows:
-            if r['session_id'] == session_id:
-                found_current = True
-                history_acc.append(avg_accuracy)
-                history_rt.append(avg_rt)
-            else:
-                history_acc.append(r['avg_accuracy'])
-                history_rt.append(r['avg_rt'])
-        
-        if not found_current:
-            history_acc.append(avg_accuracy)
-            history_rt.append(avg_rt)
-            
-        acc_slope = calculate_ols_slope(history_acc)
-        rt_slope = calculate_ols_slope(history_rt)
-        
-        pred_res = archetype_classifier.predict(avg_accuracy, avg_rt, acc_slope, rt_slope)
-        archetype = pred_res["archetype"]
-        confidence = pred_res["confidence_score"]
+        try:
+            with conn:
+                cursor = conn.cursor()
                 
-        # Insert or update cognitive profile
-        cursor.execute("SELECT id FROM cognitive_profiles WHERE user_id = ?", (user_id,))
-        profile = cursor.fetchone()
-        if profile:
-            cursor.execute(
-                """
-                UPDATE cognitive_profiles 
-                SET archetype_name = ?, confidence_score = ?, updated_at = CURRENT_TIMESTAMP 
-                WHERE user_id = ?
-                """,
-                (archetype, confidence, user_id)
-            )
-        else:
-            cursor.execute(
-                """
-                INSERT INTO cognitive_profiles (user_id, archetype_name, confidence_score) 
-                VALUES (?, ?, ?)
-                """,
-                (user_id, archetype, confidence)
-            )
-            
-        # Log this archetype classification in archetype_history for longitudinal tracking
-        cursor.execute(
-            """
-            INSERT INTO archetype_history (user_id, session_id, archetype_name, confidence_score) 
-            VALUES (?, ?, ?, ?)
-            """,
-            (user_id, session_id, archetype, confidence)
-        )
-            
-        conn.commit()
-        conn.close()
+                # Verify session and get user_id and game_type
+                cursor.execute("SELECT user_id, game_type FROM game_sessions WHERE id = ?", (session_id,))
+                session = cursor.fetchone()
+                if not session:
+                    return jsonify({"status": "error", "message": "Invalid session_id"}), 404
+                user_id = session['user_id']
+                game_type = session['game_type']
+                
+                domain = GAME_TO_DOMAIN.get(game_type, "reflexes_and_focus")
+        
+                # Determine sliding window size k based on game type (Option C Volatility Windows)
+                if game_type in ("SpeedTap", "StroopShift", "speed_tap", "stroop_shift"):
+                    k = 10
+                elif game_type in ("MazeEscape", "RouteOptimizer", "maze_escape", "route_optimizer"):
+                    k = 3
+                else:
+                    k = 5
+        
+                # Fetch the last k performance metrics for this session and specific cognitive domain
+                cursor.execute(
+                    """
+                    SELECT reaction_time, accuracy_rate, difficulty_level 
+                    FROM performance_metrics 
+                    WHERE session_id = ? AND (cognitive_domain = ? OR game_type = ?)
+                    ORDER BY recorded_at DESC, id DESC LIMIT ?
+                    """,
+                    (session_id, domain, game_type, k)
+                )
+                metrics = cursor.fetchall()
+                
+                # Fallback if no matching records found with domain
+                if not metrics:
+                    cursor.execute(
+                        """
+                        SELECT reaction_time, accuracy_rate, difficulty_level 
+                        FROM performance_metrics 
+                        WHERE session_id = ? 
+                        ORDER BY recorded_at DESC, id DESC LIMIT ?
+                        """,
+                        (session_id, k)
+                    )
+                    metrics = cursor.fetchall()
+                
+                # Default difficulty configuration
+                if not metrics:
+                    return jsonify({
+                        "status": "success",
+                        "dda_parameters": calculate_dda_parameters(1, game_type)
+                    }), 200
+                    
+                # Calculate averages
+                avg_rt = sum(m['reaction_time'] for m in metrics) / len(metrics)
+                avg_accuracy = sum(m['accuracy_rate'] for m in metrics) / len(metrics)
+                current_difficulty = metrics[0]['difficulty_level']
+                
+                # Retrieve smoothing alpha coefficient (Option C Volatility Damping filter)
+                # Default: 1.0 (no smoothing, backwards compatible)
+                alpha = safe_float(data.get('smoothing_alpha'), 1.0)
+                alpha = max(0.1, min(1.0, alpha))
+                
+                # Fetch current smooth difficulty from session
+                cursor.execute("SELECT current_smooth_difficulty FROM game_sessions WHERE id = ?", (session_id,))
+                sess_row = cursor.fetchone()
+                if sess_row and sess_row['current_smooth_difficulty'] is not None:
+                    current_smooth_difficulty = sess_row['current_smooth_difficulty']
+                else:
+                    current_smooth_difficulty = float(current_difficulty)
+                    
+                # Calculate raw target difficulty level based on standard 3-tier rules
+                if avg_accuracy > 0.90:
+                    raw_diff = min(5.0, float(current_difficulty) + 1.0)
+                elif avg_accuracy < 0.70:
+                    raw_diff = max(1.0, float(current_difficulty) - 1.0)
+                else:
+                    raw_diff = float(current_difficulty)
+                    
+                # Apply EMA filter
+                smooth_diff = alpha * raw_diff + (1.0 - alpha) * current_smooth_difficulty
+                
+                # Clamp and round
+                new_difficulty = int(round(smooth_diff))
+                new_difficulty = max(1, min(5, new_difficulty))
+                
+                # Save updated smooth difficulty to database
+                cursor.execute(
+                    "UPDATE game_sessions SET current_smooth_difficulty = ? WHERE id = ?",
+                    (smooth_diff, session_id)
+                )
+                    
+                # Calculate new parameters
+                dda_params = calculate_dda_parameters(new_difficulty, game_type)
+                
+                # Cognitive Profiling Archetype Determination using Random Forest
+                # Features: avg_accuracy, avg_rt, acc_slope, rt_slope
+                
+                # Query preceding and current session averages for this user to compute slopes
+                cursor.execute(
+                    """
+                    SELECT 
+                        gs.id AS session_id,
+                        AVG(pm.accuracy_rate) AS avg_accuracy,
+                        AVG(pm.reaction_time) AS avg_rt
+                    FROM game_sessions gs
+                    JOIN performance_metrics pm ON gs.id = pm.session_id
+                    WHERE gs.user_id = ? AND gs.id <= ?
+                    GROUP BY gs.id
+                    ORDER BY gs.id ASC
+                    """,
+                    (user_id, session_id)
+                )
+                session_rows = cursor.fetchall()
+                
+                history_acc = []
+                history_rt = []
+                found_current = False
+                for r in session_rows:
+                    if r['session_id'] == session_id:
+                        found_current = True
+                        history_acc.append(avg_accuracy)
+                        history_rt.append(avg_rt)
+                    else:
+                        history_acc.append(r['avg_accuracy'])
+                        history_rt.append(r['avg_rt'])
+                
+                if not found_current:
+                    history_acc.append(avg_accuracy)
+                    history_rt.append(avg_rt)
+                    
+                acc_slope = calculate_ols_slope(history_acc)
+                rt_slope = calculate_ols_slope(history_rt)
+                
+                pred_res = archetype_classifier.predict(avg_accuracy, avg_rt, acc_slope, rt_slope)
+                archetype = pred_res["archetype"]
+                confidence = pred_res["confidence_score"]
+                        
+                # Insert or update cognitive profile
+                cursor.execute("SELECT id FROM cognitive_profiles WHERE user_id = ?", (user_id,))
+                profile = cursor.fetchone()
+                if profile:
+                    cursor.execute(
+                        """
+                        UPDATE cognitive_profiles 
+                        SET archetype_name = ?, confidence_score = ?, updated_at = CURRENT_TIMESTAMP 
+                        WHERE user_id = ?
+                        """,
+                        (archetype, confidence, user_id)
+                    )
+                else:
+                    cursor.execute(
+                        """
+                        INSERT INTO cognitive_profiles (user_id, archetype_name, confidence_score) 
+                        VALUES (?, ?, ?)
+                        """,
+                        (user_id, archetype, confidence)
+                    )
+                    
+                # Log this archetype classification in archetype_history for longitudinal tracking
+                cursor.execute(
+                    """
+                    INSERT INTO archetype_history (user_id, session_id, archetype_name, confidence_score) 
+                    VALUES (?, ?, ?, ?)
+                    """,
+                    (user_id, session_id, archetype, confidence)
+                )
+        finally:
+            conn.close()
         
         return jsonify({
             "status": "success",
@@ -1014,59 +1080,80 @@ def submit_metrics():
     try:
         data = request.get_json() or {}
         
-        session_id = data.get('session_id')
+        session_id = safe_int(data.get('session_id'))
         
         # Support reaction_time and reaction_time_ms
-        reaction_time = data.get('reaction_time') if data.get('reaction_time') is not None else data.get('reaction_time_ms')
+        rt_val = data.get('reaction_time') if data.get('reaction_time') is not None else data.get('reaction_time_ms')
+        reaction_time = safe_float(rt_val)
         
         # Support accuracy_rate and accuracy
-        accuracy = data.get('accuracy_rate') if data.get('accuracy_rate') is not None else data.get('accuracy')
+        acc_val = data.get('accuracy_rate') if data.get('accuracy_rate') is not None else data.get('accuracy')
+        accuracy = safe_float(acc_val)
         
         # Support difficulty and difficulty_level
-        difficulty = data.get('difficulty') if data.get('difficulty') is not None else data.get('difficulty_level')
-        
-        cognitive_domain = data.get('cognitive_domain')
-        game_type = data.get('game_type')
-        error_count = data.get('error_count')
-        hesitation_ms = data.get('hesitation_ms', 0.0)
-        spam_click_count = data.get('spam_click_count', 0)
-        
-        rule_shift_latency_ms = data.get('rule_shift_latency_ms')
-        path_efficiency = data.get('path_efficiency')
+        diff_val = data.get('difficulty') if data.get('difficulty') is not None else data.get('difficulty_level')
+        difficulty = safe_int(diff_val)
         
         if session_id is None or reaction_time is None or accuracy is None or difficulty is None:
             return jsonify({"status": "error", "message": "Missing required fields"}), 400
-
+            
+        # Bounds validation
+        if session_id <= 0:
+            return jsonify({"status": "error", "message": "session_id must be a positive integer."}), 400
+        if reaction_time < 0:
+            return jsonify({"status": "error", "message": "reaction_time cannot be negative."}), 400
+        if not (0.0 <= accuracy <= 1.0):
+            return jsonify({"status": "error", "message": "accuracy_rate must be between 0.0 and 1.0."}), 400
+        if not (1 <= difficulty <= 5):
+            return jsonify({"status": "error", "message": "difficulty_level must be between 1 and 5."}), 400
+        
+        cognitive_domain = data.get('cognitive_domain')
+        if cognitive_domain is not None:
+            cognitive_domain = str(cognitive_domain)
+            
+        game_type = data.get('game_type')
+        if game_type is not None:
+            game_type = str(game_type)
+            
+        error_count = safe_int(data.get('error_count'), 0)
+        hesitation_ms = safe_float(data.get('hesitation_ms'), 0.0)
+        spam_click_count = safe_int(data.get('spam_click_count'), 0)
+        
+        rule_shift_latency_ms = safe_float(data.get('rule_shift_latency_ms'))
+        path_efficiency = safe_float(data.get('path_efficiency'))
+ 
         # Infer game_type and cognitive_domain if not provided
         conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        if not game_type:
-            cursor.execute("SELECT game_type FROM game_sessions WHERE id = ?", (session_id,))
-            session_row = cursor.fetchone()
-            if session_row:
-                game_type = session_row['game_type']
+        try:
+            with conn:
+                cursor = conn.cursor()
                 
-        if game_type and not cognitive_domain:
-            cognitive_domain = GAME_TO_DOMAIN.get(game_type)
-            
-        if error_count is None:
-            error_count = 0
-
-        # Insert performance metric
-        cursor.execute(
-            """
-            INSERT INTO performance_metrics 
-            (session_id, reaction_time, accuracy_rate, difficulty_level, cognitive_domain, game_type, error_count, hesitation_ms, spam_click_count, rule_shift_latency_ms, path_efficiency) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (session_id, reaction_time, accuracy, difficulty, cognitive_domain, game_type, error_count, hesitation_ms, spam_click_count, rule_shift_latency_ms, path_efficiency)
-        )
-        conn.commit()
-        conn.close()
-
+                if not game_type:
+                    cursor.execute("SELECT game_type FROM game_sessions WHERE id = ?", (session_id,))
+                    session_row = cursor.fetchone()
+                    if session_row:
+                        game_type = session_row['game_type']
+                        
+                if game_type and not cognitive_domain:
+                    cognitive_domain = GAME_TO_DOMAIN.get(game_type)
+                    
+                if error_count is None:
+                    error_count = 0
+ 
+                # Insert performance metric
+                cursor.execute(
+                    """
+                    INSERT INTO performance_metrics 
+                    (session_id, reaction_time, accuracy_rate, difficulty_level, cognitive_domain, game_type, error_count, hesitation_ms, spam_click_count, rule_shift_latency_ms, path_efficiency) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (session_id, reaction_time, accuracy, difficulty, cognitive_domain, game_type, error_count, hesitation_ms, spam_click_count, rule_shift_latency_ms, path_efficiency)
+                )
+        finally:
+            conn.close()
+ 
         return jsonify({"status": "success", "message": "Metrics recorded"}), 201
-
+ 
     except Exception as e:
         app.logger.error(f"Error in submit_metrics: {e}")
         return jsonify({"status": "error", "message": f"Database or server error: {str(e)}"}), 500
@@ -1083,10 +1170,20 @@ def evaluate_thesis():
         pretest = data.get('pretest_scores')
         posttest = data.get('posttest_scores')
         
-        if not pretest or not posttest or len(pretest) != len(posttest):
+        if not isinstance(pretest, list) or not isinstance(posttest, list) or len(pretest) != len(posttest):
             return jsonify({
                 "status": "error", 
-                "message": "Both pretest_scores and posttest_scores lists are required and must be of equal length."
+                "message": "Both pretest_scores and posttest_scores must be lists of equal length."
+            }), 400
+            
+        # Parse arrays defensively
+        pretest = [safe_float(x) for x in pretest]
+        posttest = [safe_float(x) for x in posttest]
+        
+        if any(x is None for x in pretest) or any(x is None for x in posttest):
+            return jsonify({
+                "status": "error",
+                "message": "All scores in pretest and posttest lists must be valid numbers."
             }), 400
             
         n = len(pretest)
@@ -1122,9 +1219,8 @@ def evaluate_thesis():
             sd_diff = variance_diff ** 0.5
             se_diff = sd_diff / (n ** 0.5)
             t_stat = mean_diff / se_diff if se_diff != 0 else 0.0
-            # Rough lookup approximation for p-value (df = n - 1)
-            # Just for safety if scipy is not installed
-            p_val = 0.01 if abs(t_stat) > 2.0 else 0.45
+            # Continuous advanced mathematical approximation lookup
+            p_val = calculate_approx_t_p_value(t_stat, n - 1)
             
         # Handle nan/inf cases in float formatting
         if math.isnan(t_stat) or math.isinf(t_stat):
