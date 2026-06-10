@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import SequenceDecoderScene from '../games/SequenceDecoderScene';
+import PauseOverlay from './PauseOverlay';
 
 export default function SequenceDecoderGame({ username = 'default_player', apiUrl = 'http://127.0.0.1:5000', onGameFinished }) {
     const gameContainerRef   = useRef(null);
@@ -13,6 +14,7 @@ export default function SequenceDecoderGame({ username = 'default_player', apiUr
     const [finalStats,      setFinalStats]      = useState(null);
     const [cognitiveProfile, setCognitiveProfile] = useState(null);
     const [error,           setError]           = useState(null);
+    const [isPaused, setIsPaused] = useState(false);
 
     const startTrainingSession = async () => {
         setGameState('LOADING');
@@ -110,7 +112,51 @@ export default function SequenceDecoderGame({ username = 'default_player', apiUr
         };
     }, [gameState, sessionId, apiUrl, ddaParameters, onGameFinished]);
 
-    const handleRestart = () => {
+    
+    // Handle pause state transitions
+    useEffect(() => {
+        if (phaserInstanceRef.current && gameState === 'PLAYING') {
+            const game = phaserInstanceRef.current;
+            if (isPaused) {
+                game.scene.scenes.forEach(scene => {
+                    if (scene.scene.isActive()) {
+                        scene.scene.pause();
+                        scene.time.paused = true;
+                        if (scene.countdownTimer) scene.countdownTimer.paused = true;
+                    }
+                });
+            } else {
+                game.scene.scenes.forEach(scene => {
+                    if (scene.scene.isPaused()) {
+                        scene.scene.resume();
+                        scene.time.paused = false;
+                        if (scene.countdownTimer) scene.countdownTimer.paused = false;
+                    }
+                });
+            }
+        }
+    }, [isPaused, gameState]);
+
+    // Handle global "P" key for pause toggling
+    useEffect(() => {
+        if (gameState !== 'PLAYING') {
+            setIsPaused(false);
+            return;
+        }
+
+        const handleKeyDown = (e) => {
+            if (e.key === 'p' || e.key === 'P') {
+                setIsPaused(prev => !prev);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [gameState]);
+
+const handleRestart = () => {
         setGameState('IDLE');
         setSessionId(null);
         setDdaParameters(null);
@@ -354,7 +400,12 @@ export default function SequenceDecoderGame({ username = 'default_player', apiUr
 
     // ── PLAYING screen
     if (gameState === 'PLAYING') {
-        return <div style={styles.canvasWrapper} ref={gameContainerRef} />;
+        return (
+            <div style={{ position: 'relative', width: '100%', maxWidth: '800px', margin: '0 auto' }}>
+                <div style={styles.canvasWrapper} ref={gameContainerRef} />
+                <PauseOverlay isPaused={isPaused} onTogglePause={() => setIsPaused(false)} />
+            </div>
+        );
     }
 
     // ── FINISHED screen

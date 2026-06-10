@@ -1,6 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Phaser from 'phaser';
 import RouteOptimizerScene from '../games/RouteOptimizerScene';
+import PauseOverlay from './PauseOverlay';
+
 
 export default function RouteOptimizerGame({
     username = 'default_player',
@@ -17,6 +19,8 @@ export default function RouteOptimizerGame({
     const [finalStats,       setFinalStats]       = useState(null);
     const [cognitiveProfile, setCognitiveProfile] = useState(null);
     const [error,            setError]            = useState(null);
+    const [isPaused,         setIsPaused]         = useState(false);
+
 
     const startTrainingSession = async () => {
         setGameState('LOADING');
@@ -93,6 +97,50 @@ export default function RouteOptimizerGame({
             }
         };
     }, [gameState, sessionId, apiUrl, ddaParameters, onGameFinished]);
+
+    // Handle pause state transitions
+    useEffect(() => {
+        if (phaserInstanceRef.current && gameState === 'PLAYING') {
+            const game = phaserInstanceRef.current;
+            if (isPaused) {
+                game.scene.scenes.forEach(scene => {
+                    if (scene.scene.isActive()) {
+                        scene.scene.pause();
+                        scene.time.paused = true;
+                        if (scene.countdownTimer) scene.countdownTimer.paused = true;
+                    }
+                });
+            } else {
+                game.scene.scenes.forEach(scene => {
+                    if (scene.scene.isPaused()) {
+                        scene.scene.resume();
+                        scene.time.paused = false;
+                        if (scene.countdownTimer) scene.countdownTimer.paused = false;
+                    }
+                });
+            }
+        }
+    }, [isPaused, gameState]);
+
+    // Handle global "P" key for pause toggling
+    useEffect(() => {
+        if (gameState !== 'PLAYING') {
+            setIsPaused(false);
+            return;
+        }
+
+        const handleKeyDown = (e) => {
+            if (e.key === 'p' || e.key === 'P') {
+                setIsPaused(prev => !prev);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [gameState]);
+
 
     const handleRestart = () => {
         setGameState('IDLE');
@@ -270,8 +318,14 @@ export default function RouteOptimizerGame({
 
     // ── PLAYING ─────────────────────────────────────────
     if (gameState === 'PLAYING') {
-        return <div style={S.canvasWrapper} ref={gameContainerRef} />;
+        return (
+            <div style={{ position: 'relative', width: '100%', maxWidth: '800px', margin: '0 auto' }}>
+                <div style={S.canvasWrapper} ref={gameContainerRef} />
+                <PauseOverlay isPaused={isPaused} onTogglePause={() => setIsPaused(false)} />
+            </div>
+        );
     }
+
 
     // ── FINISHED ────────────────────────────────────────
     if (gameState === 'FINISHED') {

@@ -1,22 +1,9 @@
-/**
- * ================================================================================
- * Chapter 2 Methodology Compliance: Software Engineering Architecture Patterns
- * - Pattern: Model-View-Controller (MVC) / Container-Presenter
- * - Component: Controller/Presenter (React Integration Wrapper)
- * - Separation of Concerns: Renders the UI wrapper, manages React lifecycle states,
- *   initializes/cleans up the Phaser game engine instance, and mediates between React
- *   state and Phaser scenes.
- * - Error Handling: Implements catch blocks for initial API connections, presenting
- *   user-friendly warning overlays if the Flask server is unreachable.
- * ================================================================================
- */
-
 import React, { useState, useEffect, useRef } from 'react';
 import Phaser from 'phaser';
-import MentalFlexScene from '../games/MentalFlexScene';
+import NeuralNBackScene from '../games/NeuralNBackScene';
 import PauseOverlay from './PauseOverlay';
 
-export default function MentalFlexGame({ username = 'default_player', apiUrl = 'http://127.0.0.1:5000', onGameFinished }) {
+export default function NeuralNBackGame({ username = 'default_player', apiUrl = 'http://127.0.0.1:5000', onGameFinished }) {
     const gameContainerRef = useRef(null);
     const phaserInstanceRef = useRef(null);
 
@@ -35,7 +22,7 @@ export default function MentalFlexGame({ username = 'default_player', apiUrl = '
         setError(null);
 
         try {
-            console.log('[React Wrapper] Initializing session on Flask API for MentalFlex...');
+            console.log('[React NB Wrapper] Initializing session on Flask API...');
             const response = await fetch(`${apiUrl}/api/start-session`, {
                 method: 'POST',
                 headers: {
@@ -43,7 +30,7 @@ export default function MentalFlexGame({ username = 'default_player', apiUrl = '
                 },
                 body: JSON.stringify({
                     username: inputUsername,
-                    game_type: 'MentalFlex'
+                    game_type: 'NeuralNBack'
                 })
             });
 
@@ -60,7 +47,7 @@ export default function MentalFlexGame({ username = 'default_player', apiUrl = '
                 throw new Error(data.message || 'Unknown server error');
             }
         } catch (err) {
-            console.error('[React Wrapper] Connection to database API failed:', err);
+            console.error('[React NB Wrapper] Connection to database API failed:', err);
             setError('Could not connect to the database server. Please verify the Flask server is running.');
             setGameState('IDLE');
         }
@@ -72,32 +59,27 @@ export default function MentalFlexGame({ username = 'default_player', apiUrl = '
             return;
         }
 
-        console.log('[React Wrapper] Starting Phaser game instance for MentalFlex...');
+        console.log('[React NB Wrapper] Starting Phaser game instance...');
         
-        // Phaser configuration with auto-scaling Scale Manager for mobile responsiveness
         const config = {
             type: Phaser.AUTO,
             parent: gameContainerRef.current,
-            backgroundColor: '#09090b',
+            backgroundColor: '#090915',
             scale: {
                 mode: Phaser.Scale.FIT,
                 autoCenter: Phaser.Scale.CENTER_BOTH,
                 width: 800,
                 height: 600
             },
-            physics: {
-                default: 'arcade',
-                arcade: { debug: false }
-            },
-            scene: [MentalFlexScene]
+            scene: [NeuralNBackScene]
         };
 
-        // Instantiate Phaser
         const game = new Phaser.Game(config);
         phaserInstanceRef.current = game;
+        window.phaserGame = game;
 
-        // Boot and pass the state objects to Phaser MentalFlexScene
-        game.scene.start('MentalFlexScene', {
+        // Boot and pass the state objects to Phaser NeuralNBackScene
+        game.scene.start('NeuralNBackScene', {
             sessionId: sessionId,
             apiUrl: apiUrl,
             ddaParameters: ddaParameters,
@@ -105,7 +87,6 @@ export default function MentalFlexGame({ username = 'default_player', apiUrl = '
                 setFinalStats(stats);
                 
                 let profileInfo = null;
-                // Fetch final cognitive profile archetype updates from the database
                 try {
                     const profileRes = await fetch(`${apiUrl}/api/dda`, {
                         method: 'POST',
@@ -122,7 +103,7 @@ export default function MentalFlexGame({ username = 'default_player', apiUrl = '
                         }
                     }
                 } catch (e) {
-                    console.warn('[React Wrapper] Failed to fetch final cognitive profile:', e);
+                    console.warn('[React NB Wrapper] Failed to fetch final cognitive profile:', e);
                 }
 
                 setGameState('FINISHED');
@@ -132,17 +113,17 @@ export default function MentalFlexGame({ username = 'default_player', apiUrl = '
             }
         });
 
-        // Cleanup: destroy Phaser instance on component unmount
+        // Cleanup
         return () => {
             if (phaserInstanceRef.current) {
-                console.log('[React Wrapper] Destroying Phaser instance...');
+                console.log('[React NB Wrapper] Destroying Phaser instance...');
                 phaserInstanceRef.current.destroy(true);
                 phaserInstanceRef.current = null;
+                window.phaserGame = null;
             }
         };
     }, [gameState, sessionId, apiUrl, ddaParameters, onGameFinished]);
 
-    
     // Handle pause state transitions
     useEffect(() => {
         if (phaserInstanceRef.current && gameState === 'PLAYING') {
@@ -153,6 +134,7 @@ export default function MentalFlexGame({ username = 'default_player', apiUrl = '
                         scene.scene.pause();
                         scene.time.paused = true;
                         if (scene.countdownTimer) scene.countdownTimer.paused = true;
+                        if (scene.stimulusEvent) scene.stimulusEvent.paused = true;
                     }
                 });
             } else {
@@ -161,6 +143,7 @@ export default function MentalFlexGame({ username = 'default_player', apiUrl = '
                         scene.scene.resume();
                         scene.time.paused = false;
                         if (scene.countdownTimer) scene.countdownTimer.paused = false;
+                        if (scene.stimulusEvent) scene.stimulusEvent.paused = false;
                     }
                 });
             }
@@ -186,7 +169,7 @@ export default function MentalFlexGame({ username = 'default_player', apiUrl = '
         };
     }, [gameState]);
 
-const handleRestart = () => {
+    const handleRestart = () => {
         setGameState('IDLE');
         setSessionId(null);
         setDdaParameters(null);
@@ -205,30 +188,30 @@ const handleRestart = () => {
             maxWidth: '800px',
             minHeight: '600px',
             height: 'auto',
-            background: 'linear-gradient(135deg, #09090b 0%, #160f29 100%)',
+            background: 'linear-gradient(135deg, #090915 0%, #1e1b4b 100%)',
             color: '#f8fafc',
             fontFamily: 'system-ui, -apple-system, sans-serif',
             borderRadius: '12px',
             boxShadow: '0 10px 25px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.1)',
-            border: '1px solid #3c1e6d',
+            border: '1px solid #312e81',
             padding: '2rem',
             textAlign: 'center',
             boxSizing: 'border-box'
         },
         card: {
-            background: 'rgba(24, 15, 41, 0.45)',
+            background: 'rgba(30, 41, 59, 0.45)',
             backdropFilter: 'blur(12px)',
             borderRadius: '16px',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
             padding: '2.5rem',
             width: '100%',
             maxWidth: '500px',
-            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)'
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)'
         },
         title: {
             fontSize: '2.5rem',
             fontWeight: '800',
-            background: 'linear-gradient(to right, #a855f7, #38bdf8)',
+            background: 'linear-gradient(to right, #38bdf8, #a855f7)',
             WebkitBackgroundClip: 'text',
             backgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
@@ -246,7 +229,7 @@ const handleRestart = () => {
             width: '100%',
             padding: '0.75rem 1rem',
             background: '#09090b',
-            border: '1.5px solid #4c1d95',
+            border: '1.5px solid #312e81',
             borderRadius: '8px',
             color: '#ffffff',
             fontSize: '1rem',
@@ -258,14 +241,14 @@ const handleRestart = () => {
         button: {
             width: '100%',
             padding: '0.75rem 1.5rem',
-            background: 'linear-gradient(to right, #a855f7, #0284c7)',
+            background: 'linear-gradient(to right, #38bdf8, #a855f7)',
             border: 'none',
             borderRadius: '8px',
             color: '#ffffff',
             fontSize: '1rem',
             fontWeight: '600',
             cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)',
+            boxShadow: '0 4px 12px rgba(124, 58, 237, 0.3)',
             transition: 'all 0.2s'
         },
         errorMessage: {
@@ -283,7 +266,7 @@ const handleRestart = () => {
             aspectRatio: '4/3',
             borderRadius: '12px',
             overflow: 'hidden',
-            border: '1px solid #3c1e6d',
+            border: '1px solid #312e81',
             boxShadow: '0 15px 35px rgba(0, 0, 0, 0.4)'
         },
         statRow: {
@@ -294,7 +277,7 @@ const handleRestart = () => {
         },
         statVal: {
             fontWeight: '700',
-            color: '#c084fc'
+            color: '#38bdf8'
         },
         archetypeBadge: {
             display: 'inline-block',
@@ -313,8 +296,8 @@ const handleRestart = () => {
         return (
             <div style={styles.overlay}>
                 <div style={styles.card}>
-                    <h1 style={styles.title}>MENTAL FLEX</h1>
-                    <p style={styles.subtitle}>Cognitive Flexibility & Set-Shifting Training</p>
+                    <h1 style={styles.title}>NEURAL N-BACK</h1>
+                    <p style={styles.subtitle}>Working Memory & Spatial Sequencing Training</p>
                     
                     {error && <div style={styles.errorMessage}>{error}</div>}
 
@@ -349,8 +332,8 @@ const handleRestart = () => {
                     <div style={{
                         width: '40px',
                         height: '40px',
-                        border: '4px solid rgba(168, 85, 247, 0.2)',
-                        borderTop: '4px solid #a855f7',
+                        border: '4px solid rgba(56, 189, 248, 0.2)',
+                        borderTop: '4px solid #38bdf8',
                         borderRadius: '50%',
                         margin: '0 auto 1.5rem auto',
                         animation: 'spin 1s linear infinite'
@@ -383,11 +366,11 @@ const handleRestart = () => {
                 <div style={styles.card}>
                     <h1 style={{ 
                         ...styles.title, 
-                        background: 'linear-gradient(to right, #4ade80, #a855f7)',
+                        background: 'linear-gradient(to right, #4ade80, #38bdf8)',
                         WebkitBackgroundClip: 'text',
                         backgroundClip: 'text' 
                     }}>SESSION COMPLETE</h1>
-                    <p style={styles.subtitle}>Telemetry successfully synced to database.</p>
+                    <p style={styles.subtitle}>Memory telemetry successfully synced to database.</p>
 
                     <div style={{ marginBottom: '2rem', textAlign: 'left' }}>
                         <div style={styles.statRow}>
@@ -395,20 +378,20 @@ const handleRestart = () => {
                             <span style={{ ...styles.statVal, color: '#4ade80' }}>{finalStats?.score}</span>
                         </div>
                         <div style={styles.statRow}>
-                            <span>Matches Made</span>
+                            <span>Correct Hits</span>
                             <span style={styles.statVal}>{finalStats?.hits}</span>
                         </div>
                         <div style={styles.statRow}>
-                            <span>Misses / Timeouts</span>
+                            <span>Incorrect / Omission Errors</span>
                             <span style={{ ...styles.statVal, color: '#ef4444' }}>{finalStats?.misses}</span>
                         </div>
                         <div style={styles.statRow}>
-                            <span>Response Accuracy</span>
+                            <span>Success Rate Accuracy</span>
                             <span style={styles.statVal}>{Math.round((finalStats?.accuracy || 0) * 100)}%</span>
                         </div>
                         <div style={styles.statRow}>
                             <span>Max Difficulty Achieved</span>
-                            <span style={{ ...styles.statVal, color: '#a855f7' }}>Level {finalStats?.difficultyLevel}</span>
+                            <span style={{ ...styles.statVal, color: '#c084fc' }}>Level {finalStats?.difficultyLevel}</span>
                         </div>
                     </div>
 

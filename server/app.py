@@ -52,12 +52,20 @@ GAME_TO_DOMAIN = {
     "focus_finder": "reflexes_and_focus",
     "MazeEscape": "executive_strategy",
     "maze_escape": "executive_strategy",
+    "NeuroMaze": "executive_strategy",
+    "neuro_maze": "executive_strategy",
     "MatrixRecall": "spatial_visual_memory",
     "matrix_recall": "spatial_visual_memory",
     "StroopShift": "reflexes_and_focus",
     "stroop_shift": "reflexes_and_focus",
     "MentalFlex": "executive_strategy",
-    "mental_flex": "executive_strategy"
+    "mental_flex": "executive_strategy",
+    "NeuralNBack": "spatial_visual_memory",
+    "neural_n_back": "spatial_visual_memory",
+    "SynapseSpin": "spatial_visual_memory",
+    "synapse_spin": "spatial_visual_memory",
+    "NexusMapper": "spatial_visual_memory",
+    "nexus_mapper": "spatial_visual_memory"
 }
 
 # Helper function to get database connection
@@ -332,6 +340,72 @@ def calculate_dda_parameters(difficulty_level, game_type='SpeedTap'):
                 "max_moves": 40,
                 "blocked_ratio": 0.25
             }
+        }
+    elif game_type in ['NeuroMaze', 'neuro_maze']:
+        # Map levels to game-specific variables for the Neuro Maze game (Problem Solving)
+        configs = {
+            1: {
+                "difficulty_level": 1,
+                "grid_size": 6,
+                "max_moves": 20,
+                "blocked_ratio": 0.1,
+                "speed_multiplier": 1.0
+            },
+            2: {
+                "difficulty_level": 2,
+                "grid_size": 7,
+                "max_moves": 25,
+                "blocked_ratio": 0.13,
+                "speed_multiplier": 1.2
+            },
+            3: {
+                "difficulty_level": 3,
+                "grid_size": 8,
+                "max_moves": 30,
+                "blocked_ratio": 0.17,
+                "speed_multiplier": 1.4
+            },
+            4: {
+                "difficulty_level": 4,
+                "grid_size": 9,
+                "max_moves": 35,
+                "blocked_ratio": 0.21,
+                "speed_multiplier": 1.6
+            },
+            5: {
+                "difficulty_level": 5,
+                "grid_size": 10,
+                "max_moves": 40,
+                "blocked_ratio": 0.25,
+                "speed_multiplier": 1.8
+            }
+        }
+    elif game_type in ['NeuralNBack', 'neural_n_back']:
+        # Map levels to game-specific variables for the Neural N-Back game (Working Memory)
+        configs = {
+            1: {"difficulty_level": 1, "n_value": 1, "step_delay": 2500},
+            2: {"difficulty_level": 2, "n_value": 1, "step_delay": 2000},
+            3: {"difficulty_level": 3, "n_value": 2, "step_delay": 2000},
+            4: {"difficulty_level": 4, "n_value": 2, "step_delay": 1600},
+            5: {"difficulty_level": 5, "n_value": 3, "step_delay": 1500}
+        }
+    elif game_type in ['SynapseSpin', 'synapse_spin']:
+        # Map levels to game-specific variables for the Synapse Spin game (Mental Rotation)
+        configs = {
+            1: {"difficulty_level": 1, "vertices": 4, "rotation_step": 90},
+            2: {"difficulty_level": 2, "vertices": 5, "rotation_step": 45},
+            3: {"difficulty_level": 3, "vertices": 6, "rotation_step": 30},
+            4: {"difficulty_level": 4, "vertices": 7, "rotation_step": 15},
+            5: {"difficulty_level": 5, "vertices": 8, "rotation_step": 0}
+        }
+    elif game_type in ['NexusMapper', 'nexus_mapper']:
+        # Map levels to game-specific variables for the Nexus Mapper game (Object-Location Memory)
+        configs = {
+            1: {"difficulty_level": 1, "grid_size": 3, "target_count": 2, "flash_duration": 2000},
+            2: {"difficulty_level": 2, "grid_size": 3, "target_count": 3, "flash_duration": 1800},
+            3: {"difficulty_level": 3, "grid_size": 4, "target_count": 3, "flash_duration": 1500},
+            4: {"difficulty_level": 4, "grid_size": 4, "target_count": 4, "flash_duration": 1200},
+            5: {"difficulty_level": 5, "grid_size": 5, "target_count": 5, "flash_duration": 1000}
         }
     elif game_type in ['MatrixRecall', 'matrix_recall']:
         # Map levels to game-specific variables for the Matrix Recall game (Spatial-Visual Memory)
@@ -1897,6 +1971,58 @@ def delete_training_goal(goal_id):
     except Exception as e:
         app.logger.error(f"Error in delete_training_goal: {e}")
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+
+
+@app.route('/metrics', methods=['GET'])
+
+def get_metrics():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Total sessions
+        cursor.execute("SELECT COUNT(*) FROM game_sessions")
+        total_sessions = cursor.fetchone()[0]
+        
+        # Average score (based on accuracy rate * 100)
+        cursor.execute("SELECT AVG(accuracy_rate) FROM performance_metrics")
+        avg_acc = cursor.fetchone()[0]
+        average_score = round(avg_acc * 100, 2) if avg_acc is not None else 0.0
+        
+        # Domain breakdown (average score per domain)
+        cursor.execute("""
+            SELECT cognitive_domain, AVG(accuracy_rate) as avg_acc, COUNT(*) as cnt
+            FROM performance_metrics 
+            WHERE cognitive_domain IS NOT NULL
+            GROUP BY cognitive_domain
+        """)
+        domain_rows = cursor.fetchall()
+        
+        domain_breakdown = {}
+        for row in domain_rows:
+            domain = row['cognitive_domain']
+            acc = row['avg_acc']
+            cnt = row['cnt']
+            domain_breakdown[domain] = {
+                "average_accuracy": round(acc * 100, 2) if acc is not None else 0.0,
+                "total_records": cnt
+            }
+            
+        conn.close()
+        
+        return jsonify({
+            "status": "success",
+            "total_sessions": total_sessions,
+            "average_score": average_score,
+            "domain_breakdown": domain_breakdown
+        }), 200
+        
+    except Exception as e:
+        app.logger.error(f"Error in get_metrics: {e}")
+        return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
+
+
+
 
 
 if __name__ == '__main__':

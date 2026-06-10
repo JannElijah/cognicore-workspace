@@ -14,6 +14,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import StroopShiftScene from '../games/StroopShiftScene';
+import PauseOverlay from './PauseOverlay';
 
 export default function StroopShiftGame({ username = 'default_player', apiUrl = 'http://127.0.0.1:5000', onGameFinished }) {
     const gameContainerRef = useRef(null);
@@ -26,6 +27,7 @@ export default function StroopShiftGame({ username = 'default_player', apiUrl = 
     const [finalStats, setFinalStats] = useState(null);
     const [cognitiveProfile, setCognitiveProfile] = useState(null);
     const [error, setError] = useState(null);
+    const [isPaused, setIsPaused] = useState(false);
 
     // Initial session start handshake with Flask server
     const startTrainingSession = async () => {
@@ -141,7 +143,51 @@ export default function StroopShiftGame({ username = 'default_player', apiUrl = 
         };
     }, [gameState, sessionId, apiUrl, ddaParameters, onGameFinished]);
 
-    const handleRestart = () => {
+    
+    // Handle pause state transitions
+    useEffect(() => {
+        if (phaserInstanceRef.current && gameState === 'PLAYING') {
+            const game = phaserInstanceRef.current;
+            if (isPaused) {
+                game.scene.scenes.forEach(scene => {
+                    if (scene.scene.isActive()) {
+                        scene.scene.pause();
+                        scene.time.paused = true;
+                        if (scene.countdownTimer) scene.countdownTimer.paused = true;
+                    }
+                });
+            } else {
+                game.scene.scenes.forEach(scene => {
+                    if (scene.scene.isPaused()) {
+                        scene.scene.resume();
+                        scene.time.paused = false;
+                        if (scene.countdownTimer) scene.countdownTimer.paused = false;
+                    }
+                });
+            }
+        }
+    }, [isPaused, gameState]);
+
+    // Handle global "P" key for pause toggling
+    useEffect(() => {
+        if (gameState !== 'PLAYING') {
+            setIsPaused(false);
+            return;
+        }
+
+        const handleKeyDown = (e) => {
+            if (e.key === 'p' || e.key === 'P') {
+                setIsPaused(prev => !prev);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [gameState]);
+
+const handleRestart = () => {
         setGameState('IDLE');
         setSessionId(null);
         setDdaParameters(null);
@@ -325,7 +371,10 @@ export default function StroopShiftGame({ username = 'default_player', apiUrl = 
 
     if (gameState === 'PLAYING') {
         return (
-            <div style={styles.canvasWrapper} ref={gameContainerRef} />
+            <div style={{ position: 'relative', width: '100%', maxWidth: '800px', margin: '0 auto' }}>
+                <div style={styles.canvasWrapper} ref={gameContainerRef} />
+                <PauseOverlay isPaused={isPaused} onTogglePause={() => setIsPaused(false)} />
+            </div>
         );
     }
 

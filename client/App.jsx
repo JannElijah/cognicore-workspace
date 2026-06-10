@@ -26,8 +26,13 @@ import MentalFlexGame from './components/MentalFlexGame';
 import EquationBalanceGame from './components/EquationBalanceGame';
 import SequenceDecoderGame from './components/SequenceDecoderGame';
 import RouteOptimizerGame from './components/RouteOptimizerGame';
+import NeuroMazeGame from './components/NeuroMazeGame';
+import NeuralNBackGame from './components/NeuralNBackGame';
+import SynapseSpinGame from './components/SynapseSpinGame';
+import NexusMapperGame from './components/NexusMapperGame';
 import LiveDdaHud from './components/LiveDdaHud';
 import { audioDda } from './utils/audioSynth';
+
 
 // Register Chart.js modules
 ChartJS.register(
@@ -382,7 +387,7 @@ export default function App() {
     if (lastGameStats) {
       const calculatedScore = Math.round(lastGameStats.accuracy * 70 + lastGameStats.difficultyLevel * 6);
       
-      if (lastGameStats.gameType === 'MemoryMatch' || lastGameStats.gameType === 'MatrixRecall') {
+      if (lastGameStats.gameType === 'MemoryMatch' || lastGameStats.gameType === 'MatrixRecall' || lastGameStats.gameType === 'NeuralNBack' || lastGameStats.gameType === 'SynapseSpin' || lastGameStats.gameType === 'NexusMapper') {
         setSkills(prev => ({
           ...prev,
           spatial_visual_memory: Math.max(calculatedScore, prev.spatial_visual_memory)
@@ -1464,6 +1469,10 @@ export default function App() {
                 {activeGame === 'EquationBalance' && <EquationBalanceGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
                 {activeGame === 'SequenceDecoder' && <SequenceDecoderGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
                 {activeGame === 'RouteOptimizer' && <RouteOptimizerGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                {activeGame === 'NeuroMaze' && <NeuroMazeGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                {activeGame === 'NeuralNBack' && <NeuralNBackGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                {activeGame === 'SynapseSpin' && <SynapseSpinGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                {activeGame === 'NexusMapper' && <NexusMapperGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
               </div>
               
               {activeSessionId && (
@@ -2914,6 +2923,63 @@ export default function App() {
                   
                   <button className="play-btn">Launch Module</button>
                 </div>
+
+                <div className="game-card theme-memory active" onClick={() => setActiveGame('NeuralNBack')}>
+                  <div className="card-target-tag">Spatial N-Back</div>
+                  <div className="card-icon">🔄</div>
+                  <h3>Neural N-Back</h3>
+                  
+                  <div className="card-section-label">Objective & Goal</div>
+                  <ul className="card-purpose-list">
+                    <li>Retain highlighted node locations in sequential memory.</li>
+                    <li>Determine if the current location matches the one shown N steps back.</li>
+                  </ul>
+
+                  <div className="card-section-label">How it helps us</div>
+                  <div className="card-benefit-box">
+                    Strengthens spatial working memory, updates fluid cognitive capacity, and sharpens visual attention span.
+                  </div>
+                  
+                  <button className="play-btn">Launch Module</button>
+                </div>
+
+                <div className="game-card theme-memory active" onClick={() => setActiveGame('SynapseSpin')}>
+                  <div className="card-target-tag">Mental Rotation</div>
+                  <div className="card-icon">🔁</div>
+                  <h3>Synapse Spin</h3>
+                  
+                  <div className="card-section-label">Objective & Goal</div>
+                  <ul className="card-purpose-list">
+                    <li>Compare a main graphical node structure against candidates.</li>
+                    <li>Identify the identical shape that has been rotated in 2D space.</li>
+                  </ul>
+
+                  <div className="card-section-label">How it helps us</div>
+                  <div className="card-benefit-box">
+                    Improves dynamic mental rotation, spatial logic transform efficiency, and analytical visualization speed.
+                  </div>
+                  
+                  <button className="play-btn">Launch Module</button>
+                </div>
+
+                <div className="game-card theme-memory active" onClick={() => setActiveGame('NexusMapper')}>
+                  <div className="card-target-tag">Object-Location Memory</div>
+                  <div className="card-icon">🗺️</div>
+                  <h3>Nexus Mapper</h3>
+                  
+                  <div className="card-section-label">Objective & Goal</div>
+                  <ul className="card-purpose-list">
+                    <li>Memorize coordinate locations of distinct glyphs on a grid.</li>
+                    <li>Recall the layout by re-placing each glyph at its correct node.</li>
+                  </ul>
+
+                  <div className="card-section-label">How it helps us</div>
+                  <div className="card-benefit-box">
+                    Enhances visual-spatial localization recall, map logic retention, and spatial indexing memory.
+                  </div>
+                  
+                  <button className="play-btn">Launch Module</button>
+                </div>
               </div>
             </div>
 
@@ -3045,6 +3111,25 @@ export default function App() {
                   <div className="card-section-label">How it helps us</div>
                   <div className="card-benefit-box">
                     Reduces cognitive friction during rapid task switching, allowing you to transition between topics or tools seamlessly.
+                  </div>
+                  
+                  <button className="play-btn">Launch Module</button>
+                </div>
+
+                <div className="game-card theme-executive active" onClick={() => setActiveGame('NeuroMaze')} style={{ background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(16, 185, 129, 0.15) 100%)' }}>
+                  <div className="card-target-tag">Executive Control</div>
+                  <div className="card-icon">🌐</div>
+                  <h3>Neuro Maze</h3>
+                  
+                  <div className="card-section-label">Objective & Goal</div>
+                  <ul className="card-purpose-list">
+                    <li>Connect synapse paths through neural mazes under a ticking clock.</li>
+                    <li>Test spatial planning with speed scaling as complexity increases.</li>
+                  </ul>
+
+                  <div className="card-section-label">How it helps us</div>
+                  <div className="card-benefit-box">
+                    Refines set-shifting speed, speed-scaled spatial logic, and high-pressure strategic execution.
                   </div>
                   
                   <button className="play-btn">Launch Module</button>
