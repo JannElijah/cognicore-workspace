@@ -362,14 +362,29 @@ export default function App() {
     setChartsLoading(true);
     setChartsError(null);
     try {
-      // 1. Fetch user session history
-      const historyRes = await fetch(`http://127.0.0.1:5000/api/user-session-history/${username}`);
+      // 1. Fetch user session history, cohort comparison, and archetype progression concurrently
+      const [historyRes, compRes, progressionRes] = await Promise.all([
+        fetch(`http://127.0.0.1:5000/api/user-session-history/${username}`),
+        fetch(`http://127.0.0.1:5000/api/cohort-comparison/${username}`),
+        fetch(`http://127.0.0.1:5000/api/archetype-progression/${username}`)
+      ]);
+
       if (!historyRes.ok) throw new Error('Failed to load session history.');
-      const historyData = await historyRes.json();
+      if (!compRes.ok) throw new Error('Failed to load cohort comparison.');
+      if (!progressionRes.ok) throw new Error('Failed to load archetype progression.');
+
+      const [historyData, compData, progressionData] = await Promise.all([
+        historyRes.json(),
+        compRes.json(),
+        progressionRes.json()
+      ]);
+
       const sessions = historyData.sessions || [];
       setSessionHistory(sessions);
+      setCohortComparison(compData);
+      setArchetypeHistory(progressionData.history || []);
 
-      // 2. Fetch latest session metrics if a session exists
+      // 2. Fetch latest session metrics sequentially (dependent on latestSid from historyRes)
       if (sessions.length > 0) {
         const latestSid = sessions[0].session_id;
         const metricsRes = await fetch(`http://127.0.0.1:5000/api/session-metrics/${latestSid}`);
@@ -379,18 +394,6 @@ export default function App() {
       } else {
         setLatestSessionMetrics([]);
       }
-
-      // 3. Fetch cohort comparison
-      const compRes = await fetch(`http://127.0.0.1:5000/api/cohort-comparison/${username}`);
-      if (!compRes.ok) throw new Error('Failed to load cohort comparison.');
-      const compData = await compRes.json();
-      setCohortComparison(compData);
-
-      // 4. Fetch archetype history progression (Option 3)
-      const progressionRes = await fetch(`http://127.0.0.1:5000/api/archetype-progression/${username}`);
-      if (!progressionRes.ok) throw new Error('Failed to load archetype progression.');
-      const progressionData = await progressionRes.json();
-      setArchetypeHistory(progressionData.history || []);
 
     } catch (err) {
       console.error('[Dashboard Charts] Data fetch failed:', err);
