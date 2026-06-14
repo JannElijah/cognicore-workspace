@@ -9,6 +9,7 @@
  * ================================================================================
  */
 import Phaser from 'phaser';
+import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
 export default class MatrixRecallScene extends Phaser.Scene {
     constructor() {
@@ -135,17 +136,15 @@ export default class MatrixRecallScene extends Phaser.Scene {
             this.registerFirstInteraction();
         });
 
-        // 5. ML Feedback HUD setup
-        this.mlHudText = this.add.text(20, height - 35, '', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            fontSize: '13px',
-            fontWeight: '600',
-            fill: '#38bdf8'
+        // Setup ML HUD & Tutorial Overlay
+        createMlHud(this, 0x38bdf8);
+        createTutorialOverlay(this, {
+            title: "MATRIX RECALL",
+            domain: "spatial_visual_memory",
+            instructions: "• Memorize the highlighted spatial nodes as they flash.\n\n• Click/tap the exact node sequence locations from memory.\n\n• DDA scales target grid sizing and decoy count.\n\n• Decoy cells flash red/coral at higher difficulty levels.",
+            themeColorHex: 0x38bdf8,
+            onStart: () => this.startGameplay()
         });
-        this.updateMlHud();
-
-        // 6. Draw tutorial visual gate
-        this.drawTutorialOverlay(width, height);
     }
 
     drawGrid() {
@@ -574,6 +573,11 @@ export default class MatrixRecallScene extends Phaser.Scene {
                     this.flashDuration = params.flash_duration;
 
                     this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);
+                    if (data.cognitive_profile) {
+                        this.archetype = data.cognitive_profile.archetype || this.archetype;
+                        this.archetypeConfidence = data.cognitive_profile.confidence_score || this.archetypeConfidence;
+                    }
+                    updateMlHud(this);
 
                     if (difficultyChanged) {
                         this.showFloatingFeedback(`DIFFICULTY ADJUSTED: LEVEL ${this.difficultyLevel}`, '#a855f7');
@@ -582,7 +586,7 @@ export default class MatrixRecallScene extends Phaser.Scene {
                     if (data.cognitive_profile) {
                         this.archetype = data.cognitive_profile.archetype || this.archetype;
                         this.archetypeConfidence = data.cognitive_profile.confidence_score || this.archetypeConfidence;
-                        this.updateMlHud();
+                        updateMlHud(this);
                     }
 
                     // Re-render grid layout dynamically if structure changed
@@ -633,124 +637,5 @@ export default class MatrixRecallScene extends Phaser.Scene {
         }
     }
 
-    drawTutorialOverlay(width, height) {
-        // Semi-transparent blocking panel
-        const overlayBg = this.add.graphics();
-        overlayBg.fillStyle(0x09090b, 0.88);
-        overlayBg.fillRect(0, 0, width, height);
-        overlayBg.setInteractive(new Phaser.Geom.Rectangle(0, 0, width, height), Phaser.Geom.Rectangle.Contains);
-
-        const modal = this.add.graphics();
-        const modalW = 550;
-        const modalH = 400;
-        const modalX = (width - modalW) / 2;
-        const modalY = (height - modalH) / 2;
-
-        modal.lineStyle(2.5, 0x38bdf8, 0.95);
-        modal.fillStyle(0x0f172a, 0.96);
-        modal.fillRoundedRect(modalX, modalY, modalW, modalH, 16);
-        modal.strokeRoundedRect(modalX, modalY, modalW, modalH, 16);
-
-        const title = this.add.text(width / 2, modalY + 40, 'MATRIX RECALL', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            fontSize: '32px',
-            fontWeight: 'bold',
-            fill: '#38bdf8',
-            letterSpacing: '0.1em'
-        }).setOrigin(0.5);
-
-        const subtitle = this.add.text(width / 2, modalY + 80, 'COGNITIVE DOMAIN: SPATIAL-VISUAL MEMORY', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            fontSize: '13px',
-            fontWeight: '700',
-            fill: '#a855f7'
-        }).setOrigin(0.5);
-
-        const divider = this.add.graphics();
-        divider.lineStyle(1.5, 0x1e293b, 1);
-        divider.lineBetween(modalX + 40, modalY + 110, modalX + modalW - 40, modalY + 110);
-
-        const instructions = this.add.text(width / 2, modalY + 140, 
-            "• Remember the pattern of glowing cyan squares flashed on the grid.\n\n" +
-            "• DO NOT click any flashed red/coral squares (decoy noise at level 3+).\n\n" +
-            "• After the sequence flashes, click all correct cyan squares in any order.\n\n" +
-            "• Your response time starts ticking the moment flashing ends.", {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            fontSize: '15px',
-            fill: '#94a3b8',
-            lineSpacing: 8
-        }).setOrigin(0.5, 0);
-
-        const btnW = 220;
-        const btnH = 50;
-        const btnX = width / 2;
-        const btnY = modalY + modalH - 60;
-
-        const btnBg = this.add.graphics();
-        btnBg.fillStyle(0x38bdf8, 0.85);
-        btnBg.lineStyle(2, 0xffffff, 0.9);
-        btnBg.fillRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
-        btnBg.strokeRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
-
-        const btnText = this.add.text(btnX, btnY, 'LAUNCH MODULE', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            fill: '#ffffff'
-        }).setOrigin(0.5);
-
-        btnBg.setInteractive(new Phaser.Geom.Rectangle(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH), Phaser.Geom.Rectangle.Contains);
-        
-        btnBg.on('pointerover', () => {
-            btnBg.clear();
-            btnBg.fillStyle(0x0284c7, 1);
-            btnBg.lineStyle(2.5, 0xffffff, 1);
-            btnBg.fillRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
-            btnBg.strokeRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
-        });
-
-        btnBg.on('pointerout', () => {
-            btnBg.clear();
-            btnBg.fillStyle(0x38bdf8, 0.85);
-            btnBg.lineStyle(2, 0xffffff, 0.9);
-            btnBg.fillRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
-            btnBg.strokeRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
-        });
-
-        btnBg.on('pointerdown', () => {
-            overlayBg.destroy();
-            modal.destroy();
-            title.destroy();
-            subtitle.destroy();
-            divider.destroy();
-            instructions.destroy();
-            btnBg.destroy();
-            btnText.destroy();
-
-            this.isTutorialActive = false;
-            this.startGameplay();
-        });
-    }
-
-    startGameplay() {
-        this.countdownTimer = this.time.addEvent({
-            delay: 1000,
-            callback: this.updateTimer,
-            callbackScope: this,
-            loop: true
-        });
-
-        this.time.delayedCall(800, () => {
-            this.startNewRound();
-        });
-    }
-
-    updateMlHud() {
-        if (this.mlHudText) {
-            const conf = Math.round(this.archetypeConfidence * 100);
-            this.mlHudText.setText(
-                `ML FEEDBACK HUD | COGNITIVE ARCHETYPE: ${this.archetype.toUpperCase()} (${conf}% CONFIDENCE) | DDA: LVL ${this.difficultyLevel.toFixed(1)}`
-            );
-        }
-    }
+    // Removed inline drawTutorialOverlay & updateMlHud
 }

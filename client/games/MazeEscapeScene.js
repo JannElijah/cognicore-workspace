@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
 export default class MazeEscapeScene extends Phaser.Scene {
     constructor() {
@@ -167,7 +168,7 @@ export default class MazeEscapeScene extends Phaser.Scene {
             fontWeight: '600',
             fill: '#10b981'
         });
-        this.updateMlHud();
+        updateMlHud(this);
 
         // Draw visual gate
         this.drawTutorialOverlay(width, height);
@@ -652,6 +653,11 @@ export default class MazeEscapeScene extends Phaser.Scene {
                     this.blockedRatio = params.blocked_ratio;
 
                     this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);
+                    if (data.cognitive_profile) {
+                        this.archetype = data.cognitive_profile.archetype || this.archetype;
+                        this.archetypeConfidence = data.cognitive_profile.confidence_score || this.archetypeConfidence;
+                    }
+                    updateMlHud(this);
 
                     if (difficultyChanged) {
                         this.showFloatingFeedback(`DIFFICULTY ADJUSTED: LEVEL ${this.difficultyLevel}`, '#a855f7');
@@ -660,7 +666,7 @@ export default class MazeEscapeScene extends Phaser.Scene {
                     if (data.cognitive_profile) {
                         this.archetype = data.cognitive_profile.archetype || this.archetype;
                         this.archetypeConfidence = data.cognitive_profile.confidence_score || this.archetypeConfidence;
-                        this.updateMlHud();
+                        updateMlHud(this);
                     }
                 }
             }
@@ -765,122 +771,5 @@ export default class MazeEscapeScene extends Phaser.Scene {
         }
     }
 
-    drawTutorialOverlay(width, height) {
-        // Semi-transparent blocking overlay
-        const overlayBg = this.add.graphics();
-        overlayBg.fillStyle(0x09090b, 0.88);
-        overlayBg.fillRect(0, 0, width, height);
-        overlayBg.setInteractive(new Phaser.Geom.Rectangle(0, 0, width, height), Phaser.Geom.Rectangle.Contains);
-
-        const modal = this.add.graphics();
-        const modalW = 550;
-        const modalH = 400;
-        const modalX = (width - modalW) / 2;
-        const modalY = (height - modalH) / 2;
-
-        modal.lineStyle(2.5, 0x10b981, 0.95);
-        modal.fillStyle(0x0f172a, 0.96);
-        modal.fillRoundedRect(modalX, modalY, modalW, modalH, 16);
-        modal.strokeRoundedRect(modalX, modalY, modalW, modalH, 16);
-
-        const title = this.add.text(width / 2, modalY + 40, 'MAZE ESCAPE', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            fontSize: '32px',
-            fontWeight: 'bold',
-            fill: '#10b981',
-            letterSpacing: '0.1em'
-        }).setOrigin(0.5);
-
-        const subtitle = this.add.text(width / 2, modalY + 80, 'COGNITIVE DOMAIN: EXECUTIVE STRATEGY', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            fontSize: '13px',
-            fontWeight: '700',
-            fill: '#a855f7'
-        }).setOrigin(0.5);
-
-        const divider = this.add.graphics();
-        divider.lineStyle(1.5, 0x1e293b, 1);
-        divider.lineBetween(modalX + 40, modalY + 110, modalX + modalW - 40, modalY + 110);
-
-        const instructions = this.add.text(width / 2, modalY + 140, 
-            "• Guide the glowing cyan player orb to the golden EXIT cell.\n\n" +
-            "• Controls: Use WASD/Arrow keys or click adjacent cells directly.\n\n" +
-            "• Inputs are buffered in a queue for extremely fast movement responses.\n\n" +
-            "• Watch out for moving barriers that shift path blocks at difficulty level 3+.", {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            fontSize: '15px',
-            fill: '#94a3b8',
-            lineSpacing: 8
-        }).setOrigin(0.5, 0);
-
-        const btnW = 220;
-        const btnH = 50;
-        const btnX = width / 2;
-        const btnY = modalY + modalH - 60;
-
-        const btnBg = this.add.graphics();
-        btnBg.fillStyle(0x10b981, 0.85);
-        btnBg.lineStyle(2, 0xffffff, 0.9);
-        btnBg.fillRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
-        btnBg.strokeRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
-
-        const btnText = this.add.text(btnX, btnY, 'LAUNCH MODULE', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            fill: '#ffffff'
-        }).setOrigin(0.5);
-
-        btnBg.setInteractive(new Phaser.Geom.Rectangle(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH), Phaser.Geom.Rectangle.Contains);
-        
-        btnBg.on('pointerover', () => {
-            btnBg.clear();
-            btnBg.fillStyle(0x059669, 1);
-            btnBg.lineStyle(2.5, 0xffffff, 1);
-            btnBg.fillRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
-            btnBg.strokeRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
-        });
-
-        btnBg.on('pointerout', () => {
-            btnBg.clear();
-            btnBg.fillStyle(0x10b981, 0.85);
-            btnBg.lineStyle(2, 0xffffff, 0.9);
-            btnBg.fillRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
-            btnBg.strokeRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
-        });
-
-        btnBg.on('pointerdown', () => {
-            overlayBg.destroy();
-            modal.destroy();
-            title.destroy();
-            subtitle.destroy();
-            divider.destroy();
-            instructions.destroy();
-            btnBg.destroy();
-            btnText.destroy();
-
-            this.isTutorialActive = false;
-            this.startGameplay();
-        });
-    }
-
-    startGameplay() {
-        this.countdownTimer = this.time.addEvent({
-            delay: 1000,
-            callback: this.updateTimer,
-            callbackScope: this,
-            loop: true
-        });
-
-        this.startNewPuzzle();
-    }
-
-    updateMlHud() {
-        if (this.mlHudText) {
-            const conf = Math.round(this.archetypeConfidence * 100);
-            this.mlHudText.setText(
-                `ML FEEDBACK HUD | COGNITIVE ARCHETYPE: ${this.archetype.toUpperCase()} (${conf}% CONFIDENCE) | DDA: LVL ${this.difficultyLevel.toFixed(1)}`
-            );
-        }
-    }
+    // Removed inline drawTutorialOverlay & updateMlHud
 }

@@ -335,6 +335,7 @@ export default class FocusFinderScene extends Phaser.Scene {
     }
 
     handleTargetClick(container) {
+        if (this.isTutorialActive) return;
         this.totalClicks++;
         this.hits++;
 
@@ -359,6 +360,7 @@ export default class FocusFinderScene extends Phaser.Scene {
     }
 
     handleDistractorClick(container) {
+        if (this.isTutorialActive) return;
         this.totalClicks++;
         this.misses++;
 
