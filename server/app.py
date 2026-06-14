@@ -827,7 +827,10 @@ def submit_assessment():
                 if not vals:
                     return 50.0 # middle fallback score
                 avg = sum(vals) / len(vals)
-                if max(vals) <= 5.0:
+                if max(vals) <= 1.0:
+                    # Binary correctness: map directly to percentage
+                    return avg * 100.0
+                elif max(vals) <= 5.0:
                     # Likert 1-5 scale: map to 0-100 range
                     return ((avg - 1.0) / 4.0) * 100.0
                 return avg

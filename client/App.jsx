@@ -103,6 +103,153 @@ const getGoalProgress = (goal) => {
   return goal.current_value / goal.target_value;
 };
 
+const COGNITIVE_QUESTIONS = [
+  {
+    id: 'q1',
+    domain: 'spatial_visual_memory',
+    title: 'Spatial-Visual Memory (1/3)',
+    text: 'A 4x4 grid contains active tiles at (row 1, col 2), (row 2, col 4), and (row 4, col 3). Which option displays these exact coordinates?',
+    options: [
+      { key: 'A', text: '(1,2), (2,4), (4,3)' },
+      { key: 'B', text: '(2,1), (4,2), (3,4)' },
+      { key: 'C', text: '(1,3), (2,4), (4,2)' },
+      { key: 'D', text: '(1,2), (2,3), (4,4)' }
+    ]
+  },
+  {
+    id: 'q2',
+    domain: 'logical_mathematical',
+    title: 'Logical-Mathematical (1/3)',
+    text: 'Complete the Fibonacci-like pattern sequence: 2, 3, 5, 8, 13, 21, ?',
+    options: [
+      { key: 'A', text: '29' },
+      { key: 'B', text: '34' },
+      { key: 'C', text: '31' },
+      { key: 'D', text: '42' }
+    ]
+  },
+  {
+    id: 'q3',
+    domain: 'reflexes_and_focus',
+    title: 'Reflexes & Focus (1/3)',
+    text: 'Stroop Conflict: The word "BLUE" is written in RED ink. What is the actual ink color of the word?',
+    options: [
+      { key: 'A', text: 'Blue' },
+      { key: 'B', text: 'Green' },
+      { key: 'C', text: 'Red' },
+      { key: 'D', text: 'Black' }
+    ]
+  },
+  {
+    id: 'q4',
+    domain: 'executive_strategy',
+    title: 'Executive Strategy (1/3)',
+    text: 'In a grid-maze, you start at (0,0) and want to reach (3,3). Moving right costs 2 points, moving down costs 3 points. Diagonal moves are blocked. What is the minimum cost to reach the target?',
+    options: [
+      { key: 'A', text: '15' },
+      { key: 'B', text: '12' },
+      { key: 'C', text: '18' },
+      { key: 'D', text: '10' }
+    ]
+  },
+  {
+    id: 'q5',
+    domain: 'spatial_visual_memory',
+    title: 'Spatial-Visual Memory (2/3)',
+    text: 'A 3x3 pattern of colored blocks: Blue-Red-Blue (Row 1), Green-Green-Red (Row 2), Blue-Green-Red (Row 3). If we rotate this entire grid 90 degrees clockwise, what is the sequence of Row 1?',
+    options: [
+      { key: 'A', text: 'Red-Green-Blue' },
+      { key: 'B', text: 'Blue-Red-Green' },
+      { key: 'C', text: 'Green-Red-Red' },
+      { key: 'D', text: 'Blue-Green-Blue' }
+    ]
+  },
+  {
+    id: 'q6',
+    domain: 'logical_mathematical',
+    title: 'Logical-Mathematical (2/3)',
+    text: 'Algebraic Puzzle: A + B = 10, A * B = 24, B - A = 2 (where B > A). If X = B * 3 - A, what is X?',
+    options: [
+      { key: 'A', text: '10' },
+      { key: 'B', text: '16' },
+      { key: 'C', text: '14' },
+      { key: 'D', text: '12' }
+    ]
+  },
+  {
+    id: 'q7',
+    domain: 'reflexes_and_focus',
+    title: 'Reflexes & Focus (2/3)',
+    text: 'Stroop Conflict: The word "GREEN" is written in YELLOW ink. Choose the word spelling, NOT the ink color.',
+    options: [
+      { key: 'A', text: 'Yellow' },
+      { key: 'B', text: 'Green' },
+      { key: 'C', text: 'Blue' },
+      { key: 'D', text: 'Red' }
+    ]
+  },
+  {
+    id: 'q8',
+    domain: 'executive_strategy',
+    title: 'Executive Strategy (2/3)',
+    text: 'Rule-Shifting: If Target = Blue Circle and Obstacle = Red Square, the optimal action is Action A. If the rule shifts such that Target and Obstacle swap colors, what is the action corresponding to Red Circle?',
+    options: [
+      { key: 'A', text: 'Action A (Treat as Target)' },
+      { key: 'B', text: 'Action C (No response needed)' },
+      { key: 'C', text: 'Action D (Re-initialize)' },
+      { key: 'D', text: 'Action B (Treat as Obstacle)' }
+    ]
+  },
+  {
+    id: 'q9',
+    domain: 'spatial_visual_memory',
+    title: 'Spatial-Visual Memory (3/3)',
+    text: 'A visual sequence flashes: Top-Right tile, Center-Left tile, Bottom-Center tile, Top-Center tile. Which option lists the tiles in the exact reverse sequence?',
+    options: [
+      { key: 'A', text: 'Top-Center, Bottom-Center, Center-Left, Top-Right' },
+      { key: 'B', text: 'Top-Right, Center-Left, Bottom-Center, Top-Center' },
+      { key: 'C', text: 'Top-Center, Bottom-Center, Top-Right, Center-Left' },
+      { key: 'D', text: 'Center-Left, Top-Right, Top-Center, Bottom-Center' }
+    ]
+  },
+  {
+    id: 'q10',
+    domain: 'logical_mathematical',
+    title: 'Logical-Mathematical (3/3)',
+    text: 'Identify the pattern to complete the sequence: 3, 9, 27, 81, ?',
+    options: [
+      { key: 'A', text: '162' },
+      { key: 'B', text: '243' },
+      { key: 'C', text: '324' },
+      { key: 'D', text: '216' }
+    ]
+  },
+  {
+    id: 'q11',
+    domain: 'reflexes_and_focus',
+    title: 'Reflexes & Focus (3/3)',
+    text: 'Stroop Conflict: The word "YELLOW" is written in GREEN ink. What is the actual ink color of the word?',
+    options: [
+      { key: 'A', text: 'Yellow' },
+      { key: 'B', text: 'Red' },
+      { key: 'C', text: 'Green' },
+      { key: 'D', text: 'Blue' }
+    ]
+  },
+  {
+    id: 'q12',
+    domain: 'executive_strategy',
+    title: 'Executive Strategy (3/3)',
+    text: 'Path Optimization: A drone must visit 3 nodes A, B, and C. Distances are: Start-A = 5, Start-B = 10, A-B = 3, B-C = 4, A-C = 6. What is the shortest total path length to visit all nodes starting from Start?',
+    options: [
+      { key: 'A', text: '12' },
+      { key: 'B', text: '14' },
+      { key: 'C', text: '15' },
+      { key: 'D', text: '16' }
+    ]
+  }
+];
+
 export default function App() {
   const [activeGame, setActiveGame] = useState(null);
   const [showDashboard, setShowDashboard] = useState(false);
@@ -120,9 +267,9 @@ export default function App() {
   const [assessmentStage, setAssessmentStage] = useState('none'); // 'none' | 'pre-test' | 'post-test' | 'completed'
   const [evaluationReport, setEvaluationReport] = useState(null);
   const [assessmentAnswers, setAssessmentAnswers] = useState({
-    q1: 3, q2: 3, q3: 3, q4: 3,
-    q5: 3, q6: 3, q7: 3, q8: 3,
-    q9: 3, q10: 3, q11: 3, q12: 3
+    q1: '', q2: '', q3: '', q4: '',
+    q5: '', q6: '', q7: '', q8: '',
+    q9: '', q10: '', q11: '', q12: ''
   });
   const [assessmentLoading, setAssessmentLoading] = useState(false);
   const [assessmentError, setAssessmentError] = useState(null);
@@ -192,6 +339,11 @@ export default function App() {
           setPreTestScores(null);
           setWeakestDomain(null);
           setPrescribedGame(null);
+          setAssessmentAnswers({
+            q1: '', q2: '', q3: '', q4: '',
+            q5: '', q6: '', q7: '', q8: '',
+            q9: '', q10: '', q11: '', q12: ''
+          });
           setAssessmentStage('pre-test');
         }
       } else {
@@ -207,17 +359,56 @@ export default function App() {
 
   const handleSubmitAssessment = async (e) => {
     if (e) e.preventDefault();
+    
+    // Check if all questions are answered
+    const unanswered = COGNITIVE_QUESTIONS.filter(q => !assessmentAnswers[q.id]);
+    if (unanswered.length > 0) {
+      setAssessmentError(`Please answer all questions before submitting. Unanswered: ${unanswered.map(q => q.id.toUpperCase()).join(', ')}`);
+      return;
+    }
+
     setAssessmentLoading(true);
     setAssessmentError(null);
     try {
       const type = assessmentStage === 'pre-test' ? 'pre-test' : 'post-test';
+      
+      // Calculate correctness and scores out of 100
+      const q1_corr = assessmentAnswers.q1 === 'A' ? 1 : 0;
+      const q5_corr = assessmentAnswers.q5 === 'D' ? 1 : 0;
+      const q9_corr = assessmentAnswers.q9 === 'A' ? 1 : 0;
+      
+      const q2_corr = assessmentAnswers.q2 === 'B' ? 1 : 0;
+      const q6_corr = assessmentAnswers.q6 === 'C' ? 1 : 0;
+      const q10_corr = assessmentAnswers.q10 === 'B' ? 1 : 0;
+      
+      const q3_corr = assessmentAnswers.q3 === 'C' ? 1 : 0;
+      const q7_corr = assessmentAnswers.q7 === 'B' ? 1 : 0;
+      const q11_corr = assessmentAnswers.q11 === 'C' ? 1 : 0;
+      
+      const q4_corr = assessmentAnswers.q4 === 'A' ? 1 : 0;
+      const q8_corr = assessmentAnswers.q8 === 'D' ? 1 : 0;
+      const q12_corr = assessmentAnswers.q12 === 'A' ? 1 : 0;
+      
+      const spatial_visual_score = ((q1_corr + q5_corr + q9_corr) / 3.0) * 100.0;
+      const logical_math_score = ((q2_corr + q6_corr + q10_corr) / 3.0) * 100.0;
+      const attention_score = ((q3_corr + q7_corr + q11_corr) / 3.0) * 100.0;
+      const executive_score = ((q4_corr + q8_corr + q12_corr) / 3.0) * 100.0;
+
       const res = await fetch(`http://127.0.0.1:5000/api/submit-assessment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           username: currentUser,
           assessment_type: type,
-          answers: assessmentAnswers
+          answers: {
+            q1: q1_corr, q2: q2_corr, q3: q3_corr, q4: q4_corr,
+            q5: q5_corr, q6: q6_corr, q7: q7_corr, q8: q8_corr,
+            q9: q9_corr, q10: q10_corr, q11: q11_corr, q12: q12_corr,
+            spatial_visual_score,
+            logical_math_score,
+            attention_score,
+            executive_score
+          }
         })
       });
       if (!res.ok) throw new Error("Failed to submit assessment.");
@@ -1696,50 +1887,40 @@ export default function App() {
           // QUESTIONNAIRE VIEW
           <div style={{ maxWidth: '750px', margin: '3rem auto', padding: '2.5rem', background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(20px)', border: '1px solid rgba(168, 85, 247, 0.35)', borderRadius: '16px', boxShadow: '0 12px 40px rgba(0,0,0,0.6)', animation: 'fadeIn 0.4s ease-out' }}>
             <h2 style={{ color: '#ffffff', margin: '0 0 0.5rem 0', textTransform: 'uppercase', fontSize: '1.6rem', letterSpacing: '0.05em', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span>📋</span> {assessmentStage === 'pre-test' ? 'Phase 1: Standardized Pre-Test Questionnaire' : 'Phase 4: Mirrored Post-Test Questionnaire'}
+              <span>📋</span> {assessmentStage === 'pre-test' ? 'Phase 1: Objective Pre-Test Evaluation' : 'Phase 4: Objective Post-Test Evaluation'}
             </h2>
             <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: '0 0 2rem 0', lineHeight: '1.6' }}>
-              Rate your subjective cognitive performance on a scale of <strong>1 (Low/Difficult)</strong> to <strong>5 (High/Easy)</strong> for each item. 
-              These data points calibrate baseline metrics and determine training path prescriptions.
+              Complete the following 12 objective cognitive challenge tasks to evaluate your performance across visual, logical, reflexes, and strategy domains. 
+              Grading is strictly binary (correct/incorrect) and will determine your cognitive profile.
             </p>
             <form onSubmit={handleSubmitAssessment} style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                {[
-                  { id: 'q1', text: 'How easy is it for you to remember the layout of a grid or map after looking at it once?', domain: 'spatial_visual_memory' },
-                  { id: 'q2', text: 'Do you enjoy solving complex math puzzles or numeric sequences?', domain: 'logical_mathematical' },
-                  { id: 'q3', text: 'How quickly can you react to visual cues or flashing targets?', domain: 'reflexes_and_focus' },
-                  { id: 'q4', text: 'Do you easily plan steps ahead when solving mazes or strategy games?', domain: 'executive_strategy' },
-                  { id: 'q5', text: 'Do you easily recall where you placed objects in a room?', domain: 'spatial_visual_memory' },
-                  { id: 'q6', text: 'How easily can you trace logical connections in a flowchart?', domain: 'logical_mathematical' },
-                  { id: 'q7', text: 'Can you easily maintain focus in a crowded, noisy workspace?', domain: 'reflexes_and_focus' },
-                  { id: 'q8', text: 'How easily do you adapt to shifting rules or sorting tasks?', domain: 'executive_strategy' },
-                  { id: 'q9', text: 'Can you easily mentally rotate or manipulate visual shapes?', domain: 'spatial_visual_memory' },
-                  { id: 'q10', text: 'Can you easily find the shortest route between multiple stops?', domain: 'logical_mathematical' },
-                  { id: 'q11', text: 'How good are you at overriding sudden reading impulses or distractions?', domain: 'reflexes_and_focus' },
-                  { id: 'q12', text: 'Can you efficiently adjust plans when obstacle density increases?', domain: 'executive_strategy' }
-                ].map((q, idx) => (
-                  <div key={q.id} style={{ padding: '1.25rem', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px' }}>
-                    <div style={{ fontSize: '0.95rem', color: '#ffffff', marginBottom: '0.75rem', fontWeight: '500', lineHeight: '1.4' }}>
-                      <span style={{ color: '#a855f7', marginRight: '0.5rem', fontWeight: 'bold' }}>{idx + 1}.</span> {q.text}
-                      <span style={{ fontSize: '0.72rem', color: '#38bdf8', marginLeft: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>[{q.domain.replace(/_/g, ' ')}]</span>
+                {COGNITIVE_QUESTIONS.map((q, idx) => {
+                  const dom = DOMAIN_INFO[q.domain];
+                  return (
+                    <div key={q.id} style={{ padding: '1.5rem', background: 'rgba(255,255,255,0.02)', border: `1px solid ${dom.color}33`, borderRadius: '10px' }}>
+                      <div style={{ fontSize: '0.95rem', color: '#ffffff', marginBottom: '0.75rem', fontWeight: '500', lineHeight: '1.4' }}>
+                        <span style={{ color: dom.color, marginRight: '0.5rem', fontWeight: 'bold' }}>{idx + 1}. {dom.icon} {q.title}</span>
+                        <div style={{ marginTop: '0.5rem', color: '#cbd5e1' }}>{q.text}</div>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem', paddingLeft: '0.5rem' }}>
+                        {q.options.map((opt) => (
+                          <label key={opt.key} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#cbd5e1', fontSize: '0.9rem', cursor: 'pointer', userSelect: 'none', padding: '0.5rem', borderRadius: '6px', background: assessmentAnswers[q.id] === opt.key ? 'rgba(255,255,255,0.05)' : 'transparent', border: assessmentAnswers[q.id] === opt.key ? `1px solid ${dom.color}66` : '1px solid transparent', transition: 'all 0.2s' }}>
+                            <input 
+                              type="radio" 
+                              name={q.id} 
+                              value={opt.key} 
+                              checked={assessmentAnswers[q.id] === opt.key}
+                              onChange={() => setAssessmentAnswers(prev => ({ ...prev, [q.id]: opt.key }))}
+                              style={{ accentColor: dom.color, transform: 'scale(1.1)' }}
+                            />
+                            <strong style={{ color: dom.color }}>{opt.key}:</strong> {opt.text}
+                          </label>
+                        ))}
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '1.75rem', alignItems: 'center', marginTop: '0.5rem' }}>
-                      {[1, 2, 3, 4, 5].map((val) => (
-                        <label key={val} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#cbd5e1', fontSize: '0.9rem', cursor: 'pointer', userSelect: 'none' }}>
-                          <input 
-                            type="radio" 
-                            name={q.id} 
-                            value={val} 
-                            checked={assessmentAnswers[q.id] === val}
-                            onChange={() => setAssessmentAnswers(prev => ({ ...prev, [q.id]: val }))}
-                            style={{ accentColor: '#a855f7', transform: 'scale(1.1)' }}
-                          />
-                          {val}
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               {assessmentError && <div style={{ color: '#f87171', fontSize: '0.9rem', fontWeight: 'bold' }}>⚠️ {assessmentError}</div>}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '1.5rem' }}>
@@ -3179,7 +3360,14 @@ export default function App() {
                       </span>
                     ) : hasPlayedPrescribed ? (
                       <button
-                        onClick={() => setAssessmentStage('post-test')}
+                        onClick={() => {
+                          setAssessmentAnswers({
+                            q1: '', q2: '', q3: '', q4: '',
+                            q5: '', q6: '', q7: '', q8: '',
+                            q9: '', q10: '', q11: '', q12: ''
+                          });
+                          setAssessmentStage('post-test');
+                        }}
                         style={{
                           background: 'linear-gradient(to right, #4ade80, #38bdf8)',
                           color: '#ffffff',

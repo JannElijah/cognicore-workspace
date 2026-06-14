@@ -74,9 +74,9 @@ def seed_research_cohort():
         scores = {}
         for d in domains:
             if d == weakest_domain:
-                scores[d] = round(random.uniform(40.0, 52.0), 1)
+                scores[d] = round(random.uniform(40.0, 48.0), 1)
             else:
-                scores[d] = round(random.uniform(58.0, 70.0), 1)
+                scores[d] = round(random.uniform(52.0, 65.0), 1)
                 
         # Calculate pre-test average for this subject
         pre_avg = sum(scores.values()) / 4.0
