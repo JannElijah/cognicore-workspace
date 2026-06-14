@@ -109,6 +109,139 @@ export default function App() {
   const [lastGameStats, setLastGameStats] = useState(null);
   const [portalView, setPortalView] = useState('participant'); // 'participant' | 'researcher'
 
+  // Quasi-Experimental Research Pipeline States
+  const [currentUser, setCurrentUser] = useState('');
+  const [usernameInput, setUsernameInput] = useState('');
+  const [preTestScores, setPreTestScores] = useState(null);
+  const [postTestScores, setPostTestScores] = useState(null);
+  const [weakestDomain, setWeakestDomain] = useState(null);
+  const [prescribedGame, setPrescribedGame] = useState(null);
+  const [hasPlayedPrescribed, setHasPlayedPrescribed] = useState(false);
+  const [assessmentStage, setAssessmentStage] = useState('none'); // 'none' | 'pre-test' | 'post-test' | 'completed'
+  const [evaluationReport, setEvaluationReport] = useState(null);
+  const [assessmentAnswers, setAssessmentAnswers] = useState({
+    q1: 3, q2: 3, q3: 3, q4: 3,
+    q5: 3, q6: 3, q7: 3, q8: 3,
+    q9: 3, q10: 3, q11: 3, q12: 3
+  });
+  const [assessmentLoading, setAssessmentLoading] = useState(false);
+  const [assessmentError, setAssessmentError] = useState(null);
+
+  const handleCheckUserStatus = async (username) => {
+    if (!username || !username.trim()) {
+      setAssessmentError("Please enter a valid username.");
+      return;
+    }
+    setAssessmentLoading(true);
+    setAssessmentError(null);
+    try {
+      const trimmedName = username.trim();
+      const res = await fetch(`http://127.0.0.1:5000/api/assessment-status/${trimmedName}`);
+      if (!res.ok) throw new Error("Failed to connect to backend server.");
+      const data = await res.json();
+      if (data.status === 'success') {
+        setCurrentUser(trimmedName);
+        setActiveDashboardUser(trimmedName);
+        
+        if (data.exists && data.pre_test) {
+          setPreTestScores(data.pre_test);
+          setWeakestDomain(data.weakest_domain);
+          setPrescribedGame(data.prescribed_game);
+          
+          if (data.post_test) {
+            setPostTestScores(data.post_test);
+            setAssessmentStage('completed');
+            fetchEvaluationReport(trimmedName);
+          } else {
+            setAssessmentStage('none');
+            // Fetch session history to check if they already played the prescribed game
+            const historyRes = await fetch(`http://127.0.0.1:5000/api/user-session-history/${trimmedName}`);
+            if (historyRes.ok) {
+              const histData = await historyRes.json();
+              const played = (histData.sessions || []).some(s => s.game_type === data.prescribed_game);
+              setHasPlayedPrescribed(played);
+            }
+          }
+        } else {
+          setPreTestScores(null);
+          setWeakestDomain(null);
+          setPrescribedGame(null);
+          setAssessmentStage('pre-test');
+        }
+      } else {
+        throw new Error(data.message || "Unknown error occurred.");
+      }
+    } catch (err) {
+      console.error(err);
+      setAssessmentError(err.message);
+    } finally {
+      setAssessmentLoading(false);
+    }
+  };
+
+  const handleSubmitAssessment = async (e) => {
+    if (e) e.preventDefault();
+    setAssessmentLoading(true);
+    setAssessmentError(null);
+    try {
+      const type = assessmentStage === 'pre-test' ? 'pre-test' : 'post-test';
+      const res = await fetch(`http://127.0.0.1:5000/api/submit-assessment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: currentUser,
+          assessment_type: type,
+          answers: assessmentAnswers
+        })
+      });
+      if (!res.ok) throw new Error("Failed to submit assessment.");
+      const data = await res.json();
+      if (data.status === 'success') {
+        if (type === 'pre-test') {
+          setPreTestScores(data.scores);
+          setWeakestDomain(data.weakest_domain);
+          setPrescribedGame(data.prescribed_game);
+          setAssessmentStage('none');
+          setHasPlayedPrescribed(false);
+          setSkills({
+            spatial_visual_memory: data.scores.spatial_visual_memory,
+            logical_mathematical: data.scores.logical_mathematical,
+            reflexes_and_focus: data.scores.reflexes_and_focus,
+            executive_strategy: data.scores.executive_strategy
+          });
+        } else {
+          setPostTestScores(data.scores);
+          setAssessmentStage('completed');
+          fetchEvaluationReport(currentUser);
+        }
+      } else {
+        throw new Error(data.message || "Submit failed.");
+      }
+    } catch (err) {
+      console.error(err);
+      setAssessmentError(err.message);
+    } finally {
+      setAssessmentLoading(false);
+    }
+  };
+
+  const fetchEvaluationReport = async (username) => {
+    try {
+      const res = await fetch(`http://127.0.0.1:5000/api/evaluate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username })
+      });
+      if (!res.ok) throw new Error("Failed to evaluate scores.");
+      const data = await res.json();
+      if (data.status === 'success') {
+        setEvaluationReport(data);
+      }
+    } catch (err) {
+      console.warn("Could not retrieve evaluation report:", err);
+    }
+  };
+
   // Thesis Cohort evaluation states (Clinical Researcher)
   const [pretestInput, setPretestInput] = useState('72, 68, 75, 80, 65, 78, 70, 74, 82, 69');
   const [posttestInput, setPosttestInput] = useState('84, 76, 85, 88, 78, 88, 82, 84, 91, 80');
@@ -451,6 +584,7 @@ export default function App() {
     setLiveCognitiveProfile(null);
     setLiveMetrics([]);
     audioDda.stop();
+    setHasPlayedPrescribed(true);
   }, [activeGame]);
 
   const handleBackToLobby = () => {
@@ -1499,7 +1633,105 @@ export default function App() {
           </div>
         )}
 
-        {activeGame ? (
+        {currentUser === '' && portalView === 'participant' ? (
+          // ONBOARDING / LOGIN VIEW
+          <div style={{ maxWidth: '480px', margin: '4rem auto', padding: '2.5rem', background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(20px)', border: '1px solid rgba(168, 85, 247, 0.3)', borderRadius: '16px', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', animation: 'fadeIn 0.3s ease-out' }}>
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <span style={{ fontSize: '3rem' }}>🧠</span>
+            </div>
+            <h2 style={{ color: '#ffffff', margin: '0 0 0.5rem 0', textAlign: 'center', fontSize: '1.6rem', letterSpacing: '0.05em', fontWeight: 'bold' }}>COGNICORE TRAINING PORTAL</h2>
+            <p style={{ color: '#94a3b8', fontSize: '0.875rem', margin: '0 0 2rem 0', textAlign: 'center', lineHeight: '1.5' }}>
+              Enter your researcher-assigned username to synchronize session telemetry, check pre-test status, or launch training loops.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <label style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Subject Username</label>
+                <input 
+                  type="text" 
+                  value={usernameInput} 
+                  onChange={(e) => setUsernameInput(e.target.value)} 
+                  placeholder="e.g. subject_01" 
+                  style={{ background: '#09090b', border: '1.5px solid rgba(168, 85, 247, 0.4)', borderRadius: '8px', color: '#ffffff', padding: '0.75rem', fontSize: '1rem', outline: 'none', width: '100%', boxSizing: 'border-box' }}
+                />
+              </div>
+              {assessmentError && <div style={{ color: '#f87171', fontSize: '0.85rem', fontWeight: 'bold' }}>⚠️ {assessmentError}</div>}
+              <button
+                onClick={() => handleCheckUserStatus(usernameInput)}
+                disabled={assessmentLoading}
+                style={{ background: 'linear-gradient(to right, #38bdf8, #a855f7)', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '0.75rem', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', width: '100%', boxShadow: '0 4px 12px rgba(168, 85, 247, 0.3)' }}
+                onMouseOver={(e) => e.target.style.filter = 'brightness(1.15)'}
+                onMouseOut={(e) => e.target.style.filter = 'brightness(1.0)'}
+              >
+                {assessmentLoading ? 'Verifying Profile...' : 'Begin Cognitive Evaluation'}
+              </button>
+            </div>
+          </div>
+        ) : assessmentStage === 'pre-test' || assessmentStage === 'post-test' ? (
+          // QUESTIONNAIRE VIEW
+          <div style={{ maxWidth: '750px', margin: '3rem auto', padding: '2.5rem', background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(20px)', border: '1px solid rgba(168, 85, 247, 0.35)', borderRadius: '16px', boxShadow: '0 12px 40px rgba(0,0,0,0.6)', animation: 'fadeIn 0.4s ease-out' }}>
+            <h2 style={{ color: '#ffffff', margin: '0 0 0.5rem 0', textTransform: 'uppercase', fontSize: '1.6rem', letterSpacing: '0.05em', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span>📋</span> {assessmentStage === 'pre-test' ? 'Phase 1: Standardized Pre-Test Questionnaire' : 'Phase 4: Mirrored Post-Test Questionnaire'}
+            </h2>
+            <p style={{ color: '#94a3b8', fontSize: '0.9rem', margin: '0 0 2rem 0', lineHeight: '1.6' }}>
+              Rate your subjective cognitive performance on a scale of <strong>1 (Low/Difficult)</strong> to <strong>5 (High/Easy)</strong> for each item. 
+              These data points calibrate baseline metrics and determine training path prescriptions.
+            </p>
+            <form onSubmit={handleSubmitAssessment} style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                {[
+                  { id: 'q1', text: 'How easy is it for you to remember the layout of a grid or map after looking at it once?', domain: 'spatial_visual_memory' },
+                  { id: 'q2', text: 'Do you enjoy solving complex math puzzles or numeric sequences?', domain: 'logical_mathematical' },
+                  { id: 'q3', text: 'How quickly can you react to visual cues or flashing targets?', domain: 'reflexes_and_focus' },
+                  { id: 'q4', text: 'Do you easily plan steps ahead when solving mazes or strategy games?', domain: 'executive_strategy' },
+                  { id: 'q5', text: 'Do you easily recall where you placed objects in a room?', domain: 'spatial_visual_memory' },
+                  { id: 'q6', text: 'How easily can you trace logical connections in a flowchart?', domain: 'logical_mathematical' },
+                  { id: 'q7', text: 'Can you easily maintain focus in a crowded, noisy workspace?', domain: 'reflexes_and_focus' },
+                  { id: 'q8', text: 'How easily do you adapt to shifting rules or sorting tasks?', domain: 'executive_strategy' },
+                  { id: 'q9', text: 'Can you easily mentally rotate or manipulate visual shapes?', domain: 'spatial_visual_memory' },
+                  { id: 'q10', text: 'Can you easily find the shortest route between multiple stops?', domain: 'logical_mathematical' },
+                  { id: 'q11', text: 'How good are you at overriding sudden reading impulses or distractions?', domain: 'reflexes_and_focus' },
+                  { id: 'q12', text: 'Can you efficiently adjust plans when obstacle density increases?', domain: 'executive_strategy' }
+                ].map((q, idx) => (
+                  <div key={q.id} style={{ padding: '1.25rem', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px' }}>
+                    <div style={{ fontSize: '0.95rem', color: '#ffffff', marginBottom: '0.75rem', fontWeight: '500', lineHeight: '1.4' }}>
+                      <span style={{ color: '#a855f7', marginRight: '0.5rem', fontWeight: 'bold' }}>{idx + 1}.</span> {q.text}
+                      <span style={{ fontSize: '0.72rem', color: '#38bdf8', marginLeft: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>[{q.domain.replace(/_/g, ' ')}]</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '1.75rem', alignItems: 'center', marginTop: '0.5rem' }}>
+                      {[1, 2, 3, 4, 5].map((val) => (
+                        <label key={val} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#cbd5e1', fontSize: '0.9rem', cursor: 'pointer', userSelect: 'none' }}>
+                          <input 
+                            type="radio" 
+                            name={q.id} 
+                            value={val} 
+                            checked={assessmentAnswers[q.id] === val}
+                            onChange={() => setAssessmentAnswers(prev => ({ ...prev, [q.id]: val }))}
+                            style={{ accentColor: '#a855f7', transform: 'scale(1.1)' }}
+                          />
+                          {val}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {assessmentError && <div style={{ color: '#f87171', fontSize: '0.9rem', fontWeight: 'bold' }}>⚠️ {assessmentError}</div>}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '1.5rem' }}>
+                <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Subject: <strong>{currentUser}</strong></span>
+                <button
+                  type="submit"
+                  disabled={assessmentLoading}
+                  style={{ background: 'linear-gradient(to right, #38bdf8, #a855f7)', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '0.8rem 2rem', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(168, 85, 247, 0.3)' }}
+                  onMouseOver={(e) => e.target.style.filter = 'brightness(1.15)'}
+                  onMouseOut={(e) => e.target.style.filter = 'brightness(1.0)'}
+                >
+                  {assessmentLoading ? 'Submitting Responses...' : 'Submit Assessment'}
+                </button>
+              </div>
+            </form>
+          </div>
+        ) : activeGame ? (
+
           <div className="game-screen-wrapper">
             <button className="back-btn" onClick={handleBackToLobby}>
               ← Back to Training Hub
@@ -2891,333 +3123,252 @@ export default function App() {
               </div>
             </div>
 
-            <h2 className="section-title">Available Training Modules by Domain</h2>
+            {/* Quasi-Experimental Analytics Banner */}
+            {preTestScores && (
+              <div className="game-card" style={{
+                padding: '2rem',
+                marginBottom: '3rem',
+                background: 'rgba(24, 24, 27, 0.75)',
+                backdropFilter: 'blur(16px)',
+                border: '1.5px dashed rgba(168, 85, 247, 0.4)',
+                borderRadius: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1.5rem',
+                animation: 'fadeIn 0.3s ease-out'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '1rem', gap: '1rem' }}>
+                  <div>
+                    <h3 style={{ fontSize: '1.25rem', margin: 0, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span>🧭</span> Quasi-Experimental Research Track
+                    </h3>
+                    <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
+                      Subject ID: <strong>{currentUser}</strong> | Mapped Weakest Domain: <strong style={{ color: '#38bdf8' }}>{weakestDomain?.replace(/_/g, ' ').toUpperCase()}</strong>
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    {assessmentStage === 'completed' ? (
+                      <span style={{ background: 'rgba(74, 222, 128, 0.1)', color: '#4ade80', border: '1px solid #4ade80', padding: '0.35rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                        ✓ Evaluation Finalized
+                      </span>
+                    ) : hasPlayedPrescribed ? (
+                      <button
+                        onClick={() => setAssessmentStage('post-test')}
+                        style={{
+                          background: 'linear-gradient(to right, #4ade80, #38bdf8)',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '8px',
+                          padding: '0.5rem 1.25rem',
+                          fontSize: '0.85rem',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          boxShadow: '0 4px 10px rgba(74, 222, 128, 0.2)'
+                        }}
+                      >
+                        ✍ Take Post-Test Questionnaire
+                      </button>
+                    ) : (
+                      <span style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: '1px solid #f59e0b', padding: '0.35rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                        ⌛ Play Prescribed Game to Unlock Post-Test
+                      </span>
+                    )}
+                  </div>
+                </div>
 
-            {/* Category 1: Reflexes & Focus */}
-            <div className="category-container theme-reflex">
-              <div className="category-header-wrapper">
-                <span className="category-title">⚡ Reflexes & Attentional Focus</span>
-                <p className="category-description">Assesses visuomotor response latencies, continuous visual search efficiency, and response inhibition control in variable-distractor environments.</p>
+                {evaluationReport ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
+                      
+                      {/* Pre vs Post Averages */}
+                      <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
+                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Standardized Test Mean</span>
+                        <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem' }}>
+                          {evaluationReport.mean_pretest} <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>→</span> <span style={{ color: '#4ade80' }}>{evaluationReport.mean_posttest}</span>
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#4ade80', marginTop: '0.25rem', fontWeight: 'bold' }}>
+                          +{evaluationReport.overall_improvement_rate_pct}% Improvement Rate
+                        </div>
+                      </div>
+
+                      {/* T-Statistic */}
+                      <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
+                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Paired t-Statistic</span>
+                        <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem' }}>
+                          t = {evaluationReport.t_statistic}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem' }}>
+                          Sample Size (n = {evaluationReport.sample_size} Domains)
+                        </div>
+                      </div>
+
+                      {/* Cohen's d / Effect Size */}
+                      <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
+                        <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Cohen's d Effect Size</span>
+                        <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem', textTransform: 'capitalize' }}>
+                          {evaluationReport.cohens_d} <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>({evaluationReport.effect_size_magnitude})</span>
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: evaluationReport.statistically_significant ? '#4ade80' : '#f87171', marginTop: '0.25rem', fontWeight: 'bold' }}>
+                          {evaluationReport.statistically_significant ? "Statistically Significant" : "Not Statistically Significant"}
+                        </div>
+                      </div>
+
+                    </div>
+
+                    {/* Hypothesis & Expose Diffs */}
+                    <div style={{ padding: '1rem', background: 'rgba(168,85,247,0.05)', border: '1px solid rgba(168,85,247,0.15)', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      <div style={{ fontSize: '0.85rem', color: '#c084fc', fontWeight: 'bold' }}>📊 Thesis Hypothesis Testing Outcome</div>
+                      <div style={{ fontSize: '0.95rem', color: '#ffffff', lineHeight: '1.5' }}>
+                        {evaluationReport.hypothesis_result}
+                      </div>
+                      
+                      {evaluationReport.domain_improvements && (
+                        <div style={{ marginTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.75rem' }}>
+                          <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold' }}>Domain Score Margin Changes:</span>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.5rem' }}>
+                            {Object.entries(evaluationReport.domain_improvements).map(([dom, margin]) => (
+                              <div key={dom} style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>
+                                <span style={{ textTransform: 'capitalize', color: '#94a3b8' }}>{dom.replace(/_/g, ' ')}:</span>{' '}
+                                <strong style={{ color: margin >= 0 ? '#4ade80' : '#ef4444' }}>
+                                  {margin >= 0 ? `+${margin}` : margin}
+                                </strong>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8' }}>
+                    ⌛ Once you complete both Pre-Test and Post-Test questionnaires, this dashboard will compute dynamic empirical analytics (paired t-tests and Cohen's d effect sizes) to validate cognitive skill improvements.
+                  </div>
+                )}
               </div>
-              <div className="game-grid" style={{ marginBottom: '3.5rem' }}>
-                <div className="game-card theme-reflex active" onClick={() => setActiveGame('SpeedTap')}>
-                  <div className="card-target-tag">Processing Speed</div>
-                  <div className="card-icon">⚡</div>
-                  <h3>Speed Tap</h3>
-                  
-                  <div className="card-section-label">Objective & Goal</div>
-                  <ul className="card-purpose-list">
-                    <li>Identify and select highlighted target boxes under a ticking clock.</li>
-                    <li>Exercise rapid response inhibition by avoiding distractor elements.</li>
-                  </ul>
+            )}
 
-                  <div className="card-section-label">How it helps us</div>
-                  <div className="card-benefit-box">
-                    Speeds up motor reflexes and decision making under time pressure, reducing error rate when multi-tasking.
+            <h2 className="section-title">Quasi-Experimental Core Game Grid</h2>
+            <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: '-1rem 0 2rem 0' }}>
+              Under our quasi-experimental design rules, only the programmatically prescribed training module targeting your weakest cognitive domain is active. Others act as control variables.
+            </p>
+
+            <div className="game-grid" style={{ marginBottom: '3.5rem' }}>
+              {[
+                {
+                  id: 'SpeedTap',
+                  title: 'Speed Tap',
+                  domain: 'reflexes_and_focus',
+                  tag: 'Reflex & Attentional Focus',
+                  icon: '⚡',
+                  objective: 'Identify and select highlighted target boxes under a ticking clock, avoiding distractors.',
+                  benefit: 'Speeds up motor reflexes and decision making under time pressure, reducing error rate.'
+                },
+                {
+                  id: 'MatrixRecall',
+                  title: 'Matrix Recall',
+                  domain: 'spatial_visual_memory',
+                  tag: 'Spatial-Visual Memory',
+                  icon: '🔲',
+                  objective: 'Observe grid pattern sequences highlighted for brief intervals and reconstruct coordinates.',
+                  benefit: 'Improves spatial orientation and visual-spatial short-term working retention.'
+                },
+                {
+                  id: 'LogicLink',
+                  title: 'Logic Link',
+                  domain: 'logical_mathematical',
+                  tag: 'Logical Reasoning',
+                  icon: '🔗',
+                  objective: 'Connect nodes in exact ascending sequence, avoiding node collisions and path overlaps.',
+                  benefit: 'Exercises logical path planning, pattern recognition, and structured problem solving.'
+                },
+                {
+                  id: 'MazeEscape',
+                  title: 'Maze Escape',
+                  domain: 'executive_strategy',
+                  tag: 'Executive Strategy',
+                  icon: '🧭',
+                  objective: 'Navigate a character through complex visual grids escaping barriers and obstacles.',
+                  benefit: 'Builds strategic path planning and forward-looking executive reasoning.'
+                }
+              ].map(game => {
+                const isPrescribed = prescribedGame === game.id;
+                
+                return (
+                  <div 
+                    key={game.id} 
+                    className={`game-card ${isPrescribed ? 'active' : ''}`}
+                    onClick={() => { if (isPrescribed) setActiveGame(game.id); }}
+                    style={{
+                      border: isPrescribed ? '2px solid #a855f7' : '1px solid rgba(255, 255, 255, 0.05)',
+                      boxShadow: isPrescribed ? '0 0 20px rgba(168, 85, 247, 0.25)' : 'none',
+                      opacity: isPrescribed ? 1.0 : 0.45,
+                      cursor: isPrescribed ? 'pointer' : 'not-allowed',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}
+                  >
+                    {!isPrescribed && (
+                      <div style={{
+                        position: 'absolute',
+                        top: 0, left: 0, right: 0, bottom: 0,
+                        background: 'rgba(9, 9, 11, 0.55)',
+                        backdropFilter: 'blur(1px)',
+                        zIndex: 2,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem'
+                      }}>
+                        <span style={{ fontSize: '1.5rem' }}>🔒</span>
+                        <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#94a3b8', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Control Variable</span>
+                      </div>
+                    )}
+                    
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{game.tag}</span>
+                      {isPrescribed && (
+                        <span style={{ background: '#a855f7', color: '#ffffff', fontSize: '0.65rem', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                          Prescribed Track
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '0.75rem 0' }}>
+                      <span style={{ fontSize: '2rem' }}>{game.icon}</span>
+                      <h3 style={{ margin: 0, fontSize: '1.25rem' }}>{game.title}</h3>
+                    </div>
+
+                    <div className="card-section-label">Objective & Goal</div>
+                    <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.82rem', color: '#cbd5e1', lineHeight: '1.4' }}>{game.objective}</p>
+
+                    <div className="card-section-label">How it helps us</div>
+                    <div className="card-benefit-box" style={{ fontSize: '0.8rem', padding: '0.5rem 0.75rem' }}>{game.benefit}</div>
+
+                    <button 
+                      className="play-btn" 
+                      disabled={!isPrescribed}
+                      style={{
+                        background: isPrescribed ? 'linear-gradient(to right, #38bdf8, #a855f7)' : 'rgba(255,255,255,0.05)',
+                        color: isPrescribed ? '#ffffff' : '#475569',
+                        marginTop: '1rem',
+                        cursor: isPrescribed ? 'pointer' : 'not-allowed',
+                        width: '100%',
+                        padding: '0.5rem',
+                        border: 'none',
+                        borderRadius: '6px',
+                        fontWeight: 'bold',
+                        fontSize: '0.85rem'
+                      }}
+                    >
+                      {isPrescribed ? 'Launch Active Game' : 'Module Disabled'}
+                    </button>
                   </div>
-                  
-                  <button className="play-btn">Launch Module</button>
-                </div>
-
-                <div className="game-card theme-reflex active" onClick={() => setActiveGame('FocusFinder')}>
-                  <div className="card-target-tag">Selective Attention</div>
-                  <div className="card-icon">🎯</div>
-                  <h3>Focus Finder</h3>
-                  
-                  <div className="card-section-label">Objective & Goal</div>
-                  <ul className="card-purpose-list">
-                    <li>Scan cluttered graphical fields to identify active target points.</li>
-                    <li>Train continuous visual vigilance under distracting layouts.</li>
-                  </ul>
-
-                  <div className="card-section-label">How it helps us</div>
-                  <div className="card-benefit-box">
-                    Enhances selective visual search in busy environments (e.g. scanning files or finding objects on store shelves).
-                  </div>
-                  
-                  <button className="play-btn">Launch Module</button>
-                </div>
-
-                <div className="game-card theme-reflex active" onClick={() => setActiveGame('StroopShift')}>
-                  <div className="card-target-tag">Cognitive Control</div>
-                  <div className="card-icon">🎨</div>
-                  <h3>Stroop Shift</h3>
-                  
-                  <div className="card-section-label">Objective & Goal</div>
-                  <ul className="card-purpose-list">
-                    <li>Override standard reading impulse and select the font/ink color.</li>
-                    <li>Resist semantic word distractions during cognitive conflict.</li>
-                  </ul>
-
-                  <div className="card-section-label">How it helps us</div>
-                  <div className="card-benefit-box">
-                    Filters out conversational background noise or notifications to maintain high attentional focus on primary work tasks.
-                  </div>
-                  
-                  <button className="play-btn">Launch Module</button>
-                </div>
-              </div>
+                );
+              })}
             </div>
-
-            {/* Category 2: Spatial-Visual Memory */}
-            <div className="category-container theme-memory">
-              <div className="category-header-wrapper">
-                <span className="category-title">🧩 Spatial-Visual Memory</span>
-                <p className="category-description">Assesses working memory capacity, spatial orientation, and visual retention of short-term pattern arrays.</p>
-              </div>
-              <div className="game-grid" style={{ marginBottom: '3.5rem' }}>
-                <div className="game-card theme-memory active" onClick={() => setActiveGame('MemoryMatch')}>
-                  <div className="card-target-tag">Working Memory</div>
-                  <div className="card-icon">🧩</div>
-                  <h3>Memory Match</h3>
-                  
-                  <div className="card-section-label">Objective & Goal</div>
-                  <ul className="card-purpose-list">
-                    <li>Flip tiles to find matching pairs in a grid layout.</li>
-                    <li>Recall tile positions and track matching trials.</li>
-                  </ul>
-
-                  <div className="card-section-label">How it helps us</div>
-                  <div className="card-benefit-box">
-                    Strengthens visual recall and short-term working retention, supporting mental math calculations and instructions list retention.
-                  </div>
-                  
-                  <button className="play-btn">Launch Module</button>
-                </div>
-
-                <div className="game-card theme-memory active" onClick={() => setActiveGame('MatrixRecall')}>
-                  <div className="card-target-tag">Spatial Retention</div>
-                  <div className="card-icon">🔲</div>
-                  <h3>Matrix Recall</h3>
-                  
-                  <div className="card-section-label">Objective & Goal</div>
-                  <ul className="card-purpose-list">
-                    <li>Observe grid pattern sequences highlighted for brief intervals.</li>
-                    <li>Reconstruct pattern coordinates in exact visual order.</li>
-                  </ul>
-
-                  <div className="card-section-label">How it helps us</div>
-                  <div className="card-benefit-box">
-                    Improves spatial orientation and mental navigation mapping, aiding recall of location coordinates and physical layouts.
-                  </div>
-                  
-                  <button className="play-btn">Launch Module</button>
-                </div>
-
-                <div className="game-card theme-memory active" onClick={() => setActiveGame('NeuralNBack')}>
-                  <div className="card-target-tag">Spatial N-Back</div>
-                  <div className="card-icon">🔄</div>
-                  <h3>Neural N-Back</h3>
-                  
-                  <div className="card-section-label">Objective & Goal</div>
-                  <ul className="card-purpose-list">
-                    <li>Retain highlighted node locations in sequential memory.</li>
-                    <li>Determine if the current location matches the one shown N steps back.</li>
-                  </ul>
-
-                  <div className="card-section-label">How it helps us</div>
-                  <div className="card-benefit-box">
-                    Strengthens spatial working memory, updates fluid cognitive capacity, and sharpens visual attention span.
-                  </div>
-                  
-                  <button className="play-btn">Launch Module</button>
-                </div>
-
-                <div className="game-card theme-memory active" onClick={() => setActiveGame('SynapseSpin')}>
-                  <div className="card-target-tag">Mental Rotation</div>
-                  <div className="card-icon">🔁</div>
-                  <h3>Synapse Spin</h3>
-                  
-                  <div className="card-section-label">Objective & Goal</div>
-                  <ul className="card-purpose-list">
-                    <li>Compare a main graphical node structure against candidates.</li>
-                    <li>Identify the identical shape that has been rotated in 2D space.</li>
-                  </ul>
-
-                  <div className="card-section-label">How it helps us</div>
-                  <div className="card-benefit-box">
-                    Improves dynamic mental rotation, spatial logic transform efficiency, and analytical visualization speed.
-                  </div>
-                  
-                  <button className="play-btn">Launch Module</button>
-                </div>
-
-                <div className="game-card theme-memory active" onClick={() => setActiveGame('NexusMapper')}>
-                  <div className="card-target-tag">Object-Location Memory</div>
-                  <div className="card-icon">🗺️</div>
-                  <h3>Nexus Mapper</h3>
-                  
-                  <div className="card-section-label">Objective & Goal</div>
-                  <ul className="card-purpose-list">
-                    <li>Memorize coordinate locations of distinct glyphs on a grid.</li>
-                    <li>Recall the layout by re-placing each glyph at its correct node.</li>
-                  </ul>
-
-                  <div className="card-section-label">How it helps us</div>
-                  <div className="card-benefit-box">
-                    Enhances visual-spatial localization recall, map logic retention, and spatial indexing memory.
-                  </div>
-                  
-                  <button className="play-btn">Launch Module</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Category 3: Logical Reasoning */}
-            <div className="category-container theme-reasoning">
-              <div className="category-header-wrapper">
-                <span className="category-title">🔗 Logical Reasoning & Sequence Logic</span>
-                <p className="category-description">Assesses analytical sequencing abilities, logical node linking, and spatial path calculation.</p>
-              </div>
-              <div className="game-grid" style={{ marginBottom: '3.5rem' }}>
-                <div className="game-card theme-reasoning active" onClick={() => setActiveGame('LogicLink')}>
-                  <div className="card-target-tag">Inductive Logic</div>
-                  <div className="card-icon">🔗</div>
-                  <h3>Logic Link</h3>
-                  
-                  <div className="card-section-label">Objective & Goal</div>
-                  <ul className="card-purpose-list">
-                    <li>Connect nodes in exact ascending sequence.</li>
-                    <li>Calculate path layouts avoiding node collisions.</li>
-                  </ul>
-
-                  <div className="card-section-label">How it helps us</div>
-                  <div className="card-benefit-box">
-                    Exercises logical path planning, pattern recognition, and mathematical structured problem solving in complex systems.
-                  </div>
-                  
-                  <button className="play-btn">Launch Module</button>
-                </div>
-
-                {/* Equation Balance Card */}
-                <div className="game-card theme-reasoning active" onClick={() => setActiveGame('EquationBalance')}>
-                  <div className="card-target-tag">Deductive Logic</div>
-                  <div className="card-icon">🧮</div>
-                  <h3>Equation Balance</h3>
-                  
-                  <div className="card-section-label">Objective & Goal</div>
-                  <ul className="card-purpose-list">
-                    <li>Select the correct operator or number to balance equations.</li>
-                    <li>Solve procedural arithmetic equations under a ticking clock.</li>
-                  </ul>
-
-                  <div className="card-section-label">How it helps us</div>
-                  <div className="card-benefit-box">
-                    Accelerates mental math estimation, improves quantitative deduction speeds, and supports quick numerical calculations.
-                  </div>
-                  
-                  <button className="play-btn">Launch Module</button>
-                </div>
-
-                {/* Sequence Decoder Card */}
-                <div className="game-card theme-reasoning active" onClick={() => setActiveGame('SequenceDecoder')}>
-                  <div className="card-target-tag">Inductive Reasoning</div>
-                  <div className="card-icon">🧩</div>
-                  <h3>Sequence Decoder</h3>
-                  
-                  <div className="card-section-label">Objective & Goal</div>
-                  <ul className="card-purpose-list">
-                    <li>Observe a series of values following a hidden rule.</li>
-                    <li>Identify the pattern and select the correct missing element.</li>
-                  </ul>
-
-                  <div className="card-section-label">How it helps us</div>
-                  <div className="card-benefit-box">
-                    Trains inductive abstraction: the ability to extract a general rule from specific observations — critical for analytical and scientific reasoning.
-                  </div>
-                  
-                  <button className="play-btn">Launch Module</button>
-                </div>
-
-                {/* Route Optimizer Card */}
-                <div className="game-card theme-reasoning active" onClick={() => setActiveGame('RouteOptimizer')}>
-                  <div className="card-target-tag">Combinatorial Logic</div>
-                  <div className="card-icon">🕸️</div>
-                  <h3>Route Optimizer</h3>
-
-                  <div className="card-section-label">Objective & Goal</div>
-                  <ul className="card-purpose-list">
-                    <li>Navigate a weighted network from START to END.</li>
-                    <li>Click through nodes to build the lowest-cost route.</li>
-                  </ul>
-
-                  <div className="card-section-label">How it helps us</div>
-                  <div className="card-benefit-box">
-                    Builds combinatorial optimization reasoning: evaluating multiple path trade-offs simultaneously — a skill used in logistics, resource planning, and decision analysis.
-                  </div>
-
-                  <button className="play-btn">Launch Module</button>
-                </div>
-              </div>
-            </div>
-
-            {/* Category 4: Executive Strategy & Flexibility */}
-            <div className="category-container theme-executive">
-              <div className="category-header-wrapper">
-                <span className="category-title">🌀 Executive Strategy & Flexibility</span>
-                <p className="category-description">Assesses set-shifting abilities, pathfinding strategies, and adaptability to sudden rules modifications.</p>
-              </div>
-              <div className="game-grid" style={{ marginBottom: '1.5rem' }}>
-                <div className="game-card theme-executive active" onClick={() => setActiveGame('MazeEscape')}>
-                  <div className="card-target-tag">Problem Solving</div>
-                  <div className="card-icon">🧭</div>
-                  <h3>Maze Escape</h3>
-                  
-                  <div className="card-section-label">Objective & Goal</div>
-                  <ul className="card-purpose-list">
-                    <li>Navigate a character through complex visual grids.</li>
-                    <li>Solve optimal escape routes and bypass barrier elements.</li>
-                  </ul>
-
-                  <div className="card-section-label">How it helps us</div>
-                  <div className="card-benefit-box">
-                    Builds strategic path planning and forward-looking executive thinking for spatial navigation and route optimization.
-                  </div>
-                  
-                  <button className="play-btn">Launch Module</button>
-                </div>
-
-                <div className="game-card theme-executive active" onClick={() => setActiveGame('MentalFlex')}>
-                  <div className="card-target-tag">Set-Shifting</div>
-                  <div className="card-icon">🌀</div>
-                  <h3>Mental Flex</h3>
-                  
-                  <div className="card-section-label">Objective & Goal</div>
-                  <ul className="card-purpose-list">
-                    <li>Match a central target query against multiple selection options.</li>
-                    <li>Adapt swiftly to changing matching rules (color, shape, or count).</li>
-                  </ul>
-
-                  <div className="card-section-label">How it helps us</div>
-                  <div className="card-benefit-box">
-                    Reduces cognitive friction during rapid task switching, allowing you to transition between topics or tools seamlessly.
-                  </div>
-                  
-                  <button className="play-btn">Launch Module</button>
-                </div>
-
-                <div className="game-card theme-executive active" onClick={() => setActiveGame('NeuroMaze')} style={{ background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(16, 185, 129, 0.15) 100%)' }}>
-                  <div className="card-target-tag">Executive Control</div>
-                  <div className="card-icon">🌐</div>
-                  <h3>Neuro Maze</h3>
-                  
-                  <div className="card-section-label">Objective & Goal</div>
-                  <ul className="card-purpose-list">
-                    <li>Connect synapse paths through neural mazes under a ticking clock.</li>
-                    <li>Test spatial planning with speed scaling as complexity increases.</li>
-                  </ul>
-
-                  <div className="card-section-label">How it helps us</div>
-                  <div className="card-benefit-box">
-                    Refines set-shifting speed, speed-scaled spatial logic, and high-pressure strategic execution.
-                  </div>
-                  
-                  <button className="play-btn">Launch Module</button>
-                </div>
-              </div>
-            </div>
-
           </div>
+
         )}
       </main>
 

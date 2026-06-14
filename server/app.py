@@ -135,6 +135,7 @@ def get_db_connection():
     conn = sqlite3.connect(DB_PATH, timeout=30.0)
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA synchronous=NORMAL")
+    conn.execute("PRAGMA foreign_keys = ON;")
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -227,6 +228,21 @@ def init_db():
             efficiency_score INTEGER NOT NULL,
             ux_score INTEGER NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    
+    # Create cognitive_assessments table if it doesn't exist
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS cognitive_assessments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            assessment_type TEXT CHECK(assessment_type IN ('pre-test', 'post-test')),
+            spatial_visual_score REAL NOT NULL,
+            logical_math_score REAL NOT NULL,
+            attention_score REAL NOT NULL,
+            executive_score REAL NOT NULL,
+            completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
     """)
     
@@ -771,10 +787,206 @@ def index():
         "message": "CogniCore Telemetry & DDA API is running successfully.",
         "endpoints": {
             "/api/start-session": "POST - Initialize session & fetch initial difficulty parameters",
+            "/api/submit-assessment": "POST - Submit pre/post test questionnaire answers",
             "/api/submit-metrics": "POST - Record player performance metrics",
             "/api/dda": "POST - Query active feedback loop DDA updates & cognitive profile classifications"
         }
     }), 200
+
+@app.route('/api/submit-assessment', methods=['POST'])
+def submit_assessment():
+    """
+    Submits user pre-test or post-test assessment scores.
+    Determines cognitive domain strengths/weaknesses and prescribes the target game module.
+    """
+    try:
+        data = request.get_json() or {}
+        username = str(data.get('username', 'default_player')).strip()
+        if not username:
+            username = 'default_player'
+        assessment_type = str(data.get('assessment_type', 'pre-test')).strip().lower()
+        if assessment_type not in ('pre-test', 'post-test'):
+            return jsonify({"status": "error", "message": "assessment_type must be either 'pre-test' or 'post-test'."}), 400
+            
+        answers = data.get('answers') or {}
+        
+        # Defensive score computation
+        spatial_visual_score = safe_float(answers.get('spatial_visual_score'))
+        logical_math_score = safe_float(answers.get('logical_math_score'))
+        attention_score = safe_float(answers.get('attention_score'))
+        executive_score = safe_float(answers.get('executive_score'))
+        
+        # Check q1-q12 mapping fallback if scores not directly specified
+        if spatial_visual_score is None:
+            sv_vals = [safe_float(answers.get(q)) for q in ('q1', 'q5', 'q9') if answers.get(q) is not None]
+            lm_vals = [safe_float(answers.get(q)) for q in ('q2', 'q6', 'q10') if answers.get(q) is not None]
+            at_vals = [safe_float(answers.get(q)) for q in ('q3', 'q7', 'q11') if answers.get(q) is not None]
+            ex_vals = [safe_float(answers.get(q)) for q in ('q4', 'q8', 'q12') if answers.get(q) is not None]
+            
+            def calc_score(vals):
+                if not vals:
+                    return 50.0 # middle fallback score
+                avg = sum(vals) / len(vals)
+                if max(vals) <= 5.0:
+                    # Likert 1-5 scale: map to 0-100 range
+                    return ((avg - 1.0) / 4.0) * 100.0
+                return avg
+
+            spatial_visual_score = calc_score(sv_vals)
+            logical_math_score = calc_score(lm_vals)
+            attention_score = calc_score(at_vals)
+            executive_score = calc_score(ex_vals)
+            
+        if any(x is None for x in (spatial_visual_score, logical_math_score, attention_score, executive_score)):
+            return jsonify({"status": "error", "message": "Failed to compute or parse scores for all 4 cognitive domains."}), 400
+
+        conn = get_db_connection()
+        try:
+            with conn:
+                cursor = conn.cursor()
+                # Get or create user
+                cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+                user = cursor.fetchone()
+                if user:
+                    user_id = user['id']
+                else:
+                    cursor.execute("INSERT INTO users (username) VALUES (?)", (username,))
+                    user_id = cursor.lastrowid
+                
+                # Insert into cognitive_assessments
+                cursor.execute(
+                    """
+                    INSERT INTO cognitive_assessments 
+                    (user_id, assessment_type, spatial_visual_score, logical_math_score, attention_score, executive_score)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    (user_id, assessment_type, spatial_visual_score, logical_math_score, attention_score, executive_score)
+                )
+        finally:
+            conn.close()
+
+        # Map weakest domain to its core prescribed Phaser game module
+        scores_map = {
+            "spatial_visual_memory": spatial_visual_score,
+            "logical_mathematical": logical_math_score,
+            "reflexes_and_focus": attention_score,
+            "executive_strategy": executive_score
+        }
+        weakest_domain = min(scores_map, key=scores_map.get)
+        
+        domain_to_game = {
+            "spatial_visual_memory": "MatrixRecall",
+            "logical_mathematical": "LogicLink",
+            "reflexes_and_focus": "SpeedTap",
+            "executive_strategy": "MazeEscape"
+        }
+        prescribed_game = domain_to_game[weakest_domain]
+
+        return jsonify({
+            "status": "success",
+            "user_id": user_id,
+            "assessment_type": assessment_type,
+            "scores": {
+                "spatial_visual_memory": round(spatial_visual_score, 2),
+                "logical_mathematical": round(logical_math_score, 2),
+                "reflexes_and_focus": round(attention_score, 2),
+                "executive_strategy": round(executive_score, 2)
+            },
+            "weakest_domain": weakest_domain,
+            "prescribed_game": prescribed_game
+        }), 201
+
+    except Exception as e:
+        app.logger.error(f"Error in submit_assessment: {e}")
+        return jsonify({"status": "error", "message": f"Database or server error: {str(e)}"}), 500
+
+@app.route('/api/assessment-status/<username>', methods=['GET'])
+def get_assessment_status(username):
+    try:
+        username = str(username).strip()
+        conn = get_db_connection()
+        try:
+            with conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+                user = cursor.fetchone()
+                if not user:
+                    return jsonify({
+                        "status": "success",
+                        "exists": False,
+                        "pre_test": None,
+                        "post_test": None,
+                        "prescribed_game": None
+                    }), 200
+                
+                user_id = user['id']
+                
+                # Fetch pre-test
+                cursor.execute(
+                    """
+                    SELECT spatial_visual_score, logical_math_score, attention_score, executive_score 
+                    FROM cognitive_assessments 
+                    WHERE user_id = ? AND assessment_type = 'pre-test'
+                    ORDER BY completed_at DESC, id DESC LIMIT 1
+                    """,
+                    (user_id,)
+                )
+                pre_row = cursor.fetchone()
+                
+                # Fetch latest post-test
+                cursor.execute(
+                    """
+                    SELECT spatial_visual_score, logical_math_score, attention_score, executive_score 
+                    FROM cognitive_assessments 
+                    WHERE user_id = ? AND assessment_type = 'post-test'
+                    ORDER BY completed_at DESC, id DESC LIMIT 1
+                    """,
+                    (user_id,)
+                )
+                post_row = cursor.fetchone()
+                
+                pre_data = None
+                prescribed_game = None
+                weakest_domain = None
+                if pre_row:
+                    pre_data = {
+                        "spatial_visual_memory": pre_row['spatial_visual_score'],
+                        "logical_mathematical": pre_row['logical_math_score'],
+                        "reflexes_and_focus": pre_row['attention_score'],
+                        "executive_strategy": pre_row['executive_score']
+                    }
+                    # Calculate weakest
+                    weakest_domain = min(pre_data, key=pre_data.get)
+                    domain_to_game = {
+                        "spatial_visual_memory": "MatrixRecall",
+                        "logical_mathematical": "LogicLink",
+                        "reflexes_and_focus": "SpeedTap",
+                        "executive_strategy": "MazeEscape"
+                    }
+                    prescribed_game = domain_to_game[weakest_domain]
+                    
+                post_data = None
+                if post_row:
+                    post_data = {
+                        "spatial_visual_memory": post_row['spatial_visual_score'],
+                        "logical_mathematical": post_row['logical_math_score'],
+                        "reflexes_and_focus": post_row['attention_score'],
+                        "executive_strategy": post_row['executive_score']
+                    }
+                    
+                return jsonify({
+                    "status": "success",
+                    "exists": True,
+                    "pre_test": pre_data,
+                    "post_test": post_data,
+                    "weakest_domain": weakest_domain,
+                    "prescribed_game": prescribed_game
+                }), 200
+        finally:
+            conn.close()
+    except Exception as e:
+        app.logger.error(f"Error in get_assessment_status: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/api/start-session', methods=['POST'])
 def start_session():
@@ -1164,16 +1376,79 @@ def evaluate_thesis():
     Pillar 1: Empirical Cognitive Improvement (Pretest-Posttest Analysis).
     Calculates individual and average improvement rates, and performs a Paired t-test
     to determine if improvements are statistically significant.
+    Supports querying user's matching pre-test and post-test values from the database
+    if a 'username' is provided.
     """
     try:
         data = request.get_json() or {}
-        pretest = data.get('pretest_scores')
-        posttest = data.get('posttest_scores')
+        username = data.get('username')
         
+        pretest = None
+        posttest = None
+        db_queried = False
+        
+        if username:
+            username = str(username).strip()
+            conn = get_db_connection()
+            try:
+                cursor = conn.cursor()
+                # Resolve user ID
+                cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+                user_row = cursor.fetchone()
+                if not user_row:
+                    return jsonify({"status": "error", "message": f"User '{username}' not found."}), 404
+                user_id = user_row['id']
+                
+                # Fetch latest pre-test
+                cursor.execute(
+                    """
+                    SELECT spatial_visual_score, logical_math_score, attention_score, executive_score 
+                    FROM cognitive_assessments 
+                    WHERE user_id = ? AND assessment_type = 'pre-test'
+                    ORDER BY completed_at DESC, id DESC LIMIT 1
+                    """,
+                    (user_id,)
+                )
+                pre_row = cursor.fetchone()
+                
+                # Fetch latest post-test
+                cursor.execute(
+                    """
+                    SELECT spatial_visual_score, logical_math_score, attention_score, executive_score 
+                    FROM cognitive_assessments 
+                    WHERE user_id = ? AND assessment_type = 'post-test'
+                    ORDER BY completed_at DESC, id DESC LIMIT 1
+                    """,
+                    (user_id,)
+                )
+                post_row = cursor.fetchone()
+                
+                if pre_row and post_row:
+                    pretest = [
+                        pre_row['spatial_visual_score'],
+                        pre_row['logical_math_score'],
+                        pre_row['attention_score'],
+                        pre_row['executive_score']
+                    ]
+                    posttest = [
+                        post_row['spatial_visual_score'],
+                        post_row['logical_math_score'],
+                        post_row['attention_score'],
+                        post_row['executive_score']
+                    ]
+                    db_queried = True
+            finally:
+                conn.close()
+                
+        # If DB query was not executed or returned nothing, fall back to direct score arrays
+        if not db_queried:
+            pretest = data.get('pretest_scores')
+            posttest = data.get('posttest_scores')
+            
         if not isinstance(pretest, list) or not isinstance(posttest, list) or len(pretest) != len(posttest):
             return jsonify({
                 "status": "error", 
-                "message": "Both pretest_scores and posttest_scores must be lists of equal length."
+                "message": "Both pretest_scores and posttest_scores (or database pre-test/post-test records) must be lists of equal length."
             }), 400
             
         # Parse arrays defensively
@@ -1227,7 +1502,7 @@ def evaluate_thesis():
             t_stat = 0.0
         if math.isnan(p_val) or math.isinf(p_val):
             p_val = 1.0
-
+ 
         # Calculate Cohen's d effect size for paired samples
         mean_diff_d = sum(diffs) / n
         if n > 1:
@@ -1235,16 +1510,16 @@ def evaluate_thesis():
             sd_diff_d = math.sqrt(var_diff_d)
         else:
             sd_diff_d = 0.0
-
+ 
         if sd_diff_d > 0:
             cohens_d = mean_diff_d / sd_diff_d
         else:
             cohens_d = 0.0
-
+ 
         # Handle nan/inf cases for Cohen's d
         if math.isnan(cohens_d) or math.isinf(cohens_d):
             cohens_d = 0.0
-
+ 
         # Determine effect size magnitude interpretation
         abs_d = abs(cohens_d)
         if abs_d < 0.2:
@@ -1258,7 +1533,7 @@ def evaluate_thesis():
             
         significant = p_val < 0.05
         
-        return jsonify({
+        response_data = {
             "status": "success",
             "sample_size": n,
             "mean_pretest": round(mean_pre, 2),
@@ -1271,7 +1546,17 @@ def evaluate_thesis():
             "effect_size_magnitude": effect_magnitude,
             "statistically_significant": bool(significant),
             "hypothesis_result": "Reject Null Hypothesis: Significant improvement detected!" if significant else "Fail to Reject Null Hypothesis: Improvement is not statistically significant."
-        }), 200
+        }
+        
+        if db_queried:
+            response_data["domain_improvements"] = {
+                "spatial_visual_memory": round(posttest[0] - pretest[0], 2),
+                "logical_mathematical": round(posttest[1] - pretest[1], 2),
+                "reflexes_and_focus": round(posttest[2] - pretest[2], 2),
+                "executive_strategy": round(posttest[3] - pretest[3], 2)
+            }
+            
+        return jsonify(response_data), 200
         
     except Exception as e:
         app.logger.error(f"Error in evaluate_thesis: {e}")
