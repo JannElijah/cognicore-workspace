@@ -1562,6 +1562,196 @@ def evaluate_thesis():
         app.logger.error(f"Error in evaluate_thesis: {e}")
         return jsonify({"status": "error", "message": f"Statistical engine error: {str(e)}"}), 500
 
+@app.route('/api/cohort-analytics', methods=['GET'])
+def get_cohort_analytics():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Query matched pre and post scores for research subjects
+        cursor.execute(
+            """
+            SELECT 
+                ca_pre.spatial_visual_score AS pre_sv,
+                ca_pre.logical_math_score AS pre_lm,
+                ca_pre.attention_score AS pre_at,
+                ca_pre.executive_score AS pre_ex,
+                ca_post.spatial_visual_score AS post_sv,
+                ca_post.logical_math_score AS post_lm,
+                ca_post.attention_score AS post_at,
+                ca_post.executive_score AS post_ex
+            FROM users u
+            JOIN cognitive_assessments ca_pre ON u.id = ca_pre.user_id AND ca_pre.assessment_type = 'pre-test'
+            JOIN cognitive_assessments ca_post ON u.id = ca_post.user_id AND ca_post.assessment_type = 'post-test'
+            WHERE u.username LIKE 'research_subject_%'
+            """
+        )
+        rows = cursor.fetchall()
+        conn.close()
+        
+        if not rows:
+            return jsonify({
+                "status": "error",
+                "message": "No research cohort subjects found in database. Please run the seeding script first."
+            }), 404
+            
+        n = len(rows)
+        
+        pre_sv_list = []
+        pre_lm_list = []
+        pre_at_list = []
+        pre_ex_list = []
+        
+        post_sv_list = []
+        post_lm_list = []
+        post_at_list = []
+        post_ex_list = []
+        
+        pre_averages = []
+        post_averages = []
+        
+        for r in rows:
+            pre_sv = safe_float(r['pre_sv'])
+            pre_lm = safe_float(r['pre_lm'])
+            pre_at = safe_float(r['pre_at'])
+            pre_ex = safe_float(r['pre_ex'])
+            
+            post_sv = safe_float(r['post_sv'])
+            post_lm = safe_float(r['post_lm'])
+            post_at = safe_float(r['post_at'])
+            post_ex = safe_float(r['post_ex'])
+            
+            pre_sv_list.append(pre_sv)
+            pre_lm_list.append(pre_lm)
+            pre_at_list.append(pre_at)
+            pre_ex_list.append(pre_ex)
+            
+            post_sv_list.append(post_sv)
+            post_lm_list.append(post_lm)
+            post_at_list.append(post_at)
+            post_ex_list.append(post_ex)
+            
+            pre_averages.append((pre_sv + pre_lm + pre_at + pre_ex) / 4.0)
+            post_averages.append((post_sv + post_lm + post_at + post_ex) / 4.0)
+            
+        # Helper standard deviation
+        def get_mean_std(lst):
+            length = len(lst)
+            if length == 0:
+                return 0.0, 0.0
+            mean = sum(lst) / length
+            if length > 1:
+                var = sum((x - mean) ** 2 for x in lst) / (length - 1)
+                std = var ** 0.5
+            else:
+                std = 0.0
+            return mean, std
+            
+        mean_pre_sv, std_pre_sv = get_mean_std(pre_sv_list)
+        mean_post_sv, std_post_sv = get_mean_std(post_sv_list)
+        
+        mean_pre_lm, std_pre_lm = get_mean_std(pre_lm_list)
+        mean_post_lm, std_post_lm = get_mean_std(post_lm_list)
+        
+        mean_pre_at, std_pre_at = get_mean_std(pre_at_list)
+        mean_post_at, std_post_at = get_mean_std(post_at_list)
+        
+        mean_pre_ex, std_pre_ex = get_mean_std(pre_ex_list)
+        mean_post_ex, std_post_ex = get_mean_std(post_ex_list)
+        
+        overall_pre_mean = sum(pre_averages) / n
+        overall_post_mean = sum(post_averages) / n
+        overall_improvement_rate = ((overall_post_mean - overall_pre_mean) / overall_pre_mean * 100) if overall_pre_mean != 0 else 0.0
+        
+        # Paired t-test
+        import math
+        diffs = [post_averages[i] - pre_averages[i] for i in range(n)]
+        mean_diff = sum(diffs) / n
+        
+        if SCIPY_AVAILABLE:
+            t_stat, p_val = stats.ttest_rel(post_averages, pre_averages)
+        else:
+            var_diff = sum((d - mean_diff) ** 2 for d in diffs) / (n - 1) if n > 1 else 0.0
+            sd_diff = var_diff ** 0.5
+            se_diff = sd_diff / (n ** 0.5) if n > 0 else 0.0
+            t_stat = mean_diff / se_diff if se_diff != 0 else 0.0
+            p_val = calculate_approx_t_p_value(t_stat, n - 1)
+            
+        if math.isnan(t_stat) or math.isinf(t_stat):
+            t_stat = 0.0
+        if math.isnan(p_val) or math.isinf(p_val):
+            p_val = 1.0
+            
+        # Cohen's d for cohort
+        var_diff_d = sum((d - mean_diff) ** 2 for d in diffs) / (n - 1) if n > 1 else 0.0
+        sd_diff_d = var_diff_d ** 0.5
+        cohens_d = mean_diff / sd_diff_d if sd_diff_d > 0 else 0.0
+        
+        if math.isnan(cohens_d) or math.isinf(cohens_d):
+            cohens_d = 0.0
+            
+        abs_d = abs(cohens_d)
+        if abs_d < 0.2:
+            effect_magnitude = "negligible"
+        elif abs_d < 0.5:
+            effect_magnitude = "small"
+        elif abs_d < 0.8:
+            effect_magnitude = "medium"
+        else:
+            effect_magnitude = "large"
+            
+        significant = p_val < 0.05
+        
+        response_data = {
+            "status": "success",
+            "sample_size": n,
+            "overall_pre_mean": round(overall_pre_mean, 2),
+            "overall_post_mean": round(overall_post_mean, 2),
+            "overall_improvement_rate_pct": round(overall_improvement_rate, 2),
+            "cohort_t_statistic": round(t_stat, 4),
+            "cohort_p_value": round(p_val, 6),
+            "cohort_cohens_d": round(cohens_d, 4),
+            "effect_size_magnitude": effect_magnitude,
+            "statistically_significant": bool(significant),
+            "hypothesis_verdict": "Reject Null Hypothesis: Significant improvement detected across the cohort." if significant else "Fail to Reject Null Hypothesis: Improvement is not statistically significant.",
+            "domains": {
+                "spatial_visual_memory": {
+                    "pre_mean": round(mean_pre_sv, 2),
+                    "pre_std": round(std_pre_sv, 2),
+                    "post_mean": round(mean_post_sv, 2),
+                    "post_std": round(std_post_sv, 2),
+                    "improvement_pct": round(((mean_post_sv - mean_pre_sv) / mean_pre_sv * 100) if mean_pre_sv != 0 else 0.0, 2)
+                },
+                "logical_mathematical": {
+                    "pre_mean": round(mean_pre_lm, 2),
+                    "pre_std": round(std_pre_lm, 2),
+                    "post_mean": round(mean_post_lm, 2),
+                    "post_std": round(std_post_lm, 2),
+                    "improvement_pct": round(((mean_post_lm - mean_pre_lm) / mean_pre_lm * 100) if mean_pre_lm != 0 else 0.0, 2)
+                },
+                "reflexes_and_focus": {
+                    "pre_mean": round(mean_pre_at, 2),
+                    "pre_std": round(std_pre_at, 2),
+                    "post_mean": round(mean_post_at, 2),
+                    "post_std": round(std_post_at, 2),
+                    "improvement_pct": round(((mean_post_at - mean_pre_at) / mean_pre_at * 100) if mean_pre_at != 0 else 0.0, 2)
+                },
+                "executive_strategy": {
+                    "pre_mean": round(mean_pre_ex, 2),
+                    "pre_std": round(std_pre_ex, 2),
+                    "post_mean": round(mean_post_ex, 2),
+                    "post_std": round(std_post_ex, 2),
+                    "improvement_pct": round(((mean_post_ex - mean_pre_ex) / mean_pre_ex * 100) if mean_pre_ex != 0 else 0.0, 2)
+                }
+            }
+        }
+        
+        return jsonify(response_data), 200
+        
+    except Exception as e:
+        app.logger.error(f"Error in get_cohort_analytics: {e}")
+        return jsonify({"status": "error", "message": f"Cohort evaluation error: {str(e)}"}), 500
+
 @app.route('/api/iso-evaluations', methods=['POST'])
 def submit_iso_evaluation():
     try:
