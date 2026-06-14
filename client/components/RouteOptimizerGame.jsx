@@ -36,6 +36,9 @@ export default function RouteOptimizerGame({
             if (data.status === 'success') {
                 setSessionId(data.session_id);
                 setDdaParameters(data.dda_parameters);
+                if (data.cognitive_profile) {
+                    setCognitiveProfile(data.cognitive_profile);
+                }
                 setGameState('PLAYING');
             } else {
                 throw new Error(data.message || 'Unknown server error');

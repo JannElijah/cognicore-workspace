@@ -1046,6 +1046,23 @@ def start_session():
                     "UPDATE game_sessions SET current_smooth_difficulty = ? WHERE id = ?",
                     (float(initial_difficulty), session_id)
                 )
+                
+                # Fetch existing cognitive profile archetype if available
+                cursor.execute(
+                    "SELECT archetype_name, confidence_score FROM cognitive_profiles WHERE user_id = ?",
+                    (user_id,)
+                )
+                prof = cursor.fetchone()
+                if prof:
+                    cognitive_profile = {
+                        "archetype": prof["archetype_name"],
+                        "confidence_score": prof["confidence_score"]
+                    }
+                else:
+                    cognitive_profile = {
+                        "archetype": "Initializing...",
+                        "confidence_score": 0.0
+                    }
         finally:
             conn.close()
         
@@ -1056,7 +1073,8 @@ def start_session():
             "status": "success",
             "session_id": session_id,
             "user_id": user_id,
-            "dda_parameters": initial_params
+            "dda_parameters": initial_params,
+            "cognitive_profile": cognitive_profile
         }), 201
         
     except Exception as e:

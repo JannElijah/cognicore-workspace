@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
 // ── Static topology templates per node count ──────────────────────────────
 // Coordinates target 800x600 canvas. Graph area: roughly y 155–505.
@@ -77,6 +78,10 @@ export default class RouteOptimizerScene extends Phaser.Scene {
     }
 
     init(data) {
+        const profile = data.cognitiveProfile || {};
+        this.archetype = profile.archetype || 'Initializing...';
+        this.archetypeConfidence = profile.confidence_score || 0.0;
+        this.isTutorialActive = true;
         this.sessionId  = data.sessionId  || null;
         this.apiUrl     = data.apiUrl     || 'http://127.0.0.1:5000';
         this.onGameOver = data.onGameOver || null;
@@ -183,7 +188,10 @@ export default class RouteOptimizerScene extends Phaser.Scene {
         );
         this.resetBtnGfx.on('pointerover', () => this._drawResetBtn(true));
         this.resetBtnGfx.on('pointerout',  () => this._drawResetBtn(false));
-        this.resetBtnGfx.on('pointerdown', () => this.resetPath());
+        this.resetBtnGfx.on('pointerdown', () => {
+            if (this.isTutorialActive) return;
+            this.resetPath();
+        });
         this.resetBtnLabel = this.add.text(W / 2, 552, 'RESET PATH', {
             fontFamily: 'system-ui, sans-serif',
             fontSize: '12px', fontWeight: '700', fill: '#22c55e'
@@ -209,6 +217,7 @@ export default class RouteOptimizerScene extends Phaser.Scene {
 
         // Micro-behaviour
         this.input.on('pointerdown', (ptr, gos) => {
+            if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gos.length === 0) {
                 const now = this.time.now;
@@ -218,15 +227,14 @@ export default class RouteOptimizerScene extends Phaser.Scene {
         });
         this.input.on('pointermove', () => this.registerFirstInteraction());
 
-        // Overall countdown
-        this.countdownTimer = this.time.addEvent({
-            delay: 1000,
-            callback: this.updateOverallTimer,
-            callbackScope: this,
-            loop: true
+        createMlHud(this, 0x10b981);
+        createTutorialOverlay(this, {
+            title: "ROUTE OPTIMIZER",
+            domain: "executive_strategy",
+            instructions: "• Connect all terminal hubs using the shortest possible path network.\n\n• DDA scales node cluster sizes dynamically.\n\n• Track your path efficiency to optimize routing performance.",
+            themeColorHex: 0x10b981,
+            onStart: () => this.startGameplay()
         });
-
-        this.startNewRound();
     }
 
     update() {
@@ -426,6 +434,7 @@ export default class RouteOptimizerScene extends Phaser.Scene {
                 if (this.gamePhase === 'PLAYING') this._updatePathVisual();
             });
             circle.on('pointerdown', () => {
+                if (this.isTutorialActive) return;
                 if (this.gamePhase !== 'PLAYING') return;
                 this.handleNodeClick(id);
             });
@@ -759,6 +768,11 @@ export default class RouteOptimizerScene extends Phaser.Scene {
                     this.maxWeight       = p.max_weight;
                     this.roundTimeLimit  = p.time_limit;
                     this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);
+                    if (data.cognitive_profile) {
+                        this.archetype = data.cognitive_profile.archetype || this.archetype;
+                        this.archetypeConfidence = data.cognitive_profile.confidence_score || this.archetypeConfidence;
+                    }
+                    updateMlHud(this);
                     if (changed) this._showFloat(`DIFFICULTY ADJUSTED: LEVEL ${this.difficultyLevel}`, '#a78bfa');
                 }
             }

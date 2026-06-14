@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
 export default class SequenceDecoderScene extends Phaser.Scene {
     constructor() {
@@ -6,6 +7,10 @@ export default class SequenceDecoderScene extends Phaser.Scene {
     }
 
     init(data) {
+        const profile = data.cognitiveProfile || {};
+        this.archetype = profile.archetype || 'Initializing...';
+        this.archetypeConfidence = profile.confidence_score || 0.0;
+        this.isTutorialActive = true;
         this.sessionId   = data.sessionId  || null;
         this.apiUrl      = data.apiUrl     || 'http://127.0.0.1:5000';
         this.onGameOver  = data.onGameOver || null;
@@ -116,19 +121,18 @@ export default class SequenceDecoderScene extends Phaser.Scene {
             fontSize: '14px', fill: '#64748b'
         }).setOrigin(0.5, 0);
 
-        // ── Overall countdown timer
-        this.countdownTimer = this.time.addEvent({
-            delay: 1000,
-            callback: this.updateOverallTimer,
-            callbackScope: this,
-            loop: true
+        createMlHud(this, 0xf59e0b);
+        createTutorialOverlay(this, {
+            title: "SEQUENCE DECODER",
+            domain: "logical_mathematical",
+            instructions: "• Unravel numerical logic patterns in the sequence.\n\n• Click or enter the next number in the pattern progression.\n\n• Speed bonuses scale with rapid logical inference times.",
+            themeColorHex: 0xf59e0b,
+            onStart: () => this.startGameplay()
         });
-
-        // Start first puzzle
-        this.startNewPuzzle();
 
         // Micro-behaviour listeners
         this.input.on('pointerdown', (pointer, gameObjects) => {
+            if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gameObjects.length === 0) {
                 const now = this.time.now;
@@ -520,6 +524,7 @@ export default class SequenceDecoderScene extends Phaser.Scene {
             });
 
             bg.on('pointerdown', (pointer, lx, ly, event) => {
+                if (this.isTutorialActive) return;
                 if (event) event.stopPropagation();
                 this.handleOptionClick(val, bg, txt, BTN_W, BTN_H);
             });
@@ -750,6 +755,11 @@ export default class SequenceDecoderScene extends Phaser.Scene {
                     this.roundTimeLimit   = p.time_limit;
 
                     this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);
+                    if (data.cognitive_profile) {
+                        this.archetype = data.cognitive_profile.archetype || this.archetype;
+                        this.archetypeConfidence = data.cognitive_profile.confidence_score || this.archetypeConfidence;
+                    }
+                    updateMlHud(this);
 
                     if (changed) {
                         this.showFloatingFeedback(

@@ -34,6 +34,11 @@ export default class SpeedTapScene extends Phaser.Scene {
         this.distractorRatio = dda.distractor_ratio || 0.0;
         this.maxConcurrentObjects = dda.object_count || 1;
 
+        // Cognitive Profile Archetype
+        const profile = data.cognitiveProfile || {};
+        this.archetype = profile.archetype || 'Initializing...';
+        this.archetypeConfidence = profile.confidence_score || 0.0;
+
         // Session Stats
         this.score = 0;
         this.hits = 0;
@@ -57,6 +62,9 @@ export default class SpeedTapScene extends Phaser.Scene {
         this.firstInteractionLatency = 0;
         this.spamClickCount = 0;
         this.lastMissTime = 0;
+
+        // Tutorial gating
+        this.isTutorialActive = true;
     }
 
     create() {
@@ -101,8 +109,8 @@ export default class SpeedTapScene extends Phaser.Scene {
             fill: '#ffffff'
         }).setOrigin(0.5, 0);
 
-        // Background click handler to register "misses" (clicking blank space)
         this.input.on('pointerdown', (pointer, gameObjects) => {
+            if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gameObjects.length === 0) {
                 this.registerMiss();
@@ -115,24 +123,21 @@ export default class SpeedTapScene extends Phaser.Scene {
         });
 
         this.input.on('pointermove', () => {
+            if (this.isTutorialActive) return;
             this.registerFirstInteraction();
         });
 
-        // 3. Game Loops and Timers
-        this.spawnTimerEvent = this.time.addEvent({
-            delay: this.spawnDelay,
-            callback: this.spawnObject,
-            callbackScope: this,
-            loop: true
+        // 4. ML Feedback HUD setup
+        this.mlHudText = this.add.text(20, height - 35, '', {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '13px',
+            fontWeight: '600',
+            fill: '#c084fc'
         });
+        this.updateMlHud();
 
-        // Countdown timer (runs every second)
-        this.time.addEvent({
-            delay: 1000,
-            callback: this.updateTimer,
-            callbackScope: this,
-            loop: true
-        });
+        // 5. Build and gate with Tutorial Overlay
+        this.drawTutorialOverlay(width, height);
     }
 
     updateTimer() {
@@ -219,6 +224,15 @@ export default class SpeedTapScene extends Phaser.Scene {
             scale: 1,
             duration: 200,
             ease: 'Back.easeOut'
+        });
+
+        // Serious Game Improvement: Target shrinking over time
+        this.tweens.add({
+            targets: container,
+            scale: 0.15,
+            delay: 200,
+            duration: this.targetLifespan - 200,
+            ease: 'Linear'
         });
 
         // Set spawn metadata
@@ -415,11 +429,18 @@ export default class SpeedTapScene extends Phaser.Scene {
                 
                 // Alert player if difficulty changed
                 if (this.difficultyLevel !== params.difficulty_level) {
+                    const direction = params.difficulty_level > this.difficultyLevel ? 'INCREASED' : 'ADJUSTED';
                     this.difficultyLevel = params.difficulty_level;
                     this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);
                     
-                    const direction = params.difficulty_level > this.difficultyLevel ? 'INCREASED' : 'ADJUSTED';
                     this.showFloatingText(this.scale.width / 2, this.scale.height / 2, `DIFFICULTY ${direction}!`, '#a855f7');
+                }
+
+                // Update archetype if returned
+                if (data.cognitive_profile) {
+                    this.archetype = data.cognitive_profile.archetype || this.archetype;
+                    this.archetypeConfidence = data.cognitive_profile.confidence_score || this.archetypeConfidence;
+                    this.updateMlHud();
                 }
 
                 // Update real-time loop variables on the fly
@@ -443,6 +464,134 @@ export default class SpeedTapScene extends Phaser.Scene {
             }
         } catch (error) {
             console.warn('[DDA Bridge] DDA API call failed. Reverting to local parameters.', error);
+        }
+    }
+
+    drawTutorialOverlay(width, height) {
+        // Semi-transparent overlay blocking interaction
+        const overlayBg = this.add.graphics();
+        overlayBg.fillStyle(0x09090b, 0.88);
+        overlayBg.fillRect(0, 0, width, height);
+        overlayBg.setInteractive(new Phaser.Geom.Rectangle(0, 0, width, height), Phaser.Geom.Rectangle.Contains);
+
+        const modal = this.add.graphics();
+        const modalW = 550;
+        const modalH = 400;
+        const modalX = (width - modalW) / 2;
+        const modalY = (height - modalH) / 2;
+
+        modal.lineStyle(2.5, 0xa855f7, 0.95);
+        modal.fillStyle(0x0f172a, 0.96);
+        modal.fillRoundedRect(modalX, modalY, modalW, modalH, 16);
+        modal.strokeRoundedRect(modalX, modalY, modalW, modalH, 16);
+
+        const title = this.add.text(width / 2, modalY + 40, 'SPEED TAP', {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '32px',
+            fontWeight: 'bold',
+            fill: '#a855f7',
+            letterSpacing: '0.1em'
+        }).setOrigin(0.5);
+
+        const subtitle = this.add.text(width / 2, modalY + 80, 'COGNITIVE DOMAIN: REFLEX & ATTENTIONAL FOCUS', {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '13px',
+            fontWeight: '700',
+            fill: '#38bdf8'
+        }).setOrigin(0.5);
+
+        const divider = this.add.graphics();
+        divider.lineStyle(1.5, 0x1e293b, 1);
+        divider.lineBetween(modalX + 40, modalY + 110, modalX + modalW - 40, modalY + 110);
+
+        const instructions = this.add.text(width / 2, modalY + 140, 
+            "• Tap the glowing cyan target circles as fast as possible.\n\n" +
+            "• DO NOT click the neon-orange triangles (false alarms/penalties).\n\n" +
+            "• Targets shrink over time; click before they get too small!\n\n" +
+            "• Rapid click spamming on blank space degrades accuracy.", {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '15px',
+            fill: '#94a3b8',
+            lineSpacing: 8
+        }).setOrigin(0.5, 0);
+
+        const btnW = 220;
+        const btnH = 50;
+        const btnX = width / 2;
+        const btnY = modalY + modalH - 60;
+
+        const btnBg = this.add.graphics();
+        btnBg.fillStyle(0xa855f7, 0.85);
+        btnBg.lineStyle(2, 0xffffff, 0.9);
+        btnBg.fillRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+        btnBg.strokeRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+
+        const btnText = this.add.text(btnX, btnY, 'LAUNCH MODULE', {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            fill: '#ffffff'
+        }).setOrigin(0.5);
+
+        btnBg.setInteractive(new Phaser.Geom.Rectangle(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH), Phaser.Geom.Rectangle.Contains);
+        
+        btnBg.on('pointerover', () => {
+            btnBg.clear();
+            btnBg.fillStyle(0x7c3aed, 1);
+            btnBg.lineStyle(2.5, 0xffffff, 1);
+            btnBg.fillRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+            btnBg.strokeRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+        });
+
+        btnBg.on('pointerout', () => {
+            btnBg.clear();
+            btnBg.fillStyle(0xa855f7, 0.85);
+            btnBg.lineStyle(2, 0xffffff, 0.9);
+            btnBg.fillRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+            btnBg.strokeRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+        });
+
+        btnBg.on('pointerdown', () => {
+            overlayBg.destroy();
+            modal.destroy();
+            title.destroy();
+            subtitle.destroy();
+            divider.destroy();
+            instructions.destroy();
+            btnBg.destroy();
+            btnText.destroy();
+
+            this.isTutorialActive = false;
+            this.startGameplay();
+        });
+    }
+
+    startGameplay() {
+        this.stimulusSpawnTime = this.time.now;
+        
+        this.spawnTimerEvent = this.time.addEvent({
+            delay: this.spawnDelay,
+            callback: this.spawnObject,
+            callbackScope: this,
+            loop: true
+        });
+
+        this.time.addEvent({
+            delay: 1000,
+            callback: this.updateTimer,
+            callbackScope: this,
+            loop: true
+        });
+
+        this.spawnObject();
+    }
+
+    updateMlHud() {
+        if (this.mlHudText) {
+            const conf = Math.round(this.archetypeConfidence * 100);
+            this.mlHudText.setText(
+                `ML FEEDBACK HUD | COGNITIVE ARCHETYPE: ${this.archetype.toUpperCase()} (${conf}% CONFIDENCE) | DDA: LVL ${this.difficultyLevel.toFixed(1)}`
+            );
         }
     }
 

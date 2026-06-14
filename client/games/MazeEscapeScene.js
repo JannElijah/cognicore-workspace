@@ -18,6 +18,11 @@ export default class MazeEscapeScene extends Phaser.Scene {
         this.maxMoves = dda.max_moves || 20;
         this.blockedRatio = dda.blocked_ratio || 0.1;
 
+        // Cognitive Profile Archetype
+        const profile = data.cognitiveProfile || {};
+        this.archetype = profile.archetype || 'Initializing...';
+        this.archetypeConfidence = profile.confidence_score || 0.0;
+
         // Session Stats
         this.score = 0;
         this.hits = 0; // successfully solved mazes
@@ -45,6 +50,18 @@ export default class MazeEscapeScene extends Phaser.Scene {
         this.firstInteractionLatency = 0;
         this.spamClickCount = 0;
         this.lastMissTime = 0;
+
+        // Input buffering
+        this.inputQueue = [];
+
+        // Hazard barrier states
+        this.hazardCellA = null;
+        this.hazardCellB = null;
+        this.activeHazardCell = null;
+        this.hazardTimerEvent = null;
+
+        // Tutorial Gating
+        this.isTutorialActive = true;
     }
 
     create() {
@@ -103,53 +120,31 @@ export default class MazeEscapeScene extends Phaser.Scene {
             letterSpacing: '0.05em'
         }).setOrigin(0.5, 0);
 
-        // Keyboard Controls
+        // Keyboard Controls (Buffer moves in the input queue)
         this.input.keyboard.on('keydown', (event) => {
-            if (this.gamePhase !== 'PLAYING' || this.isMoving) return;
+            if (this.gamePhase !== 'PLAYING' || this.isTutorialActive) return;
 
-            let dx = 0;
-            let dy = 0;
             const key = event.key.toLowerCase();
+            let direction = null;
             
             if (key === 'arrowup' || key === 'w') {
-                dy = -1;
+                direction = 'up';
             } else if (key === 'arrowdown' || key === 's') {
-                dy = 1;
+                direction = 'down';
             } else if (key === 'arrowleft' || key === 'a') {
-                dx = -1;
+                direction = 'left';
             } else if (key === 'arrowright' || key === 'd') {
-                dx = 1;
+                direction = 'right';
             }
 
-            if (dx !== 0 || dy !== 0) {
-                const nx = this.playerGridX + dx;
-                const ny = this.playerGridY + dy;
-
-                if (nx >= 0 && nx < this.gridSize && ny >= 0 && ny < this.gridSize) {
-                    const cell = this.gridCells[ny][nx];
-                    if (!cell.isBlocked) {
-                        this.movePlayerAlongPath([[this.playerGridX, this.playerGridY], [nx, ny]]);
-                    } else {
-                        // Tiny shake to signal blocked
-                        this.cameras.main.shake(50, 0.002);
-                    }
-                }
+            if (direction) {
+                this.inputQueue.push(direction);
             }
         });
 
-        // Start Countdown Timer
-        this.countdownTimer = this.time.addEvent({
-            delay: 1000,
-            callback: this.updateTimer,
-            callbackScope: this,
-            loop: true
-        });
-
-        // Draw first maze
-        this.startNewPuzzle();
-
-        // Micro-behavior tracking listeners
+        // Pointer tracking
         this.input.on('pointerdown', (pointer, gameObjects) => {
+            if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gameObjects.length === 0) {
                 const now = this.time.now;
@@ -161,8 +156,21 @@ export default class MazeEscapeScene extends Phaser.Scene {
         });
 
         this.input.on('pointermove', () => {
+            if (this.isTutorialActive) return;
             this.registerFirstInteraction();
         });
+
+        // ML Feedback HUD setup
+        this.mlHudText = this.add.text(20, height - 35, '', {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '13px',
+            fontWeight: '600',
+            fill: '#10b981'
+        });
+        this.updateMlHud();
+
+        // Draw visual gate
+        this.drawTutorialOverlay(width, height);
     }
 
     updateTimer() {
@@ -189,6 +197,16 @@ export default class MazeEscapeScene extends Phaser.Scene {
         this.stimulusSpawnTime = this.time.now;
         this.firstInteractionRegistered = false;
         this.firstInteractionLatency = 0;
+
+        // Reset hazards and input queue
+        if (this.hazardTimerEvent) {
+            this.hazardTimerEvent.remove();
+            this.hazardTimerEvent = null;
+        }
+        this.hazardCellA = null;
+        this.hazardCellB = null;
+        this.activeHazardCell = null;
+        this.inputQueue = [];
 
         const width = this.scale.width;
 
@@ -283,11 +301,13 @@ export default class MazeEscapeScene extends Phaser.Scene {
                 if (!isBlocked) {
                     bg.setInteractive(new Phaser.Geom.Rectangle(-cellSize / 2, -cellSize / 2, cellSize, cellSize), Phaser.Geom.Rectangle.Contains);
                     bg.on('pointerdown', (pointer, localX, localY, event) => {
+                        if (this.isTutorialActive) return;
                         if (event) event.stopPropagation();
                         this.handleCellClick(c, r);
                     });
 
                     bg.on('pointerover', () => {
+                        if (this.isTutorialActive) return;
                         if (this.gamePhase === 'PLAYING' && !this.isMoving) {
                             bg.lineStyle(2, 0x38bdf8, 0.7); // Cyan highlight border
                             bg.strokeRoundedRect(-cellSize / 2 + 1, -cellSize / 2 + 1, cellSize - 2, cellSize - 2, 4);
@@ -295,6 +315,7 @@ export default class MazeEscapeScene extends Phaser.Scene {
                     });
 
                     bg.on('pointerout', () => {
+                        if (this.isTutorialActive) return;
                         if (this.gamePhase === 'PLAYING') {
                             bg.clear();
                             bg.fillStyle(0x1e293b, 0.35);
@@ -342,11 +363,36 @@ export default class MazeEscapeScene extends Phaser.Scene {
         this.playerSprite.lineStyle(3, 0x22d3ee, 0.85); // glowing border
         this.playerSprite.strokeCircle(0, 0, cellSize * 0.29);
 
+        // Setup dynamic shifting hazard barrier at level 3+
+        if (this.difficultyLevel >= 3) {
+            let foundA = null;
+            let foundB = null;
+            const midRow = Math.floor(this.gridSize / 2);
+            for (let col = 1; col < this.gridSize - 2; col++) {
+                if (!this.gridCells[midRow][col].isBlocked && !this.gridCells[midRow][col+1].isBlocked) {
+                    foundA = this.gridCells[midRow][col];
+                    foundB = this.gridCells[midRow][col+1];
+                    break;
+                }
+            }
+            if (foundA && foundB) {
+                this.hazardCellA = foundA;
+                this.hazardCellB = foundB;
+                this.activeHazardCell = this.hazardCellA;
+                this.hazardTimerEvent = this.time.addEvent({
+                    delay: 2000,
+                    callback: this.toggleHazardBarrier,
+                    callbackScope: this,
+                    loop: true
+                });
+            }
+        }
+
         this.puzzleStartTime = this.time.now;
     }
 
     handleCellClick(tx, ty) {
-        if (this.gamePhase !== 'PLAYING' || this.isMoving) return;
+        if (this.gamePhase !== 'PLAYING' || this.isMoving || this.isTutorialActive) return;
 
         // Pathfinder search
         const path = this.findBFSPath(this.playerGridX, this.playerGridY, tx, ty);
@@ -610,6 +656,12 @@ export default class MazeEscapeScene extends Phaser.Scene {
                     if (difficultyChanged) {
                         this.showFloatingFeedback(`DIFFICULTY ADJUSTED: LEVEL ${this.difficultyLevel}`, '#a855f7');
                     }
+
+                    if (data.cognitive_profile) {
+                        this.archetype = data.cognitive_profile.archetype || this.archetype;
+                        this.archetypeConfidence = data.cognitive_profile.confidence_score || this.archetypeConfidence;
+                        this.updateMlHud();
+                    }
                 }
             }
         } catch (e) {
@@ -621,6 +673,7 @@ export default class MazeEscapeScene extends Phaser.Scene {
 
     endGame() {
         if (this.countdownTimer) this.countdownTimer.remove();
+        if (this.hazardTimerEvent) this.hazardTimerEvent.remove();
 
         this.gridCells.forEach(row => {
             row.forEach(cell => {
@@ -648,6 +701,186 @@ export default class MazeEscapeScene extends Phaser.Scene {
                 hesitation_ms: this.firstInteractionLatency || 0,
                 spam_click_count: this.spamClickCount
             });
+        }
+    }
+
+    update() {
+        // Input queue move buffering processor
+        if (this.gamePhase === 'PLAYING' && !this.isMoving && !this.isTutorialActive && this.inputQueue && this.inputQueue.length > 0) {
+            const dir = this.inputQueue.shift();
+            let dx = 0;
+            let dy = 0;
+            if (dir === 'up') dy = -1;
+            else if (dir === 'down') dy = 1;
+            else if (dir === 'left') dx = -1;
+            else if (dir === 'right') dx = 1;
+
+            const nx = this.playerGridX + dx;
+            const ny = this.playerGridY + dy;
+
+            if (nx >= 0 && nx < this.gridSize && ny >= 0 && ny < this.gridSize) {
+                const cell = this.gridCells[ny][nx];
+                if (!cell.isBlocked) {
+                    this.movePlayerAlongPath([[this.playerGridX, this.playerGridY], [nx, ny]]);
+                } else {
+                    this.cameras.main.shake(50, 0.002);
+                    this.inputQueue = []; // Clear queue on wall collision
+                }
+            } else {
+                this.inputQueue = []; // Clear queue on bounds collision
+            }
+        }
+    }
+
+    toggleHazardBarrier() {
+        if (this.gamePhase !== 'PLAYING' || this.isTutorialActive) return;
+
+        // Clear previous barrier cell block
+        if (this.activeHazardCell) {
+            this.activeHazardCell.isBlocked = false;
+            const bg = this.activeHazardCell.bg;
+            const cellSize = 360 / this.gridSize;
+            bg.clear();
+            bg.fillStyle(0x1e293b, 0.35);
+            bg.lineStyle(1, 0xffffff, 0.05);
+            bg.fillRoundedRect(-cellSize / 2 + 1, -cellSize / 2 + 1, cellSize - 2, cellSize - 2, 4);
+            bg.strokeRoundedRect(-cellSize / 2 + 1, -cellSize / 2 + 1, cellSize - 2, cellSize - 2, 4);
+        }
+
+        // Toggle active cell
+        this.activeHazardCell = (this.activeHazardCell === this.hazardCellA) ? this.hazardCellB : this.hazardCellA;
+
+        // Block the new hazard cell (but do not trap the player if they stand on it)
+        if (this.activeHazardCell && (this.activeHazardCell.col !== this.playerGridX || this.activeHazardCell.row !== this.playerGridY)) {
+            this.activeHazardCell.isBlocked = true;
+            const bg = this.activeHazardCell.bg;
+            const cellSize = 360 / this.gridSize;
+            bg.clear();
+            bg.fillStyle(0x991b1b, 0.7); // Bright red hazard block
+            bg.lineStyle(2, 0xef4444, 0.95);
+            bg.fillRoundedRect(-cellSize / 2 + 1, -cellSize / 2 + 1, cellSize - 2, cellSize - 2, 4);
+            bg.strokeRoundedRect(-cellSize / 2 + 1, -cellSize / 2 + 1, cellSize - 2, cellSize - 2, 4);
+
+            this.showFloatingFeedback('BARRIER SHIFTED!', '#ef4444');
+        }
+    }
+
+    drawTutorialOverlay(width, height) {
+        // Semi-transparent blocking overlay
+        const overlayBg = this.add.graphics();
+        overlayBg.fillStyle(0x09090b, 0.88);
+        overlayBg.fillRect(0, 0, width, height);
+        overlayBg.setInteractive(new Phaser.Geom.Rectangle(0, 0, width, height), Phaser.Geom.Rectangle.Contains);
+
+        const modal = this.add.graphics();
+        const modalW = 550;
+        const modalH = 400;
+        const modalX = (width - modalW) / 2;
+        const modalY = (height - modalH) / 2;
+
+        modal.lineStyle(2.5, 0x10b981, 0.95);
+        modal.fillStyle(0x0f172a, 0.96);
+        modal.fillRoundedRect(modalX, modalY, modalW, modalH, 16);
+        modal.strokeRoundedRect(modalX, modalY, modalW, modalH, 16);
+
+        const title = this.add.text(width / 2, modalY + 40, 'MAZE ESCAPE', {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '32px',
+            fontWeight: 'bold',
+            fill: '#10b981',
+            letterSpacing: '0.1em'
+        }).setOrigin(0.5);
+
+        const subtitle = this.add.text(width / 2, modalY + 80, 'COGNITIVE DOMAIN: EXECUTIVE STRATEGY', {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '13px',
+            fontWeight: '700',
+            fill: '#a855f7'
+        }).setOrigin(0.5);
+
+        const divider = this.add.graphics();
+        divider.lineStyle(1.5, 0x1e293b, 1);
+        divider.lineBetween(modalX + 40, modalY + 110, modalX + modalW - 40, modalY + 110);
+
+        const instructions = this.add.text(width / 2, modalY + 140, 
+            "• Guide the glowing cyan player orb to the golden EXIT cell.\n\n" +
+            "• Controls: Use WASD/Arrow keys or click adjacent cells directly.\n\n" +
+            "• Inputs are buffered in a queue for extremely fast movement responses.\n\n" +
+            "• Watch out for moving barriers that shift path blocks at difficulty level 3+.", {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '15px',
+            fill: '#94a3b8',
+            lineSpacing: 8
+        }).setOrigin(0.5, 0);
+
+        const btnW = 220;
+        const btnH = 50;
+        const btnX = width / 2;
+        const btnY = modalY + modalH - 60;
+
+        const btnBg = this.add.graphics();
+        btnBg.fillStyle(0x10b981, 0.85);
+        btnBg.lineStyle(2, 0xffffff, 0.9);
+        btnBg.fillRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+        btnBg.strokeRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+
+        const btnText = this.add.text(btnX, btnY, 'LAUNCH MODULE', {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            fill: '#ffffff'
+        }).setOrigin(0.5);
+
+        btnBg.setInteractive(new Phaser.Geom.Rectangle(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH), Phaser.Geom.Rectangle.Contains);
+        
+        btnBg.on('pointerover', () => {
+            btnBg.clear();
+            btnBg.fillStyle(0x059669, 1);
+            btnBg.lineStyle(2.5, 0xffffff, 1);
+            btnBg.fillRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+            btnBg.strokeRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+        });
+
+        btnBg.on('pointerout', () => {
+            btnBg.clear();
+            btnBg.fillStyle(0x10b981, 0.85);
+            btnBg.lineStyle(2, 0xffffff, 0.9);
+            btnBg.fillRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+            btnBg.strokeRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+        });
+
+        btnBg.on('pointerdown', () => {
+            overlayBg.destroy();
+            modal.destroy();
+            title.destroy();
+            subtitle.destroy();
+            divider.destroy();
+            instructions.destroy();
+            btnBg.destroy();
+            btnText.destroy();
+
+            this.isTutorialActive = false;
+            this.startGameplay();
+        });
+    }
+
+    startGameplay() {
+        this.countdownTimer = this.time.addEvent({
+            delay: 1000,
+            callback: this.updateTimer,
+            callbackScope: this,
+            loop: true
+        });
+
+        this.startNewPuzzle();
+    }
+
+    updateMlHud() {
+        if (this.mlHudText) {
+            const conf = Math.round(this.archetypeConfidence * 100);
+            this.mlHudText.setText(
+                `ML FEEDBACK HUD | COGNITIVE ARCHETYPE: ${this.archetype.toUpperCase()} (${conf}% CONFIDENCE) | DDA: LVL ${this.difficultyLevel.toFixed(1)}`
+            );
         }
     }
 }

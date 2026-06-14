@@ -10,6 +10,7 @@
  * ================================================================================
  */
 import Phaser from 'phaser';
+import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
 export default class StroopShiftScene extends Phaser.Scene {
     constructor() {
@@ -17,6 +18,10 @@ export default class StroopShiftScene extends Phaser.Scene {
     }
 
     init(data) {
+        const profile = data.cognitiveProfile || {};
+        this.archetype = profile.archetype || 'Initializing...';
+        this.archetypeConfidence = profile.confidence_score || 0.0;
+        this.isTutorialActive = true;
         // Core configurations passed from React wrapper
         this.sessionId = data.sessionId || null;
         this.apiUrl = data.apiUrl || 'http://127.0.0.1:5000';
@@ -179,12 +184,14 @@ export default class StroopShiftScene extends Phaser.Scene {
             });
 
             btnBg.on('pointerdown', () => {
+                if (this.isTutorialActive) return;
                 this.handleColorSelection(color.name);
             });
         });
 
         // 4. Global Input Listeners (Hesitation & Spam Clicks)
         this.input.on('pointerdown', (pointer, gameObjects) => {
+            if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gameObjects.length === 0) {
                 const now = this.time.now;
@@ -196,18 +203,17 @@ export default class StroopShiftScene extends Phaser.Scene {
         });
 
         this.input.on('pointermove', () => {
+            if (this.isTutorialActive) return;
             this.registerFirstInteraction();
         });
 
-        // 5. Start Game Cycles
-        this.spawnWord();
-
-        // 30 seconds game countdown timer
-        this.countdownTimer = this.time.addEvent({
-            delay: 1000,
-            callback: this.updateCountdown,
-            callbackScope: this,
-            loop: true
+        createMlHud(this, 0xa855f7);
+        createTutorialOverlay(this, {
+            title: "STROOP SHIFT",
+            domain: "reflexes_and_focus",
+            instructions: "• Identify matching ink color vs word text meaning.\n\n• Respond according to the dynamic command rule on screen.\n\n• Shift attention quickly as rules invert in real-time.",
+            themeColorHex: 0xa855f7,
+            onStart: () => this.startGameplay()
         });
     }
 
@@ -500,6 +506,11 @@ export default class StroopShiftScene extends Phaser.Scene {
                 this.dynamicTextSpin = params.dynamic_text_spin;
                 this.distractorFlashes = params.distractor_flashes;
                 
+                if (data.cognitive_profile) {
+                    this.archetype = data.cognitive_profile.archetype || this.archetype;
+                    this.archetypeConfidence = data.cognitive_profile.confidence_score || this.archetypeConfidence;
+                }
+                updateMlHud(this);
                 console.log('[DDA StroopShift] Updated parameters:', params);
             }
         } catch (error) {

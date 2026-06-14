@@ -10,6 +10,7 @@
  * ================================================================================
  */
 import Phaser from 'phaser';
+import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
 export default class MentalFlexScene extends Phaser.Scene {
     constructor() {
@@ -17,6 +18,10 @@ export default class MentalFlexScene extends Phaser.Scene {
     }
 
     init(data) {
+        const profile = data.cognitiveProfile || {};
+        this.archetype = profile.archetype || 'Initializing...';
+        this.archetypeConfidence = profile.confidence_score || 0.0;
+        this.isTutorialActive = true;
         // Core configuration passed from React
         this.sessionId = data.sessionId || null;
         this.apiUrl = data.apiUrl || 'http://127.0.0.1:5000';
@@ -144,27 +149,18 @@ export default class MentalFlexScene extends Phaser.Scene {
         this.currentRule = this.rulesPool[Phaser.Math.Between(0, this.rulesPool.length - 1)];
         this.updateRuleDisplay();
         
-        // Spawn cards
-        this.spawnCards();
-
-        // Global countdown timer
-        this.countdownTimer = this.time.addEvent({
-            delay: 1000,
-            callback: this.updateCountdown,
-            callbackScope: this,
-            loop: true
-        });
-
-        // Round countdown ticker (runs every 10ms for smooth bar updates)
-        this.roundTicker = this.time.addEvent({
-            delay: 10,
-            callback: this.tickRoundTime,
-            callbackScope: this,
-            loop: true
+        createMlHud(this, 0xf59e0b);
+        createTutorialOverlay(this, {
+            title: "MENTAL FLEX",
+            domain: "logical_mathematical",
+            instructions: "• Sort cards dynamically based on the changing matching rule.\n\n• Pay attention to the ACTIVE rule at the top (Color, Shape, or Count).\n\n• Minimize shift latency when switching sorting criteria.",
+            themeColorHex: 0xf59e0b,
+            onStart: () => this.startGameplay()
         });
 
         // Input listeners for spam click and first interactions
         this.input.on('pointerdown', (pointer, gameObjects) => {
+            if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gameObjects.length === 0) {
                 const now = this.time.now;
@@ -176,6 +172,7 @@ export default class MentalFlexScene extends Phaser.Scene {
         });
 
         this.input.on('pointermove', () => {
+            if (this.isTutorialActive) return;
             this.registerFirstInteraction();
         });
     }
@@ -388,6 +385,7 @@ export default class MentalFlexScene extends Phaser.Scene {
             });
 
             bg.on('pointerdown', (pointer, localX, localY, event) => {
+                if (this.isTutorialActive) return;
                 if (event) event.stopPropagation();
                 this.handleChoiceSelection(choiceCard);
             });
@@ -689,6 +687,11 @@ export default class MentalFlexScene extends Phaser.Scene {
                     this.rulesPool = params.rules_pool;
 
                     this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);
+                    if (data.cognitive_profile) {
+                        this.archetype = data.cognitive_profile.archetype || this.archetype;
+                        this.archetypeConfidence = data.cognitive_profile.confidence_score || this.archetypeConfidence;
+                    }
+                    updateMlHud(this);
 
                     if (diffChanged) {
                         const direction = params.difficulty_level > oldDifficulty ? 'SCALED UP' : 'DE-ESCALATED';

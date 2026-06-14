@@ -9,6 +9,7 @@
  * ================================================================================
  */
 import Phaser from 'phaser';
+import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
 export default class MemoryMatchScene extends Phaser.Scene {
     constructor() {
@@ -16,6 +17,10 @@ export default class MemoryMatchScene extends Phaser.Scene {
     }
 
     init(data) {
+        const profile = data.cognitiveProfile || {};
+        this.archetype = profile.archetype || 'Initializing...';
+        this.archetypeConfidence = profile.confidence_score || 0.0;
+        this.isTutorialActive = true;
         // Core configuration passed from React
         this.sessionId = data.sessionId || null;
         this.apiUrl = data.apiUrl || 'http://127.0.0.1:5000';
@@ -106,21 +111,18 @@ export default class MemoryMatchScene extends Phaser.Scene {
         // 3. Draw grid and begin
         this.drawGrid();
 
-        // Start Countdown Timer
-        this.countdownTimer = this.time.addEvent({
-            delay: 1000,
-            callback: this.updateTimer,
-            callbackScope: this,
-            loop: true
-        });
-
-        // Delay starting first round slightly to let user settle
-        this.time.delayedCall(1500, () => {
-            this.startNewRound();
+        createMlHud(this, 0x38bdf8);
+        createTutorialOverlay(this, {
+            title: "MEMORY MATCH",
+            domain: "spatial_visual_memory",
+            instructions: "• Click cards to flip them and reveal their symbols.\n\n• Find matching pairs in as few moves as possible.\n\n• DDA adapts grid sizes based on your memory recall speed.",
+            themeColorHex: 0x38bdf8,
+            onStart: () => this.startGameplay()
         });
 
         // Micro-behavior tracking listeners
         this.input.on('pointerdown', (pointer, gameObjects) => {
+            if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gameObjects.length === 0) {
                 const now = this.time.now;
@@ -132,6 +134,7 @@ export default class MemoryMatchScene extends Phaser.Scene {
         });
 
         this.input.on('pointermove', () => {
+            if (this.isTutorialActive) return;
             this.registerFirstInteraction();
         });
     }
@@ -192,6 +195,7 @@ export default class MemoryMatchScene extends Phaser.Scene {
 
                 // Click event
                 cellBg.on('pointerdown', (pointer, localX, localY, event) => {
+                    if (this.isTutorialActive) return;
                     if (event) event.stopPropagation();
                     this.handleCellInput(index);
                 });
@@ -510,6 +514,11 @@ export default class MemoryMatchScene extends Phaser.Scene {
                     this.flashDuration = params.flash_duration;
 
                     this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);
+                    if (data.cognitive_profile) {
+                        this.archetype = data.cognitive_profile.archetype || this.archetype;
+                        this.archetypeConfidence = data.cognitive_profile.confidence_score || this.archetypeConfidence;
+                    }
+                    updateMlHud(this);
 
                     if (difficultyChanged) {
                         const direction = difficultyChanged && params.difficulty_level > this.difficultyLevel ? 'INCREASED' : 'ADJUSTED';

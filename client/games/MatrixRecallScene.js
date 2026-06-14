@@ -29,6 +29,11 @@ export default class MatrixRecallScene extends Phaser.Scene {
         this.targetCount = dda.target_count || 3;
         this.flashDuration = dda.flash_duration || 1200;
 
+        // Cognitive Profile Archetype
+        const profile = data.cognitiveProfile || {};
+        this.archetype = profile.archetype || 'Initializing...';
+        this.archetypeConfidence = profile.confidence_score || 0.0;
+
         // Game states
         this.score = 0;
         this.hits = 0; // successfully recalled matrices
@@ -38,6 +43,7 @@ export default class MatrixRecallScene extends Phaser.Scene {
         this.timeLeft = this.gameDuration;
 
         this.targets = []; // Stores indices of cells that are targets
+        this.decoyTargets = []; // Stores indices of cell distractors (Visual Noise)
         this.playerSelections = []; // Stores indices clicked by player
         this.gamePhase = 'INTRO'; // INTRO | FLASHING | RECALL | FEEDBACK | GAMEOVER
         this.flashStartTime = 0; // Marks when the flash phase ended for timing
@@ -52,6 +58,10 @@ export default class MatrixRecallScene extends Phaser.Scene {
         this.firstInteractionLatency = 0;
         this.spamClickCount = 0;
         this.lastMissTime = 0;
+        this.ruleShiftLatency = 0;
+
+        // Tutorial gating
+        this.isTutorialActive = true;
     }
 
     create() {
@@ -104,24 +114,12 @@ export default class MatrixRecallScene extends Phaser.Scene {
             letterSpacing: '0.05em'
         }).setOrigin(0.5, 0);
 
-        // 3. Draw grid and begin
+        // 3. Draw grid (pre-draw cell visual blocks underneath)
         this.drawGrid();
 
-        // Start Countdown Timer
-        this.countdownTimer = this.time.addEvent({
-            delay: 1000,
-            callback: this.updateTimer,
-            callbackScope: this,
-            loop: true
-        });
-
-        // Delay starting first round slightly to let user settle
-        this.time.delayedCall(1500, () => {
-            this.startNewRound();
-        });
-
-        // Micro-behavior tracking listeners
+        // 4. Pointer tracking
         this.input.on('pointerdown', (pointer, gameObjects) => {
+            if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gameObjects.length === 0) {
                 const now = this.time.now;
@@ -133,8 +131,21 @@ export default class MatrixRecallScene extends Phaser.Scene {
         });
 
         this.input.on('pointermove', () => {
+            if (this.isTutorialActive) return;
             this.registerFirstInteraction();
         });
+
+        // 5. ML Feedback HUD setup
+        this.mlHudText = this.add.text(20, height - 35, '', {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '13px',
+            fontWeight: '600',
+            fill: '#38bdf8'
+        });
+        this.updateMlHud();
+
+        // 6. Draw tutorial visual gate
+        this.drawTutorialOverlay(width, height);
     }
 
     drawGrid() {
@@ -190,12 +201,14 @@ export default class MatrixRecallScene extends Phaser.Scene {
 
                 // Click event
                 cellBg.on('pointerdown', (pointer, localX, localY, event) => {
+                    if (this.isTutorialActive) return;
                     if (event) event.stopPropagation();
                     this.handleCellInput(index);
                 });
 
                 // Hover micro-animations
                 cellBg.on('pointerover', () => {
+                    if (this.isTutorialActive) return;
                     if (this.gamePhase === 'RECALL' && !this.playerSelections.includes(index)) {
                         cellBg.clear();
                         cellBg.fillStyle(0x334155, 0.6);
@@ -261,25 +274,36 @@ export default class MatrixRecallScene extends Phaser.Scene {
 
         // Generate target cell indexes randomly
         this.targets = [];
+        this.decoyTargets = [];
         const totalCells = this.gridCols * this.gridRows;
         const indices = Array.from({ length: totalCells }, (_, i) => i);
         Phaser.Utils.Array.Shuffle(indices);
         this.targets = indices.slice(0, this.targetCount);
 
-        console.log('[Matrix Recall] Generated Targets:', this.targets);
+        // Serious Game Improvement: Decoy grids for levels 3+
+        if (this.difficultyLevel >= 3) {
+            const remaining = indices.slice(this.targetCount);
+            const decoyCount = Math.min(remaining.length, this.difficultyLevel - 1);
+            this.decoyTargets = remaining.slice(0, decoyCount);
+        }
 
-        // Flash targets simultaneously
+        console.log('[Matrix Recall] Targets:', this.targets, 'Decoys:', this.decoyTargets);
+
+        // Flash targets (Gold/Cyan) and decoys (Coral/Red) simultaneously
         this.targets.forEach(index => {
-            this.highlightCell(index, 0xa855f7, 0xf3e8ff, this.flashDuration); // Purple glow
+            this.highlightCell(index, 0x38bdf8, 0xffffff, this.flashDuration); // Cyan target glow
+        });
+        this.decoyTargets.forEach(index => {
+            this.highlightCell(index, 0xef4444, 0xfca5a5, this.flashDuration); // Red decoy glow
         });
 
         // Transition to recall phase after the flash duration ends
         this.time.delayedCall(this.flashDuration, () => {
             if (this.gamePhase !== 'FLASHING') return;
             
-            // Hide the glow templates
+            // Hide all glows
             this.gridCells.forEach(cell => {
-                if (this.targets.includes(cell.index)) {
+                if (this.targets.includes(cell.index) || this.decoyTargets.includes(cell.index)) {
                     cell.glow.setVisible(false);
                 }
             });
@@ -325,6 +349,11 @@ export default class MatrixRecallScene extends Phaser.Scene {
     handleCellInput(index) {
         if (this.gamePhase !== 'RECALL') return;
         if (this.playerSelections.includes(index)) return; // Prevent double-clicking same cell
+
+        // Capture rule-shift latency (time since flash ended to first click)
+        if (this.playerSelections.length === 0) {
+            this.ruleShiftLatency = this.time.now - this.flashStartTime;
+        }
 
         this.playerSelections.push(index);
 
@@ -495,7 +524,8 @@ export default class MatrixRecallScene extends Phaser.Scene {
             difficulty: this.difficultyLevel,
             error_count: errorVal,
             hesitation_ms: this.firstInteractionLatency || 0,
-            spam_click_count: this.spamClickCount
+            spam_click_count: this.spamClickCount,
+            rule_shift_latency_ms: this.ruleShiftLatency || 0.0
         };
 
         try {
@@ -546,8 +576,13 @@ export default class MatrixRecallScene extends Phaser.Scene {
                     this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);
 
                     if (difficultyChanged) {
-                        const direction = params.difficulty_level > this.difficultyLevel ? 'INCREASED' : 'ADJUSTED';
                         this.showFloatingFeedback(`DIFFICULTY ADJUSTED: LEVEL ${this.difficultyLevel}`, '#a855f7');
+                    }
+
+                    if (data.cognitive_profile) {
+                        this.archetype = data.cognitive_profile.archetype || this.archetype;
+                        this.archetypeConfidence = data.cognitive_profile.confidence_score || this.archetypeConfidence;
+                        this.updateMlHud();
                     }
 
                     // Re-render grid layout dynamically if structure changed
@@ -592,8 +627,130 @@ export default class MatrixRecallScene extends Phaser.Scene {
                 accuracy: this.accuracy,
                 difficultyLevel: this.difficultyLevel,
                 hesitation_ms: this.firstInteractionLatency || 0,
-                spam_click_count: this.spamClickCount
+                spam_click_count: this.spamClickCount,
+                rule_shift_latency_ms: this.ruleShiftLatency || 0.0
             });
+        }
+    }
+
+    drawTutorialOverlay(width, height) {
+        // Semi-transparent blocking panel
+        const overlayBg = this.add.graphics();
+        overlayBg.fillStyle(0x09090b, 0.88);
+        overlayBg.fillRect(0, 0, width, height);
+        overlayBg.setInteractive(new Phaser.Geom.Rectangle(0, 0, width, height), Phaser.Geom.Rectangle.Contains);
+
+        const modal = this.add.graphics();
+        const modalW = 550;
+        const modalH = 400;
+        const modalX = (width - modalW) / 2;
+        const modalY = (height - modalH) / 2;
+
+        modal.lineStyle(2.5, 0x38bdf8, 0.95);
+        modal.fillStyle(0x0f172a, 0.96);
+        modal.fillRoundedRect(modalX, modalY, modalW, modalH, 16);
+        modal.strokeRoundedRect(modalX, modalY, modalW, modalH, 16);
+
+        const title = this.add.text(width / 2, modalY + 40, 'MATRIX RECALL', {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '32px',
+            fontWeight: 'bold',
+            fill: '#38bdf8',
+            letterSpacing: '0.1em'
+        }).setOrigin(0.5);
+
+        const subtitle = this.add.text(width / 2, modalY + 80, 'COGNITIVE DOMAIN: SPATIAL-VISUAL MEMORY', {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '13px',
+            fontWeight: '700',
+            fill: '#a855f7'
+        }).setOrigin(0.5);
+
+        const divider = this.add.graphics();
+        divider.lineStyle(1.5, 0x1e293b, 1);
+        divider.lineBetween(modalX + 40, modalY + 110, modalX + modalW - 40, modalY + 110);
+
+        const instructions = this.add.text(width / 2, modalY + 140, 
+            "• Remember the pattern of glowing cyan squares flashed on the grid.\n\n" +
+            "• DO NOT click any flashed red/coral squares (decoy noise at level 3+).\n\n" +
+            "• After the sequence flashes, click all correct cyan squares in any order.\n\n" +
+            "• Your response time starts ticking the moment flashing ends.", {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '15px',
+            fill: '#94a3b8',
+            lineSpacing: 8
+        }).setOrigin(0.5, 0);
+
+        const btnW = 220;
+        const btnH = 50;
+        const btnX = width / 2;
+        const btnY = modalY + modalH - 60;
+
+        const btnBg = this.add.graphics();
+        btnBg.fillStyle(0x38bdf8, 0.85);
+        btnBg.lineStyle(2, 0xffffff, 0.9);
+        btnBg.fillRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+        btnBg.strokeRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+
+        const btnText = this.add.text(btnX, btnY, 'LAUNCH MODULE', {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            fill: '#ffffff'
+        }).setOrigin(0.5);
+
+        btnBg.setInteractive(new Phaser.Geom.Rectangle(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH), Phaser.Geom.Rectangle.Contains);
+        
+        btnBg.on('pointerover', () => {
+            btnBg.clear();
+            btnBg.fillStyle(0x0284c7, 1);
+            btnBg.lineStyle(2.5, 0xffffff, 1);
+            btnBg.fillRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+            btnBg.strokeRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+        });
+
+        btnBg.on('pointerout', () => {
+            btnBg.clear();
+            btnBg.fillStyle(0x38bdf8, 0.85);
+            btnBg.lineStyle(2, 0xffffff, 0.9);
+            btnBg.fillRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+            btnBg.strokeRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+        });
+
+        btnBg.on('pointerdown', () => {
+            overlayBg.destroy();
+            modal.destroy();
+            title.destroy();
+            subtitle.destroy();
+            divider.destroy();
+            instructions.destroy();
+            btnBg.destroy();
+            btnText.destroy();
+
+            this.isTutorialActive = false;
+            this.startGameplay();
+        });
+    }
+
+    startGameplay() {
+        this.countdownTimer = this.time.addEvent({
+            delay: 1000,
+            callback: this.updateTimer,
+            callbackScope: this,
+            loop: true
+        });
+
+        this.time.delayedCall(800, () => {
+            this.startNewRound();
+        });
+    }
+
+    updateMlHud() {
+        if (this.mlHudText) {
+            const conf = Math.round(this.archetypeConfidence * 100);
+            this.mlHudText.setText(
+                `ML FEEDBACK HUD | COGNITIVE ARCHETYPE: ${this.archetype.toUpperCase()} (${conf}% CONFIDENCE) | DDA: LVL ${this.difficultyLevel.toFixed(1)}`
+            );
         }
     }
 }

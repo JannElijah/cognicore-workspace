@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
 export default class SynapseSpinScene extends Phaser.Scene {
     constructor() {
@@ -6,6 +7,10 @@ export default class SynapseSpinScene extends Phaser.Scene {
     }
 
     init(data) {
+        const profile = data.cognitiveProfile || {};
+        this.archetype = profile.archetype || 'Initializing...';
+        this.archetypeConfidence = profile.confidence_score || 0.0;
+        this.isTutorialActive = true;
         this.sessionId = data.sessionId || null;
         this.apiUrl = data.apiUrl || 'http://127.0.0.1:5000';
         this.onGameOver = data.onGameOver || null;
@@ -90,6 +95,7 @@ export default class SynapseSpinScene extends Phaser.Scene {
 
         // Background click spam check
         this.input.on('pointerdown', (pointer, gameObjects) => {
+            if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gameObjects.length === 0) {
                 const now = this.time.now;
@@ -101,17 +107,18 @@ export default class SynapseSpinScene extends Phaser.Scene {
         });
 
         this.input.on('pointermove', () => {
+            if (this.isTutorialActive) return;
             this.registerFirstInteraction();
         });
 
-        this.countdownTimer = this.time.addEvent({
-            delay: 1000,
-            callback: this.updateTimer,
-            callbackScope: this,
-            loop: true
+        createMlHud(this, 0x10b981);
+        createTutorialOverlay(this, {
+            title: "SYNAPSE SPIN",
+            domain: "executive_strategy",
+            instructions: "• Rotate synapses to guide signal sparks to matched color receptors.\n\n• Click/tap to rotate receptors and switch directions.\n\n• DDA accelerates spark velocity based on correct routing.",
+            themeColorHex: 0x10b981,
+            onStart: () => this.startGameplay()
         });
-
-        this.startNewPuzzle();
     }
 
     updateTimer() {
@@ -251,6 +258,7 @@ export default class SynapseSpinScene extends Phaser.Scene {
             });
 
             bg.on('pointerdown', (pointer, localX, localY, event) => {
+                if (this.isTutorialActive) return;
                 if (event) event.stopPropagation();
                 this.registerFirstInteraction();
                 this.handleSelection(i);
@@ -400,6 +408,11 @@ export default class SynapseSpinScene extends Phaser.Scene {
                     this.rotationStep = params.rotation_step;
 
                     this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);
+                    if (data.cognitive_profile) {
+                        this.archetype = data.cognitive_profile.archetype || this.archetype;
+                        this.archetypeConfidence = data.cognitive_profile.confidence_score || this.archetypeConfidence;
+                    }
+                    updateMlHud(this);
 
                     if (diffChanged) {
                         this.showFloatingFeedback(`LEVEL ADJUSTED: LEVEL ${this.difficultyLevel}`, '#a78bfa');

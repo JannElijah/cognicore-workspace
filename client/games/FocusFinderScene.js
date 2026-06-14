@@ -9,6 +9,7 @@
  * ================================================================================
  */
 import Phaser from 'phaser';
+import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
 export default class FocusFinderScene extends Phaser.Scene {
     constructor() {
@@ -16,6 +17,10 @@ export default class FocusFinderScene extends Phaser.Scene {
     }
 
     init(data) {
+        const profile = data.cognitiveProfile || {};
+        this.archetype = profile.archetype || 'Initializing...';
+        this.archetypeConfidence = profile.confidence_score || 0.0;
+        this.isTutorialActive = true;
         // Core configuration passed from React
         this.sessionId = data.sessionId || null;
         this.apiUrl = data.apiUrl || 'http://127.0.0.1:5000';
@@ -132,17 +137,18 @@ export default class FocusFinderScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // 3. Spawning Loops
-        this.countdownTimer = this.time.addEvent({
-            delay: 1000,
-            callback: this.updateTimer,
-            callbackScope: this,
-            loop: true
+        createMlHud(this, 0xa855f7);
+        createTutorialOverlay(this, {
+            title: "FOCUS FINDER",
+            domain: "reflexes_and_focus",
+            instructions: "• Locate and click the target shape matching the top preview window.\n\n• Ignore distracting shape/color combinations.\n\n• Maintain accuracy: misses and false clicks degrade score.",
+            themeColorHex: 0xa855f7,
+            onStart: () => this.startGameplay()
         });
-
-        this.generateWave();
 
         // Micro-behavior tracking listeners
         this.input.on('pointerdown', (pointer, gameObjects) => {
+            if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gameObjects.length === 0) {
                 const now = this.time.now;
@@ -154,6 +160,7 @@ export default class FocusFinderScene extends Phaser.Scene {
         });
 
         this.input.on('pointermove', () => {
+            if (this.isTutorialActive) return;
             this.registerFirstInteraction();
         });
     }
@@ -570,6 +577,11 @@ export default class FocusFinderScene extends Phaser.Scene {
                     this.visualSimilarity = params.similarity;
 
                     this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);
+                    if (data.cognitive_profile) {
+                        this.archetype = data.cognitive_profile.archetype || this.archetype;
+                        this.archetypeConfidence = data.cognitive_profile.confidence_score || this.archetypeConfidence;
+                    }
+                    updateMlHud(this);
 
                     if (difficultyChanged) {
                         const direction = params.difficulty_level > this.difficultyLevel ? 'INCREASED' : 'ADJUSTED';

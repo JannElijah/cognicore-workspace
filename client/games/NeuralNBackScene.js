@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
 export default class NeuralNBackScene extends Phaser.Scene {
     constructor() {
@@ -6,6 +7,10 @@ export default class NeuralNBackScene extends Phaser.Scene {
     }
 
     init(data) {
+        const profile = data.cognitiveProfile || {};
+        this.archetype = profile.archetype || 'Initializing...';
+        this.archetypeConfidence = profile.confidence_score || 0.0;
+        this.isTutorialActive = true;
         this.sessionId = data.sessionId || null;
         this.apiUrl = data.apiUrl || 'http://127.0.0.1:5000';
         this.onGameOver = data.onGameOver || null;
@@ -171,6 +176,7 @@ export default class NeuralNBackScene extends Phaser.Scene {
         });
 
         this.matchBtnBg.on('pointerdown', (pointer, localX, localY, event) => {
+            if (this.isTutorialActive) return;
             if (event) event.stopPropagation();
             this.registerFirstInteraction();
             this.handleMatchInput();
@@ -178,12 +184,14 @@ export default class NeuralNBackScene extends Phaser.Scene {
 
         // Keyboard inputs
         this.input.keyboard.on('keydown-SPACE', () => {
+            if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             this.handleMatchInput();
         });
 
         // Background spam click checks
         this.input.on('pointerdown', (pointer, gameObjects) => {
+            if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gameObjects.length === 0) {
                 const now = this.time.now;
@@ -194,22 +202,14 @@ export default class NeuralNBackScene extends Phaser.Scene {
             }
         });
 
-        this.countdownTimer = this.time.addEvent({
-            delay: 1000,
-            callback: this.updateTimer,
-            callbackScope: this,
-            loop: true
+        createMlHud(this, 0x38bdf8);
+        createTutorialOverlay(this, {
+            title: "NEURAL N-BACK",
+            domain: "spatial_visual_memory",
+            instructions: "• Watch the glowing grid positions sequence.\n\n• Determine if the current position matches the one N steps back.\n\n• Press MATCH (keyboard or button) to register a hit.",
+            themeColorHex: 0x38bdf8,
+            onStart: () => this.startGameplay()
         });
-
-        // Stimulus tick timer loop
-        this.stimulusEvent = this.time.addEvent({
-            delay: this.stepDelay,
-            callback: this.showNextStimulus,
-            callbackScope: this,
-            loop: true
-        });
-
-        this.showNextStimulus();
     }
 
     updateTimer() {
@@ -416,6 +416,11 @@ export default class NeuralNBackScene extends Phaser.Scene {
 
                     this.nValText.setText(`TARGET: ${this.nValue}-BACK`);
                     this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);
+                    if (data.cognitive_profile) {
+                        this.archetype = data.cognitive_profile.archetype || this.archetype;
+                        this.archetypeConfidence = data.cognitive_profile.confidence_score || this.archetypeConfidence;
+                    }
+                    updateMlHud(this);
 
                     // Re-align step delay loop timer
                     if (this.stimulusEvent) {

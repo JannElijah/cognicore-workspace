@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
 export default class EquationBalanceScene extends Phaser.Scene {
     constructor() {
@@ -6,6 +7,10 @@ export default class EquationBalanceScene extends Phaser.Scene {
     }
 
     init(data) {
+        const profile = data.cognitiveProfile || {};
+        this.archetype = profile.archetype || 'Initializing...';
+        this.archetypeConfidence = profile.confidence_score || 0.0;
+        this.isTutorialActive = true;
         this.sessionId = data.sessionId || null;
         this.apiUrl = data.apiUrl || 'http://127.0.0.1:5000';
         this.onGameOver = data.onGameOver || null;
@@ -113,19 +118,19 @@ export default class EquationBalanceScene extends Phaser.Scene {
             fill: '#ffffff'
         }).setOrigin(0.5);
 
-        // Start Countdown Timer
-        this.countdownTimer = this.time.addEvent({
-            delay: 1000,
-            callback: this.updateOverallTimer,
-            callbackScope: this,
-            loop: true
+        // Setup ML HUD & Tutorial Overlay
+        createMlHud(this, 0xf59e0b);
+        createTutorialOverlay(this, {
+            title: "EQUATION BALANCE",
+            domain: "logical_mathematical",
+            instructions: "• Balance the equation by choosing the correct missing operator/number.\n\n• Work quickly to gain larger time bonuses.\n\n• Incorrect answers shake screen and incur a score penalty.",
+            themeColorHex: 0xf59e0b,
+            onStart: () => this.startGameplay()
         });
-
-        // Initialize first puzzle
-        this.startNewPuzzle();
 
         // Micro-behavior tracking listeners
         this.input.on('pointerdown', (pointer, gameObjects) => {
+            if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gameObjects.length === 0) {
                 const now = this.time.now;
@@ -137,6 +142,7 @@ export default class EquationBalanceScene extends Phaser.Scene {
         });
 
         this.input.on('pointermove', () => {
+            if (this.isTutorialActive) return;
             this.registerFirstInteraction();
         });
     }
@@ -412,6 +418,7 @@ export default class EquationBalanceScene extends Phaser.Scene {
             // Click triggers
             bg.setInteractive(new Phaser.Geom.Rectangle(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight), Phaser.Geom.Rectangle.Contains);
             bg.on('pointerdown', (pointer, localX, localY, event) => {
+                if (this.isTutorialActive) return;
                 if (event) event.stopPropagation();
                 this.handleOptionClick(val, bg, txt);
             });
@@ -641,6 +648,11 @@ export default class EquationBalanceScene extends Phaser.Scene {
                     this.roundTimeLimit = params.time_limit;
 
                     this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);
+                    if (data.cognitive_profile) {
+                        this.archetype = data.cognitive_profile.archetype || this.archetype;
+                        this.archetypeConfidence = data.cognitive_profile.confidence_score || this.archetypeConfidence;
+                    }
+                    updateMlHud(this);
 
                     if (diffChanged) {
                         this.showFloatingFeedback(`DIFFICULTY LEVEL ADJUSTED: LEVEL ${this.difficultyLevel}`, '#a855f7');

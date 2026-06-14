@@ -28,6 +28,11 @@ export default class LogicLinkScene extends Phaser.Scene {
         this.sequenceLength = dda.sequence_length || 3;
         this.distractorsCount = dda.distractors || 0;
 
+        // Cognitive Profile Archetype
+        const profile = data.cognitiveProfile || {};
+        this.archetype = profile.archetype || 'Initializing...';
+        this.archetypeConfidence = profile.confidence_score || 0.0;
+
         // Session Stats
         this.score = 0;
         this.hits = 0;
@@ -51,6 +56,11 @@ export default class LogicLinkScene extends Phaser.Scene {
         this.firstInteractionLatency = 0;
         this.spamClickCount = 0;
         this.lastMissTime = 0;
+        this.puzzleClicksCount = 0;
+        this.ruleShiftLatency = 0;
+
+        // Tutorial state
+        this.isTutorialActive = true;
     }
 
     create() {
@@ -105,19 +115,9 @@ export default class LogicLinkScene extends Phaser.Scene {
         // Graphics Layer for drawing glowing paths
         this.lineGraphics = this.add.graphics();
 
-        // Start Countdown Timer
-        this.countdownTimer = this.time.addEvent({
-            delay: 1000,
-            callback: this.updateTimer,
-            callbackScope: this,
-            loop: true
-        });
-
-        // Initialize grid board
-        this.startNewPuzzle();
-
-        // Micro-behavior tracking listeners
+        // 3. Pointer tracking
         this.input.on('pointerdown', (pointer, gameObjects) => {
+            if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gameObjects.length === 0) {
                 const now = this.time.now;
@@ -129,8 +129,21 @@ export default class LogicLinkScene extends Phaser.Scene {
         });
 
         this.input.on('pointermove', () => {
+            if (this.isTutorialActive) return;
             this.registerFirstInteraction();
         });
+
+        // 4. ML Feedback HUD setup
+        this.mlHudText = this.add.text(20, height - 35, '', {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '13px',
+            fontWeight: '600',
+            fill: '#f59e0b'
+        });
+        this.updateMlHud();
+
+        // 5. Build and gate with Tutorial Overlay
+        this.drawTutorialOverlay(width, height);
     }
 
     updateTimer() {
@@ -153,6 +166,8 @@ export default class LogicLinkScene extends Phaser.Scene {
         this.stimulusSpawnTime = this.time.now;
         this.firstInteractionRegistered = false;
         this.firstInteractionLatency = 0;
+        this.puzzleClicksCount = 0;
+        this.ruleShiftLatency = 0;
         this.statusText.setText('LINK IN ASCENDING ORDER!').setFill('#e2e8f0');
 
         const width = this.scale.width;
@@ -235,28 +250,43 @@ export default class LogicLinkScene extends Phaser.Scene {
                 }
 
                 // Interactive click bounds
-                bg.setInteractive(new Phaser.Geom.Circle(0, 0, cellSize * 0.4), Phaser.Geom.Circle.Contains);
+                bg.setInteractive(new Phaser.Geom.Circle(0, 0, cellSize * 0.45), Phaser.Geom.Circle.Contains);
                 bg.on('pointerdown', (pointer, localX, localY, event) => {
+                    if (this.isTutorialActive) return;
                     if (event) event.stopPropagation();
                     this.handleNodeClick(index, numberVal, x, y, bg, txt, cellSize);
                 });
 
-                // Hover triggers
+                // Hover triggers (visual magnetic snapping expansion)
                 bg.on('pointerover', () => {
+                    if (this.isTutorialActive) return;
                     if (this.gamePhase === 'PLAYING') {
-                        bg.lineStyle(3, numberVal > 0 ? 0xf59e0b : 0xef4444, 0.9);
-                        bg.strokeCircle(0, 0, cellSize * 0.4);
+                        this.tweens.add({
+                            targets: [bg, txt].filter(Boolean),
+                            scale: 1.15,
+                            duration: 100,
+                            ease: 'Back.easeOut'
+                        });
+                        bg.lineStyle(3.5, numberVal > 0 ? 0xf59e0b : 0xef4444, 0.95);
+                        bg.strokeCircle(0, 0, cellSize * 0.45);
                     }
                 });
 
                 bg.on('pointerout', () => {
+                    if (this.isTutorialActive) return;
                     if (this.gamePhase === 'PLAYING') {
+                        this.tweens.add({
+                            targets: [bg, txt].filter(Boolean),
+                            scale: 1.0,
+                            duration: 100,
+                            ease: 'Power1'
+                        });
                         bg.lineStyle(
                             numberVal > 0 ? 2.5 : 1.5, 
                             numberVal > 0 ? 0xf59e0b : 0xffffff, 
                             numberVal > 0 ? 0.8 : 0.08
                         );
-                        bg.strokeCircle(0, 0, cellSize * 0.4);
+                        bg.strokeCircle(0, 0, cellSize * 0.45);
                     }
                 });
 
@@ -278,6 +308,14 @@ export default class LogicLinkScene extends Phaser.Scene {
 
     handleNodeClick(index, value, x, y, bg, txt, cellSize) {
         if (this.gamePhase !== 'PLAYING') return;
+        if (this.isTutorialActive) return;
+
+        this.puzzleClicksCount++;
+
+        // Track latency from puzzle start to first node interaction
+        if (this.puzzleClicksCount === 1) {
+            this.ruleShiftLatency = this.time.now - this.puzzleStartTime;
+        }
 
         const correctNextVal = this.clickedSequence.length + 1;
 
@@ -434,6 +472,8 @@ export default class LogicLinkScene extends Phaser.Scene {
     async dispatchMetricTelemetry(solveTimeMs, roundAccuracy) {
         if (!this.sessionId) return;
 
+        const efficiency = this.puzzleClicksCount > 0 ? Math.min(1.0, this.sequenceLength / this.puzzleClicksCount) : 1.0;
+
         const payload = {
             session_id: this.sessionId,
             cognitive_domain: "logical_mathematical",
@@ -443,7 +483,9 @@ export default class LogicLinkScene extends Phaser.Scene {
             difficulty: this.difficultyLevel,
             error_count: roundAccuracy === 1.0 ? 0 : 1,
             hesitation_ms: this.firstInteractionLatency || 0,
-            spam_click_count: this.spamClickCount
+            spam_click_count: this.spamClickCount,
+            path_efficiency: efficiency,
+            rule_shift_latency_ms: this.ruleShiftLatency || 0.0
         };
 
         try {
@@ -494,6 +536,12 @@ export default class LogicLinkScene extends Phaser.Scene {
                     if (difficultyChanged) {
                         this.showFloatingFeedback(`DIFFICULTY ADJUSTED: LEVEL ${this.difficultyLevel}`, '#a855f7');
                     }
+
+                    if (data.cognitive_profile) {
+                        this.archetype = data.cognitive_profile.archetype || this.archetype;
+                        this.archetypeConfidence = data.cognitive_profile.confidence_score || this.archetypeConfidence;
+                        this.updateMlHud();
+                    }
                 }
             }
         } catch (e) {
@@ -528,8 +576,128 @@ export default class LogicLinkScene extends Phaser.Scene {
                 accuracy: this.accuracy,
                 difficultyLevel: this.difficultyLevel,
                 hesitation_ms: this.firstInteractionLatency || 0,
-                spam_click_count: this.spamClickCount
+                spam_click_count: this.spamClickCount,
+                rule_shift_latency_ms: this.ruleShiftLatency || 0.0
             });
+        }
+    }
+
+    drawTutorialOverlay(width, height) {
+        // Semi-transparent blocking panel
+        const overlayBg = this.add.graphics();
+        overlayBg.fillStyle(0x09090b, 0.88);
+        overlayBg.fillRect(0, 0, width, height);
+        overlayBg.setInteractive(new Phaser.Geom.Rectangle(0, 0, width, height), Phaser.Geom.Rectangle.Contains);
+
+        const modal = this.add.graphics();
+        const modalW = 550;
+        const modalH = 400;
+        const modalX = (width - modalW) / 2;
+        const modalY = (height - modalH) / 2;
+
+        modal.lineStyle(2.5, 0xf59e0b, 0.95);
+        modal.fillStyle(0x0f172a, 0.96);
+        modal.fillRoundedRect(modalX, modalY, modalW, modalH, 16);
+        modal.strokeRoundedRect(modalX, modalY, modalW, modalH, 16);
+
+        const title = this.add.text(width / 2, modalY + 40, 'LOGIC LINK', {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '32px',
+            fontWeight: 'bold',
+            fill: '#f59e0b',
+            letterSpacing: '0.1em'
+        }).setOrigin(0.5);
+
+        const subtitle = this.add.text(width / 2, modalY + 80, 'COGNITIVE DOMAIN: LOGICAL-MATHEMATICAL REASONING', {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '13px',
+            fontWeight: '700',
+            fill: '#a855f7'
+        }).setOrigin(0.5);
+
+        const divider = this.add.graphics();
+        divider.lineStyle(1.5, 0x1e293b, 1);
+        divider.lineBetween(modalX + 40, modalY + 110, modalX + modalW - 40, modalY + 110);
+
+        const instructions = this.add.text(width / 2, modalY + 140, 
+            "• Connect the glowing numbered nodes in ascending order (1 → 2 → 3).\n\n" +
+            "• Hover close to nodes to visually trigger the magnetic snapping scale-up.\n\n" +
+            "• Click/tap the correct next node in the sequence to draw connections.\n\n" +
+            "• Mismatch clicks or incorrect sequencing breaks the logic pathway.", {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '15px',
+            fill: '#94a3b8',
+            lineSpacing: 8
+        }).setOrigin(0.5, 0);
+
+        const btnW = 220;
+        const btnH = 50;
+        const btnX = width / 2;
+        const btnY = modalY + modalH - 60;
+
+        const btnBg = this.add.graphics();
+        btnBg.fillStyle(0xf59e0b, 0.85);
+        btnBg.lineStyle(2, 0xffffff, 0.9);
+        btnBg.fillRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+        btnBg.strokeRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+
+        const btnText = this.add.text(btnX, btnY, 'LAUNCH MODULE', {
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            fill: '#ffffff'
+        }).setOrigin(0.5);
+
+        btnBg.setInteractive(new Phaser.Geom.Rectangle(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH), Phaser.Geom.Rectangle.Contains);
+        
+        btnBg.on('pointerover', () => {
+            btnBg.clear();
+            btnBg.fillStyle(0xd97706, 1);
+            btnBg.lineStyle(2.5, 0xffffff, 1);
+            btnBg.fillRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+            btnBg.strokeRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+        });
+
+        btnBg.on('pointerout', () => {
+            btnBg.clear();
+            btnBg.fillStyle(0xf59e0b, 0.85);
+            btnBg.lineStyle(2, 0xffffff, 0.9);
+            btnBg.fillRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+            btnBg.strokeRoundedRect(btnX - btnW / 2, btnY - btnH / 2, btnW, btnH, 8);
+        });
+
+        btnBg.on('pointerdown', () => {
+            overlayBg.destroy();
+            modal.destroy();
+            title.destroy();
+            subtitle.destroy();
+            divider.destroy();
+            instructions.destroy();
+            btnBg.destroy();
+            btnText.destroy();
+
+            this.isTutorialActive = false;
+            this.startGameplay();
+        });
+    }
+
+    startGameplay() {
+        this.countdownTimer = this.time.addEvent({
+            delay: 1000,
+            callback: this.updateTimer,
+            callbackScope: this,
+            loop: true
+        });
+
+        this.startNewPuzzle();
+    }
+
+    updateMlHud() {
+        if (this.mlHudText) {
+            const conf = Math.round(this.archetypeConfidence * 100);
+            this.mlHudText.setText(
+                `ML FEEDBACK HUD | COGNITIVE ARCHETYPE: ${this.archetype.toUpperCase()} (${conf}% CONFIDENCE) | DDA: LVL ${this.difficultyLevel.toFixed(1)}`
+            );
         }
     }
 }
