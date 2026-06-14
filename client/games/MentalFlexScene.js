@@ -177,6 +177,23 @@ export default class MentalFlexScene extends Phaser.Scene {
         });
     }
 
+    startGameplay() {
+        this.isTutorialActive = false;
+        this.countdownTimer = this.time.addEvent({
+            delay: 1000,
+            callback: this.updateCountdown,
+            callbackScope: this,
+            loop: true
+        });
+        this.roundTickTimer = this.time.addEvent({
+            delay: 10,
+            callback: this.tickRoundTime,
+            callbackScope: this,
+            loop: true
+        });
+        this.spawnCards();
+    }
+
     updateCountdown() {
         this.timeLeft -= 1000;
         const seconds = Math.ceil(this.timeLeft / 1000);

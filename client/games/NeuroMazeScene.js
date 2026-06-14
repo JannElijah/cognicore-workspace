@@ -172,6 +172,17 @@ export default class NeuroMazeScene extends Phaser.Scene {
         });
     }
 
+    startGameplay() {
+        this.isTutorialActive = false;
+        this.countdownTimer = this.time.addEvent({
+            delay: 1000,
+            callback: this.updateTimer,
+            callbackScope: this,
+            loop: true
+        });
+        this.startNewPuzzle();
+    }
+
     updateTimer() {
         this.timeLeft -= 1000;
         const seconds = Math.ceil(this.timeLeft / 1000);

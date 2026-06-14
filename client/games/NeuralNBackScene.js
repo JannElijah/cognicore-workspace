@@ -212,6 +212,23 @@ export default class NeuralNBackScene extends Phaser.Scene {
         });
     }
 
+    startGameplay() {
+        this.isTutorialActive = false;
+        this.countdownTimer = this.time.addEvent({
+            delay: 1000,
+            callback: this.updateTimer,
+            callbackScope: this,
+            loop: true
+        });
+        this.stimulusEvent = this.time.addEvent({
+            delay: this.stepDelay,
+            callback: this.showNextStimulus,
+            callbackScope: this,
+            loop: true
+        });
+        this.showNextStimulus();
+    }
+
     updateTimer() {
         this.timeLeft -= 1000;
         const seconds = Math.ceil(this.timeLeft / 1000);

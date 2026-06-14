@@ -161,17 +161,15 @@ export default class MazeEscapeScene extends Phaser.Scene {
             this.registerFirstInteraction();
         });
 
-        // ML Feedback HUD setup
-        this.mlHudText = this.add.text(20, height - 35, '', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            fontSize: '13px',
-            fontWeight: '600',
-            fill: '#10b981'
+        // Setup ML HUD & Tutorial Overlay
+        createMlHud(this, 0x10b981);
+        createTutorialOverlay(this, {
+            title: "MAZE ESCAPE",
+            domain: "executive_strategy",
+            instructions: "• Guide the glowing cyan player orb to the golden EXIT cell.\n\n• Controls: Use WASD/Arrow keys or click adjacent cells directly.\n\n• Inputs are buffered in a queue for extremely fast movement responses.\n\n• Watch out for moving barriers that shift path blocks at difficulty level 3+.",
+            themeColorHex: 0x10b981,
+            onStart: () => this.startGameplay()
         });
-        updateMlHud(this);
-
-        // Draw visual gate
-        this.drawTutorialOverlay(width, height);
     }
 
     updateTimer() {
@@ -771,5 +769,14 @@ export default class MazeEscapeScene extends Phaser.Scene {
         }
     }
 
-    // Removed inline drawTutorialOverlay & updateMlHud
+    startGameplay() {
+        this.countdownTimer = this.time.addEvent({
+            delay: 1000,
+            callback: this.updateTimer,
+            callbackScope: this,
+            loop: true
+        });
+
+        this.startNewPuzzle();
+    }
 }

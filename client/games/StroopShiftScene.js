@@ -217,6 +217,17 @@ export default class StroopShiftScene extends Phaser.Scene {
         });
     }
 
+    startGameplay() {
+        this.isTutorialActive = false;
+        this.countdownTimer = this.time.addEvent({
+            delay: 1000,
+            callback: this.updateCountdown,
+            callbackScope: this,
+            loop: true
+        });
+        this.spawnWord();
+    }
+
     updateCountdown() {
         this.timeLeft -= 1000;
         const seconds = Math.ceil(this.timeLeft / 1000);

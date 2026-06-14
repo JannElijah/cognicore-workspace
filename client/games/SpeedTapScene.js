@@ -472,5 +472,52 @@ export default class SpeedTapScene extends Phaser.Scene {
         }
     }
 
-    // Removed inline drawTutorialOverlay & updateMlHud
+    startGameplay() {
+        this.stimulusSpawnTime = this.time.now;
+        
+        this.spawnTimerEvent = this.time.addEvent({
+            delay: this.spawnDelay,
+            callback: this.spawnObject,
+            callbackScope: this,
+            loop: true
+        });
+
+        this.time.addEvent({
+            delay: 1000,
+            callback: this.updateTimer,
+            callbackScope: this,
+            loop: true
+        });
+
+        this.spawnObject();
+    }
+
+    endGame() {
+        // Clean up spawners
+        if (this.spawnTimerEvent) this.spawnTimerEvent.remove();
+        
+        // Clear all active targets
+        this.activeTargets.forEach(t => t.destroy());
+        this.activeTargets = [];
+
+        console.log('[Game Over] Final Telemetry: ', {
+            score: this.score,
+            hits: this.hits,
+            misses: this.misses,
+            accuracy: this.accuracy
+        });
+
+        // Invoke React hook callback if it exists
+        if (this.onGameOver) {
+            this.onGameOver({
+                score: this.score,
+                hits: this.hits,
+                misses: this.misses,
+                accuracy: this.accuracy,
+                difficultyLevel: this.difficultyLevel,
+                hesitation_ms: this.firstInteractionLatency || 0,
+                spam_click_count: this.spamClickCount
+            });
+        }
+    }
 }

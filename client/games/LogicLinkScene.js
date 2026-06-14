@@ -586,5 +586,14 @@ export default class LogicLinkScene extends Phaser.Scene {
         }
     }
 
-    // Removed inline drawTutorialOverlay & updateMlHud
+    startGameplay() {
+        this.countdownTimer = this.time.addEvent({
+            delay: 1000,
+            callback: this.updateTimer,
+            callbackScope: this,
+            loop: true
+        });
+
+        this.startNewPuzzle();
+    }
 }
