@@ -252,6 +252,12 @@ const COGNITIVE_QUESTIONS = [
 
 export default function App() {
   const [activeGame, setActiveGame] = useState(null);
+  const [selectedGameMode, setSelectedGameMode] = useState('timed');
+
+  useEffect(() => {
+    window.currentGameMode = selectedGameMode;
+  }, [selectedGameMode]);
+
   const [showDashboard, setShowDashboard] = useState(false);
   const [lastGameStats, setLastGameStats] = useState(null);
   const [portalView, setPortalView] = useState('participant'); // 'participant' | 'researcher'
@@ -3605,6 +3611,59 @@ export default function App() {
                 )}
               </div>
             )}
+
+            {/* Sleek Premium Game Mode Selector */}
+            <div className="game-card" style={{
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '1.5rem',
+              marginBottom: '2rem',
+              background: 'rgba(15, 23, 42, 0.4)',
+              backdropFilter: 'blur(16px)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '12px',
+              width: '100%',
+              alignItems: 'stretch',
+              gap: '1rem',
+              boxSizing: 'border-box'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
+                <span style={{ fontSize: '1.25rem' }}>🕹️</span>
+                <strong style={{ fontSize: '1rem', color: '#38bdf8', letterSpacing: '0.05em' }}>SELECT TRAINING GAME MODE</strong>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
+                {[
+                  { id: 'timed', label: '⏱️ Standard Timed', desc: 'Standard 2-minute timed session.' },
+                  { id: 'zen', label: '🌸 Zen Mode', desc: 'Unlimited time, counts up, no pressure.' },
+                  { id: 'survival', label: '❤️ Survival Mode', desc: 'Start with 3 lives. Errors deduct lives.' },
+                  { id: 'target', label: '🎯 Objective Target', desc: 'Ends after exactly 10 trials.' },
+                  { id: 'time_attack', label: '⚡ Time Attack', desc: 'Race to get 10 correct hits.' },
+                  { id: 'endurance', label: '🔋 Fatigue Endurance', desc: 'Start with 20s. Hit adds +2s, miss subtracts -5s.' }
+                ].map(mode => (
+                  <button
+                    key={mode.id}
+                    type="button"
+                    onClick={() => setSelectedGameMode(mode.id)}
+                    style={{
+                      background: selectedGameMode === mode.id ? 'rgba(168, 85, 247, 0.15)' : 'rgba(255, 255, 255, 0.02)',
+                      border: selectedGameMode === mode.id ? '1.5px solid #a855f7' : '1.5px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '8px',
+                      color: selectedGameMode === mode.id ? '#c084fc' : '#e2e8f0',
+                      padding: '0.75rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      textAlign: 'left',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.25rem'
+                    }}
+                  >
+                    <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{mode.label}</span>
+                    <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>{mode.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <h2 className="section-title">Quasi-Experimental Core Game Grid</h2>
             <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: '-1rem 0 2rem 0' }}>

@@ -281,6 +281,12 @@ def init_db():
         print("[DB Migration] Added current_smooth_difficulty column to game_sessions")
     except sqlite3.OperationalError:
         pass
+
+    try:
+        cursor.execute("ALTER TABLE game_sessions ADD COLUMN game_mode TEXT DEFAULT 'timed'")
+        print("[DB Migration] Added game_mode column to game_sessions")
+    except sqlite3.OperationalError:
+        pass
     
     # Create indexes for query optimizations
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_performance_metrics_session ON performance_metrics (session_id)")
@@ -1010,6 +1016,7 @@ def start_session():
         if not username:
             username = 'default_player'
         game_type = str(data.get('game_type', 'SpeedTap')).strip()
+        game_mode = str(data.get('game_mode', 'timed')).strip().lower()
         
         conn = get_db_connection()
         try:
@@ -1027,8 +1034,8 @@ def start_session():
                     
                 # Create game session
                 cursor.execute(
-                    "INSERT INTO game_sessions (user_id, game_type) VALUES (?, ?)",
-                    (user_id, game_type)
+                    "INSERT INTO game_sessions (user_id, game_type, game_mode) VALUES (?, ?, ?)",
+                    (user_id, game_type, game_mode)
                 )
                 session_id = cursor.lastrowid
                 
@@ -1083,6 +1090,7 @@ def start_session():
             "status": "success",
             "session_id": session_id,
             "user_id": user_id,
+            "game_mode": game_mode,
             "dda_parameters": initial_params,
             "cognitive_profile": cognitive_profile
         }), 201
