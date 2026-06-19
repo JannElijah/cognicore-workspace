@@ -56,6 +56,7 @@ export default class MemoryMatchScene extends Phaser.Scene {
         this.firstInteractionLatency = 0;
         this.spamClickCount = 0;
         this.lastMissTime = 0;
+        this.telemetryBuffer = [];
     }
 
     create() {
@@ -465,7 +466,7 @@ export default class MemoryMatchScene extends Phaser.Scene {
     // CLOSED-LOOP DDA & TELEMETRY BRIDGE
     // ==========================================
 
-    async dispatchMetricTelemetry(recallTimeMs, roundAccuracy) {
+    dispatchMetricTelemetry(recallTimeMs, roundAccuracy) {
         if (!this.sessionId) return;
 
         const payload = {
@@ -480,12 +481,23 @@ export default class MemoryMatchScene extends Phaser.Scene {
             spam_click_count: this.spamClickCount
         };
 
+        if (!this.telemetryBuffer) {
+            this.telemetryBuffer = [];
+        }
+        this.telemetryBuffer.push(payload);
+    }
+
+    async flushTelemetry() {
+        if (!this.sessionId || !this.telemetryBuffer || this.telemetryBuffer.length === 0) return;
+        const payloadBatch = { metrics: this.telemetryBuffer };
+        this.telemetryBuffer = [];
+        
         try {
-            console.log('[Telemetry Dispatch] Sending metrics...', payload);
-            await fetch(`${this.apiUrl}/api/submit-metrics`, {
+            console.log('[Telemetry Dispatch] Sending batched metrics...', payloadBatch);
+            await fetch(`${this.apiUrl}/api/submit-metrics/batch`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(payloadBatch)
             });
         } catch (e) {
             console.warn('[Telemetry Dispatch] Connection offline, telemetry buffered.', e);
@@ -503,6 +515,9 @@ export default class MemoryMatchScene extends Phaser.Scene {
         if (!this.sessionId) return;
 
         this.statusText.setText('SYNCING ADAPTATION...').setFill('#64748b');
+
+        // Flush telemetry in batch before querying DDA updates
+        await this.flushTelemetry();
 
         try {
             console.log('[DDA Bridge] Checking memory scaling profiles...');
@@ -551,11 +566,14 @@ export default class MemoryMatchScene extends Phaser.Scene {
         this.startNewRound();
     }
 
-    endGame() {
+    async endGame() {
         if (this.countdownTimer) this.countdownTimer.remove();
         if (this.roundTimer) this.roundTimer.remove();
 
         this.gamePhase = 'GAMEOVER';
+
+        // Flush remaining telemetry before closing session
+        await this.flushTelemetry();
 
         this.gridCells.forEach(cell => {
             if (cell.bg) cell.bg.destroy();

@@ -48,6 +48,7 @@ export default class FocusFinderScene extends Phaser.Scene {
         this.firstInteractionLatency = 0;
         this.spamClickCount = 0;
         this.lastMissTime = 0;
+        this.telemetryBuffer = [];
 
         // Shapes & Colors dictionaries
         this.shapesList = ['circle', 'square', 'triangle', 'star', 'hexagon'];
@@ -533,7 +534,7 @@ export default class FocusFinderScene extends Phaser.Scene {
     // CLOSED-LOOP DDA & TELEMETRY BRIDGE
     // ==========================================
 
-    async dispatchMetricTelemetry(searchTimeMs, clickAccuracy) {
+    dispatchMetricTelemetry(searchTimeMs, clickAccuracy) {
         if (!this.sessionId) return;
 
         const payload = {
@@ -548,15 +549,26 @@ export default class FocusFinderScene extends Phaser.Scene {
             spam_click_count: this.spamClickCount
         };
 
+        if (!this.telemetryBuffer) {
+            this.telemetryBuffer = [];
+        }
+        this.telemetryBuffer.push(payload);
+    }
+
+    async flushTelemetry() {
+        if (!this.sessionId || !this.telemetryBuffer || this.telemetryBuffer.length === 0) return;
+        const payloadBatch = { metrics: this.telemetryBuffer };
+        this.telemetryBuffer = [];
+        
         try {
-            console.log('[Telemetry Dispatch] Sending metrics...', payload);
-            await fetch(`${this.apiUrl}/api/submit-metrics`, {
+            console.log('[Telemetry Dispatch] Sending batched metrics...', payloadBatch);
+            await fetch(`${this.apiUrl}/api/submit-metrics/batch`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(payloadBatch)
             });
         } catch (e) {
-            console.warn('[Telemetry Dispatch] Database offline, telemetry buffered.', e);
+            console.warn('[Telemetry Dispatch] Connection offline, telemetry buffered.', e);
         }
     }
 
@@ -569,6 +581,9 @@ export default class FocusFinderScene extends Phaser.Scene {
 
     async adaptDifficulty() {
         if (!this.sessionId) return;
+
+        // Flush telemetry in batch before querying DDA updates
+        await this.flushTelemetry();
 
         try {
             console.log('[DDA Bridge] Checking focus scaling profiles...');
@@ -610,8 +625,11 @@ export default class FocusFinderScene extends Phaser.Scene {
         this.generateWave();
     }
 
-    endGame() {
+    async endGame() {
         if (this.countdownTimer) this.countdownTimer.remove();
+
+        // Flush remaining telemetry before closing session
+        await this.flushTelemetry();
 
         this.spawnedObjects.forEach(obj => obj.destroy());
         this.spawnedObjects = [];

@@ -595,22 +595,33 @@ export default function App() {
             const options = args[1] || {};
             if (options.body) {
               const body = JSON.parse(options.body);
-              const accuracy = body.accuracy_rate !== undefined ? body.accuracy_rate : body.accuracy;
-              const rt = body.reaction_time !== undefined ? body.reaction_time : body.reaction_time_ms;
-              const spamClicks = body.spam_click_count || 0;
-              const hesitation = body.hesitation_ms || 0;
-              
-              if (accuracy !== undefined && rt !== undefined) {
-                setLiveMetrics(prev => [...prev, { accuracy, rt, spamClicks, hesitation }]);
-                
-                // Play success (blip) / failure (buzz) synthesized audio tones
-                audioDda.playFeedback(accuracy === 1.0);
-                
-                // Trigger low-pass calming mode when player shows panic or high hesitation latency
-                if (spamClicks > 2 || hesitation > 1500) {
-                  audioDda.setFrustration(true);
-                }
+              let items = [];
+              if (Array.isArray(body)) {
+                items = body;
+              } else if (body && Array.isArray(body.metrics)) {
+                items = body.metrics;
+              } else {
+                items = [body];
               }
+              
+              items.forEach(item => {
+                const accuracy = item.accuracy_rate !== undefined ? item.accuracy_rate : item.accuracy;
+                const rt = item.reaction_time !== undefined ? item.reaction_time : item.reaction_time_ms;
+                const spamClicks = item.spam_click_count || 0;
+                const hesitation = item.hesitation_ms || 0;
+                
+                if (accuracy !== undefined && rt !== undefined) {
+                  setLiveMetrics(prev => [...prev, { accuracy, rt, spamClicks, hesitation }]);
+                  
+                  // Play success (blip) / failure (buzz) synthesized audio tones
+                  audioDda.playFeedback(accuracy === 1.0);
+                  
+                  // Trigger low-pass calming mode when player shows panic or high hesitation latency
+                  if (spamClicks > 2 || hesitation > 1500) {
+                    audioDda.setFrustration(true);
+                  }
+                }
+              });
             }
           } catch (e) {
             console.error('[Telemetry HUD] Error parsing submit-metrics', e);

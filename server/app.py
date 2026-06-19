@@ -282,6 +282,13 @@ def init_db():
     except sqlite3.OperationalError:
         pass
     
+    # Create indexes for query optimizations
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_performance_metrics_session ON performance_metrics (session_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_game_sessions_user ON game_sessions (user_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_cognitive_assessments_user ON cognitive_assessments (user_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_performance_metrics_domain ON performance_metrics (cognitive_domain)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_performance_metrics_recorded ON performance_metrics (recorded_at)")
+    
     conn.commit()
     conn.close()
 
@@ -1389,6 +1396,81 @@ def submit_metrics():
  
     except Exception as e:
         app.logger.error(f"Error in submit_metrics: {e}")
+        return jsonify({"status": "error", "message": f"Database or server error: {str(e)}"}), 500
+
+@app.route('/api/submit-metrics/batch', methods=['POST'])
+def submit_metrics_batch():
+    """
+    Submits a batch of game metrics telemetry to database in a single transaction.
+    """
+    try:
+        data = request.get_json() or {}
+        if isinstance(data, list):
+            metrics_list = data
+        elif isinstance(data, dict) and "metrics" in data:
+            metrics_list = data["metrics"]
+        else:
+            return jsonify({"status": "error", "message": "Expected list of metrics or dictionary with 'metrics' key."}), 400
+            
+        if not metrics_list:
+            return jsonify({"status": "success", "message": "No metrics to record"}), 201
+            
+        conn = get_db_connection()
+        try:
+            with conn:
+                cursor = conn.cursor()
+                for item in metrics_list:
+                    session_id = safe_int(item.get('session_id'))
+                    rt_val = item.get('reaction_time') if item.get('reaction_time') is not None else item.get('reaction_time_ms')
+                    reaction_time = safe_float(rt_val)
+                    acc_val = item.get('accuracy_rate') if item.get('accuracy_rate') is not None else item.get('accuracy')
+                    accuracy = safe_float(acc_val)
+                    diff_val = item.get('difficulty') if item.get('difficulty') is not None else item.get('difficulty_level')
+                    difficulty = safe_int(diff_val)
+                    
+                    if session_id is None or reaction_time is None or accuracy is None or difficulty is None:
+                        continue
+                    if session_id <= 0 or reaction_time < 0 or not (0.0 <= accuracy <= 1.0) or not (1 <= difficulty <= 5):
+                        continue
+                        
+                    cognitive_domain = item.get('cognitive_domain')
+                    if cognitive_domain is not None:
+                        cognitive_domain = str(cognitive_domain)
+                    game_type = item.get('game_type')
+                    if game_type is not None:
+                        game_type = str(game_type)
+                        
+                    error_count = safe_int(item.get('error_count'), 0)
+                    hesitation_ms = safe_float(item.get('hesitation_ms'), 0.0)
+                    spam_click_count = safe_int(item.get('spam_click_count'), 0)
+                    
+                    rule_shift_latency_ms = safe_float(item.get('rule_shift_latency_ms'))
+                    path_efficiency = safe_float(item.get('path_efficiency'))
+                    
+                    if not game_type:
+                        cursor.execute("SELECT game_type FROM game_sessions WHERE id = ?", (session_id,))
+                        session_row = cursor.fetchone()
+                        if session_row:
+                            game_type = session_row['game_type']
+                            
+                    if game_type and not cognitive_domain:
+                        cognitive_domain = GAME_TO_DOMAIN.get(game_type)
+                        
+                    cursor.execute(
+                        """
+                        INSERT INTO performance_metrics 
+                        (session_id, reaction_time, accuracy_rate, difficulty_level, cognitive_domain, game_type, error_count, hesitation_ms, spam_click_count, rule_shift_latency_ms, path_efficiency) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        (session_id, reaction_time, accuracy, difficulty, cognitive_domain, game_type, error_count, hesitation_ms, spam_click_count, rule_shift_latency_ms, path_efficiency)
+                    )
+        finally:
+            conn.close()
+            
+        return jsonify({"status": "success", "message": f"{len(metrics_list)} metrics recorded"}), 201
+        
+    except Exception as e:
+        app.logger.error(f"Error in submit_metrics_batch: {e}")
         return jsonify({"status": "error", "message": f"Database or server error: {str(e)}"}), 500
 
 @app.route('/api/evaluate', methods=['POST'])
