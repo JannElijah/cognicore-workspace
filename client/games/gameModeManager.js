@@ -23,11 +23,45 @@ window.fetch = async function (url, options) {
 const OriginalGame = Phaser.Game;
 Phaser.Game = class extends OriginalGame {
     constructor(config) {
-        if (config && config.scene) {
-            const scenes = Array.isArray(config.scene) ? config.scene : [config.scene];
-            scenes.forEach(sceneClass => {
-                decorateSceneClass(sceneClass);
-            });
+        if (config) {
+            // Apply High-Performance configuration overrides
+            
+            // 1. Optimize WebGL/Canvas rendering pipeline
+            config.render = {
+                powerPreference: 'high-performance', // Request high performance GPU context
+                roundPixels: true,                   // Force pixel rounding to prevent costly sub-pixel anti-aliasing interpolation
+                antialias: false,                    // Disable antialias for raw canvas speed
+                batchSize: 4096,                     // Increase batch size for draw calls
+                ...(config.render || {})
+            };
+
+            // 2. Lock to stable target framerate
+            config.fps = {
+                target: 60,                          // Frame-rate target
+                forceSetTimeOut: false,              // Use requestAnimationFrame where possible
+                ...(config.fps || {})
+            };
+
+            // 3. Disable internal Phaser Audio to save CPU/Memory (React handles synth audio directly)
+            config.audio = {
+                noAudio: true,
+                ...(config.audio || {})
+            };
+
+            // 4. Input pipeline optimizations
+            config.input = {
+                activePointers: 1,                   // Limit pointer tracking to a single finger/mouse cursor
+                disableContextMenu: true,             // Prevent context menu overhead
+                ...(config.input || {})
+            };
+
+            // 5. Intercept and decorate the game scenes
+            if (config.scene) {
+                const scenes = Array.isArray(config.scene) ? config.scene : [config.scene];
+                scenes.forEach(sceneClass => {
+                    decorateSceneClass(sceneClass);
+                });
+            }
         }
         super(config);
     }
