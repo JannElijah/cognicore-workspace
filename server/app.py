@@ -133,7 +133,6 @@ GAME_TO_DOMAIN = {
 # Helper function to get database connection
 def get_db_connection():
     conn = sqlite3.connect(DB_PATH, timeout=30.0)
-    conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA synchronous=NORMAL")
     conn.execute("PRAGMA foreign_keys = ON;")
     conn.row_factory = sqlite3.Row
@@ -141,6 +140,11 @@ def get_db_connection():
 
 # Programmatic Schema Migration / Initialization
 def init_db():
+    # Set WAL mode once on the database file at startup
+    conn = sqlite3.connect(DB_PATH, timeout=30.0)
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.close()
+
     conn = get_db_connection()
     cursor = conn.cursor()
     
@@ -1231,18 +1235,21 @@ def adjust_difficulty():
                 # Cognitive Profiling Archetype Determination using Random Forest
                 # Features: avg_accuracy, avg_rt, acc_slope, rt_slope
                 
-                # Query preceding and current session averages for this user to compute slopes
+                # Query preceding and current session averages for this user to compute slopes, limiting to latest 20 sessions
                 cursor.execute(
                     """
-                    SELECT 
-                        gs.id AS session_id,
-                        AVG(pm.accuracy_rate) AS avg_accuracy,
-                        AVG(pm.reaction_time) AS avg_rt
-                    FROM game_sessions gs
-                    JOIN performance_metrics pm ON gs.id = pm.session_id
-                    WHERE gs.user_id = ? AND gs.id <= ?
-                    GROUP BY gs.id
-                    ORDER BY gs.id ASC
+                    SELECT session_id, avg_accuracy, avg_rt FROM (
+                        SELECT 
+                            gs.id AS session_id,
+                            AVG(pm.accuracy_rate) AS avg_accuracy,
+                            AVG(pm.reaction_time) AS avg_rt
+                        FROM game_sessions gs
+                        JOIN performance_metrics pm ON gs.id = pm.session_id
+                        WHERE gs.user_id = ? AND gs.id <= ?
+                        GROUP BY gs.id
+                        ORDER BY gs.id DESC
+                        LIMIT 20
+                    ) ORDER BY session_id ASC
                     """,
                     (user_id, session_id)
                 )
@@ -1424,9 +1431,11 @@ def submit_metrics_batch():
             return jsonify({"status": "success", "message": "No metrics to record"}), 201
             
         conn = get_db_connection()
+        recorded_count = 0
         try:
             with conn:
                 cursor = conn.cursor()
+                session_game_types = {}
                 for item in metrics_list:
                     session_id = safe_int(item.get('session_id'))
                     rt_val = item.get('reaction_time') if item.get('reaction_time') is not None else item.get('reaction_time_ms')
@@ -1456,10 +1465,16 @@ def submit_metrics_batch():
                     path_efficiency = safe_float(item.get('path_efficiency'))
                     
                     if not game_type:
-                        cursor.execute("SELECT game_type FROM game_sessions WHERE id = ?", (session_id,))
-                        session_row = cursor.fetchone()
-                        if session_row:
-                            game_type = session_row['game_type']
+                        if session_id in session_game_types:
+                            game_type = session_game_types[session_id]
+                        else:
+                            cursor.execute("SELECT game_type FROM game_sessions WHERE id = ?", (session_id,))
+                            session_row = cursor.fetchone()
+                            if session_row:
+                                game_type = session_row['game_type']
+                                session_game_types[session_id] = game_type
+                    else:
+                        session_game_types[session_id] = game_type
                             
                     if game_type and not cognitive_domain:
                         cognitive_domain = GAME_TO_DOMAIN.get(game_type)
@@ -1472,10 +1487,11 @@ def submit_metrics_batch():
                         """,
                         (session_id, reaction_time, accuracy, difficulty, cognitive_domain, game_type, error_count, hesitation_ms, spam_click_count, rule_shift_latency_ms, path_efficiency)
                     )
+                    recorded_count += 1
         finally:
             conn.close()
             
-        return jsonify({"status": "success", "message": f"{len(metrics_list)} metrics recorded"}), 201
+        return jsonify({"status": "success", "message": f"{recorded_count} metrics recorded"}), 201
         
     except Exception as e:
         app.logger.error(f"Error in submit_metrics_batch: {e}")
@@ -1675,8 +1691,8 @@ def evaluate_thesis():
 
 @app.route('/api/cohort-analytics', methods=['GET'])
 def get_cohort_analytics():
+    conn = get_db_connection()
     try:
-        conn = get_db_connection()
         cursor = conn.cursor()
         
         # Query matched pre and post scores for research subjects
@@ -1698,7 +1714,6 @@ def get_cohort_analytics():
             """
         )
         rows = cursor.fetchall()
-        conn.close()
         
         if not rows:
             return jsonify({
@@ -1862,6 +1877,8 @@ def get_cohort_analytics():
     except Exception as e:
         app.logger.error(f"Error in get_cohort_analytics: {e}")
         return jsonify({"status": "error", "message": f"Cohort evaluation error: {str(e)}"}), 500
+    finally:
+        conn.close()
 
 @app.route('/api/iso-evaluations', methods=['POST'])
 def submit_iso_evaluation():
@@ -1889,17 +1906,19 @@ def submit_iso_evaluation():
             return jsonify({"status": "error", "message": "All scores must be between 1 and 5 (Likert scale)."}), 400
             
         conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            """
-            INSERT INTO iso_evaluations 
-            (functionality_score, usability_score, reliability_score, efficiency_score, ux_score) 
-            VALUES (?, ?, ?, ?, ?)
-            """,
-            scores
-        )
-        conn.commit()
-        conn.close()
+        try:
+            with conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    """
+                    INSERT INTO iso_evaluations 
+                    (functionality_score, usability_score, reliability_score, efficiency_score, ux_score) 
+                    VALUES (?, ?, ?, ?, ?)
+                    """,
+                    scores
+                )
+        finally:
+            conn.close()
         
         return jsonify({"status": "success", "message": "ISO 25010 evaluation recorded successfully."}), 201
         
@@ -1909,14 +1928,13 @@ def submit_iso_evaluation():
 
 @app.route('/api/iso-evaluations', methods=['GET'])
 def get_iso_evaluations():
+    conn = get_db_connection()
     try:
-        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
             "SELECT id, functionality_score, usability_score, reliability_score, efficiency_score, ux_score, created_at FROM iso_evaluations ORDER BY created_at DESC"
         )
         rows = cursor.fetchall()
-        conn.close()
         
         evaluations = []
         for r in rows:
@@ -1938,11 +1956,13 @@ def get_iso_evaluations():
     except Exception as e:
         app.logger.error(f"Error in get_iso_evaluations: {e}")
         return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
+    finally:
+        conn.close()
 
 @app.route('/api/iso-evaluations/summary', methods=['GET'])
 def get_iso_evaluations_summary():
+    conn = get_db_connection()
     try:
-        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
             """
@@ -1957,7 +1977,6 @@ def get_iso_evaluations_summary():
             """
         )
         row = cursor.fetchone()
-        conn.close()
         
         if row and row["count"] > 0:
             summary = {
@@ -1986,11 +2005,13 @@ def get_iso_evaluations_summary():
     except Exception as e:
         app.logger.error(f"Error in get_iso_evaluations_summary: {e}")
         return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
+    finally:
+        conn.close()
 
 @app.route('/api/cohort-db-scores', methods=['GET'])
 def get_cohort_db_scores():
+    conn = get_db_connection()
     try:
-        conn = get_db_connection()
         cursor = conn.cursor()
         
         # Get all users starting with clinical_subject_
@@ -2028,8 +2049,6 @@ def get_cohort_db_scores():
                 # Fallback if less than 10
                 pretest_scores.append(round(accuracies[0] * 100, 1))
                 posttest_scores.append(round(accuracies[-1] * 100, 1))
-                
-        conn.close()
         
         return jsonify({
             "status": "success",
@@ -2041,15 +2060,17 @@ def get_cohort_db_scores():
     except Exception as e:
         app.logger.error(f"Error in get_cohort_db_scores: {e}")
         return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
+    finally:
+        conn.close()
 
 @app.route('/api/export-csv', methods=['GET'])
 def export_csv():
+    conn = get_db_connection()
     try:
         from flask import Response
         import csv
         import io
         
-        conn = get_db_connection()
         cursor = conn.cursor()
         
         query = """
@@ -2076,7 +2097,6 @@ def export_csv():
         """
         cursor.execute(query)
         rows = cursor.fetchall()
-        conn.close()
 
         output = io.StringIO()
         writer = csv.writer(output)
@@ -2108,28 +2128,39 @@ def export_csv():
     except Exception as e:
         app.logger.error(f"Error in export_csv: {e}")
         return jsonify({"status": "error", "message": f"Export failed: {str(e)}"}), 500
+    finally:
+        conn.close()
 
 @app.route('/api/user-session-history/<username>', methods=['GET'])
 def get_user_session_history(username):
+    conn = get_db_connection()
     try:
-        conn = get_db_connection()
         cursor = conn.cursor()
         
         # Get user
         cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
         user = cursor.fetchone()
         if not user:
-            conn.close()
             return jsonify({"status": "success", "sessions": []}), 200
         user_id = user['id']
         
-        # Fetch sessions
+        # Fetch sessions with precomputed stats in a single join query
         cursor.execute(
             """
-            SELECT id, game_type, game_mode, start_time 
-            FROM game_sessions 
-            WHERE user_id = ? 
-            ORDER BY start_time DESC
+            SELECT 
+                gs.id AS session_id, 
+                gs.game_type, 
+                gs.game_mode, 
+                gs.start_time,
+                AVG(pm.reaction_time) AS avg_rt,
+                AVG(pm.accuracy_rate) AS avg_acc,
+                MAX(pm.difficulty_level) AS max_diff,
+                COUNT(pm.id) AS rounds_count
+            FROM game_sessions gs
+            LEFT JOIN performance_metrics pm ON gs.id = pm.session_id
+            WHERE gs.user_id = ?
+            GROUP BY gs.id
+            ORDER BY gs.start_time DESC
             """,
             (user_id,)
         )
@@ -2137,46 +2168,36 @@ def get_user_session_history(username):
         
         sessions = []
         for s in sessions_rows:
-            sid = s['id']
-            # Get summary stats for this session
-            cursor.execute(
-                """
-                SELECT 
-                    AVG(reaction_time) as avg_rt,
-                    AVG(accuracy_rate) as avg_acc,
-                    MAX(difficulty_level) as max_diff,
-                    COUNT(*) as count
-                FROM performance_metrics
-                WHERE session_id = ?
-                """,
-                (sid,)
-            )
-            stats = cursor.fetchone()
-            
             sessions.append({
-                "session_id": sid,
+                "session_id": s["session_id"],
                 "game_type": s["game_type"],
                 "game_mode": s["game_mode"] if s["game_mode"] else "timed",
                 "start_time": s["start_time"],
-                "avg_rt": round(stats["avg_rt"], 2) if stats["avg_rt"] is not None else 0.0,
-                "avg_acc": round(stats["avg_acc"], 4) if stats["avg_acc"] is not None else 0.0,
-                "max_diff": stats["max_diff"] if stats["max_diff"] is not None else 1,
-                "rounds_count": stats["count"]
+                "avg_rt": round(s["avg_rt"], 2) if s["avg_rt"] is not None else 0.0,
+                "avg_acc": round(s["avg_acc"], 4) if s["avg_acc"] is not None else 0.0,
+                "max_diff": s["max_diff"] if s["max_diff"] is not None else 1,
+                "rounds_count": s["rounds_count"]
             })
             
-        conn.close()
         return jsonify({"status": "success", "sessions": sessions}), 200
         
     except Exception as e:
         app.logger.error(f"Error in get_user_session_history: {e}")
         return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
+    finally:
+        conn.close()
 
 @app.route('/api/session-metrics/<int:session_id>', methods=['GET'])
 def get_session_metrics(session_id):
+    conn = get_db_connection()
     try:
-        conn = get_db_connection()
         cursor = conn.cursor()
         
+        # Verify if session exists
+        cursor.execute("SELECT id FROM game_sessions WHERE id = ?", (session_id,))
+        if not cursor.fetchone():
+            return jsonify({"status": "error", "message": f"Session ID {session_id} not found."}), 404
+
         cursor.execute(
             """
             SELECT id, reaction_time, accuracy_rate, difficulty_level, recorded_at, rule_shift_latency_ms, path_efficiency
@@ -2187,7 +2208,6 @@ def get_session_metrics(session_id):
             (session_id,)
         )
         rows = cursor.fetchall()
-        conn.close()
         
         metrics = []
         for r in rows:
@@ -2208,11 +2228,13 @@ def get_session_metrics(session_id):
     except Exception as e:
         app.logger.error(f"Error in get_session_metrics: {e}")
         return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
+    finally:
+        conn.close()
 
 @app.route('/api/cohort-comparison/<username>', methods=['GET'])
 def get_cohort_comparison(username):
+    conn = get_db_connection()
     try:
-        conn = get_db_connection()
         cursor = conn.cursor()
         
         # Get active user averages
@@ -2248,7 +2270,6 @@ def get_cohort_comparison(username):
         cohort_rt = round(cohort_stats["avg_rt"], 2) if cohort_stats and cohort_stats["avg_rt"] is not None else 0.0
         cohort_acc = round(cohort_stats["avg_acc"], 4) if cohort_stats and cohort_stats["avg_acc"] is not None else 0.0
         
-        conn.close()
         return jsonify({
             "status": "success",
             "username": username,
@@ -2267,18 +2288,19 @@ def get_cohort_comparison(username):
     except Exception as e:
         app.logger.error(f"Error in get_cohort_comparison: {e}")
         return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
+    finally:
+        conn.close()
 
 @app.route('/api/archetype-progression/<username>', methods=['GET'])
 def get_archetype_progression(username):
+    conn = get_db_connection()
     try:
-        conn = get_db_connection()
         cursor = conn.cursor()
         
         # Get user
         cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
         user = cursor.fetchone()
         if not user:
-            conn.close()
             return jsonify({"status": "success", "history": []}), 200
         user_id = user['id']
         
@@ -2294,7 +2316,6 @@ def get_archetype_progression(username):
             (user_id,)
         )
         rows = cursor.fetchall()
-        conn.close()
         
         history = []
         for r in rows:
@@ -2312,6 +2333,8 @@ def get_archetype_progression(username):
     except Exception as e:
         app.logger.error(f"Error in get_archetype_progression: {e}")
         return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
+    finally:
+        conn.close()
 
 
 def calculate_pearson_r(x, y):
@@ -2378,38 +2401,40 @@ def get_research_correlations():
             return jsonify({"status": "error", "message": "Invalid variables selected"}), 400
 
         conn = get_db_connection()
-        cursor = conn.cursor()
+        try:
+            cursor = conn.cursor()
 
-        if cohort == 'active' and active_username:
-            query = f"""
-                SELECT pm.{var1}, pm.{var2}, u.username
-                FROM performance_metrics pm
-                JOIN game_sessions gs ON pm.session_id = gs.id
-                JOIN users u ON gs.user_id = u.id
-                WHERE u.username = ? AND pm.{var1} IS NOT NULL AND pm.{var2} IS NOT NULL
-            """
-            cursor.execute(query, (active_username,))
-        elif cohort == 'clinical':
-            query = f"""
-                SELECT pm.{var1}, pm.{var2}, u.username
-                FROM performance_metrics pm
-                JOIN game_sessions gs ON pm.session_id = gs.id
-                JOIN users u ON gs.user_id = u.id
-                WHERE u.username LIKE 'clinical_subject_%' AND pm.{var1} IS NOT NULL AND pm.{var2} IS NOT NULL
-            """
-            cursor.execute(query)
-        else:  # all
-            query = f"""
-                SELECT pm.{var1}, pm.{var2}, u.username
-                FROM performance_metrics pm
-                JOIN game_sessions gs ON pm.session_id = gs.id
-                JOIN users u ON gs.user_id = u.id
-                WHERE pm.{var1} IS NOT NULL AND pm.{var2} IS NOT NULL
-            """
-            cursor.execute(query)
+            if cohort == 'active' and active_username:
+                query = f"""
+                    SELECT pm.{var1}, pm.{var2}, u.username
+                    FROM performance_metrics pm
+                    JOIN game_sessions gs ON pm.session_id = gs.id
+                    JOIN users u ON gs.user_id = u.id
+                    WHERE u.username = ? AND pm.{var1} IS NOT NULL AND pm.{var2} IS NOT NULL
+                """
+                cursor.execute(query, (active_username,))
+            elif cohort == 'clinical':
+                query = f"""
+                    SELECT pm.{var1}, pm.{var2}, u.username
+                    FROM performance_metrics pm
+                    JOIN game_sessions gs ON pm.session_id = gs.id
+                    JOIN users u ON gs.user_id = u.id
+                    WHERE u.username LIKE 'clinical_subject_%' AND pm.{var1} IS NOT NULL AND pm.{var2} IS NOT NULL
+                """
+                cursor.execute(query)
+            else:  # all
+                query = f"""
+                    SELECT pm.{var1}, pm.{var2}, u.username
+                    FROM performance_metrics pm
+                    JOIN game_sessions gs ON pm.session_id = gs.id
+                    JOIN users u ON gs.user_id = u.id
+                    WHERE pm.{var1} IS NOT NULL AND pm.{var2} IS NOT NULL
+                """
+                cursor.execute(query)
 
-        rows = cursor.fetchall()
-        conn.close()
+            rows = cursor.fetchall()
+        finally:
+            conn.close()
 
         x_vals = []
         y_vals = []
@@ -2463,8 +2488,8 @@ def get_research_correlations():
 
 @app.route('/api/research/learning-curves/<username>', methods=['GET'])
 def get_learning_curves(username):
+    conn = get_db_connection()
     try:
-        conn = get_db_connection()
         cursor = conn.cursor()
 
         cursor.execute("""
@@ -2474,11 +2499,11 @@ def get_learning_curves(username):
             FROM game_sessions gs
             JOIN users u ON gs.user_id = u.id
             LEFT JOIN performance_metrics pm ON pm.session_id = gs.id
+            WHERE u.username = ? OR u.username LIKE 'clinical_subject_%'
             GROUP BY gs.id
             ORDER BY gs.user_id, gs.start_time ASC
-        """)
+        """, (username,))
         rows = cursor.fetchall()
-        conn.close()
 
         user_sessions = {}
         for r in rows:
@@ -2553,19 +2578,21 @@ def get_learning_curves(username):
     except Exception as e:
         app.logger.error(f"Error in get_learning_curves: {e}")
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+    finally:
+        conn.close()
 
 
 @app.route('/api/training-goals/<username>', methods=['GET'])
 def get_training_goals(username):
+    conn = get_db_connection()
     try:
-        conn = get_db_connection()
         cursor = conn.cursor()
 
         cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
         user = cursor.fetchone()
         if not user:
-            cursor.execute("INSERT INTO users (username) VALUES (?)", (username,))
-            conn.commit()
+            with conn:
+                cursor.execute("INSERT INTO users (username) VALUES (?)", (username,))
             cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
             user = cursor.fetchone()
         
@@ -2573,6 +2600,33 @@ def get_training_goals(username):
 
         cursor.execute("SELECT id, domain, metric_type, target_value, is_completed FROM training_goals WHERE user_id = ?", (user_id,))
         goals_rows = cursor.fetchall()
+
+        # Query all domain averages for this user in a single database roundtrip
+        cursor.execute(
+            """
+            SELECT 
+                pm.cognitive_domain,
+                AVG(pm.accuracy_rate) AS avg_acc,
+                AVG(pm.reaction_time) AS avg_rt,
+                MAX(pm.difficulty_level) AS max_diff
+            FROM performance_metrics pm
+            JOIN game_sessions gs ON pm.session_id = gs.id
+            WHERE gs.user_id = ?
+            GROUP BY pm.cognitive_domain
+            """,
+            (user_id,)
+        )
+        stats_rows = cursor.fetchall()
+        
+        # Map cognitive_domain to its metrics
+        domain_stats = {
+            row['cognitive_domain']: {
+                'avg_acc': row['avg_acc'],
+                'avg_rt': row['avg_rt'],
+                'max_diff': row['max_diff']
+            }
+            for row in stats_rows if row['cognitive_domain'] is not None
+        }
 
         goals = []
         for g in goals_rows:
@@ -2582,20 +2636,7 @@ def get_training_goals(username):
             target_value = g['target_value']
             is_completed_db = g['is_completed']
 
-            cursor.execute(
-                """
-                SELECT 
-                    AVG(pm.accuracy_rate) as avg_acc,
-                    AVG(pm.reaction_time) as avg_rt,
-                    MAX(pm.difficulty_level) as max_diff
-                FROM performance_metrics pm
-                JOIN game_sessions gs ON pm.session_id = gs.id
-                WHERE gs.user_id = ? AND pm.cognitive_domain = ?
-                """,
-                (user_id, domain)
-            )
-            stats = cursor.fetchone()
-            
+            stats = domain_stats.get(domain)
             current_value = 0.0
             achieved = False
 
@@ -2615,8 +2656,8 @@ def get_training_goals(username):
 
             just_completed = False
             if achieved and is_completed_db == 0:
-                cursor.execute("UPDATE training_goals SET is_completed = 1 WHERE id = ?", (gid,))
-                conn.commit()
+                with conn:
+                    cursor.execute("UPDATE training_goals SET is_completed = 1 WHERE id = ?", (gid,))
                 just_completed = True
                 is_completed_db = 1
 
@@ -2630,12 +2671,13 @@ def get_training_goals(username):
                 "just_completed": just_completed
             })
 
-        conn.close()
         return jsonify({"status": "success", "goals": goals}), 200
 
     except Exception as e:
         app.logger.error(f"Error in get_training_goals: {e}")
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+    finally:
+        conn.close()
 
 
 @app.route('/api/training-goals', methods=['POST'])
@@ -2650,28 +2692,48 @@ def create_training_goal():
         if not username or not domain or not metric_type or target_value is None:
             return jsonify({"status": "error", "message": "Missing required parameters"}), 400
 
+        # Input Validation
+        valid_domains = {"spatial_visual_memory", "logical_mathematical", "reflexes_and_focus", "executive_strategy"}
+        if domain not in valid_domains:
+            return jsonify({"status": "error", "message": f"Invalid cognitive domain: {domain}"}), 400
+
+        if metric_type not in {"accuracy", "reaction_time", "difficulty"}:
+            return jsonify({"status": "error", "message": f"Invalid metric type: {metric_type}"}), 400
+
+        try:
+            val = float(target_value)
+            if val < 0:
+                return jsonify({"status": "error", "message": "target_value must be a positive number."}), 400
+            if metric_type == "accuracy" and (val < 0.0 or val > 100.0):
+                return jsonify({"status": "error", "message": "Accuracy target must be a percentage between 0 and 100."}), 400
+            if metric_type == "difficulty" and (val < 1.0 or val > 5.0):
+                return jsonify({"status": "error", "message": "Difficulty target must be a level between 1 and 5."}), 400
+        except (ValueError, TypeError):
+            return jsonify({"status": "error", "message": "target_value must be a valid number."}), 400
+
         conn = get_db_connection()
-        cursor = conn.cursor()
+        try:
+            with conn:
+                cursor = conn.cursor()
 
-        cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
-        user = cursor.fetchone()
-        if not user:
-            cursor.execute("INSERT INTO users (username) VALUES (?)", (username,))
-            conn.commit()
-            cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
-            user = cursor.fetchone()
+                cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+                user = cursor.fetchone()
+                if not user:
+                    cursor.execute("INSERT INTO users (username) VALUES (?)", (username,))
+                    cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+                    user = cursor.fetchone()
 
-        user_id = user['id']
+                user_id = user['id']
 
-        cursor.execute(
-            """
-            INSERT INTO training_goals (user_id, domain, metric_type, target_value, is_completed)
-            VALUES (?, ?, ?, ?, 0)
-            """,
-            (user_id, domain, metric_type, float(target_value))
-        )
-        conn.commit()
-        conn.close()
+                cursor.execute(
+                    """
+                    INSERT INTO training_goals (user_id, domain, metric_type, target_value, is_completed)
+                    VALUES (?, ?, ?, ?, 0)
+                    """,
+                    (user_id, domain, metric_type, val)
+                )
+        finally:
+            conn.close()
 
         return jsonify({"status": "success", "message": "Goal created successfully"}), 201
 
@@ -2682,23 +2744,25 @@ def create_training_goal():
 
 @app.route('/api/training-goals/<int:goal_id>', methods=['DELETE'])
 def delete_training_goal(goal_id):
+    conn = get_db_connection()
     try:
-        conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM training_goals WHERE id = ?", (goal_id,))
-        conn.commit()
-        conn.close()
+        with conn:
+            cursor.execute("DELETE FROM training_goals WHERE id = ?", (goal_id,))
+            if cursor.rowcount == 0:
+                return jsonify({"status": "error", "message": f"Training goal with ID {goal_id} not found."}), 404
         return jsonify({"status": "success", "message": "Goal deleted successfully"}), 200
     except Exception as e:
         app.logger.error(f"Error in delete_training_goal: {e}")
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+    finally:
+        conn.close()
 
 
 @app.route('/metrics', methods=['GET'])
-
 def get_metrics():
+    conn = get_db_connection()
     try:
-        conn = get_db_connection()
         cursor = conn.cursor()
         
         # Total sessions
@@ -2729,8 +2793,6 @@ def get_metrics():
                 "total_records": cnt
             }
             
-        conn.close()
-        
         return jsonify({
             "status": "success",
             "total_sessions": total_sessions,
@@ -2741,6 +2803,8 @@ def get_metrics():
     except Exception as e:
         app.logger.error(f"Error in get_metrics: {e}")
         return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
+    finally:
+        conn.close()
 
 
 
