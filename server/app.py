@@ -2126,7 +2126,7 @@ def get_user_session_history(username):
         # Fetch sessions
         cursor.execute(
             """
-            SELECT id, game_type, start_time 
+            SELECT id, game_type, game_mode, start_time 
             FROM game_sessions 
             WHERE user_id = ? 
             ORDER BY start_time DESC
@@ -2156,6 +2156,7 @@ def get_user_session_history(username):
             sessions.append({
                 "session_id": sid,
                 "game_type": s["game_type"],
+                "game_mode": s["game_mode"] if s["game_mode"] else "timed",
                 "start_time": s["start_time"],
                 "avg_rt": round(stats["avg_rt"], 2) if stats["avg_rt"] is not None else 0.0,
                 "avg_acc": round(stats["avg_acc"], 4) if stats["avg_acc"] is not None else 0.0,
