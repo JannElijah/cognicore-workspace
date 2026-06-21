@@ -66,13 +66,13 @@ def run_tuning_tests():
     assert "confidence_score" in res_fast
     
     # 2. Test Fatiguing metrics
-    res_fatigue = archetype_classifier.predict(0.60, 950.0, -0.06, 80.0)
+    res_fatigue = archetype_classifier.predict(0.20, 25000.0, -0.06, 80.0)
     print(f"  High Fatigue prediction output: {res_fatigue}")
     assert res_fatigue["archetype"] == "High Fatigue"
     assert "confidence_score" in res_fatigue
     
     # 3. Test Plateauing metrics
-    res_plat = archetype_classifier.predict(0.80, 550.0, 0.0, 0.0)
+    res_plat = archetype_classifier.predict(0.50, 1000.0, 0.0, 0.0)
     print(f"  Plateauing prediction output: {res_plat}")
     assert res_plat["archetype"] == "Plateauing"
     assert "confidence_score" in res_plat

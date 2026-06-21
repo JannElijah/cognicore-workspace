@@ -2759,6 +2759,175 @@ def delete_training_goal(goal_id):
         conn.close()
 
 
+
+@app.route('/api/model/status', methods=['GET'])
+def get_model_status():
+    try:
+        from model import SKLEARN_AVAILABLE
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(DISTINCT session_id) FROM performance_metrics")
+        dataset_size = cursor.fetchone()[0]
+        conn.close()
+
+        hyperparams = None
+        rf_classes = None
+        if SKLEARN_AVAILABLE and archetype_classifier.model is not None:
+            hyperparams = archetype_classifier.model.get_params()
+            rf_classes = list(archetype_classifier.model.classes_)
+
+        return jsonify({
+            "status": "success",
+            "is_sklearn_available": SKLEARN_AVAILABLE,
+            "is_loaded_from_disk": archetype_classifier.is_loaded_from_disk,
+            "has_rf_model": archetype_classifier.model is not None,
+            "has_clustering_model": archetype_classifier.clustering_model is not None,
+            "has_scaler": archetype_classifier.scaler is not None,
+            "hyperparameters": hyperparams,
+            "rf_classes": rf_classes,
+            "dataset_size": dataset_size
+        }), 200
+    except Exception as e:
+        app.logger.error(f"Error in get_model_status: {e}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+
+
+@app.route('/api/model/retrain', methods=['POST'])
+def retrain_model():
+    try:
+        from train_model import train_retargeted_classifier
+        res = train_retargeted_classifier()
+        if res and res.get("status") == "success":
+            # Reload classifier instance to fetch newly serialized pickle files
+            archetype_classifier.__init__()
+            return jsonify(res), 200
+        else:
+            return jsonify({
+                "status": "error", 
+                "message": "Model retraining pipeline completed with error or insufficient data samples."
+            }), 400
+    except Exception as e:
+        app.logger.error(f"Error in retrain_model: {e}")
+        return jsonify({"status": "error", "message": f"Retraining pipeline failed: {str(e)}"}), 500
+
+
+@app.route('/api/model/clusters', methods=['GET'])
+def get_model_clusters():
+    try:
+        import numpy as np
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+            SELECT 
+                gs.id AS session_id,
+                u.username,
+                gs.game_type,
+                AVG(pm.accuracy_rate) AS avg_acc,
+                AVG(pm.reaction_time) AS avg_rt,
+                AVG(pm.hesitation_ms) AS avg_hes,
+                AVG(pm.spam_click_count) AS avg_spam,
+                AVG(pm.rule_shift_latency_ms) AS avg_rule,
+                AVG(pm.path_efficiency) AS avg_path
+            FROM game_sessions gs
+            JOIN users u ON gs.user_id = u.id
+            JOIN performance_metrics pm ON gs.id = pm.session_id
+            GROUP BY gs.id
+            ORDER BY gs.id ASC
+        """
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        conn.close()
+
+        user_sessions = {}
+        for r in rows:
+            uname = r["username"]
+            if uname not in user_sessions:
+                user_sessions[uname] = []
+            user_sessions[uname].append(r)
+
+        data_points = []
+        X_features = []
+
+        for uname, sessions in user_sessions.items():
+            history_acc = []
+            history_rt = []
+            for s in sessions:
+                avg_acc = s["avg_acc"]
+                avg_rt = s["avg_rt"]
+                history_acc.append(avg_acc)
+                history_rt.append(avg_rt)
+
+                acc_slope = calculate_ols_slope(history_acc)
+                rt_slope = calculate_ols_slope(history_rt)
+
+                avg_hes = s["avg_hes"] if s["avg_hes"] is not None else 0.0
+                avg_spam = s["avg_spam"] if s["avg_spam"] is not None else 0.0
+                avg_path = s["avg_path"] if s["avg_path"] is not None else 1.0
+
+                feature_vector = [avg_acc, avg_rt, acc_slope, rt_slope, avg_hes, avg_spam, avg_path]
+                X_features.append(feature_vector)
+
+                data_points.append({
+                    "session_id": s["session_id"],
+                    "username": uname,
+                    "game_type": s["game_type"],
+                    "accuracy": round(avg_acc, 4),
+                    "reaction_time": round(avg_rt, 2),
+                    "acc_slope": round(acc_slope, 4),
+                    "rt_slope": round(rt_slope, 2),
+                    "hesitation": round(avg_hes, 2),
+                    "spam_clicks": round(avg_spam, 2),
+                    "path_efficiency": round(avg_path, 4)
+                })
+
+        if not data_points:
+            return jsonify({"status": "success", "data_points": []}), 200
+
+        from model import SKLEARN_AVAILABLE
+        if SKLEARN_AVAILABLE and archetype_classifier.clustering_model is not None and archetype_classifier.scaler is not None:
+            X_arr = np.array(X_features)
+            X_scaled = archetype_classifier.scaler.transform(X_arr)
+            cluster_labels = archetype_classifier.clustering_model.predict(X_scaled)
+
+            centroids = archetype_classifier.clustering_model.cluster_centers_
+            centroids_orig = archetype_classifier.scaler.inverse_transform(centroids)
+
+            cluster_scores = []
+            for i in range(3):
+                mean_acc = centroids_orig[i][0]
+                mean_rt = centroids_orig[i][1]
+                score = mean_acc * 1000.0 - mean_rt
+                cluster_scores.append((score, i))
+            cluster_scores.sort()
+
+            cluster_mapping = {
+                cluster_scores[0][1]: "High Fatigue",
+                cluster_scores[1][1]: "Plateauing",
+                cluster_scores[2][1]: "Fast Learner"
+            }
+
+            for idx, label in enumerate(cluster_labels):
+                data_points[idx]["cluster"] = cluster_mapping[label]
+        else:
+            for dp in data_points:
+                acc_slope = dp["acc_slope"]
+                rt_slope = dp["rt_slope"]
+                if acc_slope > 0.01 and rt_slope < -10.0:
+                    dp["cluster"] = "Fast Learner"
+                elif acc_slope < -0.01 and rt_slope > 10.0:
+                    dp["cluster"] = "High Fatigue"
+                else:
+                    dp["cluster"] = "Plateauing"
+
+        return jsonify({
+            "status": "success",
+            "data_points": data_points
+        }), 200
+    except Exception as e:
+        app.logger.error(f"Error in get_model_clusters: {e}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+
+
 @app.route('/metrics', methods=['GET'])
 def get_metrics():
     conn = get_db_connection()

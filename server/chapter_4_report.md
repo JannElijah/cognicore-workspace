@@ -1,6 +1,6 @@
 # Chapter 4 Statistical Verification Report
 
-*Generated on: 2026-06-10 22:23:11*
+*Generated on: 2026-06-21 19:01:36*
 
 This report provides automated statistical evaluations matching Chapter 4 manuscript requirements. A Paired t-test is applied over the 30 clinical cohort subjects to verify cognitive improvement, along with micro-behavioral Pearson correlation coefficients.
 
@@ -22,7 +22,7 @@ Pearson correlation analysis of micro-behavioral metrics captured during game ex
 | Variable 1 (X) | Variable 2 (Y) | Correlation Coefficient ($r$) | Coefficient of Determination ($R^2$) | p-value | Significance | Interpretation |
 | :--- | :--- | :---: | :---: | :---: | :---: | :--- |
 | Rule-Shift Latency | Spam Click Count | 0.8279 | 0.6855 | 7.950304e-77 | Significant (p < 0.05) | There is a strong positive correlation. |
-| Hesitation (ms) | Reaction Time (ms) | 0.5509 | 0.3035 | 1.383385e-154 | Significant (p < 0.05) | There is a moderate positive correlation. |
+| Hesitation (ms) | Reaction Time (ms) | 0.5263 | 0.2770 | 1.929006e-168 | Significant (p < 0.05) | There is a moderate positive correlation. |
 
 ## 3. Generated Chapter 4 Figures
 

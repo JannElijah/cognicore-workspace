@@ -533,6 +533,17 @@ export default function App() {
   const [ddaAdvisorMessage, setDdaAdvisorMessage] = useState(null);
   const prevDdaParamsRef = useRef(null);
 
+  // Unsupervised Archetype Clustering & Retraining states
+  const [activeResearcherTab, setActiveResearcherTab] = useState('cohort-stats'); // 'cohort-stats' | 'ai-sandbox'
+  const [modelStatus, setModelStatus] = useState(null);
+  const [retrainMetrics, setRetrainMetrics] = useState(null);
+  const [retrainLoading, setRetrainLoading] = useState(false);
+  const [clusterDataPoints, setClusterDataPoints] = useState([]);
+  const [clusterLoading, setClusterLoading] = useState(false);
+  const [clusterError, setClusterError] = useState(null);
+  const [clusterXVar, setClusterXVar] = useState('reaction_time');
+  const [clusterYVar, setClusterYVar] = useState('accuracy');
+
   // Live Game DDA HUD States (Phase 2)
   const [activeSessionId, setActiveSessionId] = useState(null);
   const [liveDdaParams, setLiveDdaParams] = useState(null);
@@ -1155,13 +1166,223 @@ export default function App() {
     }
   };
 
+  // Unsupervised Archetype Clustering & Model Retraining methods
+  const fetchModelStatus = async () => {
+    try {
+      const res = await fetch('http://127.0.0.1:5000/api/model/status');
+      if (!res.ok) throw new Error('Failed to load active model status.');
+      const data = await res.json();
+      if (data.status === 'success') {
+        setModelStatus(data);
+      }
+    } catch (e) {
+      console.error("[Model Status Fetch] Failed:", e);
+    }
+  };
+
+  const fetchClusterPoints = async () => {
+    setClusterLoading(true);
+    setClusterError(null);
+    try {
+      const res = await fetch('http://127.0.0.1:5000/api/model/clusters');
+      if (!res.ok) throw new Error('Failed to load clustered session points.');
+      const data = await res.json();
+      if (data.status === 'success') {
+        setClusterDataPoints(data.data_points || []);
+      } else {
+        throw new Error(data.message || 'Clustered session points fetch failed.');
+      }
+    } catch (e) {
+      console.error("[Cluster Points Fetch] Failed:", e);
+      setClusterError(e.message);
+    } finally {
+      setClusterLoading(false);
+    }
+  };
+
+  const triggerModelRetrain = async () => {
+    setRetrainLoading(true);
+    try {
+      const res = await fetch('http://127.0.0.1:5000/api/model/retrain', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      if (!res.ok) throw new Error('Model retraining pipeline failed or returned an error.');
+      const data = await res.json();
+      if (data.status === 'success') {
+        setRetrainMetrics(data);
+        // Refresh status and clustered data points after successful retraining
+        fetchModelStatus();
+        fetchClusterPoints();
+      } else {
+        throw new Error(data.message || 'Model retraining pipeline failed.');
+      }
+    } catch (e) {
+      console.error("[Model Retrain] Failed:", e);
+      alert(`Retraining failed: ${e.message}`);
+    } finally {
+      setRetrainLoading(false);
+    }
+  };
+
+  const getClusteringScatterData = () => {
+    if (!clusterDataPoints || clusterDataPoints.length === 0) {
+      return { datasets: [] };
+    }
+
+    const fastLearnerPoints = [];
+    const plateauingPoints = [];
+    const highFatiguePoints = [];
+
+    clusterDataPoints.forEach(p => {
+      const pt = {
+        x: p[clusterXVar],
+        y: p[clusterYVar],
+        username: p.username,
+        game_type: p.game_type,
+        session_id: p.session_id
+      };
+      if (p.cluster === 'Fast Learner') {
+        fastLearnerPoints.push(pt);
+      } else if (p.cluster === 'Plateauing') {
+        plateauingPoints.push(pt);
+      } else if (p.cluster === 'High Fatigue') {
+        highFatiguePoints.push(pt);
+      }
+    });
+
+    return {
+      datasets: [
+        {
+          label: 'Fast Learner',
+          data: fastLearnerPoints,
+          backgroundColor: '#10b981', // green/emerald
+          borderColor: 'rgba(16, 185, 129, 0.4)',
+          borderWidth: 1,
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          type: 'scatter'
+        },
+        {
+          label: 'Plateauing',
+          data: plateauingPoints,
+          backgroundColor: '#f59e0b', // amber/yellow
+          borderColor: 'rgba(245, 158, 11, 0.4)',
+          borderWidth: 1,
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          type: 'scatter'
+        },
+        {
+          label: 'High Fatigue',
+          data: highFatiguePoints,
+          backgroundColor: '#ef4444', // red
+          borderColor: 'rgba(239, 68, 68, 0.4)',
+          borderWidth: 1,
+          pointRadius: 6,
+          pointHoverRadius: 8,
+          type: 'scatter'
+        }
+      ]
+    };
+  };
+
+  const clusteringScatterOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: clusterXVar.replace(/_/g, ' ').toUpperCase(),
+          color: '#94a3b8'
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.05)'
+        },
+        ticks: {
+          color: '#94a3b8'
+        }
+      },
+      y: {
+        title: {
+          display: true,
+          text: clusterYVar.replace(/_/g, ' ').toUpperCase(),
+          color: '#94a3b8'
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.05)'
+        },
+        ticks: {
+          color: '#94a3b8'
+        }
+      }
+    },
+    plugins: {
+      legend: {
+        labels: {
+          color: '#f8fafc'
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            const raw = context.raw;
+            return `User: ${raw.username} | Game: ${raw.game_type} | ID: ${raw.session_id} | X: ${raw.x} | Y: ${raw.y}`;
+          }
+        }
+      }
+    }
+  };
+
+  const getCalculatedCentroids = () => {
+    const archetypes = ["Fast Learner", "Plateauing", "High Fatigue"];
+    const features = ["accuracy", "reaction_time", "hesitation", "spam_clicks", "path_efficiency"];
+    const sums = {};
+    const counts = {};
+    
+    // Initialize
+    archetypes.forEach(arch => {
+      sums[arch] = {};
+      counts[arch] = 0;
+      features.forEach(f => {
+        sums[arch][f] = 0;
+      });
+    });
+    
+    clusterDataPoints.forEach(p => {
+      const arch = p.cluster;
+      if (sums[arch]) {
+        counts[arch]++;
+        features.forEach(f => {
+          sums[arch][f] += p[f] || 0;
+        });
+      }
+    });
+    
+    const centroids = {};
+    archetypes.forEach(arch => {
+      centroids[arch] = {};
+      features.forEach(f => {
+        const count = counts[arch] || 1;
+        centroids[arch][f] = sums[arch][f] / count;
+      });
+    });
+    
+    return centroids;
+  };
+
   // Run ISO & Sandbox fetch when switching to researcher view
   useEffect(() => {
     if (portalView === 'researcher') {
       fetchIsoSummary();
       fetchSandboxData(sandboxVar1, sandboxVar2, sandboxCohort);
+      fetchModelStatus();
+      fetchClusterPoints();
     }
-  }, [portalView, sandboxVar1, sandboxVar2, sandboxCohort, activeDashboardUser]);
+  }, [portalView, sandboxVar1, sandboxVar2, sandboxCohort, activeDashboardUser, activeResearcherTab]);
 
   // Cognitive Goal Tracker Methods (Option C)
   const fetchGoals = async (username = activeDashboardUser) => {
@@ -2061,7 +2282,58 @@ export default function App() {
               </a>
             </div>
 
-            <h2 className="section-title">Thesis Verification Engine (Pillar 1 Research Design)</h2>
+            {/* Tab navigation buttons */}
+            <div style={{
+              display: 'flex',
+              gap: '1rem',
+              marginBottom: '2rem',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+              paddingBottom: '0.75rem',
+              width: '100%'
+            }}>
+              <button
+                onClick={() => setActiveResearcherTab('cohort-stats')}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: activeResearcherTab === 'cohort-stats' ? '#38bdf8' : '#94a3b8',
+                  fontSize: '1.05rem',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  padding: '0.5rem 1.25rem',
+                  borderBottom: activeResearcherTab === 'cohort-stats' ? '3px solid #38bdf8' : 'none',
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                📊 Cohort Statistics & ISO 25010
+              </button>
+              <button
+                onClick={() => setActiveResearcherTab('ai-sandbox')}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: activeResearcherTab === 'ai-sandbox' ? '#38bdf8' : '#94a3b8',
+                  fontSize: '1.05rem',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  padding: '0.5rem 1.25rem',
+                  borderBottom: activeResearcherTab === 'ai-sandbox' ? '3px solid #38bdf8' : 'none',
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                🤖 AI Sandbox & Clustering
+              </button>
+            </div>
+
+            {activeResearcherTab === 'cohort-stats' ? (
+              <>
+                <h2 className="section-title">Thesis Verification Engine (Pillar 1 Research Design)</h2>
             <div className="game-card" style={{ width: '100%', alignItems: 'stretch', padding: '2rem', marginBottom: '2rem' }}>
               <div style={{ background: 'rgba(124, 58, 237, 0.08)', border: '1px solid rgba(124, 58, 237, 0.2)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
                 <span style={{ fontWeight: 'bold', color: '#c084fc', fontSize: '0.9rem' }}>Pillar 1: Empirical Cognitive Improvement (Pretest-Posttest Design)</span>
@@ -2685,7 +2957,303 @@ export default function App() {
               </div>
 
             </div>
+          </>
+        ) : (
+          <div style={{ animation: 'fadeIn 0.4s ease-out', width: '100%' }}>
+            <h2 className="section-title">AI Sandbox & Dynamic Archetype Clustering</h2>
+            
+            {/* STATUS & RETRAIN SECTION */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
+              
+              {/* Active Model Status Card */}
+              <div className="game-card" style={{ flex: '1', alignItems: 'stretch', padding: '2rem', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '16px', backdropFilter: 'blur(20px)', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
+                <h3 style={{ color: '#38bdf8', marginBottom: '1.25rem', fontWeight: 'bold', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  🤖 Active Model Status
+                </h3>
+                
+                {modelStatus ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
+                      <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Python Scikit-Learn:</span>
+                      <span style={{ fontWeight: 'bold', color: modelStatus.is_sklearn_available ? '#4ade80' : '#ef4444' }}>
+                        {modelStatus.is_sklearn_available ? 'Available' : 'Unavailable'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
+                      <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Loaded From Pickles:</span>
+                      <span style={{ fontWeight: 'bold', color: modelStatus.is_loaded_from_disk ? '#4ade80' : '#f59e0b' }}>
+                        {modelStatus.is_loaded_from_disk ? 'Yes (Disk)' : 'No (Synthetic Fallback)'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
+                      <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Training Session Size:</span>
+                      <span style={{ fontWeight: 'bold', color: '#e2e8f0' }}>
+                        {modelStatus.dataset_size} sessions
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
+                      <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>DDA Classifiers Loaded:</span>
+                      <span style={{ fontWeight: 'bold', color: modelStatus.has_rf_model ? '#4ade80' : '#ef4444' }}>
+                        {modelStatus.has_rf_model ? 'Ready' : 'Not Loaded'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
+                      <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Clustering Model (KMeans):</span>
+                      <span style={{ fontWeight: 'bold', color: modelStatus.has_clustering_model ? '#4ade80' : '#ef4444' }}>
+                        {modelStatus.has_clustering_model ? 'Ready' : 'Not Loaded'}
+                      </span>
+                    </div>
+                    
+                    {modelStatus.hyperparameters && (
+                      <div style={{ marginTop: '0.5rem' }}>
+                        <span style={{ color: '#94a3b8', fontSize: '0.85rem', display: 'block', marginBottom: '0.25rem', fontWeight: 'bold' }}>Active Classifier Hyperparams:</span>
+                        <pre style={{ margin: 0, padding: '0.75rem', background: '#09090b', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', fontSize: '0.75rem', overflowX: 'auto', color: '#38bdf8' }}>
+                          {JSON.stringify({
+                            n_estimators: modelStatus.hyperparameters.n_estimators || 50,
+                            max_depth: modelStatus.hyperparameters.max_depth || 6,
+                            min_samples_split: modelStatus.hyperparameters.min_samples_split || 2,
+                            criterion: modelStatus.hyperparameters.criterion || 'gini'
+                          }, null, 2)}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ color: '#94a3b8', textAlign: 'center', padding: '1rem' }}>Loading model status...</div>
+                )}
+              </div>
+
+              {/* Retrain Control Panel */}
+              <div className="game-card" style={{ flex: '1', alignItems: 'stretch', padding: '2rem', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '16px', backdropFilter: 'blur(20px)', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
+                <h3 style={{ color: '#38bdf8', marginBottom: '1.25rem', fontWeight: 'bold', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  ⚙️ Retrain & Optimize Engine
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: '0 0 1.5rem 0', lineHeight: '1.4' }}>
+                  Trigger online retraining of the supervised DDA classifier. The engine runs unsupervised K-Means clustering ($k=3$) over 7 telemetry dimensions to form fresh player archetypes, then retrains a Random Forest Classifier via Grid Search to predict these labels.
+                </p>
+                
+                <button
+                  onClick={triggerModelRetrain}
+                  disabled={retrainLoading}
+                  className="dashboard-toggle-btn"
+                  style={{
+                    background: 'linear-gradient(to right, #38bdf8, #a855f7)',
+                    color: '#ffffff',
+                    border: 'none',
+                    padding: '0.75rem 1.5rem',
+                    borderRadius: '8px',
+                    fontWeight: '700',
+                    boxShadow: '0 4px 12px rgba(124, 58, 237, 0.25)',
+                    cursor: retrainLoading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    width: '100%',
+                    transition: 'all 0.2s',
+                    marginBottom: '1rem'
+                  }}
+                >
+                  {retrainLoading ? (
+                    <>
+                      <span className="spinner" style={{ display: 'inline-block', width: '1rem', height: '1rem', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></span>
+                      Executing Grid Search Retraining...
+                    </>
+                  ) : (
+                    '⚡ Retrain & Tune Classifier'
+                  )}
+                </button>
+
+                {retrainMetrics ? (
+                  <div style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', padding: '1rem', animation: 'fadeIn 0.3s ease-out' }}>
+                    <h4 style={{ color: '#4ade80', margin: '0 0 0.5rem 0', fontSize: '0.95rem', fontWeight: 'bold' }}>✓ Retraining Successful</h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.85rem' }}>
+                      <div>
+                        <span style={{ color: '#64748b', display: 'block' }}>Validation Accuracy:</span>
+                        <span style={{ fontWeight: 'bold', color: '#ffffff', fontSize: '1.1rem' }}>{(retrainMetrics.test_accuracy * 100).toFixed(2)}%</span>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748b', display: 'block' }}>Optimized Hyperparams:</span>
+                        <span style={{ fontWeight: 'bold', color: '#38bdf8' }}>
+                          d={retrainMetrics.best_params.max_depth || 'none'}, est={retrainMetrics.best_params.n_estimators}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '10px', padding: '1rem', textAlign: 'center', fontSize: '0.85rem', color: '#64748b' }}>
+                    No retraining has been executed in the current session.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* CENTROIDS & METRICS MATRIX */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
+              
+              {/* Centroids Table */}
+              <div className="game-card" style={{ flex: '1', alignItems: 'stretch', padding: '2rem', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '16px' }}>
+                <h3 style={{ color: '#38bdf8', marginBottom: '1.25rem', fontWeight: 'bold', fontSize: '1.25rem' }}>
+                  📊 Dynamic Archetype Centroids
+                </h3>
+                <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '1.25rem' }}>
+                  The average performance values for each discovered archetype, computed dynamically across the database cohort:
+                </p>
+                
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', textAlign: 'left' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8' }}>
+                        <th style={{ padding: '0.5rem' }}>Behavioral Metric</th>
+                        <th style={{ padding: '0.5rem', color: '#ef4444' }}>High Fatigue</th>
+                        <th style={{ padding: '0.5rem', color: '#f59e0b' }}>Plateauing</th>
+                        <th style={{ padding: '0.5rem', color: '#10b981' }}>Fast Learner</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        { key: 'accuracy', name: 'Accuracy Rate', format: (v) => `${(v * 100).toFixed(1)}%` },
+                        { key: 'reaction_time', name: 'Reaction Time', format: (v) => `${v.toFixed(0)} ms` },
+                        { key: 'hesitation', name: 'Hesitation Latency', format: (v) => `${v.toFixed(0)} ms` },
+                        { key: 'spam_clicks', name: 'Spam Click Count', format: (v) => v.toFixed(1) },
+                        { key: 'path_efficiency', name: 'Path Efficiency', format: (v) => v.toFixed(2) }
+                      ].map((metric) => {
+                        const centroids = getCalculatedCentroids();
+                        return (
+                          <tr key={metric.key} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                            <td style={{ padding: '0.5rem', fontWeight: 'bold', color: '#e2e8f0' }}>{metric.name}</td>
+                            <td style={{ padding: '0.5rem', color: '#f87171' }}>
+                              {centroids["High Fatigue"] && centroids["High Fatigue"][metric.key] !== undefined ? metric.format(centroids["High Fatigue"][metric.key]) : 'N/A'}
+                            </td>
+                            <td style={{ padding: '0.5rem', color: '#fbbf24' }}>
+                              {centroids["Plateauing"] && centroids["Plateauing"][metric.key] !== undefined ? metric.format(centroids["Plateauing"][metric.key]) : 'N/A'}
+                            </td>
+                            <td style={{ padding: '0.5rem', color: '#34d399' }}>
+                              {centroids["Fast Learner"] && centroids["Fast Learner"][metric.key] !== undefined ? metric.format(centroids["Fast Learner"][metric.key]) : 'N/A'}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Classification Report Card */}
+              <div className="game-card" style={{ flex: '1', alignItems: 'stretch', padding: '2rem', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '16px' }}>
+                <h3 style={{ color: '#38bdf8', marginBottom: '1.25rem', fontWeight: 'bold', fontSize: '1.25rem' }}>
+                  📈 Classification Performance Report
+                </h3>
+                {retrainMetrics && retrainMetrics.classification_report ? (
+                  <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem', textAlign: 'left' }}>
+                      <thead>
+                        <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)', color: '#94a3b8' }}>
+                          <th style={{ padding: '0.5rem' }}>Archetype Class</th>
+                          <th style={{ padding: '0.5rem' }}>Precision</th>
+                          <th style={{ padding: '0.5rem' }}>Recall</th>
+                          <th style={{ padding: '0.5rem' }}>F1-Score</th>
+                          <th style={{ padding: '0.5rem' }}>Support</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {["Fast Learner", "Plateauing", "High Fatigue"].map((clsName) => {
+                          const stats = retrainMetrics.classification_report[clsName];
+                          if (!stats) return null;
+                          return (
+                            <tr key={clsName} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                              <td style={{ padding: '0.5rem', fontWeight: 'bold', color: clsName === 'Fast Learner' ? '#34d399' : clsName === 'Plateauing' ? '#fbbf24' : '#f87171' }}>{clsName}</td>
+                              <td style={{ padding: '0.5rem' }}>{stats.precision.toFixed(3)}</td>
+                              <td style={{ padding: '0.5rem' }}>{stats.recall.toFixed(3)}</td>
+                              <td style={{ padding: '0.5rem' }}>{stats['f1-score'].toFixed(3)}</td>
+                              <td style={{ padding: '0.5rem', color: '#94a3b8' }}>{stats.support}</td>
+                            </tr>
+                          );
+                        })}
+                        <tr style={{ borderTop: '1px solid rgba(255,255,255,0.1)', fontWeight: 'bold', color: '#e2e8f0' }}>
+                          <td style={{ padding: '0.5rem' }}>Accuracy</td>
+                          <td style={{ padding: '0.5rem' }}></td>
+                          <td style={{ padding: '0.5rem' }}></td>
+                          <td style={{ padding: '0.5rem' }}>{retrainMetrics.classification_report.accuracy.toFixed(3)}</td>
+                          <td style={{ padding: '0.5rem', color: '#94a3b8' }}>{retrainMetrics.classification_report.macro_avg ? retrainMetrics.classification_report.macro_avg.support : ''}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div style={{ border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '10px', padding: '3rem 1rem', textAlign: 'center', fontSize: '0.85rem', color: '#64748b' }}>
+                    💡 Run model retraining to retrieve classification metrics (precision, recall, f1-score).
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* 2D SCATTER PLOT VIEW */}
+            <div className="game-card" style={{ width: '100%', alignItems: 'stretch', padding: '2rem', boxSizing: 'border-box', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '16px' }}>
+              <h3 style={{ color: '#38bdf8', marginBottom: '0.5rem', fontWeight: 'bold', fontSize: '1.25rem' }}>
+                🎯 Interactive 2D Archetype Space
+              </h3>
+              <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: '0 0 1.5rem 0' }}>
+                Plot sessions in a 2-dimensional scatter space colored by cluster archetype. Select metrics for X and Y axes to observe feature boundaries.
+              </p>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', marginBottom: '2rem', background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ flex: '1', minWidth: '200px', textAlign: 'left' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.4rem', fontWeight: 'bold' }}>Horizontal X-Axis Metric:</label>
+                  <select
+                    value={clusterXVar}
+                    onChange={(e) => setClusterXVar(e.target.value)}
+                    style={{ background: '#09090b', color: '#fff', border: '1.5px solid #334155', borderRadius: '6px', padding: '0.5rem', width: '100%', outline: 'none' }}
+                  >
+                    <option value="accuracy">Accuracy Rate</option>
+                    <option value="reaction_time">Reaction Time (ms)</option>
+                    <option value="acc_slope">Accuracy Learning Slope</option>
+                    <option value="rt_slope">Reaction Time Learning Slope</option>
+                    <option value="hesitation">Hesitation Latency (ms)</option>
+                    <option value="spam_clicks">Spam Clicks</option>
+                    <option value="path_efficiency">Path Efficiency</option>
+                  </select>
+                </div>
+
+                <div style={{ flex: '1', minWidth: '200px', textAlign: 'left' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.4rem', fontWeight: 'bold' }}>Vertical Y-Axis Metric:</label>
+                  <select
+                    value={clusterYVar}
+                    onChange={(e) => setClusterYVar(e.target.value)}
+                    style={{ background: '#09090b', color: '#fff', border: '1.5px solid #334155', borderRadius: '6px', padding: '0.5rem', width: '100%', outline: 'none' }}
+                  >
+                    <option value="accuracy">Accuracy Rate</option>
+                    <option value="reaction_time">Reaction Time (ms)</option>
+                    <option value="acc_slope">Accuracy Learning Slope</option>
+                    <option value="rt_slope">Reaction Time Learning Slope</option>
+                    <option value="hesitation">Hesitation Latency (ms)</option>
+                    <option value="spam_clicks">Spam Clicks</option>
+                    <option value="path_efficiency">Path Efficiency</option>
+                  </select>
+                </div>
+              </div>
+
+              {clusterLoading && <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>Loading cluster points...</div>}
+              {clusterError && <div style={{ color: '#ef4444', background: 'rgba(239, 68, 68, 0.1)', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem' }}>{clusterError}</div>}
+
+              {!clusterLoading && clusterDataPoints.length > 0 && (
+                <div style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '1.5rem', display: 'flex', flexDirection: 'column', height: '420px', boxSizing: 'border-box' }}>
+                  <h4 style={{ color: '#e2e8f0', fontSize: '1rem', margin: '0 0 1rem 0', fontWeight: 'bold', textAlign: 'left' }}>Cohort Sessions Spatial Grouping</h4>
+                  <div style={{ flex: 1, position: 'relative', height: 'calc(100% - 30px)' }}>
+                    <Scatter data={getClusteringScatterData()} options={clusteringScatterOptions} />
+                  </div>
+                </div>
+              )}
+              
+              {!clusterLoading && clusterDataPoints.length === 0 && (
+                <div style={{ border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '12px', padding: '3rem', textAlign: 'center', color: '#64748b' }}>
+                  No sessions data available for clustering. Play some games first!
+                </div>
+              )}
+            </div>
           </div>
+        )}
+      </div>
         ) : showDashboard ? (
           // ==========================================
           // PARTICIPANT ANALYTICS DASHBOARD
