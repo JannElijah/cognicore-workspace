@@ -428,6 +428,8 @@ const COGNITIVE_QUESTIONS = [
 export default function App() {
   const [activeGame, setActiveGame] = useState(null);
   const [selectedGameMode, setSelectedGameMode] = useState('timed');
+  const [pendingGameToLaunch, setPendingGameToLaunch] = useState(null);
+  const [hoveredMode, setHoveredMode] = useState(null);
 
   useEffect(() => {
     window.currentGameMode = selectedGameMode;
@@ -4355,58 +4357,7 @@ export default function App() {
               </div>
             )}
 
-            {/* Sleek Premium Game Mode Selector */}
-            <div className="game-card" style={{
-              display: 'flex',
-              flexDirection: 'column',
-              padding: '1.5rem',
-              marginBottom: '2rem',
-              background: 'rgba(15, 23, 42, 0.4)',
-              backdropFilter: 'blur(16px)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: '12px',
-              width: '100%',
-              alignItems: 'stretch',
-              gap: '1rem',
-              boxSizing: 'border-box'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
-                <span style={{ fontSize: '1.25rem' }}>🕹️</span>
-                <strong style={{ fontSize: '1rem', color: '#38bdf8', letterSpacing: '0.05em' }}>SELECT TRAINING GAME MODE</strong>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
-                {[
-                  { id: 'timed', label: '⏱️ Standard Timed', desc: 'Standard 2-minute timed session.' },
-                  { id: 'zen', label: '🌸 Zen Mode', desc: 'Unlimited time, counts up, no pressure.' },
-                  { id: 'survival', label: '❤️ Survival Mode', desc: 'Start with 3 lives. Errors deduct lives.' },
-                  { id: 'target', label: '🎯 Objective Target', desc: 'Ends after exactly 10 trials.' },
-                  { id: 'time_attack', label: '⚡ Time Attack', desc: 'Race to get 10 correct hits.' },
-                  { id: 'endurance', label: '🔋 Fatigue Endurance', desc: 'Start with 20s. Hit adds +2s, miss subtracts -5s.' }
-                ].map(mode => (
-                  <button
-                    key={mode.id}
-                    type="button"
-                    onClick={() => setSelectedGameMode(mode.id)}
-                    style={{
-                      background: selectedGameMode === mode.id ? 'rgba(168, 85, 247, 0.15)' : 'rgba(255, 255, 255, 0.02)',
-                      border: selectedGameMode === mode.id ? '1.5px solid #a855f7' : '1.5px solid rgba(255, 255, 255, 0.08)',
-                      borderRadius: '8px',
-                      color: selectedGameMode === mode.id ? '#c084fc' : '#e2e8f0',
-                      padding: '0.75rem',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      textAlign: 'left',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '0.25rem'
-                    }}
-                  >
-                    <span style={{ fontWeight: 'bold', fontSize: '0.9rem' }}>{mode.label}</span>
-                    <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>{mode.desc}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
+            {/* Game Mode Selector has been moved to the Launch Modal to eliminate clutter */}
 
             <h2 className="section-title">Quasi-Experimental Core Game Grid</h2>
             <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: '-1rem 0 2rem 0' }}>
@@ -4436,7 +4387,7 @@ export default function App() {
                         <div 
                           key={game.id} 
                           className={`game-card theme-${dom.themeClass} active`}
-                          onClick={() => { setActiveGame(game.id); }}
+                          onClick={() => { setPendingGameToLaunch({ id: game.id, title: game.title, themeClass: dom.themeClass, icon: game.icon }); }}
                           style={{
                             border: isPrescribed ? `2.5px solid ${theme.color}` : `1px solid ${theme.color}44`,
                             boxShadow: isPrescribed ? `0 0 25px ${theme.glow}` : '0 4px 15px rgba(0, 0, 0, 0.25)',
@@ -4460,15 +4411,16 @@ export default function App() {
                             <span style={{ fontSize: '2rem' }}>{game.icon}</span>
                             <h3 style={{ margin: 0, fontSize: '1.25rem' }}>{game.title}</h3>
                           </div>
-
+ 
                           <div className="card-section-label">Objective & Goal</div>
                           <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.82rem', color: '#cbd5e1', lineHeight: '1.4' }}>{game.objective}</p>
-
+ 
                           <div className="card-section-label">How it helps us</div>
                           <div className="card-benefit-box" style={{ fontSize: '0.8rem', padding: '0.5rem 0.75rem', borderLeft: `3px solid ${theme.color}` }}>{game.benefit}</div>
-
+ 
                           <button 
                             className="play-btn" 
+                            onClick={(e) => { e.stopPropagation(); setPendingGameToLaunch({ id: game.id, title: game.title, themeClass: dom.themeClass, icon: game.icon }); }}
                             style={{
                               background: isPrescribed ? theme.btnGradient : 'rgba(255, 255, 255, 0.02)',
                               border: isPrescribed ? 'none' : `1.5px solid ${theme.color}`,
@@ -4493,10 +4445,224 @@ export default function App() {
                 </div>
               );
             })}
-          </div>
 
-        )}
-      </main>
+            {/* Dynamic Game Launcher & Mode Config Selector Modal Overlay */}
+            {pendingGameToLaunch && (
+            <div style={{
+              position: 'fixed',
+              top: 0, left: 0, right: 0, bottom: 0,
+              background: 'rgba(9, 9, 11, 0.85)',
+              backdropFilter: 'blur(12px)',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 1000,
+              animation: 'fadeIn 0.25s ease-out'
+            }}>
+              <div style={{
+                background: 'rgba(15, 23, 42, 0.95)',
+                border: `2px solid ${DOMAIN_THEMES[pendingGameToLaunch.themeClass]?.color || '#ffffff'}`,
+                borderRadius: '16px',
+                padding: '2.5rem',
+                width: '90%',
+                maxWidth: '700px',
+                boxShadow: `0 0 45px ${DOMAIN_THEMES[pendingGameToLaunch.themeClass]?.glow || 'rgba(255,255,255,0.1)'}`,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1.5rem',
+                position: 'relative'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <span style={{ fontSize: '2.25rem' }}>{pendingGameToLaunch.icon}</span>
+                    <div>
+                      <h2 style={{ margin: 0, fontSize: '1.75rem', color: '#ffffff' }}>
+                        Launch {pendingGameToLaunch.title}
+                      </h2>
+                      <span style={{ fontSize: '0.75rem', color: DOMAIN_THEMES[pendingGameToLaunch.themeClass]?.color, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        Setup Session Config
+                      </span>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setPendingGameToLaunch(null)}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#94a3b8',
+                      fontSize: '1.5rem',
+                      cursor: 'pointer',
+                      padding: '0.5rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'color 0.2s'
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '1rem' }}>
+                  <div style={{ fontWeight: 'bold', fontSize: '0.9rem', color: DOMAIN_THEMES[pendingGameToLaunch.themeClass]?.color, marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Select Gameplay Mode
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                    {[
+                      { id: 'timed', label: '⏱️ Standard Timed', desc: 'Standard 2-minute timed session.' },
+                      { id: 'zen', label: '🌸 Zen Mode', desc: 'Unlimited time, counts up, no pressure.' },
+                      { id: 'survival', label: '❤️ Survival Mode', desc: 'Start with 3 lives. Errors deduct lives.' },
+                      { id: 'target', label: '🎯 Objective Target', desc: 'Ends after exactly 10 trials.' },
+                      { id: 'time_attack', label: '⚡ Time Attack', desc: 'Race to get 10 correct hits.' },
+                      { id: 'endurance', label: '🔋 Fatigue Endurance', desc: 'Start with 20s. Hit adds +2s, miss subtracts -5s.' }
+                    ].map(mode => {
+                      const isSelected = selectedGameMode === mode.id;
+                      const isHovered = hoveredMode === mode.id;
+                      const themeColor = DOMAIN_THEMES[pendingGameToLaunch.themeClass]?.color || '#ffffff';
+                      
+                      return (
+                        <button
+                          key={mode.id}
+                          type="button"
+                          onClick={() => setSelectedGameMode(mode.id)}
+                          onMouseEnter={() => setHoveredMode(mode.id)}
+                          onMouseLeave={() => setHoveredMode(null)}
+                          style={{
+                            background: isSelected ? `rgba(255, 255, 255, 0.05)` : 'rgba(255, 255, 255, 0.02)',
+                            border: isSelected ? `2px solid ${themeColor}` : '1.5px solid rgba(255, 255, 255, 0.08)',
+                            borderRadius: '8px',
+                            color: isSelected ? themeColor : '#e2e8f0',
+                            padding: '0.85rem',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            textAlign: 'left',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '0.25rem',
+                            transform: isHovered ? 'translateY(-2px)' : 'none',
+                            boxShadow: isSelected ? `0 0 10px ${DOMAIN_THEMES[pendingGameToLaunch.themeClass]?.glow}` : 'none'
+                          }}
+                        >
+                          <span style={{ fontWeight: 'bold', fontSize: '0.95rem' }}>{mode.label}</span>
+                          <span style={{ fontSize: '0.75rem', color: isSelected ? '#ffffff' : '#94a3b8' }}>{mode.desc}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Hover Rules & Explanation Panel */}
+                <div style={{
+                  background: 'rgba(9, 9, 11, 0.5)',
+                  border: `1.5px solid ${(DOMAIN_THEMES[pendingGameToLaunch.themeClass]?.color || '#ffffff')}33`,
+                  borderRadius: '10px',
+                  padding: '1.25rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem',
+                  transition: 'all 0.3s'
+                }}>
+                  {(() => {
+                    const activeModeId = hoveredMode || selectedGameMode || 'timed';
+                    const modeDetails = {
+                      timed: {
+                        title: '⏱️ Standard Timed Rules',
+                        explanation: 'Traditional cognitive evaluation mode.',
+                        rules: 'You have exactly 2 minutes (120 seconds) to complete as many correct trials as possible. Speed and accuracy are balanced in real-time by the DDA engine to calculate difficulty adjustments.'
+                      },
+                      zen: {
+                        title: '🌸 Zen Mode Rules',
+                        explanation: 'Low-stress cognitive training & warmup practice.',
+                        rules: 'Play at your own pace with no ticking timers or life counters. Perfect for warm-ups, learning the game mechanics, or relaxing without speed-accuracy time pressure.'
+                      },
+                      survival: {
+                        title: '❤️ Survival Mode Rules',
+                        explanation: 'High-stakes precision focus training.',
+                        rules: 'You start the session with exactly 3 lives. Every incorrect input or element timeout subtracts 1 life. The session continues indefinitely until all lives are depleted. Focus on high accuracy!'
+                      },
+                      target: {
+                        title: '🎯 Objective Target Rules',
+                        explanation: 'Fixed-length cognitive efficiency benchmark.',
+                        rules: 'The game concludes after exactly 10 trials. Your goal is to maximize accuracy rate and minimize average reaction time. Highly effective for clean pre/post benchmark scoring.'
+                      },
+                      time_attack: {
+                        title: '⚡ Time Attack Rules',
+                        explanation: 'Rapid motor execution challenge.',
+                        rules: 'Race against the clock to complete exactly 10 correct matches as fast as possible. Any mistakes will delay your timer progress. Speed is key!'
+                      },
+                      endurance: {
+                        title: '🔋 Fatigue Endurance Rules',
+                        explanation: 'Adaptive threshold capacity training.',
+                        rules: 'Start the session with a 20-second timer. Every correct trial adds +2 seconds of bonus time, while each incorrect trial subtracts -5 seconds. Survive and score as long as you can!'
+                      }
+                    }[activeModeId];
+
+                    return (
+                      <>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <strong style={{ fontSize: '0.95rem', color: DOMAIN_THEMES[pendingGameToLaunch.themeClass]?.color || '#ffffff' }}>
+                            {modeDetails.title} {hoveredMode && <span style={{ fontSize: '0.7rem', background: 'rgba(255,255,255,0.08)', padding: '0.1rem 0.4rem', borderRadius: '4px', color: '#94a3b8', marginLeft: '0.5rem' }}>Previewing</span>}
+                          </strong>
+                          <span style={{ fontSize: '0.75rem', fontStyle: 'italic', color: '#94a3b8' }}>
+                            {modeDetails.explanation}
+                          </span>
+                        </div>
+                        <p style={{ margin: 0, fontSize: '0.82rem', color: '#cbd5e1', lineHeight: '1.5' }}>
+                          {modeDetails.rules}
+                        </p>
+                      </>
+                    );
+                  })()}
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
+                  <button
+                    onClick={() => setPendingGameToLaunch(null)}
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: '8px',
+                      color: '#cbd5e1',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      fontSize: '0.95rem',
+                      transition: 'background 0.2s'
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      setActiveGame(pendingGameToLaunch.id);
+                      setPendingGameToLaunch(null);
+                    }}
+                    style={{
+                      flex: 2,
+                      padding: '0.75rem',
+                      background: DOMAIN_THEMES[pendingGameToLaunch.themeClass]?.btnGradient || 'linear-gradient(to right, #38bdf8, #a855f7)',
+                      border: 'none',
+                      borderRadius: '8px',
+                      color: '#ffffff',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      fontSize: '0.95rem',
+                      boxShadow: `0 4px 15px ${DOMAIN_THEMES[pendingGameToLaunch.themeClass]?.btnGlow || 'rgba(255,255,255,0.2)'}`,
+                      transition: 'filter 0.2s'
+                    }}
+                  >
+                    Start Training Session 🚀
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </main>
 
       {/* Footer */}
       <footer className="portal-footer">
