@@ -85,11 +85,186 @@ const ProgressRing = ({ radius, stroke, progress, color }) => {
 };
 
 const DOMAIN_INFO = {
-  reflexes_and_focus: { title: 'Reflexes & Focus', color: '#a855f7', icon: '⚡' },
-  spatial_visual_memory: { title: 'Memory & Recall', color: '#38bdf8', icon: '🧠' },
+  reflexes_and_focus: { title: 'Reflexes & Focus', color: '#38bdf8', icon: '⚡' },
+  spatial_visual_memory: { title: 'Memory & Recall', color: '#4ade80', icon: '🧠' },
   logical_mathematical: { title: 'Logical Reasoning', color: '#f59e0b', icon: '🔢' },
-  executive_strategy: { title: 'Executive Strategy', color: '#10b981', icon: '🧭' }
+  executive_strategy: { title: 'Executive Strategy', color: '#a855f7', icon: '🧭' }
 };
+
+const DOMAIN_THEMES = {
+  reflex: {
+    color: '#38bdf8',
+    glow: 'rgba(56, 189, 248, 0.25)',
+    btnGlow: 'rgba(56, 189, 248, 0.4)',
+    bg: 'rgba(56, 189, 248, 0.03)',
+    btnGradient: 'linear-gradient(to right, #38bdf8, #60a5fa)'
+  },
+  memory: {
+    color: '#4ade80',
+    glow: 'rgba(74, 222, 128, 0.25)',
+    btnGlow: 'rgba(74, 222, 128, 0.4)',
+    bg: 'rgba(74, 222, 128, 0.03)',
+    btnGradient: 'linear-gradient(to right, #4ade80, #34d399)'
+  },
+  reasoning: {
+    color: '#f59e0b',
+    glow: 'rgba(245, 158, 11, 0.25)',
+    btnGlow: 'rgba(245, 158, 11, 0.4)',
+    bg: 'rgba(245, 158, 11, 0.03)',
+    btnGradient: 'linear-gradient(to right, #f59e0b, #fbbf24)'
+  },
+  executive: {
+    color: '#a855f7',
+    glow: 'rgba(168, 85, 247, 0.25)',
+    btnGlow: 'rgba(168, 85, 247, 0.4)',
+    bg: 'rgba(168, 85, 247, 0.03)',
+    btnGradient: 'linear-gradient(to right, #a855f7, #c084fc)'
+  }
+};
+
+const DOMAINS_LIST = [
+  {
+    id: 'reflexes_and_focus',
+    themeClass: 'reflex',
+    title: 'Reflex & Attentional Focus',
+    icon: '⚡',
+    description: 'Enhance sensory processing, motor reaction speeds, target discrimination, and distraction filtering.',
+    games: [
+      {
+        id: 'SpeedTap',
+        title: 'Speed Tap',
+        icon: '⚡',
+        objective: 'Identify and select highlighted target boxes under a ticking clock, avoiding distractors.',
+        benefit: 'Speeds up motor reflexes and decision making under time pressure, reducing error rate.'
+      },
+      {
+        id: 'FocusFinder',
+        title: 'Focus Finder',
+        icon: '🎯',
+        objective: 'Locate moving target objects hidden dynamically within a dense field of distractor elements.',
+        benefit: 'Improves visual search capabilities, spatial attention filtering, and processing speed.'
+      },
+      {
+        id: 'StroopShift',
+        title: 'Stroop Shift',
+        icon: '🎨',
+        objective: 'Match target features while inhibiting cognitive Stroop color-word conflict distractors.',
+        benefit: 'Enhances cognitive inhibition, task switching speed, and selective attention control.'
+      }
+    ]
+  },
+  {
+    id: 'spatial_visual_memory',
+    themeClass: 'memory',
+    title: 'Spatial-Visual Memory',
+    icon: '🧠',
+    description: 'Improve active working memory storage, pattern retention, visual-spatial configuration, and object-location binding.',
+    games: [
+      {
+        id: 'MemoryMatch',
+        title: 'Memory Match',
+        icon: '🃏',
+        objective: 'Flip and match visual card pairs arranged in grid-based memory matrices.',
+        benefit: 'Enhances working memory buffer capacity, spatial mapping, and quick visual association.'
+      },
+      {
+        id: 'MatrixRecall',
+        title: 'Matrix Recall',
+        icon: '🔲',
+        objective: 'Observe grid pattern sequences highlighted for brief intervals and reconstruct coordinates.',
+        benefit: 'Improves spatial orientation and visual-spatial short-term working retention.'
+      },
+      {
+        id: 'NeuralNBack',
+        title: 'Neural N-Back',
+        icon: '🧩',
+        objective: 'Track visual element sequences and identify target matches located N steps backwards.',
+        benefit: 'Exercises active mental template updates, temporal processing, and continuous memory storage.'
+      },
+      {
+        id: 'SynapseSpin',
+        title: 'Synapse Spin',
+        icon: '🔄',
+        objective: 'Compare visual geometric shapes and rotate them mentally to identify matching templates.',
+        benefit: 'Boosts spatial manipulation speed, mental rotation, and spatial configuration logic.'
+      },
+      {
+        id: 'NexusMapper',
+        title: 'Nexus Mapper',
+        icon: '🗺️',
+        objective: 'Memorize visual objects placed in complex network nodes and recall locations.',
+        benefit: 'Enhances associative object-location memory bindings and structural retention.'
+      }
+    ]
+  },
+  {
+    id: 'logical_mathematical',
+    themeClass: 'reasoning',
+    title: 'Logical-Mathematical Reasoning',
+    icon: '🔢',
+    description: 'Develop numerical calculation, sequence pattern induction, path search planning, and combinatorial optimization logic.',
+    games: [
+      {
+        id: 'LogicLink',
+        title: 'Logic Link',
+        icon: '🔗',
+        objective: 'Connect nodes in exact ascending sequence, avoiding node collisions and path overlaps.',
+        benefit: 'Exercises logical path planning, pattern recognition, and structured problem solving.'
+      },
+      {
+        id: 'EquationBalance',
+        title: 'Equation Balance',
+        icon: '⚖️',
+        objective: 'Balance complex mathematical expressions by inputting correct operators or operands.',
+        benefit: 'Improves mathematical logic, numerical calculation speed, and deductive calculation.'
+      },
+      {
+        id: 'SequenceDecoder',
+        title: 'Sequence Decoder',
+        icon: '🔢',
+        objective: 'Examine numeric sequences (e.g. geometric, Fibonacci) and infer missing patterns.',
+        benefit: 'Strengthens inductive logical reasoning, sequence detection, and mathematical extrapolation.'
+      },
+      {
+        id: 'RouteOptimizer',
+        title: 'Route Optimizer',
+        icon: '📍',
+        objective: 'Determine the absolute shortest route visiting all destination nodes under a time limit.',
+        benefit: 'Trains combinatorial logic, spatial graph reasoning, and planning efficiency.'
+      }
+    ]
+  },
+  {
+    id: 'executive_strategy',
+    themeClass: 'executive',
+    title: 'Executive Strategy & Planning',
+    icon: '🧭',
+    description: 'Train adaptive executive control, dynamic plan correction, card matching rule-switching, and decision confidence.',
+    games: [
+      {
+        id: 'MazeEscape',
+        title: 'Maze Escape',
+        icon: '🧭',
+        objective: 'Navigate a character through complex visual grids escaping barriers and obstacles.',
+        benefit: 'Builds strategic path planning and forward-looking executive reasoning.'
+      },
+      {
+        id: 'NeuroMaze',
+        title: 'Neuro Maze',
+        icon: '🏃',
+        objective: 'Escape dynamic grid mazes with moving barrier walls and shifting exit locations.',
+        benefit: 'Improves real-time replanning, visual obstacle prediction, and quick strategic changes.'
+      },
+      {
+        id: 'MentalFlex',
+        title: 'Mental Flex',
+        icon: '🤹',
+        objective: 'Match incoming target items based on rapidly shifting rules (color, shape, count).',
+        benefit: 'Enhances cognitive flexibility, rule induction switching, and adaptive execution.'
+      }
+    ]
+  }
+];
 
 const getGoalProgress = (goal) => {
   if (goal.is_completed) return 1.0;
@@ -4235,124 +4410,89 @@ export default function App() {
 
             <h2 className="section-title">Quasi-Experimental Core Game Grid</h2>
             <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: '-1rem 0 2rem 0' }}>
-              Under our quasi-experimental design rules, only the programmatically prescribed training module targeting your weakest cognitive domain is active. Others act as control variables.
+              Under our cognitive training design, the programmatically prescribed module targeting your weakest cognitive domain is highlighted. However, all modules are fully unlocked for self-directed practice.
             </p>
 
-            <div className="game-grid" style={{ marginBottom: '3.5rem' }}>
-              {[
-                {
-                  id: 'SpeedTap',
-                  title: 'Speed Tap',
-                  domain: 'reflexes_and_focus',
-                  tag: 'Reflex & Attentional Focus',
-                  icon: '⚡',
-                  objective: 'Identify and select highlighted target boxes under a ticking clock, avoiding distractors.',
-                  benefit: 'Speeds up motor reflexes and decision making under time pressure, reducing error rate.'
-                },
-                {
-                  id: 'MatrixRecall',
-                  title: 'Matrix Recall',
-                  domain: 'spatial_visual_memory',
-                  tag: 'Spatial-Visual Memory',
-                  icon: '🔲',
-                  objective: 'Observe grid pattern sequences highlighted for brief intervals and reconstruct coordinates.',
-                  benefit: 'Improves spatial orientation and visual-spatial short-term working retention.'
-                },
-                {
-                  id: 'LogicLink',
-                  title: 'Logic Link',
-                  domain: 'logical_mathematical',
-                  tag: 'Logical Reasoning',
-                  icon: '🔗',
-                  objective: 'Connect nodes in exact ascending sequence, avoiding node collisions and path overlaps.',
-                  benefit: 'Exercises logical path planning, pattern recognition, and structured problem solving.'
-                },
-                {
-                  id: 'MazeEscape',
-                  title: 'Maze Escape',
-                  domain: 'executive_strategy',
-                  tag: 'Executive Strategy',
-                  icon: '🧭',
-                  objective: 'Navigate a character through complex visual grids escaping barriers and obstacles.',
-                  benefit: 'Builds strategic path planning and forward-looking executive reasoning.'
-                }
-              ].map(game => {
-                const isPrescribed = prescribedGame === game.id;
-                
-                return (
-                  <div 
-                    key={game.id} 
-                    className={`game-card ${isPrescribed ? 'active' : ''}`}
-                    onClick={() => { if (isPrescribed) setActiveGame(game.id); }}
-                    style={{
-                      border: isPrescribed ? '2px solid #a855f7' : '1px solid rgba(255, 255, 255, 0.05)',
-                      boxShadow: isPrescribed ? '0 0 20px rgba(168, 85, 247, 0.25)' : 'none',
-                      opacity: isPrescribed ? 1.0 : 0.45,
-                      cursor: isPrescribed ? 'pointer' : 'not-allowed',
-                      position: 'relative',
-                      overflow: 'hidden'
-                    }}
-                  >
-                    {!isPrescribed && (
-                      <div style={{
-                        position: 'absolute',
-                        top: 0, left: 0, right: 0, bottom: 0,
-                        background: 'rgba(9, 9, 11, 0.55)',
-                        backdropFilter: 'blur(1px)',
-                        zIndex: 2,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.5rem'
-                      }}>
-                        <span style={{ fontSize: '1.5rem' }}>🔒</span>
-                        <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#94a3b8', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Control Variable</span>
-                      </div>
-                    )}
-                    
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{game.tag}</span>
-                      {isPrescribed && (
-                        <span style={{ background: '#a855f7', color: '#ffffff', fontSize: '0.65rem', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>
-                          Prescribed Track
-                        </span>
-                      )}
+            {DOMAINS_LIST.map(dom => {
+              const domInfo = DOMAIN_INFO[dom.id] || { title: dom.title, icon: dom.icon, color: '#ffffff' };
+              return (
+                <div key={dom.id} className={`category-container theme-${dom.themeClass}`} style={{ marginBottom: '3.5rem' }}>
+                  <div className="category-header-wrapper" style={{ borderLeft: `4px solid ${domInfo.color}` }}>
+                    <div className="category-title" style={{ color: domInfo.color, fontSize: '1.5rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span>{domInfo.icon}</span>
+                      <span>{domInfo.title}</span>
                     </div>
-                    
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '0.75rem 0' }}>
-                      <span style={{ fontSize: '2rem' }}>{game.icon}</span>
-                      <h3 style={{ margin: 0, fontSize: '1.25rem' }}>{game.title}</h3>
+                    <div className="category-description" style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: '0.25rem' }}>
+                      {dom.description}
                     </div>
-
-                    <div className="card-section-label">Objective & Goal</div>
-                    <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.82rem', color: '#cbd5e1', lineHeight: '1.4' }}>{game.objective}</p>
-
-                    <div className="card-section-label">How it helps us</div>
-                    <div className="card-benefit-box" style={{ fontSize: '0.8rem', padding: '0.5rem 0.75rem' }}>{game.benefit}</div>
-
-                    <button 
-                      className="play-btn" 
-                      disabled={!isPrescribed}
-                      style={{
-                        background: isPrescribed ? 'linear-gradient(to right, #38bdf8, #a855f7)' : 'rgba(255,255,255,0.05)',
-                        color: isPrescribed ? '#ffffff' : '#475569',
-                        marginTop: '1rem',
-                        cursor: isPrescribed ? 'pointer' : 'not-allowed',
-                        width: '100%',
-                        padding: '0.5rem',
-                        border: 'none',
-                        borderRadius: '6px',
-                        fontWeight: 'bold',
-                        fontSize: '0.85rem'
-                      }}
-                    >
-                      {isPrescribed ? 'Launch Active Game' : 'Module Disabled'}
-                    </button>
                   </div>
-                );
-              })}
-            </div>
+
+                  <div className="game-grid">
+                    {dom.games.map(game => {
+                      const isPrescribed = prescribedGame === game.id;
+                      const theme = DOMAIN_THEMES[dom.themeClass] || DOMAIN_THEMES.reflex;
+                      
+                      return (
+                        <div 
+                          key={game.id} 
+                          className={`game-card theme-${dom.themeClass} active`}
+                          onClick={() => { setActiveGame(game.id); }}
+                          style={{
+                            border: isPrescribed ? `2.5px solid ${theme.color}` : `1px solid ${theme.color}44`,
+                            boxShadow: isPrescribed ? `0 0 25px ${theme.glow}` : '0 4px 15px rgba(0, 0, 0, 0.25)',
+                            background: `linear-gradient(135deg, rgba(15, 23, 42, 0.6), ${theme.bg})`,
+                            opacity: 1.0,
+                            cursor: 'pointer',
+                            position: 'relative',
+                            overflow: 'hidden'
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                            <span style={{ fontSize: '0.72rem', color: theme.color, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{domInfo.title}</span>
+                            {isPrescribed && (
+                              <span style={{ background: theme.color, color: '#ffffff', fontSize: '0.65rem', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                                Prescribed Track
+                              </span>
+                            )}
+                          </div>
+                          
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '0.75rem 0' }}>
+                            <span style={{ fontSize: '2rem' }}>{game.icon}</span>
+                            <h3 style={{ margin: 0, fontSize: '1.25rem' }}>{game.title}</h3>
+                          </div>
+
+                          <div className="card-section-label">Objective & Goal</div>
+                          <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.82rem', color: '#cbd5e1', lineHeight: '1.4' }}>{game.objective}</p>
+
+                          <div className="card-section-label">How it helps us</div>
+                          <div className="card-benefit-box" style={{ fontSize: '0.8rem', padding: '0.5rem 0.75rem', borderLeft: `3px solid ${theme.color}` }}>{game.benefit}</div>
+
+                          <button 
+                            className="play-btn" 
+                            style={{
+                              background: isPrescribed ? theme.btnGradient : 'rgba(255, 255, 255, 0.02)',
+                              border: isPrescribed ? 'none' : `1.5px solid ${theme.color}`,
+                              color: isPrescribed ? '#ffffff' : theme.color,
+                              marginTop: 'auto',
+                              cursor: 'pointer',
+                              width: '100%',
+                              padding: '0.65rem',
+                              borderRadius: '8px',
+                              fontWeight: 'bold',
+                              fontSize: '0.85rem',
+                              boxShadow: isPrescribed ? `0 4px 12px ${theme.btnGlow}` : 'none',
+                              transition: 'all 0.2s'
+                            }}
+                          >
+                            {isPrescribed ? 'Launch Active Game' : 'Launch Game'}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
         )}
