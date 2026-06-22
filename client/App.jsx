@@ -1379,6 +1379,7 @@ export default function App() {
 
   const triggerModelRetrain = async () => {
     setRetrainLoading(true);
+    setRetrainMetrics(null);
     try {
       const res = await fetch('http://127.0.0.1:5000/api/model/retrain', {
         method: 'POST',
@@ -1389,17 +1390,42 @@ export default function App() {
       if (!res.ok) throw new Error('Model retraining pipeline failed or returned an error.');
       const data = await res.json();
       if (data.status === 'success') {
-        setRetrainMetrics(data);
-        // Refresh status and clustered data points after successful retraining
-        fetchModelStatus();
-        fetchClusterPoints();
+        // Start polling the status until it becomes idle or error
+        let pollCount = 0;
+        const intervalId = setInterval(async () => {
+          pollCount++;
+          try {
+            const statusRes = await fetch('http://127.0.0.1:5000/api/model/status');
+            if (statusRes.ok) {
+              const statusData = await statusRes.json();
+              if (statusData.training_status === 'idle') {
+                clearInterval(intervalId);
+                setRetrainMetrics(statusData.last_retrain_metrics);
+                setRetrainLoading(false);
+                fetchModelStatus();
+                fetchClusterPoints();
+              } else if (statusData.training_status === 'error') {
+                clearInterval(intervalId);
+                setRetrainLoading(false);
+                alert(`Retraining failed: ${statusData.training_error || 'Pipeline error'}`);
+              }
+            }
+          } catch (e) {
+            console.error("Polling error:", e);
+          }
+          
+          if (pollCount > 60) { // Timeout after 120 seconds (60 * 2s)
+            clearInterval(intervalId);
+            setRetrainLoading(false);
+            alert("Retraining timed out on client side.");
+          }
+        }, 2000);
       } else {
         throw new Error(data.message || 'Model retraining pipeline failed.');
       }
     } catch (e) {
       console.error("[Model Retrain] Failed:", e);
       alert(`Retraining failed: ${e.message}`);
-    } finally {
       setRetrainLoading(false);
     }
   };

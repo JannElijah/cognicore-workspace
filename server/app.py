@@ -2760,6 +2760,17 @@ def delete_training_goal(goal_id):
 
 
 
+import threading
+import time
+
+# Global model training state tracking
+model_training_state = {
+    "status": "idle", # "idle", "training", "error"
+    "error_message": None,
+    "last_trained_at": None,
+    "last_retrain_metrics": None
+}
+
 @app.route('/api/model/status', methods=['GET'])
 def get_model_status():
     try:
@@ -2785,7 +2796,11 @@ def get_model_status():
             "has_scaler": archetype_classifier.scaler is not None,
             "hyperparameters": hyperparams,
             "rf_classes": rf_classes,
-            "dataset_size": dataset_size
+            "dataset_size": dataset_size,
+            "training_status": model_training_state["status"],
+            "training_error": model_training_state["error_message"],
+            "last_trained_at": model_training_state["last_trained_at"],
+            "last_retrain_metrics": model_training_state["last_retrain_metrics"]
         }), 200
     except Exception as e:
         app.logger.error(f"Error in get_model_status: {e}")
@@ -2794,21 +2809,30 @@ def get_model_status():
 
 @app.route('/api/model/retrain', methods=['POST'])
 def retrain_model():
-    try:
-        from train_model import train_retargeted_classifier
-        res = train_retargeted_classifier()
-        if res and res.get("status") == "success":
-            # Reload classifier instance to fetch newly serialized pickle files
-            archetype_classifier.__init__()
-            return jsonify(res), 200
-        else:
-            return jsonify({
-                "status": "error", 
-                "message": "Model retraining pipeline completed with error or insufficient data samples."
-            }), 400
-    except Exception as e:
-        app.logger.error(f"Error in retrain_model: {e}")
-        return jsonify({"status": "error", "message": f"Retraining pipeline failed: {str(e)}"}), 500
+    if model_training_state["status"] == "training":
+        return jsonify({"status": "error", "message": "Model retraining is already in progress."}), 400
+
+    def run_training():
+        model_training_state["status"] = "training"
+        model_training_state["error_message"] = None
+        try:
+            from train_model import train_retargeted_classifier
+            res = train_retargeted_classifier()
+            if res and res.get("status") == "success":
+                # Reload classifier instance to fetch newly serialized pickle files
+                archetype_classifier.__init__()
+                model_training_state["status"] = "idle"
+                model_training_state["last_trained_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
+                model_training_state["last_retrain_metrics"] = res
+            else:
+                model_training_state["status"] = "error"
+                model_training_state["error_message"] = "Model retraining pipeline completed with error or insufficient data samples."
+        except Exception as e:
+            model_training_state["status"] = "error"
+            model_training_state["error_message"] = str(e)
+
+    threading.Thread(target=run_training).start()
+    return jsonify({"status": "success", "message": "Model retraining started in background."}), 202
 
 
 @app.route('/api/model/clusters', methods=['GET'])

@@ -3,17 +3,192 @@ import Phaser from 'phaser';
 // Initialize global game mode tracking variable
 window.currentGameMode = 'timed';
 
-// Global Fetch Interceptor to inject game_mode on session creation
+// Global Telemetry Buffers
+let memoryTelemetryBuffer = [];
+let lastUsedApiUrlBase = 'http://127.0.0.1:5000';
+
+function extractApiUrlBase(url) {
+    if (typeof url === 'string' && url.includes('/api/')) {
+        lastUsedApiUrlBase = url.substring(0, url.indexOf('/api/'));
+    }
+    return lastUsedApiUrlBase;
+}
+
+// Queue metrics to LocalStorage if offline or connection fails
+function queueOfflineTelemetry(url, options) {
+    try {
+        const body = JSON.parse(options.body);
+        let metricsToQueue = [];
+        if (url.includes('/batch')) {
+            metricsToQueue = body.metrics || [];
+        } else {
+            metricsToQueue = [body];
+        }
+        
+        if (metricsToQueue.length === 0) return;
+        
+        const existing = JSON.parse(localStorage.getItem('cognicore_offline_telemetry') || '[]');
+        const updated = [...existing, ...metricsToQueue];
+        localStorage.setItem('cognicore_offline_telemetry', JSON.stringify(updated));
+        console.log(`[gameModeManager] Queued ${metricsToQueue.length} metrics offline. Local queue size: ${updated.length}`);
+    } catch (e) {
+        console.error('[gameModeManager] Failed to queue offline telemetry:', e);
+    }
+}
+
+// Flush memory buffer of metrics to the batch API endpoint
+async function flushMemoryBuffer() {
+    if (memoryTelemetryBuffer.length === 0) return;
+    const metricsToFlush = [...memoryTelemetryBuffer];
+    memoryTelemetryBuffer = [];
+    
+    const base = lastUsedApiUrlBase;
+    console.log(`[gameModeManager] Flushing ${metricsToFlush.length} buffered metrics to server...`);
+    
+    try {
+        const response = await originalFetch(`${base}/api/submit-metrics/batch`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ metrics: metricsToFlush })
+        });
+        if (!response.ok) {
+            console.warn('[gameModeManager] Batch flush failed on server, queueing to offline storage.');
+            queueOfflineTelemetry(`${base}/api/submit-metrics/batch`, { body: JSON.stringify({ metrics: metricsToFlush }) });
+        }
+    } catch (err) {
+        console.warn('[gameModeManager] Batch flush connection exception, queueing to offline storage.', err);
+        queueOfflineTelemetry(`${base}/api/submit-metrics/batch`, { body: JSON.stringify({ metrics: metricsToFlush }) });
+    }
+}
+
+// Flush offline LocalStorage queue metrics to batch endpoint
+async function flushOfflineTelemetry() {
+    if (!navigator.onLine) return;
+    const existing = JSON.parse(localStorage.getItem('cognicore_offline_telemetry') || '[]');
+    if (existing.length === 0) return;
+    
+    const base = lastUsedApiUrlBase;
+    console.log(`[gameModeManager] Connection restored. Flushing ${existing.length} offline metrics...`);
+    try {
+        const response = await originalFetch(`${base}/api/submit-metrics/batch`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ metrics: existing })
+        });
+        if (response.ok) {
+            localStorage.removeItem('cognicore_offline_telemetry');
+            console.log('[gameModeManager] Offline metrics successfully synchronized!');
+        }
+    } catch (e) {
+        console.warn('[gameModeManager] Offline sync failed, will retry later.', e);
+    }
+}
+
+// Periodically flush buffered and offline telemetry
+setInterval(flushMemoryBuffer, 5000);
+setInterval(flushOfflineTelemetry, 8000);
+window.addEventListener('online', flushOfflineTelemetry);
+
+// Global Fetch Interceptor
 const originalFetch = window.fetch;
 window.fetch = async function (url, options) {
-    if (typeof url === 'string' && url.includes('/api/start-session') && options && options.method === 'POST') {
+    if (typeof url !== 'string') {
+        return originalFetch.apply(this, arguments);
+    }
+    
+    // Track base API URL dynamically
+    extractApiUrlBase(url);
+
+    // Flush memory buffer on session start, evaluate, or compliance logging to guarantee completion writes
+    if (url.includes('/api/start-session') || url.includes('/api/evaluate') || url.includes('/api/iso-evaluations')) {
+        await flushMemoryBuffer();
+    }
+
+    // 1. Intercept Session Startup
+    if (url.includes('/api/start-session') && options && options.method === 'POST') {
         try {
             const body = JSON.parse(options.body);
             body.game_mode = window.currentGameMode || 'timed';
             options.body = JSON.stringify(body);
-            console.log('[gameModeManager] Injected game_mode into start-session POST:', body.game_mode);
+            console.log('[gameModeManager] Injected game_mode into start-session:', body.game_mode);
         } catch (e) {
-            console.error('[gameModeManager] Error parsing fetch body in interceptor:', e);
+            console.error('[gameModeManager] Error parsing start-session body:', e);
+        }
+    }
+
+    // 2. Intercept Individual Telemetry Metrics (Buffer & Batch)
+    if (url.includes('/api/submit-metrics') && !url.includes('/batch') && options && options.method === 'POST') {
+        try {
+            const metric = JSON.parse(options.body);
+            memoryTelemetryBuffer.push(metric);
+            console.log('[gameModeManager] Buffered metric. Current buffer size:', memoryTelemetryBuffer.length);
+            
+            // Return immediate mock success to Phaser scene
+            return new Response(JSON.stringify({ status: "success", message: "Metric buffered locally" }), {
+                status: 201,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        } catch (e) {
+            console.error('[gameModeManager] Error buffering metric:', e);
+        }
+    }
+
+    // 3. Intercept Batch Telemetry Metrics (Inject Offline Caching)
+    if (url.includes('/api/submit-metrics/batch') && options && options.method === 'POST') {
+        try {
+            if (!navigator.onLine) {
+                queueOfflineTelemetry(url, options);
+                return new Response(JSON.stringify({ status: "success", message: "Metrics cached offline" }), {
+                    status: 201,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
+            const response = await originalFetch.apply(this, arguments);
+            if (!response.ok) {
+                queueOfflineTelemetry(url, options);
+                return new Response(JSON.stringify({ status: "success", message: "Metrics cached offline due to server error" }), {
+                    status: 201,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
+            return response;
+        } catch (err) {
+            queueOfflineTelemetry(url, options);
+            return new Response(JSON.stringify({ status: "success", message: "Metrics cached offline due to fetch error" }), {
+                status: 201,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+    }
+
+    // 4. Intercept DDA Adaptation requests (Flush buffer first, handle offline fallbacks)
+    if (url.includes('/api/dda') && options && options.method === 'POST') {
+        // Flush any buffered metrics first so the server has the latest trials for difficulty adjustment
+        await flushMemoryBuffer();
+        
+        try {
+            if (!navigator.onLine) {
+                console.log('[gameModeManager] Offline DDA fallback triggered.');
+                return new Response(JSON.stringify({ status: "success", message: "DDA offline fallback", dda_parameters: null }), {
+                    status: 200,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
+            const response = await originalFetch.apply(this, arguments);
+            if (!response.ok) {
+                console.log('[gameModeManager] Server error DDA fallback triggered.');
+                return new Response(JSON.stringify({ status: "success", message: "DDA server error fallback", dda_parameters: null }), {
+                    status: 200,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
+            return response;
+        } catch (err) {
+            console.log('[gameModeManager] Fetch error DDA fallback triggered.', err);
+            return new Response(JSON.stringify({ status: "success", message: "DDA connection error fallback", dda_parameters: null }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
     }
     return originalFetch.apply(this, arguments);

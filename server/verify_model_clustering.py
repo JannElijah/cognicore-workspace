@@ -26,17 +26,35 @@ def test_model_clustering_pipeline():
     print("\n[Step 2] Triggering online model retraining...")
     res_retrain = requests.post(f"{API_URL}/api/model/retrain")
     print(f"Status code: {res_retrain.status_code}")
-    assert res_retrain.status_code == 200, f"Failed model retrain: {res_retrain.text}"
+    assert res_retrain.status_code in (200, 202), f"Failed model retrain: {res_retrain.text}"
     retrain_data = res_retrain.json()
     assert retrain_data["status"] == "success"
-    assert "test_accuracy" in retrain_data
-    assert "cluster_centroids" in retrain_data
-    assert "classification_report" in retrain_data
+    
+    # Poll status endpoint until training finishes
+    import time
+    print("Waiting for background retraining to complete...")
+    max_retries = 40
+    retries = 0
+    while retries < max_retries:
+        time.sleep(1)
+        res_status = requests.get(f"{API_URL}/api/model/status")
+        assert res_status.status_code == 200
+        status_data = res_status.json()
+        if status_data.get("training_status") != "training":
+            break
+        retries += 1
+        
+    assert status_data.get("training_status") == "idle", f"Retraining failed or timed out: {status_data}"
+    retrain_metrics = status_data.get("last_retrain_metrics")
+    assert retrain_metrics is not None, "Missing retrain metrics post-retrain"
+    assert "test_accuracy" in retrain_metrics
+    assert "cluster_centroids" in retrain_metrics
+    assert "classification_report" in retrain_metrics
     
     print("\nRetraining completed successfully. Results summary:")
-    print(f"  Test Accuracy: {retrain_data['test_accuracy']}")
+    print(f"  Test Accuracy: {retrain_metrics['test_accuracy']}")
     print("  Cluster centroids:")
-    print(json.dumps(retrain_data["cluster_centroids"], indent=2))
+    print(json.dumps(retrain_metrics["cluster_centroids"], indent=2))
     
     # 3. Test model status after retraining (loaded from disk should be True)
     print("\n[Step 3] Fetching model status post-retrain...")
