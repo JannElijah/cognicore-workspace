@@ -1816,33 +1816,54 @@ export default function App() {
     },
     plugins: {
       legend: {
-        display: false
+        display: true,
+        position: 'top',
+        labels: {
+          color: '#94a3b8',
+          boxWidth: 10,
+          font: { size: 10 }
+        }
       }
     }
   };
+
+  const diffLevels = latestSessionMetrics.map(m => m.difficulty_level);
+  const diffPointRadii = diffLevels.map((val, idx) => {
+    if (idx === 0) return 4;
+    return val !== diffLevels[idx - 1] ? 8 : 4;
+  });
+  const diffPointColors = diffLevels.map((val, idx) => {
+    if (idx === 0) return '#a855f7';
+    return val !== diffLevels[idx - 1] ? '#22c55e' : '#a855f7';
+  });
 
   const lineChartData = {
     labels: latestSessionMetrics.map((_, index) => `R${index + 1}`),
     datasets: [
       {
         label: 'Difficulty Level',
-        data: latestSessionMetrics.map(m => m.difficulty_level),
+        data: diffLevels,
         borderColor: '#a855f7',
-        backgroundColor: 'rgba(168, 85, 247, 0.15)',
+        backgroundColor: 'rgba(168, 85, 247, 0.12)',
         borderWidth: 3,
         yAxisID: 'yDiff',
         tension: 0.15,
-        pointBackgroundColor: '#a855f7',
-        pointRadius: 4
+        fill: true,
+        pointBackgroundColor: diffPointColors,
+        pointBorderColor: diffPointColors.map(c => c === '#22c55e' ? '#ffffff' : 'transparent'),
+        pointBorderWidth: diffPointColors.map(c => c === '#22c55e' ? 2 : 0),
+        pointRadius: diffPointRadii,
+        pointHoverRadius: diffPointRadii.map(r => r + 2)
       },
       {
         label: 'Reaction Time (ms)',
         data: latestSessionMetrics.map(m => m.reaction_time_ms),
         borderColor: '#38bdf8',
-        backgroundColor: 'rgba(56, 189, 248, 0.05)',
+        backgroundColor: 'rgba(56, 189, 248, 0.04)',
         borderWidth: 2,
         yAxisID: 'yRt',
         tension: 0.2,
+        fill: true,
         pointBackgroundColor: '#38bdf8',
         pointRadius: 3,
         borderDash: [5, 5]
@@ -1974,6 +1995,260 @@ export default function App() {
       }
     }
   };
+
+  // ─── GAME TYPE → DOMAIN HELPER ────────────────────────────────────────────
+  const GAME_DOMAIN_MAP = {
+    SpeedTap: 'Reflexes', FocusFinder: 'Reflexes', StroopShift: 'Reflexes',
+    MemoryMatch: 'Memory', MatrixRecall: 'Memory', NeuralNBack: 'Memory',
+    SynapseSpin: 'Memory', NexusMapper: 'Memory',
+    LogicLink: 'Logic', EquationBalance: 'Logic', SequenceDecoder: 'Logic', RouteOptimizer: 'Logic',
+    MazeEscape: 'Strategy', MentalFlex: 'Strategy', NeuroMaze: 'Strategy'
+  };
+
+  // ─── 1. MULTI-SESSION REACTION TIME TREND ─────────────────────────────────
+  const validSessions = sessionHistory.filter(s => s.avg_rt > 0 && s.rounds_count > 0);
+  const reversedSessions = [...validSessions].reverse();
+  const trendLabels = reversedSessions.map((_, i) => `S${i + 1}`);
+  const trendRt = reversedSessions.map(s => Math.round(s.avg_rt));
+  const trendEma = trendRt.reduce((acc, val, i) => {
+    if (i === 0) return [val];
+    acc.push(Math.round(acc[i - 1] + 0.35 * (val - acc[i - 1])));
+    return acc;
+  }, []);
+  const sessionTrendData = {
+    labels: trendLabels,
+    datasets: [
+      {
+        label: 'Avg Reaction Time (ms)',
+        data: trendRt,
+        borderColor: '#38bdf8',
+        backgroundColor: 'rgba(56,189,248,0.07)',
+        borderWidth: 2,
+        pointBackgroundColor: '#38bdf8',
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        tension: 0.35,
+        fill: true,
+        order: 2
+      },
+      {
+        label: 'EMA Trend',
+        data: trendEma,
+        borderColor: '#22c55e',
+        backgroundColor: 'transparent',
+        borderWidth: 2.5,
+        borderDash: [6, 3],
+        pointRadius: 0,
+        tension: 0.45,
+        fill: false,
+        order: 1
+      }
+    ]
+  };
+  const sessionTrendOptions = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top', labels: { color: '#94a3b8', boxWidth: 10, font: { size: 10 } } },
+      tooltip: {
+        callbacks: {
+          title: (items) => {
+            const idx = items[0]?.dataIndex;
+            const s = reversedSessions[idx];
+            return s ? `${s.game_type} — ${s.game_mode}` : `Session ${idx + 1}`;
+          },
+          label: (item) => ` ${item.dataset.label}: ${item.raw} ms`
+        },
+        backgroundColor: 'rgba(15,23,42,0.95)',
+        borderColor: 'rgba(56,189,248,0.4)', borderWidth: 1,
+        titleColor: '#38bdf8', bodyColor: '#e2e8f0'
+      }
+    },
+    scales: {
+      x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', font: { size: 9 } } },
+      y: {
+        grid: { color: 'rgba(255,255,255,0.05)' },
+        ticks: { color: '#38bdf8', font: { size: 9 } },
+        title: { display: true, text: 'RT (ms)', color: '#38bdf8', font: { size: 10 } }
+      }
+    }
+  };
+
+  // ─── 2. PER-DOMAIN ACCURACY HORIZONTAL BAR CHART ──────────────────────────
+  const domainAccMap_d = { Reflexes: [], Memory: [], Logic: [], Strategy: [] };
+  sessionHistory.slice(0, 20).forEach(s => {
+    const domain = GAME_DOMAIN_MAP[s.game_type];
+    if (domain && s.avg_acc > 0) domainAccMap_d[domain].push(s.avg_acc * 100);
+  });
+  const domainAccAvg = ['Reflexes', 'Memory', 'Logic', 'Strategy'].map(d => {
+    const vals = domainAccMap_d[d];
+    return vals.length ? +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1) : 0;
+  });
+  const domainAccData = {
+    labels: ['\u26a1 Reflexes', '\ud83e\udde0 Memory', '\ud83d\udd22 Logic', '\ud83e\udded Strategy'],
+    datasets: [{
+      label: 'Avg Accuracy (%)',
+      data: domainAccAvg,
+      backgroundColor: ['rgba(168,85,247,0.75)', 'rgba(56,189,248,0.75)', 'rgba(245,158,11,0.75)', 'rgba(16,185,129,0.75)'],
+      borderColor: ['#a855f7', '#38bdf8', '#f59e0b', '#10b981'],
+      borderWidth: 1.5,
+      borderRadius: 6,
+    }]
+  };
+  const domainAccOptions = {
+    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: { label: (item) => ` ${item.raw.toFixed(1)}% accuracy` },
+        backgroundColor: 'rgba(15,23,42,0.95)', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1, bodyColor: '#e2e8f0'
+      }
+    },
+    scales: {
+      x: { min: 0, max: 100, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', font: { size: 9 } } },
+      y: { grid: { display: false }, ticks: { color: '#e2e8f0', font: { size: 11, weight: 'bold' } } }
+    }
+  };
+
+  // ─── 3. PER-GAME SCORE BREAKDOWN ──────────────────────────────────────────
+  const gameScoreMap = {};
+  sessionHistory.forEach(s => {
+    if (!s.game_type) return;
+    const proxy = Math.round((s.avg_acc || 0) * 70 + (s.max_diff || 1) * 6);
+    if (!gameScoreMap[s.game_type] || proxy > gameScoreMap[s.game_type]) gameScoreMap[s.game_type] = proxy;
+  });
+  const sortedGames = Object.entries(gameScoreMap).sort((a, b) => b[1] - a[1]).slice(0, 12);
+  const gameScoreColors = sortedGames.map((_, i, arr) => {
+    const ratio = i / Math.max(arr.length - 1, 1);
+    return `rgba(${Math.round(16+ratio*223)},${Math.round(185-ratio*117)},${Math.round(129-ratio*61)},0.78)`;
+  });
+  const perGameScoreData = {
+    labels: sortedGames.map(([g]) => g),
+    datasets: [{
+      label: 'Best Score',
+      data: sortedGames.map(([, v]) => v),
+      backgroundColor: gameScoreColors,
+      borderColor: gameScoreColors.map(c => c.replace('0.78','1')),
+      borderWidth: 1.5, borderRadius: 5,
+    }]
+  };
+  const perGameScoreOptions = {
+    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: { label: (item) => ` Score: ${item.raw} / 100` },
+        backgroundColor: 'rgba(15,23,42,0.95)', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1, bodyColor: '#e2e8f0'
+      }
+    },
+    scales: {
+      x: { min: 0, max: 100, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', font: { size: 9 } } },
+      y: { grid: { display: false }, ticks: { color: '#e2e8f0', font: { size: 10 } } }
+    }
+  };
+
+  // ─── 4. ACCURACY vs REACTION TIME SCATTER ─────────────────────────────────
+  const DIFF_PALETTE = ['#22c55e','#86efac','#f59e0b','#f97316','#ef4444'];
+  const scatterByDiff = [1,2,3,4,5].map(level => ({
+    label: `Level ${level}`,
+    data: latestSessionMetrics
+      .filter(m => m.difficulty_level === level && m.reaction_time_ms > 0)
+      .map(m => ({ x: Math.round(m.reaction_time_ms), y: +(m.accuracy_rate*100).toFixed(1) })),
+    backgroundColor: DIFF_PALETTE[level-1] + 'bb',
+    borderColor: DIFF_PALETTE[level-1],
+    pointRadius: 6, pointHoverRadius: 9,
+  }));
+  const scatterData = { datasets: scatterByDiff.filter(d => d.data.length > 0) };
+  const scatterOptions = {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top', labels: { color: '#94a3b8', boxWidth: 8, font: { size: 10 } } },
+      tooltip: {
+        callbacks: { label: (item) => ` RT: ${item.raw.x}ms   Acc: ${item.raw.y}%` },
+        backgroundColor: 'rgba(15,23,42,0.95)', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
+        titleColor: '#f59e0b', bodyColor: '#e2e8f0'
+      }
+    },
+    scales: {
+      x: {
+        grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', font: { size: 9 } },
+        title: { display: true, text: 'Reaction Time (ms)', color: '#94a3b8', font: { size: 10 } }
+      },
+      y: {
+        min: 0, max: 100,
+        grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', font: { size: 9 } },
+        title: { display: true, text: 'Accuracy (%)', color: '#94a3b8', font: { size: 10 } }
+      }
+    }
+  };
+
+  // ─── RADAR UPGRADED: archetype baseline ghost overlay ────────────────────
+  const ARCHETYPE_BASELINES = {
+    'Advanced':        [88, 85, 90, 83],
+    'Standard':        [65, 62, 68, 60],
+    'Beginner':        [42, 40, 45, 38],
+    'Initializing...': [55, 55, 55, 55],
+  };
+  const baselineValues = ARCHETYPE_BASELINES[cognitiveProfile?.archetype] || ARCHETYPE_BASELINES['Initializing...'];
+  const radarDataEnhanced = {
+    labels: ['Spatial-Visual Memory','Logical-Mathematical','Reflexes & Focus','Executive Strategy'],
+    datasets: [
+      {
+        label: 'Your Profile',
+        data: [skills.spatial_visual_memory, skills.logical_mathematical, skills.reflexes_and_focus, skills.executive_strategy],
+        backgroundColor: 'rgba(168,85,247,0.2)',
+        borderColor: '#a855f7', borderWidth: 2.5,
+        pointBackgroundColor: '#38bdf8', pointBorderColor: '#ffffff',
+        pointRadius: 5, pointHoverRadius: 7, order: 1
+      },
+      {
+        label: `${cognitiveProfile?.archetype || 'Archetype'} Baseline`,
+        data: baselineValues,
+        backgroundColor: 'rgba(255,255,255,0.04)',
+        borderColor: 'rgba(255,255,255,0.22)', borderWidth: 1.5,
+        borderDash: [5, 4],
+        pointBackgroundColor: 'rgba(255,255,255,0.25)', pointBorderColor: 'transparent',
+        pointRadius: 3, order: 2
+      }
+    ]
+  };
+
+  // ─── DOMAIN DELTAS FOR SCORE CARDS ─────────────────────────────────────────
+  const domainDeltas = {
+    spatial_visual_memory: 0,
+    logical_mathematical: 0,
+    reflexes_and_focus: 0,
+    executive_strategy: 0
+  };
+
+  const domainSessionsMap = {
+    spatial_visual_memory: [],
+    logical_mathematical: [],
+    reflexes_and_focus: [],
+    executive_strategy: []
+  };
+
+  // Group session history by domain using the GAME_DOMAIN_MAP
+  sessionHistory.forEach(s => {
+    const domainName = GAME_DOMAIN_MAP[s.game_type];
+    if (domainName === 'Memory') domainSessionsMap.spatial_visual_memory.push(s);
+    if (domainName === 'Logic') domainSessionsMap.logical_mathematical.push(s);
+    if (domainName === 'Reflexes') domainSessionsMap.reflexes_and_focus.push(s);
+    if (domainName === 'Strategy') domainSessionsMap.executive_strategy.push(s);
+  });
+
+  // Calculate delta: latest session score minus previous session score
+  Object.keys(domainSessionsMap).forEach(key => {
+    const sList = domainSessionsMap[key];
+    if (sList.length >= 2) {
+      const latestScore = Math.round((sList[0].avg_acc || 0) * 70 + (sList[0].max_diff || 1) * 6);
+      const prevScore = Math.round((sList[1].avg_acc || 0) * 70 + (sList[1].max_diff || 1) * 6);
+      domainDeltas[key] = latestScore - prevScore;
+    } else if (sList.length === 1) {
+      // If there is only one session, the delta is the difference from baseline
+      const latestScore = Math.round((sList[0].avg_acc || 0) * 70 + (sList[0].max_diff || 1) * 6);
+      domainDeltas[key] = latestScore;
+    }
+  });
 
   return (
     <div className="portal-container" style={{ position: 'relative' }}>
@@ -3513,26 +3788,179 @@ export default function App() {
             {/* Cognitive Skills Score Row */}
             <h2 className="section-title">Cognitive Domain Profiling</h2>
             <div className="game-grid" style={{ marginBottom: '3rem' }}>
-              <div className="game-card" style={{ padding: '1.5rem', borderLeft: '4px solid #38bdf8' }}>
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Spatial-Visual Memory</span>
-                <h3 style={{ fontSize: '2.5rem', margin: '0.5rem 0', color: '#38bdf8' }}>{skills.spatial_visual_memory}/100</h3>
-                <p style={{ margin: '0', fontSize: '0.85rem' }}>Short-Term grid sequence recall and spatial working capacity.</p>
+              
+              {/* Spatial-Visual Memory Card */}
+              <div className="game-card" style={{ 
+                padding: '1.25rem 1.5rem', 
+                borderLeft: '4px solid #38bdf8', 
+                display: 'flex', 
+                flexDirection: 'row', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                gap: '1rem',
+                minWidth: '260px',
+                boxSizing: 'border-box'
+              }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Spatial-Visual Memory</span>
+                    {domainDeltas.spatial_visual_memory !== 0 && (
+                      <span style={{
+                        background: domainDeltas.spatial_visual_memory > 0 ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                        border: domainDeltas.spatial_visual_memory > 0 ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)',
+                        color: domainDeltas.spatial_visual_memory > 0 ? '#4ade80' : '#f87171',
+                        fontSize: '0.65rem',
+                        padding: '0.05rem 0.35rem',
+                        borderRadius: '9999px',
+                        fontWeight: 'bold',
+                        boxShadow: domainDeltas.spatial_visual_memory > 0 ? '0 0 6px rgba(34, 197, 94, 0.15)' : '0 0 6px rgba(239, 68, 68, 0.15)'
+                      }}>
+                        {domainDeltas.spatial_visual_memory > 0 ? `+${domainDeltas.spatial_visual_memory}` : domainDeltas.spatial_visual_memory}
+                      </span>
+                    )}
+                  </div>
+                  <h3 style={{ fontSize: '1.85rem', margin: '0.25rem 0', color: '#38bdf8', fontWeight: '800' }}>
+                    {skills.spatial_visual_memory}<span style={{ fontSize: '0.9rem', color: '#64748b' }}>/100</span>
+                  </h3>
+                  <p style={{ margin: '0', fontSize: '0.8rem', color: '#94a3b8', lineHeight: '1.35' }}>
+                    Short-Term grid sequence recall and spatial working capacity.
+                  </p>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', flexShrink: 0 }}>
+                  <ProgressRing radius={30} stroke={3.5} progress={skills.spatial_visual_memory / 100} color="#38bdf8" />
+                  <span style={{ position: 'absolute', fontSize: '1.1rem' }}>🧠</span>
+                </div>
               </div>
-              <div className="game-card" style={{ padding: '1.5rem', borderLeft: '4px solid #f59e0b' }}>
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Logical Reasoning</span>
-                <h3 style={{ fontSize: '2.5rem', margin: '0.5rem 0', color: '#f59e0b' }}>{skills.logical_mathematical}/100</h3>
-                <p style={{ margin: '0', fontSize: '0.85rem' }}>Logical sequencing, path optimization, and relational connections.</p>
+
+              {/* Logical Reasoning Card */}
+              <div className="game-card" style={{ 
+                padding: '1.25rem 1.5rem', 
+                borderLeft: '4px solid #f59e0b', 
+                display: 'flex', 
+                flexDirection: 'row', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                gap: '1rem',
+                minWidth: '260px',
+                boxSizing: 'border-box'
+              }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Logical Reasoning</span>
+                    {domainDeltas.logical_mathematical !== 0 && (
+                      <span style={{
+                        background: domainDeltas.logical_mathematical > 0 ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                        border: domainDeltas.logical_mathematical > 0 ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)',
+                        color: domainDeltas.logical_mathematical > 0 ? '#4ade80' : '#f87171',
+                        fontSize: '0.65rem',
+                        padding: '0.05rem 0.35rem',
+                        borderRadius: '9999px',
+                        fontWeight: 'bold',
+                        boxShadow: domainDeltas.logical_mathematical > 0 ? '0 0 6px rgba(34, 197, 94, 0.15)' : '0 0 6px rgba(239, 68, 68, 0.15)'
+                      }}>
+                        {domainDeltas.logical_mathematical > 0 ? `+${domainDeltas.logical_mathematical}` : domainDeltas.logical_mathematical}
+                      </span>
+                    )}
+                  </div>
+                  <h3 style={{ fontSize: '1.85rem', margin: '0.25rem 0', color: '#f59e0b', fontWeight: '800' }}>
+                    {skills.logical_mathematical}<span style={{ fontSize: '0.9rem', color: '#64748b' }}>/100</span>
+                  </h3>
+                  <p style={{ margin: '0', fontSize: '0.8rem', color: '#94a3b8', lineHeight: '1.35' }}>
+                    Logical sequencing, path optimization, and relational connections.
+                  </p>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', flexShrink: 0 }}>
+                  <ProgressRing radius={30} stroke={3.5} progress={skills.logical_mathematical / 100} color="#f59e0b" />
+                  <span style={{ position: 'absolute', fontSize: '1.1rem' }}>🔢</span>
+                </div>
               </div>
-              <div className="game-card" style={{ padding: '1.5rem', borderLeft: '4px solid #a855f7' }}>
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Reflexes & Focus</span>
-                <h3 style={{ fontSize: '2.5rem', margin: '0.5rem 0', color: '#a855f7' }}>{skills.reflexes_and_focus}/100</h3>
-                <p style={{ margin: '0', fontSize: '0.85rem' }}>Continuous visual search, rapid target identification, and motor response.</p>
+
+              {/* Reflexes & Focus Card */}
+              <div className="game-card" style={{ 
+                padding: '1.25rem 1.5rem', 
+                borderLeft: '4px solid #a855f7', 
+                display: 'flex', 
+                flexDirection: 'row', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                gap: '1rem',
+                minWidth: '260px',
+                boxSizing: 'border-box'
+              }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Reflexes & Focus</span>
+                    {domainDeltas.reflexes_and_focus !== 0 && (
+                      <span style={{
+                        background: domainDeltas.reflexes_and_focus > 0 ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                        border: domainDeltas.reflexes_and_focus > 0 ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)',
+                        color: domainDeltas.reflexes_and_focus > 0 ? '#4ade80' : '#f87171',
+                        fontSize: '0.65rem',
+                        padding: '0.05rem 0.35rem',
+                        borderRadius: '9999px',
+                        fontWeight: 'bold',
+                        boxShadow: domainDeltas.reflexes_and_focus > 0 ? '0 0 6px rgba(34, 197, 94, 0.15)' : '0 0 6px rgba(239, 68, 68, 0.15)'
+                      }}>
+                        {domainDeltas.reflexes_and_focus > 0 ? `+${domainDeltas.reflexes_and_focus}` : domainDeltas.reflexes_and_focus}
+                      </span>
+                    )}
+                  </div>
+                  <h3 style={{ fontSize: '1.85rem', margin: '0.25rem 0', color: '#a855f7', fontWeight: '800' }}>
+                    {skills.reflexes_and_focus}<span style={{ fontSize: '0.9rem', color: '#64748b' }}>/100</span>
+                  </h3>
+                  <p style={{ margin: '0', fontSize: '0.8rem', color: '#94a3b8', lineHeight: '1.35' }}>
+                    Continuous visual search, rapid target identification, and motor response.
+                  </p>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', flexShrink: 0 }}>
+                  <ProgressRing radius={30} stroke={3.5} progress={skills.reflexes_and_focus / 100} color="#a855f7" />
+                  <span style={{ position: 'absolute', fontSize: '1.1rem' }}>⚡</span>
+                </div>
               </div>
-              <div className="game-card" style={{ padding: '1.5rem', borderLeft: '4px solid #10b981' }}>
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Executive Strategy</span>
-                <h3 style={{ fontSize: '2.5rem', margin: '0.5rem 0', color: '#10b981' }}>{skills.executive_strategy}/100</h3>
-                <p style={{ margin: '0', fontSize: '0.85rem' }}>Multi-step pathfinding and spatial maze escape navigation planning.</p>
+
+              {/* Executive Strategy Card */}
+              <div className="game-card" style={{ 
+                padding: '1.25rem 1.5rem', 
+                borderLeft: '4px solid #10b981', 
+                display: 'flex', 
+                flexDirection: 'row', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                gap: '1rem',
+                minWidth: '260px',
+                boxSizing: 'border-box'
+              }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Executive Strategy</span>
+                    {domainDeltas.executive_strategy !== 0 && (
+                      <span style={{
+                        background: domainDeltas.executive_strategy > 0 ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                        border: domainDeltas.executive_strategy > 0 ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(239, 68, 68, 0.3)',
+                        color: domainDeltas.executive_strategy > 0 ? '#4ade80' : '#f87171',
+                        fontSize: '0.65rem',
+                        padding: '0.05rem 0.35rem',
+                        borderRadius: '9999px',
+                        fontWeight: 'bold',
+                        boxShadow: domainDeltas.executive_strategy > 0 ? '0 0 6px rgba(34, 197, 94, 0.15)' : '0 0 6px rgba(239, 68, 68, 0.15)'
+                      }}>
+                        {domainDeltas.executive_strategy > 0 ? `+${domainDeltas.executive_strategy}` : domainDeltas.executive_strategy}
+                      </span>
+                    )}
+                  </div>
+                  <h3 style={{ fontSize: '1.85rem', margin: '0.25rem 0', color: '#10b981', fontWeight: '800' }}>
+                    {skills.executive_strategy}<span style={{ fontSize: '0.9rem', color: '#64748b' }}>/100</span>
+                  </h3>
+                  <p style={{ margin: '0', fontSize: '0.8rem', color: '#94a3b8', lineHeight: '1.35' }}>
+                    Multi-step pathfinding and spatial maze escape navigation planning.
+                  </p>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', flexShrink: 0 }}>
+                  <ProgressRing radius={30} stroke={3.5} progress={skills.executive_strategy / 100} color="#10b981" />
+                  <span style={{ position: 'absolute', fontSize: '1.1rem' }}>🧭</span>
+                </div>
               </div>
+
             </div>
 
             {/* Middle Row: Trend Vector SVG + Radar Chart */}
@@ -3580,9 +4008,109 @@ export default function App() {
               <div className="game-card" style={{ width: '100%', alignItems: 'stretch', boxSizing: 'border-box' }}>
                 <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>🕸️ Cognitive Domain Radar Chart</h3>
                 <div style={{ position: 'relative', height: '240px' }}>
-                  <Radar data={radarData} options={radarOptions} />
+                  <Radar data={radarDataEnhanced} options={radarOptions} />
                 </div>
               </div>
+            </div>
+
+            {/* Premium Analytics row */}
+            <h2 className="section-title">Premium Cognitive Analytics</h2>
+            <div className="dashboard-row-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
+              
+              {/* Multi-Session Reaction Time Trend */}
+              <div className="game-card" style={{ width: '100%', alignItems: 'stretch', boxSizing: 'border-box' }}>
+                <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span>📈</span> Multi-Session RT Trend
+                </h3>
+                <p style={{ color: '#94a3b8', fontSize: '0.8rem', margin: '0 0 1.25rem 0', lineHeight: '1.3' }}>
+                  Progression of speed and EMA trend over previous active game sessions.
+                </p>
+                <div style={{ position: 'relative', height: '220px', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px', padding: '10px' }}>
+                  {chartsLoading ? (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8' }}>
+                      Loading trend metrics...
+                    </div>
+                  ) : reversedSessions.length === 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#64748b', fontSize: '0.8rem', textAlign: 'center' }}>
+                      <span>No session history found.</span>
+                      <span style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: '#4b5563' }}>Complete sessions to plot learning trends.</span>
+                    </div>
+                  ) : (
+                    <Line data={sessionTrendData} options={sessionTrendOptions} />
+                  )}
+                </div>
+              </div>
+
+              {/* Per-Domain Accuracy Breakdown */}
+              <div className="game-card" style={{ width: '100%', alignItems: 'stretch', boxSizing: 'border-box' }}>
+                <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span>🎯</span> Per-Domain Accuracy
+                </h3>
+                <p style={{ color: '#94a3b8', fontSize: '0.8rem', margin: '0 0 1.25rem 0', lineHeight: '1.3' }}>
+                  Average task precision and success rate percentages across cognitive domains.
+                </p>
+                <div style={{ position: 'relative', height: '220px', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px', padding: '10px' }}>
+                  {chartsLoading ? (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8' }}>
+                      Loading domain accuracy...
+                    </div>
+                  ) : sessionHistory.length === 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#64748b', fontSize: '0.8rem', textAlign: 'center' }}>
+                      <span>No domain accuracy data.</span>
+                    </div>
+                  ) : (
+                    <Bar data={domainAccData} options={domainAccOptions} />
+                  )}
+                </div>
+              </div>
+
+              {/* Per-Game Score Breakdown */}
+              <div className="game-card" style={{ width: '100%', alignItems: 'stretch', boxSizing: 'border-box' }}>
+                <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span>🏆</span> Per-Game Best Scores
+                </h3>
+                <p style={{ color: '#94a3b8', fontSize: '0.8rem', margin: '0 0 1.25rem 0', lineHeight: '1.3' }}>
+                  Highest performance index achieved across specific game modules.
+                </p>
+                <div style={{ position: 'relative', height: '220px', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px', padding: '10px' }}>
+                  {chartsLoading ? (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8' }}>
+                      Loading game breakdown...
+                    </div>
+                  ) : sortedGames.length === 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#64748b', fontSize: '0.8rem', textAlign: 'center' }}>
+                      <span>No high scores recorded.</span>
+                    </div>
+                  ) : (
+                    <Bar data={perGameScoreData} options={perGameScoreOptions} />
+                  )}
+                </div>
+              </div>
+
+              {/* Accuracy vs RT Scatter Plot */}
+              <div className="game-card" style={{ width: '100%', alignItems: 'stretch', boxSizing: 'border-box' }}>
+                <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span>✨</span> Reaction Time vs Accuracy
+                </h3>
+                <p style={{ color: '#94a3b8', fontSize: '0.8rem', margin: '0 0 1.25rem 0', lineHeight: '1.3' }}>
+                  Execution speed mapped against success rate for the current session.
+                </p>
+                <div style={{ position: 'relative', height: '220px', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px', padding: '10px' }}>
+                  {chartsLoading ? (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8' }}>
+                      Loading scatter distribution...
+                    </div>
+                  ) : latestSessionMetrics.length === 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#64748b', fontSize: '0.8rem', textAlign: 'center' }}>
+                      <span>No metrics in current session.</span>
+                      <span style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: '#4b5563' }}>Complete a training round to populate.</span>
+                    </div>
+                  ) : (
+                    <Scatter data={scatterData} options={scatterOptions} />
+                  )}
+                </div>
+              </div>
+
             </div>
 
             {/* Bottom Row: Behavioral Insights and Recommendations */}
