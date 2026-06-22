@@ -19,6 +19,46 @@ export default class SpeedTapScene extends Phaser.Scene {
         super('SpeedTapScene');
     }
 
+    preload() {
+        // Pre-generate GPU-cached textures for target circle and distractor triangle.
+        // This avoids re-drawing these shapes via Phaser Graphics on every spawn call,
+        // significantly reducing CPU->GPU draw call overhead across the full session.
+        const size = 50; // base size (will be scaled per-spawn by targetScale)
+        const padding = 6; // extra px for glow/stroke bleed
+        const dim = size * 2 + padding * 2;
+
+        // --- Target: Neon-teal filled circle with inner ring ---
+        if (!this.textures.exists('speedtap_target')) {
+            const tGfx = this.add.graphics();
+            tGfx.lineStyle(3, 0x38bdf8, 0.9);
+            tGfx.fillStyle(0x06b6d4, 0.45);
+            tGfx.fillCircle(size + padding, size + padding, size);
+            tGfx.strokeCircle(size + padding, size + padding, size);
+            tGfx.lineStyle(1.5, 0xffffff, 0.6);
+            tGfx.strokeCircle(size + padding, size + padding, size * 0.6);
+            tGfx.generateTexture('speedtap_target', dim, dim);
+            tGfx.destroy();
+        }
+
+        // --- Distractor: Neon-orange triangle with X label baked in ---
+        if (!this.textures.exists('speedtap_distractor')) {
+            const dGfx = this.add.graphics();
+            const cx = size + padding;
+            const cy = size + padding;
+            dGfx.lineStyle(3, 0xf97316, 0.85);
+            dGfx.fillStyle(0xef4444, 0.4);
+            dGfx.beginPath();
+            dGfx.moveTo(cx,           cy - size);
+            dGfx.lineTo(cx + size,    cy + size);
+            dGfx.lineTo(cx - size,    cy + size);
+            dGfx.closePath();
+            dGfx.fillPath();
+            dGfx.strokePath();
+            dGfx.generateTexture('speedtap_distractor', dim, dim);
+            dGfx.destroy();
+        }
+    }
+
     init(data) {
         // Essential configuration and session metadata passed from the React wrapper
         this.sessionId = data.sessionId || null;
@@ -169,99 +209,77 @@ export default class SpeedTapScene extends Phaser.Scene {
         // Determine if this is a target or a distractor
         const isDistractor = Math.random() < this.distractorRatio;
 
-        // Draw shape dynamically using Phaser Graphics (no external assets needed)
-        const size = 50 * this.targetScale;
-        const container = this.add.container(x, y);
-        const graphic = this.add.graphics();
-        
-        container.add(graphic);
+        // --- Use pre-cached GPU textures instead of per-spawn Graphics draw calls ---
+        const textureKey = isDistractor ? 'speedtap_distractor' : 'speedtap_target';
+        const scaledSize = 50 * this.targetScale;
 
-        if (isDistractor) {
-            // Distractor styling: coral triangle with neon orange glow
-            graphic.lineStyle(3, 0xf97316, 0.8);
-            graphic.fillStyle(0xef4444, 0.4); // Semi-transparent red
-            
-            // Draw a triangle
-            graphic.beginPath();
-            graphic.moveTo(0, -size);
-            graphic.lineTo(size, size);
-            graphic.lineTo(-size, size);
-            graphic.closePath();
-            graphic.fillPath();
-            graphic.strokePath();
+        // Create sprite from cached texture
+        const sprite = this.add.image(x, y, textureKey);
+        // Scale sprite so it matches DDA-controlled targetScale
+        // The texture was drawn at base size 50*2 = 100px wide, normalize:
+        sprite.setScale((scaledSize * 2) / sprite.width);
+        sprite.setDepth(10);
 
-            // Add center indicator "X"
-            const label = this.add.text(0, -2, '✖', {
-                fontFamily: 'Arial',
-                fontSize: `${18 * this.targetScale}px`,
-                fill: '#f97316'
-            }).setOrigin(0.5);
-            container.add(label);
+        // Hit detection: use circular geometry for natural click feel
+        sprite.setInteractive(
+            new Phaser.Geom.Circle(
+                sprite.width / 2,
+                sprite.height / 2,
+                sprite.width / 2
+            ),
+            Phaser.Geom.Circle.Contains
+        );
 
-            container.setData('type', 'distractor');
-        } else {
-            // Standard Target styling: sleek neon-teal circle with inner rings
-            graphic.lineStyle(3, 0x38bdf8, 0.8);
-            graphic.fillStyle(0x06b6d4, 0.4); // Semi-transparent cyan
-            graphic.fillCircle(0, 0, size);
-            graphic.strokeCircle(0, 0, size);
-            
-            // Inner circle ring
-            graphic.lineStyle(1.5, 0xffffff, 0.6);
-            graphic.strokeCircle(0, 0, size * 0.6);
+        sprite.setData('type', isDistractor ? 'distractor' : 'target');
 
-            container.setData('type', 'target');
-        }
-
-        // Add hit detection bounds
-        graphic.setInteractive(new Phaser.Geom.Circle(0, 0, size), Phaser.Geom.Circle.Contains);
-        
-        // Scale in animation on spawn (subtle micro-animation)
-        container.setScale(0);
+        // Scale in animation on spawn
+        sprite.setScale(0);
         this.tweens.add({
-            targets: container,
-            scale: 1,
+            targets: sprite,
+            scale: (scaledSize * 2) / (this.textures.get(textureKey).getSourceImage().width || 106),
             duration: 200,
             ease: 'Back.easeOut'
         });
 
-        // Serious Game Improvement: Target shrinking over time
+        const targetNormalScale = (scaledSize * 2) / (this.textures.get(textureKey).getSourceImage().width || 106);
+
+        // Shrink to near-invisible over lifespan (DDA-controlled)
         this.tweens.add({
-            targets: container,
-            scale: 0.15,
+            targets: sprite,
+            scale: targetNormalScale * 0.15,
             delay: 200,
             duration: this.targetLifespan - 200,
             ease: 'Linear'
         });
 
         // Set spawn metadata
-        container.setData('spawnTime', this.time.now);
-        container.setData('active', true);
+        sprite.setData('spawnTime', this.time.now);
+        sprite.setData('active', true);
 
         // Click interaction
-        graphic.on('pointerdown', (pointer) => {
-            this.handleObjectClick(container);
+        sprite.on('pointerdown', () => {
+            this.handleObjectClick(sprite);
         });
 
         // Lifetime limit check (DDA-controlled)
         const lifetimeTimer = this.time.delayedCall(this.targetLifespan, () => {
-            if (container.active) {
+            if (sprite.active) {
                 this.tweens.add({
-                    targets: container,
+                    targets: sprite,
                     scale: 0,
                     duration: 150,
                     onComplete: () => {
-                        if (container.getData('type') === 'target') {
+                        if (sprite.getData('type') === 'target') {
                             this.registerMiss(); // Letting target expire counts as a miss
                         }
-                        this.removeTarget(container);
+                        this.removeTarget(sprite);
                     }
                 });
             }
         });
 
-        container.setData('lifetimeTimer', lifetimeTimer);
-        this.activeTargets.push(container);
+        sprite.setData('lifetimeTimer', lifetimeTimer);
+        this.activeTargets.push(sprite);
     }
 
     handleObjectClick(container) {
@@ -316,9 +334,9 @@ export default class SpeedTapScene extends Phaser.Scene {
         this.updateHUD();
     }
 
-    removeTarget(container) {
-        this.activeTargets = this.activeTargets.filter(t => t !== container);
-        container.destroy();
+    removeTarget(sprite) {
+        this.activeTargets = this.activeTargets.filter(t => t !== sprite);
+        sprite.destroy();
     }
 
     registerMiss() {

@@ -17,6 +17,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import sqlite3
 import os
+import time
 
 # Import Machine Learning Classifier Strategy
 from model import archetype_classifier
@@ -45,6 +46,26 @@ def safe_int(val, default=None):
         return int(val) if val is not None else default
     except (ValueError, TypeError):
         return default
+
+def db_execute_with_retry(cursor, sql, params=(), max_retries=5):
+    """
+    Executes a SQLite statement with exponential backoff retry logic.
+    Catches sqlite3.OperationalError (database is locked) and retries
+    up to max_retries times with delays: 50ms, 100ms, 200ms, 400ms, 800ms.
+    This ensures concurrent telemetry writes from multiple games never
+    permanently fail due to transient SQLite locking contention.
+    """
+    backoff_ms = 50
+    for attempt in range(max_retries):
+        try:
+            cursor.execute(sql, params)
+            return  # success
+        except sqlite3.OperationalError as e:
+            if 'locked' in str(e).lower() and attempt < max_retries - 1:
+                time.sleep(backoff_ms / 1000.0)
+                backoff_ms *= 2  # exponential backoff
+            else:
+                raise  # re-raise on final attempt or non-lock errors
 
 def calculate_approx_t_p_value(t_stat, df):
     """
@@ -1033,11 +1054,16 @@ def start_session():
                 if user:
                     user_id = user['id']
                 else:
-                    cursor.execute("INSERT INTO users (username) VALUES (?)", (username,))
+                    db_execute_with_retry(
+                        cursor,
+                        "INSERT INTO users (username) VALUES (?)",
+                        (username,)
+                    )
                     user_id = cursor.lastrowid
                     
                 # Create game session
-                cursor.execute(
+                db_execute_with_retry(
+                    cursor,
                     "INSERT INTO game_sessions (user_id, game_type, game_mode) VALUES (?, ?, ?)",
                     (user_id, game_type, game_mode)
                 )
@@ -1395,8 +1421,9 @@ def submit_metrics():
                 if error_count is None:
                     error_count = 0
  
-                # Insert performance metric
-                cursor.execute(
+                # Insert performance metric with retry for SQLite lock contention
+                db_execute_with_retry(
+                    cursor,
                     """
                     INSERT INTO performance_metrics 
                     (session_id, reaction_time, accuracy_rate, difficulty_level, cognitive_domain, game_type, error_count, hesitation_ms, spam_click_count, rule_shift_latency_ms, path_efficiency) 
@@ -1479,7 +1506,9 @@ def submit_metrics_batch():
                     if game_type and not cognitive_domain:
                         cognitive_domain = GAME_TO_DOMAIN.get(game_type)
                         
-                    cursor.execute(
+                    # Insert metric with retry for SQLite lock contention
+                    db_execute_with_retry(
+                        cursor,
                         """
                         INSERT INTO performance_metrics 
                         (session_id, reaction_time, accuracy_rate, difficulty_level, cognitive_domain, game_type, error_count, hesitation_ms, spam_click_count, rule_shift_latency_ms, path_efficiency) 

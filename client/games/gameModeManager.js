@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import cogniFX from '../utils/cogniFX.js';
 
 // Initialize global game mode tracking variable
 window.currentGameMode = 'timed';
@@ -333,12 +334,82 @@ function decorateSceneClass(SceneClass) {
         });
     };
 
-    // 2. Wrap Scene create() to render custom glassmorphic HUD components
+    // Cognitive domain → particle tint color mapping
+    const DOMAIN_PARTICLE_COLOR = {
+        'reflexes_and_focus':  0xa855f7, // vivid purple
+        'spatial_visual_memory': 0x38bdf8, // cyan
+        'logical_mathematical': 0x10b981, // emerald
+        'executive_strategy':  0xf59e0b, // amber
+    };
+
+    // Helper: resolve scene's domain tint (falls back to cyan)
+    function getSceneTint(scene) {
+        const domainMap = {
+            SpeedTapScene: 'reflexes_and_focus',
+            FocusFinderScene: 'reflexes_and_focus',
+            StroopShiftScene: 'reflexes_and_focus',
+            MemoryMatchScene: 'spatial_visual_memory',
+            MatrixRecallScene: 'spatial_visual_memory',
+            NeuralNBackScene: 'spatial_visual_memory',
+            NexusMapperScene: 'spatial_visual_memory',
+            SynapseSpinScene: 'spatial_visual_memory',
+            LogicLinkScene: 'logical_mathematical',
+            EquationBalanceScene: 'logical_mathematical',
+            SequenceDecoderScene: 'logical_mathematical',
+            RouteOptimizerScene: 'logical_mathematical',
+            MazeEscapeScene: 'executive_strategy',
+            NeuroMazeScene: 'executive_strategy',
+            MentalFlexScene: 'executive_strategy',
+        };
+        const domain = domainMap[scene.constructor.name] || 'reflexes_and_focus';
+        return DOMAIN_PARTICLE_COLOR[domain] || 0x38bdf8;
+    }
+
+    // 2. Wrap Scene create() to render custom glassmorphic HUD components + bootstrap particles
     const originalCreate = SceneClass.prototype.create;
     SceneClass.prototype.create = function () {
         if (originalCreate) {
             originalCreate.call(this);
         }
+
+        // --- Particle Emitter Bootstrap ---
+        // Use Phaser 3.60+ particle API (particles manager with emitter config)
+        try {
+            const tint = getSceneTint(this);
+
+            // Build a small radial dot texture for particles
+            const gfx = this.add.graphics();
+            gfx.fillStyle(0xffffff, 1);
+            gfx.fillCircle(4, 4, 4);
+            gfx.generateTexture('_cogni_particle_dot', 8, 8);
+            gfx.destroy();
+
+            this._cogniParticles = this.add.particles(0, 0, '_cogni_particle_dot', {
+                speed: { min: 80, max: 220 },
+                angle: { min: 0, max: 360 },
+                scale: { start: 0.6, end: 0 },
+                alpha: { start: 0.95, end: 0 },
+                lifespan: { min: 350, max: 550 },
+                tint: tint,
+                quantity: 0,          // emit on demand only
+                emitting: false,
+                blendMode: 'ADD',
+                gravityY: 60,
+            });
+            this._cogniParticles.setDepth(100);
+            this._cogniParticleTint = tint;
+        } catch (e) {
+            // Phaser version or WebGL not available — silently skip particles
+            this._cogniParticles = null;
+        }
+
+        // Track last pointer down position for particle origin
+        this._lastPointerX = this.scale.width / 2;
+        this._lastPointerY = this.scale.height / 2;
+        this.input.on('pointerdown', (ptr) => {
+            this._lastPointerX = ptr.x;
+            this._lastPointerY = ptr.y;
+        });
 
         // Draw custom HUD overlay
         if (this.gameMode === 'survival') {
@@ -372,7 +443,7 @@ function decorateSceneClass(SceneClass) {
         }
     };
 
-    // 3. Wrap updateHUD() to detect correct hits or errors
+    // 3. Wrap updateHUD() to detect correct hits or errors + trigger FX
     const originalUpdateHUD = SceneClass.prototype.updateHUD;
     SceneClass.prototype.updateHUD = function () {
         if (originalUpdateHUD) {
@@ -384,6 +455,7 @@ function decorateSceneClass(SceneClass) {
             this._prevHits = this.hits || 0;
             this._prevMisses = this.misses || 0;
             this._prevAttempts = this.totalAttempts || this.totalClicks || this.totalTrials || 0;
+            this._consecutiveHitStreak = 0;
             return;
         }
 
@@ -403,7 +475,30 @@ function decorateSceneClass(SceneClass) {
         this._prevMisses = currentMisses;
         this._prevAttempts = currentAttempts;
 
+        // ── HIT FX ────────────────────────────────────────────────────────────
         if (isHit) {
+            this._consecutiveHitStreak = (this._consecutiveHitStreak || 0) + 1;
+
+            // 1. WebGL particle burst at last pointer position
+            if (this._cogniParticles) {
+                try {
+                    const px = this._lastPointerX || this.scale.width / 2;
+                    const py = this._lastPointerY || this.scale.height / 2;
+                    // Scale burst quantity with streak (base 18, +3 per 5 streak)
+                    const qty = Math.min(40, 18 + Math.floor(this._consecutiveHitStreak / 5) * 3);
+                    this._cogniParticles.emitParticleAt(px, py, qty);
+                } catch (_) {}
+            }
+
+            // 2. Audio hit tone — pitch scales with difficulty + streak
+            try {
+                cogniFX.playHitTone(
+                    this.difficultyLevel || 1,
+                    this._consecutiveHitStreak
+                );
+            } catch (_) {}
+
+            // ── Game mode logic ────────────────────────────────────────────────
             if (this.gameMode === 'time_attack') {
                 this.correctHitsCount = (this.correctHitsCount || 0) + 1;
                 if (this.targetGoalText) {
@@ -413,7 +508,6 @@ function decorateSceneClass(SceneClass) {
                     this.endGame();
                 }
             } else if (this.gameMode === 'endurance') {
-                // Correct inputs add +2 seconds
                 this.timeLeft += 2000;
                 showFloatingTimeText(this, '+2s', '#22c55e');
             }
@@ -429,9 +523,23 @@ function decorateSceneClass(SceneClass) {
             }
         }
 
+        // ── MISS FX ───────────────────────────────────────────────────────────
         if (isMiss) {
+            this._consecutiveHitStreak = 0; // reset streak on miss
+
+            // 1. Proportional screen-shake (intensity scales with difficulty)
+            try {
+                const shakeIntensity = 0.004 + (this.difficultyLevel || 1) * 0.0012;
+                this.cameras.main.shake(90, Math.min(0.012, shakeIntensity));
+            } catch (_) {}
+
+            // 2. Audio miss tone
+            try {
+                cogniFX.playMissTone(this.difficultyLevel || 1);
+            } catch (_) {}
+
+            // ── Game mode logic ────────────────────────────────────────────────
             if (this.gameMode === 'survival') {
-                // Deduct a life
                 this.lives = (this.lives !== undefined ? this.lives : 3) - 1;
                 if (this.livesText) {
                     this.livesText.setText(`LIVES: ${this.lives}`);
@@ -441,7 +549,6 @@ function decorateSceneClass(SceneClass) {
                     this.endGame();
                 }
             } else if (this.gameMode === 'endurance') {
-                // Incorrect inputs deduct -5 seconds
                 this.timeLeft = Math.max(0, this.timeLeft - 5000);
                 showFloatingTimeText(this, '-5s', '#ef4444');
                 if (this.timeLeft <= 0) {
@@ -460,6 +567,18 @@ function decorateSceneClass(SceneClass) {
             }
         }
     };
+
+    // 3b. Patch showFloatingText to also trigger DDA shift audio when difficulty text changes
+    const originalShowFloatingText = SceneClass.prototype.showFloatingText;
+    if (originalShowFloatingText) {
+        SceneClass.prototype.showFloatingText = function(x, y, text, color) {
+            originalShowFloatingText.call(this, x, y, text, color);
+            if (typeof text === 'string' && text.includes('DIFFICULTY')) {
+                const isUp = text.includes('INCREASED') || text.includes('UP');
+                try { cogniFX.playDDAShift(isUp ? 'up' : 'down'); } catch (_) {}
+            }
+        };
+    }
 
     // 4. Overwrite standard 1-second countdown timers to count UP or count DOWN depending on mode
     const customTimerCallback = function () {

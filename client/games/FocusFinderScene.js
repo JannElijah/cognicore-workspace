@@ -16,6 +16,110 @@ export default class FocusFinderScene extends Phaser.Scene {
         super('FocusFinderScene');
     }
 
+    preload() {
+        // Pre-generate GPU-cached textures for all 25 shape×color combos.
+        // At runtime, spawnTargetObject/spawnDistractorObject use sprite lookups
+        // instead of Graphics draw calls, cutting per-wave GPU overhead.
+        const shapesList = ['circle', 'square', 'triangle', 'star', 'hexagon'];
+        const colorsMap = {
+            'teal':   0x06b6d4,
+            'purple': 0xa855f7,
+            'yellow': 0xf59e0b,
+            'coral':  0xf97316,
+            'green':  0x10b981
+        };
+        const TEX_SIZE = 64; // texture canvas size (pixels)
+        const r = TEX_SIZE / 2;
+
+        const drawToGfx = (gfx, shapeType, colorHex) => {
+            gfx.clear();
+            gfx.fillStyle(colorHex, 0.45);
+            gfx.lineStyle(2.5, colorHex, 0.95);
+
+            if (shapeType === 'circle') {
+                gfx.fillCircle(r, r, r - 3);
+                gfx.strokeCircle(r, r, r - 3);
+                gfx.lineStyle(1.5, 0xffffff, 0.5);
+                gfx.strokeCircle(r, r, (r - 3) * 0.55);
+            } else if (shapeType === 'square') {
+                gfx.fillRoundedRect(3, 3, TEX_SIZE - 6, TEX_SIZE - 6, 8);
+                gfx.strokeRoundedRect(3, 3, TEX_SIZE - 6, TEX_SIZE - 6, 8);
+                gfx.lineStyle(1.5, 0xffffff, 0.5);
+                const inner = (TEX_SIZE - 6) * 0.4;
+                gfx.strokeRoundedRect(r - inner / 2, r - inner / 2, inner, inner, 4);
+            } else if (shapeType === 'triangle') {
+                gfx.beginPath();
+                gfx.moveTo(r, 3);
+                gfx.lineTo(TEX_SIZE - 3, TEX_SIZE - 3);
+                gfx.lineTo(3, TEX_SIZE - 3);
+                gfx.closePath();
+                gfx.fillPath();
+                gfx.strokePath();
+                gfx.lineStyle(1.5, 0xffffff, 0.5);
+                gfx.beginPath();
+                gfx.moveTo(r, r * 0.6);
+                gfx.lineTo(r + r * 0.55, TEX_SIZE - 3 - (r * 0.6));
+                gfx.lineTo(r - r * 0.55, TEX_SIZE - 3 - (r * 0.6));
+                gfx.closePath();
+                gfx.strokePath();
+            } else if (shapeType === 'star') {
+                const spikes = 5;
+                const outerR = r - 3;
+                const innerR = (r - 3) * 0.4;
+                let rot = (Math.PI / 2) * 3;
+                const step = Math.PI / spikes;
+                gfx.beginPath();
+                for (let i = 0; i < spikes; i++) {
+                    gfx.lineTo(r + Math.cos(rot) * outerR, r + Math.sin(rot) * outerR);
+                    rot += step;
+                    gfx.lineTo(r + Math.cos(rot) * innerR, r + Math.sin(rot) * innerR);
+                    rot += step;
+                }
+                gfx.closePath();
+                gfx.fillPath();
+                gfx.strokePath();
+                gfx.lineStyle(1.5, 0xffffff, 0.6);
+                gfx.strokeCircle(r, r, 4);
+            } else if (shapeType === 'hexagon') {
+                gfx.beginPath();
+                for (let s = 0; s < 6; s++) {
+                    const ang = (Math.PI / 3) * s;
+                    const px = r + Math.cos(ang) * (r - 3);
+                    const py = r + Math.sin(ang) * (r - 3);
+                    if (s === 0) gfx.moveTo(px, py);
+                    else gfx.lineTo(px, py);
+                }
+                gfx.closePath();
+                gfx.fillPath();
+                gfx.strokePath();
+                gfx.lineStyle(1.5, 0xffffff, 0.5);
+                gfx.beginPath();
+                for (let s = 0; s < 6; s++) {
+                    const ang = (Math.PI / 3) * s;
+                    const px = r + Math.cos(ang) * (r - 3) * 0.6;
+                    const py = r + Math.sin(ang) * (r - 3) * 0.6;
+                    if (s === 0) gfx.moveTo(px, py);
+                    else gfx.lineTo(px, py);
+                }
+                gfx.closePath();
+                gfx.strokePath();
+            }
+        };
+
+        // Draw each combination and generate a named texture
+        const gfx = this.add.graphics();
+        shapesList.forEach(shape => {
+            Object.entries(colorsMap).forEach(([colorName, colorHex]) => {
+                const key = `ff_${shape}_${colorName}`;
+                if (!this.textures.exists(key)) {
+                    drawToGfx(gfx, shape, colorHex);
+                    gfx.generateTexture(key, TEX_SIZE, TEX_SIZE);
+                }
+            });
+        });
+        gfx.destroy();
+    }
+
     init(data) {
         const profile = data.cognitiveProfile || {};
         this.archetype = profile.archetype || 'Initializing...';
@@ -234,13 +338,26 @@ export default class FocusFinderScene extends Phaser.Scene {
         const container = this.add.container(x, y);
         const size = 52;
 
-        const graphic = this.add.graphics();
-        this.drawShapeGraphic(graphic, this.targetShape, this.colorsMap[this.targetColor], size);
-        container.add(graphic);
+        // Use pre-cached GPU texture sprite
+        const texKey = `ff_${this.targetShape}_${this.targetColor}`;
+        let sprite;
+        if (this.textures.exists(texKey)) {
+            sprite = this.add.image(0, 0, texKey);
+            // Normalize to match 52px display size (texture is 64px)
+            sprite.setScale(size / 64);
+        } else {
+            // Fallback: draw live if texture wasn't cached (shouldn't happen)
+            sprite = this.add.graphics();
+            this.drawShapeGraphic(sprite, this.targetShape, this.colorsMap[this.targetColor], size);
+        }
+        container.add(sprite);
 
         // Setup interaction
-        graphic.setInteractive(new Phaser.Geom.Circle(0, 0, size / 2), Phaser.Geom.Circle.Contains);
-        graphic.on('pointerdown', () => {
+        const hitArea = new Phaser.Geom.Circle(0, 0, size / 2);
+        if (sprite.setInteractive) {
+            sprite.setInteractive(hitArea, Phaser.Geom.Circle.Contains);
+        }
+        sprite.on('pointerdown', () => {
             this.handleTargetClick(container);
         });
 
@@ -317,13 +434,24 @@ export default class FocusFinderScene extends Phaser.Scene {
         const container = this.add.container(x, y);
         const size = 52;
 
-        const graphic = this.add.graphics();
-        this.drawShapeGraphic(graphic, dShape, this.colorsMap[dColor], size);
-        container.add(graphic);
+        // Use pre-cached GPU texture sprite
+        const texKey = `ff_${dShape}_${dColor}`;
+        let sprite;
+        if (this.textures.exists(texKey)) {
+            sprite = this.add.image(0, 0, texKey);
+            sprite.setScale(size / 64);
+        } else {
+            sprite = this.add.graphics();
+            this.drawShapeGraphic(sprite, dShape, this.colorsMap[dColor], size);
+        }
+        container.add(sprite);
 
         // Setup interaction
-        graphic.setInteractive(new Phaser.Geom.Circle(0, 0, size / 2), Phaser.Geom.Circle.Contains);
-        graphic.on('pointerdown', () => {
+        const hitArea = new Phaser.Geom.Circle(0, 0, size / 2);
+        if (sprite.setInteractive) {
+            sprite.setInteractive(hitArea, Phaser.Geom.Circle.Contains);
+        }
+        sprite.on('pointerdown', () => {
             this.handleDistractorClick(container);
         });
 
