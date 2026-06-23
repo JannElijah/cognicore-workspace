@@ -352,8 +352,10 @@ export default class FocusFinderScene extends Phaser.Scene {
         }
         container.add(sprite);
 
-        // Setup interaction
-        const hitArea = new Phaser.Geom.Circle(0, 0, size / 2);
+        // Setup interaction - center the hit area correctly for sprite texture bounds
+        const hitArea = (sprite.width && sprite.width > 0)
+            ? new Phaser.Geom.Circle(sprite.width / 2, sprite.height / 2, sprite.width / 2)
+            : new Phaser.Geom.Circle(0, 0, size / 2);
         if (sprite.setInteractive) {
             sprite.setInteractive(hitArea, Phaser.Geom.Circle.Contains);
         }
@@ -446,8 +448,10 @@ export default class FocusFinderScene extends Phaser.Scene {
         }
         container.add(sprite);
 
-        // Setup interaction
-        const hitArea = new Phaser.Geom.Circle(0, 0, size / 2);
+        // Setup interaction - center the hit area correctly for sprite texture bounds
+        const hitArea = (sprite.width && sprite.width > 0)
+            ? new Phaser.Geom.Circle(sprite.width / 2, sprite.height / 2, sprite.width / 2)
+            : new Phaser.Geom.Circle(0, 0, size / 2);
         if (sprite.setInteractive) {
             sprite.setInteractive(hitArea, Phaser.Geom.Circle.Contains);
         }

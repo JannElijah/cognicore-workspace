@@ -135,6 +135,8 @@ GAME_TO_DOMAIN = {
     "focus_finder": "reflexes_and_focus",
     "MazeEscape": "executive_strategy",
     "maze_escape": "executive_strategy",
+    "RuleShifter": "executive_strategy",
+    "rule_shifter": "executive_strategy",
     "NeuroMaze": "executive_strategy",
     "neuro_maze": "executive_strategy",
     "MatrixRecall": "spatial_visual_memory",
@@ -465,6 +467,45 @@ def calculate_dda_parameters(difficulty_level, game_type='SpeedTap'):
                 "grid_size": 10,
                 "max_moves": 40,
                 "blocked_ratio": 0.25
+            }
+        }
+    elif game_type in ['RuleShifter', 'rule_shifter']:
+        # Map levels for Rule Shifter: adaptive rule-switching and confidence tracking
+        configs = {
+            1: {
+                "difficulty_level": 1,
+                "rule_switch_interval": 8,
+                "choice_count": 3,
+                "explicit_hint": True,
+                "time_limit": 60000
+            },
+            2: {
+                "difficulty_level": 2,
+                "rule_switch_interval": 6,
+                "choice_count": 3,
+                "explicit_hint": True,
+                "time_limit": 55000
+            },
+            3: {
+                "difficulty_level": 3,
+                "rule_switch_interval": 5,
+                "choice_count": 4,
+                "explicit_hint": False,
+                "time_limit": 50000
+            },
+            4: {
+                "difficulty_level": 4,
+                "rule_switch_interval": 4,
+                "choice_count": 4,
+                "explicit_hint": False,
+                "time_limit": 45000
+            },
+            5: {
+                "difficulty_level": 5,
+                "rule_switch_interval": 3,
+                "choice_count": 4,
+                "explicit_hint": False,
+                "time_limit": 40000
             }
         }
     elif game_type in ['NeuroMaze', 'neuro_maze']:
@@ -919,7 +960,7 @@ def submit_assessment():
             "spatial_visual_memory": "MatrixRecall",
             "logical_mathematical": "LogicLink",
             "reflexes_and_focus": "SpeedTap",
-            "executive_strategy": "MazeEscape"
+            "executive_strategy": "RuleShifter"
         }
         prescribed_game = domain_to_game[weakest_domain]
 
@@ -1002,7 +1043,7 @@ def get_assessment_status(username):
                         "spatial_visual_memory": "MatrixRecall",
                         "logical_mathematical": "LogicLink",
                         "reflexes_and_focus": "SpeedTap",
-                        "executive_strategy": "MazeEscape"
+                        "executive_strategy": "RuleShifter"
                     }
                     prescribed_game = domain_to_game[weakest_domain]
                     
@@ -1179,7 +1220,7 @@ def adjust_difficulty():
                 # Determine sliding window size k based on game type (Option C Volatility Windows)
                 if game_type in ("SpeedTap", "StroopShift", "speed_tap", "stroop_shift"):
                     k = 10
-                elif game_type in ("MazeEscape", "RouteOptimizer", "maze_escape", "route_optimizer"):
+                elif game_type in ("MazeEscape", "RouteOptimizer", "maze_escape", "route_optimizer", "RuleShifter", "rule_shifter"):
                     k = 3
                 else:
                     k = 5

@@ -77,6 +77,7 @@ export default function SequenceDecoderGame({ username = 'default_player', apiUr
             sessionId,
             apiUrl,
             ddaParameters,
+            cognitiveProfile,
             onGameOver: async (stats) => {
                 setFinalStats(stats);
 

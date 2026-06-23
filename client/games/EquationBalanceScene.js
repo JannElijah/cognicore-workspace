@@ -148,7 +148,7 @@ export default class EquationBalanceScene extends Phaser.Scene {
     }
 
     update() {
-        if (this.gamePhase === 'PLAYING') {
+        if (!this.isTutorialActive && this.gamePhase === 'PLAYING') {
             const elapsed = this.time.now - this.roundStartTime;
             this.roundTimeRemaining = Math.max(0, this.roundTimeLimit - elapsed);
 

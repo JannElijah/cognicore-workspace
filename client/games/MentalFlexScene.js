@@ -18,6 +18,7 @@ export default class MentalFlexScene extends Phaser.Scene {
     }
 
     init(data) {
+        data = data || {};
         const profile = data.cognitiveProfile || {};
         this.archetype = profile.archetype || 'Initializing...';
         this.archetypeConfidence = profile.confidence_score || 0.0;
@@ -134,7 +135,7 @@ export default class MentalFlexScene extends Phaser.Scene {
         this.ruleText.setShadow(0, 0, '#eab308', 10, true, true);
 
         // Dynamic helper status alert
-        this.statusText = this.add.text(width / 2, 130, 'Match cards based on the active rule!', {
+        this.statusText = this.add.text(width / 2, 125, 'Match cards based on the active rule!', {
             fontFamily: 'system-ui, -apple-system, sans-serif',
             fontSize: '14px',
             fontWeight: '700',
@@ -213,7 +214,7 @@ export default class MentalFlexScene extends Phaser.Scene {
         const barWidth = 300;
         const barHeight = 8;
         const x = (width - barWidth) / 2;
-        const y = 160;
+        const y = 155;
 
         this.timerBar.clear();
         
@@ -326,7 +327,7 @@ export default class MentalFlexScene extends Phaser.Scene {
 
         // 1. Spawn query card in the center top
         const qData = this.generateCardData();
-        this.queryCard = this.drawCard(qData, width / 2, height / 2 - 80, 130, 180);
+        this.queryCard = this.drawCard(qData, width / 2, 275, 130, 180);
         
         // Add rule overlay highlighting
         this.queryCard.cardBg.clear();
@@ -363,7 +364,7 @@ export default class MentalFlexScene extends Phaser.Scene {
         const cardSpacing = 35;
         const totalW = this.choicesCount * cardW + (this.choicesCount - 1) * cardSpacing;
         const startX = (width - totalW) / 2 + cardW / 2;
-        const choicesY = height - 120;
+        const choicesY = height - 115;
 
         choices.forEach((cData, index) => {
             const x = startX + index * (cardW + cardSpacing);

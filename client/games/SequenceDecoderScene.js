@@ -7,6 +7,7 @@ export default class SequenceDecoderScene extends Phaser.Scene {
     }
 
     init(data) {
+        data = data || {};
         const profile = data.cognitiveProfile || {};
         this.archetype = profile.archetype || 'Initializing...';
         this.archetypeConfidence = profile.confidence_score || 0.0;
@@ -144,7 +145,7 @@ export default class SequenceDecoderScene extends Phaser.Scene {
     }
 
     update() {
-        if (this.gamePhase !== 'PLAYING') return;
+        if (this.isTutorialActive || this.gamePhase !== 'PLAYING') return;
 
         const elapsed = this.time.now - this.roundStartTime;
         this.roundTimeRemaining = Math.max(0, this.roundTimeLimit - elapsed);
