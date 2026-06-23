@@ -127,6 +127,8 @@ export default class RuleShifterScene extends Phaser.Scene {
         this._buildConfidenceModal();
 
         // 4. Input handling
+        // topOnly = false so Graphics inside Containers receive pointer events
+        this.input.topOnly = false;
         this.input.on('pointerdown', (ptr, gos) => {
             if (this.isTutorialActive) return;
             this.registerFirstInteraction();
@@ -219,11 +221,19 @@ export default class RuleShifterScene extends Phaser.Scene {
             const card = this.drawCard(cData, cardX, choiceY, 110, 150, false);
             this.choiceCards.push(card);
 
-            // Add interactive handlers
-            card.cardBg.setInteractive();
+            // Graphics objects require an explicit hit-area shape — setInteractive()
+            // with no args silently fails on Graphics in Phaser 3.
+            card.cardBg.setInteractive(
+                new Phaser.Geom.Rectangle(-55, -75, 110, 150),
+                Phaser.Geom.Rectangle.Contains
+            );
+
             card.cardBg.on('pointerover', () => {
                 if (this.confidenceModal.visible || this.gamePhase !== 'PLAYING') return;
+                card.cardBg.clear();
+                card.cardBg.fillStyle(0x1e293b, 0.75);
                 card.cardBg.lineStyle(3, 0xa855f7, 0.9);
+                card.cardBg.fillRoundedRect(-55, -75, 110, 150, 10);
                 card.cardBg.strokeRoundedRect(-55, -75, 110, 150, 10);
                 this.game.canvas.style.cursor = 'pointer';
             });
@@ -354,6 +364,7 @@ export default class RuleShifterScene extends Phaser.Scene {
         // Display decision confidence options overlay
         const targetY = choiceCard.y - 120;
         this.confidenceModal.setPosition(choiceCard.x, targetY);
+        this.confidenceModal.setActive(true);
         this.confidenceModal.setVisible(true);
 
         this.statusText.setText('SELECT YOUR DECISION CONFIDENCE LEVEL').setFill('#eab308');
@@ -363,6 +374,7 @@ export default class RuleShifterScene extends Phaser.Scene {
         if (!this.selectedChoiceCard) return;
 
         this.confidenceModal.setVisible(false);
+        this.confidenceModal.setActive(false);
         this.totalAttempts++;
 
         const isCorrect = this._isMatch(
@@ -480,6 +492,7 @@ export default class RuleShifterScene extends Phaser.Scene {
     _buildConfidenceModal() {
         this.confidenceModal = this.add.container(0, 0);
         this.confidenceModal.setVisible(false);
+        this.confidenceModal.setActive(false);
 
         // Backplate frame
         const plate = this.add.graphics();

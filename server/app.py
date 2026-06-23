@@ -135,8 +135,8 @@ GAME_TO_DOMAIN = {
     "focus_finder": "reflexes_and_focus",
     "MazeEscape": "executive_strategy",
     "maze_escape": "executive_strategy",
-    "RuleShifter": "executive_strategy",
-    "rule_shifter": "executive_strategy",
+    "PriorityQueue": "executive_strategy",
+    "priority_queue": "executive_strategy",
     "NeuroMaze": "executive_strategy",
     "neuro_maze": "executive_strategy",
     "MatrixRecall": "spatial_visual_memory",
@@ -469,43 +469,49 @@ def calculate_dda_parameters(difficulty_level, game_type='SpeedTap'):
                 "blocked_ratio": 0.25
             }
         }
-    elif game_type in ['RuleShifter', 'rule_shifter']:
-        # Map levels for Rule Shifter: adaptive rule-switching and confidence tracking
+    elif game_type in ['PriorityQueue', 'priority_queue']:
+        # Priority Queue: conveyor belt triage. Higher difficulty = faster belt,
+        # more concurrent cards, shorter spawn intervals, less label context.
         configs = {
             1: {
                 "difficulty_level": 1,
-                "rule_switch_interval": 8,
-                "choice_count": 3,
-                "explicit_hint": True,
-                "time_limit": 60000
+                "belt_speed": 30,        # px/sec (slow)
+                "spawn_interval": 5000,  # ms between new cards
+                "max_cards": 2,
+                "ambiguity_level": 0,    # full labels shown
+                "time_limit": 75000
             },
             2: {
                 "difficulty_level": 2,
-                "rule_switch_interval": 6,
-                "choice_count": 3,
-                "explicit_hint": True,
-                "time_limit": 55000
+                "belt_speed": 38,
+                "spawn_interval": 4200,
+                "max_cards": 3,
+                "ambiguity_level": 0,
+                "time_limit": 75000
             },
             3: {
                 "difficulty_level": 3,
-                "rule_switch_interval": 5,
-                "choice_count": 4,
-                "explicit_hint": False,
-                "time_limit": 50000
+                "belt_speed": 48,
+                "spawn_interval": 3500,
+                "max_cards": 3,
+                "ambiguity_level": 1,    # category label hidden
+                "time_limit": 70000
             },
             4: {
                 "difficulty_level": 4,
-                "rule_switch_interval": 4,
-                "choice_count": 4,
-                "explicit_hint": False,
-                "time_limit": 45000
+                "belt_speed": 60,
+                "spawn_interval": 2800,
+                "max_cards": 4,
+                "ambiguity_level": 1,
+                "time_limit": 65000
             },
             5: {
                 "difficulty_level": 5,
-                "rule_switch_interval": 3,
-                "choice_count": 4,
-                "explicit_hint": False,
-                "time_limit": 40000
+                "belt_speed": 75,
+                "spawn_interval": 2200,
+                "max_cards": 4,
+                "ambiguity_level": 2,    # both dots and category hidden
+                "time_limit": 60000
             }
         }
     elif game_type in ['NeuroMaze', 'neuro_maze']:
@@ -960,7 +966,7 @@ def submit_assessment():
             "spatial_visual_memory": "MatrixRecall",
             "logical_mathematical": "LogicLink",
             "reflexes_and_focus": "SpeedTap",
-            "executive_strategy": "RuleShifter"
+            "executive_strategy": "PriorityQueue"
         }
         prescribed_game = domain_to_game[weakest_domain]
 
@@ -1043,7 +1049,7 @@ def get_assessment_status(username):
                         "spatial_visual_memory": "MatrixRecall",
                         "logical_mathematical": "LogicLink",
                         "reflexes_and_focus": "SpeedTap",
-                        "executive_strategy": "RuleShifter"
+                        "executive_strategy": "PriorityQueue"
                     }
                     prescribed_game = domain_to_game[weakest_domain]
                     
@@ -1220,7 +1226,7 @@ def adjust_difficulty():
                 # Determine sliding window size k based on game type (Option C Volatility Windows)
                 if game_type in ("SpeedTap", "StroopShift", "speed_tap", "stroop_shift"):
                     k = 10
-                elif game_type in ("MazeEscape", "RouteOptimizer", "maze_escape", "route_optimizer", "RuleShifter", "rule_shifter"):
+                elif game_type in ("MazeEscape", "RouteOptimizer", "maze_escape", "route_optimizer", "PriorityQueue", "priority_queue"):
                     k = 3
                 else:
                     k = 5

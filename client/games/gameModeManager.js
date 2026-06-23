@@ -360,7 +360,7 @@ function decorateSceneClass(SceneClass) {
             MazeEscapeScene: 'executive_strategy',
             NeuroMazeScene: 'executive_strategy',
             MentalFlexScene: 'executive_strategy',
-            RuleShifterScene: 'executive_strategy',
+            PriorityQueueScene: 'executive_strategy',
         };
         const domain = domainMap[scene.constructor.name] || 'reflexes_and_focus';
         return DOMAIN_PARTICLE_COLOR[domain] || 0x38bdf8;

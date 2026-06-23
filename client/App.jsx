@@ -22,7 +22,7 @@ const SpeedTapGame = lazy(() => import('./components/SpeedTapGame'));
 const MemoryMatchGame = lazy(() => import('./components/MemoryMatchGame'));
 const FocusFinderGame = lazy(() => import('./components/FocusFinderGame'));
 const LogicLinkGame = lazy(() => import('./components/LogicLinkGame'));
-const RuleShifterGame = lazy(() => import('./components/RuleShifterGame'));
+const PriorityQueueGame = lazy(() => import('./components/PriorityQueueGame'));
 const MatrixRecallGame = lazy(() => import('./components/MatrixRecallGame'));
 const StroopShiftGame = lazy(() => import('./components/StroopShiftGame'));
 const MentalFlexGame = lazy(() => import('./components/MentalFlexGame'));
@@ -242,11 +242,11 @@ const DOMAINS_LIST = [
     description: 'Train adaptive executive control, dynamic plan correction, card matching rule-switching, and decision confidence.',
     games: [
       {
-        id: 'RuleShifter',
-        title: 'Rule Shifter',
-        icon: '🎴',
-        objective: 'Match cards to a target template according to changing rules and submit your decision confidence.',
-        benefit: 'Trains set-shifting cognitive control, implicit hypothesis testing, and decision confidence.'
+        id: 'PriorityQueue',
+        title: 'Priority Queue',
+        icon: '📥',
+        objective: 'Drag and drop incoming task cards into Urgent, Important, or Delegate bins before they scroll off the conveyor belt.',
+        benefit: 'Trains executive triage, multi-priority switching, decision speed under pressure, and resource allocation.'
       },
       {
         id: 'NeuroMaze',
@@ -985,7 +985,7 @@ export default function App() {
           ...prev,
           reflexes_and_focus: Math.max(calculatedScore, prev.reflexes_and_focus)
         }));
-      } else if (lastGameStats.gameType === 'MazeEscape' || lastGameStats.gameType === 'RuleShifter' || lastGameStats.gameType === 'MentalFlex') {
+      } else if (lastGameStats.gameType === 'MazeEscape' || lastGameStats.gameType === 'PriorityQueue' || lastGameStats.gameType === 'MentalFlex') {
         setSkills(prev => ({
           ...prev,
           executive_strategy: Math.max(calculatedScore, prev.executive_strategy)
@@ -2002,7 +2002,7 @@ export default function App() {
     MemoryMatch: 'Memory', MatrixRecall: 'Memory', NeuralNBack: 'Memory',
     SynapseSpin: 'Memory', NexusMapper: 'Memory',
     LogicLink: 'Logic', EquationBalance: 'Logic', SequenceDecoder: 'Logic', RouteOptimizer: 'Logic',
-    MazeEscape: 'Strategy', RuleShifter: 'Strategy', MentalFlex: 'Strategy', NeuroMaze: 'Strategy'
+    MazeEscape: 'Strategy', PriorityQueue: 'Strategy', MentalFlex: 'Strategy', NeuroMaze: 'Strategy'
   };
 
   // ─── 1. MULTI-SESSION REACTION TIME TREND ─────────────────────────────────
@@ -2695,7 +2695,7 @@ export default function App() {
                     {activeGame === 'MemoryMatch' && <MemoryMatchGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
                     {activeGame === 'FocusFinder' && <FocusFinderGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
                     {activeGame === 'LogicLink' && <LogicLinkGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                    {activeGame === 'RuleShifter' && <RuleShifterGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                    {activeGame === 'PriorityQueue' && <PriorityQueueGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
                     {activeGame === 'MatrixRecall' && <MatrixRecallGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
                     {activeGame === 'StroopShift' && <StroopShiftGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
                     {activeGame === 'MentalFlex' && <MentalFlexGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
