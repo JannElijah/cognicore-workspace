@@ -10,9 +10,10 @@
  * ================================================================================
  */
 import Phaser from 'phaser';
+import BaseCognitiveScene from './BaseCognitiveScene';
 import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
-export default class MentalFlexScene extends Phaser.Scene {
+export default class MentalFlexScene extends BaseCognitiveScene {
     constructor() {
         super('MentalFlexScene');
     }
@@ -636,13 +637,6 @@ export default class MentalFlexScene extends Phaser.Scene {
         }
         this.choiceCards.forEach(c => c.destroy());
         this.choiceCards = [];
-    }
-
-    registerFirstInteraction() {
-        if (!this.firstInteractionRegistered && this.stimulusSpawnTime > 0) {
-            this.firstInteractionLatency = this.time.now - this.stimulusSpawnTime;
-            this.firstInteractionRegistered = true;
-        }
     }
 
     // ==========================================

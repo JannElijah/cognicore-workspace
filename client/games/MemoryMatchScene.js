@@ -9,9 +9,10 @@
  * ================================================================================
  */
 import Phaser from 'phaser';
+import BaseCognitiveScene from './BaseCognitiveScene';
 import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
-export default class MemoryMatchScene extends Phaser.Scene {
+export default class MemoryMatchScene extends BaseCognitiveScene {
     constructor() {
         super('MemoryMatchScene');
     }
@@ -444,24 +445,6 @@ export default class MemoryMatchScene extends Phaser.Scene {
         this.accuracyText.setText(`ACCURACY: ${Math.round(this.accuracy * 100)}%`);
     }
 
-    showFloatingFeedback(text, color) {
-        const width = this.scale.width;
-        const txt = this.add.text(width / 2, 135, text, {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            fontSize: '20px',
-            fontWeight: 'bold',
-            fill: color
-        }).setOrigin(0.5);
-
-        this.tweens.add({
-            targets: txt,
-            y: 110,
-            alpha: 0,
-            duration: 1000,
-            onComplete: () => txt.destroy()
-        });
-    }
-
     // ==========================================
     // CLOSED-LOOP DDA & TELEMETRY BRIDGE
     // ==========================================
@@ -501,13 +484,6 @@ export default class MemoryMatchScene extends Phaser.Scene {
             });
         } catch (e) {
             console.warn('[Telemetry Dispatch] Connection offline, telemetry buffered.', e);
-        }
-    }
-
-    registerFirstInteraction() {
-        if (!this.firstInteractionRegistered && this.stimulusSpawnTime > 0) {
-            this.firstInteractionLatency = this.time.now - this.stimulusSpawnTime;
-            this.firstInteractionRegistered = true;
         }
     }
 

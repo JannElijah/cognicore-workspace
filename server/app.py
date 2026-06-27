@@ -31,7 +31,38 @@ except ImportError:
 
 app = Flask(__name__)
 # CORS allows your React/Phaser frontend to communicate with this backend
-CORS(app) 
+CORS(app)
+
+import jwt
+from functools import wraps
+import datetime
+
+SECRET_KEY = os.environ.get("JWT_SECRET", "cognicore_super_secret_key_123")
+
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        if 'Authorization' in request.headers:
+            parts = request.headers['Authorization'].split()
+            if len(parts) == 2 and parts[0] == 'Bearer':
+                token = parts[1]
+        
+        if not token:
+            return jsonify({'status': 'error', 'message': 'Token is missing!'}), 401
+            
+        try:
+            data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            current_user_id = data['user_id']
+            current_username = data['username']
+        except jwt.ExpiredSignatureError:
+            return jsonify({'status': 'error', 'message': 'Token has expired!'}), 401
+        except Exception as e:
+            return jsonify({'status': 'error', 'message': 'Token is invalid!'}), 401
+            
+        return f(current_user_id, current_username, *args, **kwargs)
+    return decorated
+ 
 
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cognicore.db')
 
@@ -118,6 +149,7 @@ def calculate_approx_t_p_value(t_stat, df):
 
 
 # 4-Tier Cognitive Domain Categorization Framework Configuration Mapping
+ml_history_cache = {}
 GAME_TO_DOMAIN = {
     "MemoryMatch": "spatial_visual_memory",
     "memory_match": "spatial_visual_memory",
@@ -878,6 +910,50 @@ def index():
         }
     }), 200
 
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    try:
+        data = request.get_json() or {}
+        username = str(data.get('username', '')).strip()
+        if not username:
+            return jsonify({'status': 'error', 'message': 'Username is required'}), 400
+            
+        conn = get_db_connection()
+        try:
+            with conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+                user = cursor.fetchone()
+                if user:
+                    user_id = user['id']
+                else:
+                    db_execute_with_retry(cursor, "INSERT INTO users (username) VALUES (?)", (username,))
+                    user_id = cursor.lastrowid
+                    
+        finally:
+            conn.close()
+            
+        token = jwt.encode({
+            'user_id': user_id,
+            'username': username,
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+        }, SECRET_KEY, algorithm="HS256")
+        
+        return jsonify({
+            'status': 'success',
+            'token': token,
+            'user': {
+                'id': user_id,
+                'username': username
+            }
+        }), 200
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
 @app.route('/api/submit-assessment', methods=['POST'])
 def submit_assessment():
     """
@@ -1077,16 +1153,16 @@ def get_assessment_status(username):
         return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route('/api/start-session', methods=['POST'])
-def start_session():
+@token_required
+def start_session(current_user_id, current_username):
     """
-    Starts a new game session. If the user doesn't exist, it creates one.
+    Starts a new game session.
     Returns: session_id, user_id, and initial DDA game parameters.
     """
     try:
         data = request.get_json() or {}
-        username = str(data.get('username', 'default_player')).strip()
-        if not username:
-            username = 'default_player'
+        username = current_username
+        user_id = current_user_id
         game_type = str(data.get('game_type', 'SpeedTap')).strip()
         game_mode = str(data.get('game_mode', 'timed')).strip().lower()
         
@@ -1095,18 +1171,7 @@ def start_session():
             with conn:
                 cursor = conn.cursor()
                 
-                # Get or create user
-                cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
-                user = cursor.fetchone()
-                if user:
-                    user_id = user['id']
-                else:
-                    db_execute_with_retry(
-                        cursor,
-                        "INSERT INTO users (username) VALUES (?)",
-                        (username,)
-                    )
-                    user_id = cursor.lastrowid
+                # User already authenticated via JWT
                     
                 # Create game session
                 db_execute_with_retry(
@@ -1197,7 +1262,8 @@ def calculate_ols_slope(y_vals):
     return slope
 
 @app.route('/api/dda', methods=['POST'])
-def adjust_difficulty():
+@token_required
+def adjust_difficulty(current_user_id, current_username):
     """
     Analyzes recent performance telemetry for a session, updates difficulty parameters, 
     and classifies/updates the user's cognitive profile archetype.
@@ -1309,40 +1375,51 @@ def adjust_difficulty():
                 # Features: avg_accuracy, avg_rt, acc_slope, rt_slope
                 
                 # Query preceding and current session averages for this user to compute slopes, limiting to latest 20 sessions
-                cursor.execute(
-                    """
-                    SELECT session_id, avg_accuracy, avg_rt FROM (
-                        SELECT 
-                            gs.id AS session_id,
-                            AVG(pm.accuracy_rate) AS avg_accuracy,
-                            AVG(pm.reaction_time) AS avg_rt
-                        FROM game_sessions gs
-                        JOIN performance_metrics pm ON gs.id = pm.session_id
-                        WHERE gs.user_id = ? AND gs.id <= ?
-                        GROUP BY gs.id
-                        ORDER BY gs.id DESC
-                        LIMIT 20
-                    ) ORDER BY session_id ASC
-                    """,
-                    (user_id, session_id)
-                )
-                session_rows = cursor.fetchall()
-                
-                history_acc = []
-                history_rt = []
-                found_current = False
-                for r in session_rows:
-                    if r['session_id'] == session_id:
-                        found_current = True
-                        history_acc.append(avg_accuracy)
-                        history_rt.append(avg_rt)
-                    else:
-                        history_acc.append(r['avg_accuracy'])
-                        history_rt.append(r['avg_rt'])
-                
-                if not found_current:
+                cache_key = f"{user_id}"
+                # If we have 20 cached, we can just use cache and slide the window
+                if cache_key in ml_history_cache and len(ml_history_cache[cache_key]['acc']) >= 20:
+                    history_acc = ml_history_cache[cache_key]['acc'][-19:]
+                    history_rt = ml_history_cache[cache_key]['rt'][-19:]
                     history_acc.append(avg_accuracy)
                     history_rt.append(avg_rt)
+                else:
+                    cursor.execute(
+                        """
+                        SELECT session_id, avg_accuracy, avg_rt FROM (
+                            SELECT 
+                                gs.id AS session_id,
+                                AVG(pm.accuracy_rate) AS avg_accuracy,
+                                AVG(pm.reaction_time) AS avg_rt
+                            FROM game_sessions gs
+                            JOIN performance_metrics pm ON gs.id = pm.session_id
+                            WHERE gs.user_id = ? AND gs.id <= ?
+                            GROUP BY gs.id
+                            ORDER BY gs.id DESC
+                            LIMIT 20
+                        ) ORDER BY session_id ASC
+                        """,
+                        (user_id, session_id)
+                    )
+                    session_rows = cursor.fetchall()
+                    
+                    history_acc = []
+                    history_rt = []
+                    found_current = False
+                    for r in session_rows:
+                        if r['session_id'] == session_id:
+                            found_current = True
+                            history_acc.append(avg_accuracy)
+                            history_rt.append(avg_rt)
+                        else:
+                            history_acc.append(r['avg_accuracy'])
+                            history_rt.append(r['avg_rt'])
+                    
+                    if not found_current:
+                        history_acc.append(avg_accuracy)
+                        history_rt.append(avg_rt)
+                        
+                ml_history_cache[cache_key] = {'acc': history_acc.copy(), 'rt': history_rt.copy()}
+
                     
                 acc_slope = calculate_ols_slope(history_acc)
                 rt_slope = calculate_ols_slope(history_rt)
@@ -1401,7 +1478,8 @@ def adjust_difficulty():
         return jsonify({"status": "error", "message": f"Database or server error: {str(e)}"}), 500
 
 @app.route('/api/submit-metrics', methods=['POST'])
-def submit_metrics():
+@token_required
+def submit_metrics(current_user_id, current_username):
     """
     Submits game metrics telemetry to database.
     """
@@ -3083,4 +3161,4 @@ if __name__ == '__main__':
     if not os.path.exists(DB_PATH):
         print(f"Database not found at {DB_PATH}. Please make sure it exists.")
     
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000)

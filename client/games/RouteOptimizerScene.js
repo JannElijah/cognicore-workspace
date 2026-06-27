@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import BaseCognitiveScene from './BaseCognitiveScene';
 import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
 // ── Static topology templates per node count ──────────────────────────────
@@ -72,7 +73,7 @@ const C_PRIMARY    = 0x22c55e;   // green-500
 const C_WARN       = 0xef4444;   // red
 const C_AMBER      = 0xf59e0b;
 
-export default class RouteOptimizerScene extends Phaser.Scene {
+export default class RouteOptimizerScene extends BaseCognitiveScene {
     constructor() {
         super('RouteOptimizerScene');
     }
@@ -750,13 +751,6 @@ export default class RouteOptimizerScene extends Phaser.Scene {
             });
         } catch (e) {
             console.warn('[Telemetry] RouteOptimizer unreachable.', e);
-        }
-    }
-
-    registerFirstInteraction() {
-        if (!this.firstInteractionRegistered && this.roundStartTime > 0) {
-            this.firstInteractionLatency = this.time.now - this.roundStartTime;
-            this.firstInteractionRegistered = true;
         }
     }
 

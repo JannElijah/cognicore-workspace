@@ -15,6 +15,7 @@ Chapter 2 Methodology Compliance: Software Engineering Architecture Patterns
 import numpy as np
 import os
 import pickle
+from functools import lru_cache
 
 # Try importing scikit-learn
 try:

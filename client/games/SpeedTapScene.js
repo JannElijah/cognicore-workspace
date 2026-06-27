@@ -12,9 +12,10 @@
  * ================================================================================
  */
 import Phaser from 'phaser';
+import BaseCognitiveScene from './BaseCognitiveScene';
 import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
-export default class SpeedTapScene extends Phaser.Scene {
+export default class SpeedTapScene extends BaseCognitiveScene {
     constructor() {
         super('SpeedTapScene');
     }
@@ -414,13 +415,6 @@ export default class SpeedTapScene extends Phaser.Scene {
         } catch (error) {
             // Satisfy connection redundancy standard: Log warning, keep playing
             console.warn('[Telemetry Dispatch] Database connection failed. Telemetry queued locally.', error);
-        }
-    }
-
-    registerFirstInteraction() {
-        if (!this.firstInteractionRegistered && this.stimulusSpawnTime > 0) {
-            this.firstInteractionLatency = this.time.now - this.stimulusSpawnTime;
-            this.firstInteractionRegistered = true;
         }
     }
 

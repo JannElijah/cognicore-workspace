@@ -17,6 +17,7 @@ import { Radar, Line, Bar, Scatter } from 'react-chartjs-2';
 
 import LiveDdaHud from './components/LiveDdaHud';
 import ErrorBoundary from './components/ErrorBoundary';
+import useCogniStore from './store/useCogniStore';
 
 const SpeedTapGame = lazy(() => import('./components/SpeedTapGame'));
 const MemoryMatchGame = lazy(() => import('./components/MemoryMatchGame'));
@@ -492,7 +493,21 @@ export default function App() {
     setAssessmentError(null);
     try {
       const trimmedName = username.trim();
+      
+      const loginRes = await fetch('http://127.0.0.1:5000/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: trimmedName })
+      });
+      if (loginRes.ok) {
+          const loginData = await loginRes.json();
+          if (loginData.status === 'success') {
+              useCogniStore.getState().login(loginData.user, loginData.token);
+          }
+      }
+
       const res = await fetch(`http://127.0.0.1:5000/api/assessment-status/${trimmedName}`);
+
       if (!res.ok) throw new Error("Failed to connect to backend server.");
       const data = await res.json();
       if (data.status === 'success') {
@@ -741,6 +756,17 @@ export default function App() {
     const originalFetch = window.fetch;
     window.fetch = async (...args) => {
       const url = args[0];
+      let options = args[1] || {};
+      
+      const token = useCogniStore.getState().token;
+      if (token) {
+          options.headers = {
+              ...options.headers,
+              'Authorization': `Bearer ${token}`
+          };
+          args[1] = options;
+      }
+      
       if (typeof url === 'string' && url.includes('/api/dda')) {
         const options = args[1] || {};
         if (options.method === 'POST') {

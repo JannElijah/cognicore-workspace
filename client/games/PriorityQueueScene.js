@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import BaseCognitiveScene from './BaseCognitiveScene';
 import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
 // ─────────────────────────────────────────────────────────────
@@ -43,7 +44,7 @@ const BIN_CONFIG = {
     DELEGATE:  { color: 0x22c55e, glow: 0x4ade80, label: '🟢  DELEGATE',  sublabel: 'Assign or drop', icon: '📤' },
 };
 
-export default class PriorityQueueScene extends Phaser.Scene {
+export default class PriorityQueueScene extends BaseCognitiveScene {
     constructor() { super('PriorityQueueScene'); }
 
     // ── init ────────────────────────────────────────────────
@@ -618,13 +619,6 @@ export default class PriorityQueueScene extends Phaser.Scene {
     }
 
     // ── Micro-behaviour ─────────────────────────────────────
-    registerFirstInteraction() {
-        if (!this.firstInteractionRegistered && this.stimulusSpawnTime > 0) {
-            this.firstInteractionLatency = this.time.now - this.stimulusSpawnTime;
-            this.firstInteractionRegistered = true;
-        }
-    }
-
     // ── Telemetry ────────────────────────────────────────────
     async dispatchTelemetry(reactionTimeMs, roundAccuracy) {
         if (!this.sessionId) return;

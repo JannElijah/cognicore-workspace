@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
+import BaseCognitiveScene from './BaseCognitiveScene';
 import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
-export default class SequenceDecoderScene extends Phaser.Scene {
+export default class SequenceDecoderScene extends BaseCognitiveScene {
     constructor() {
         super('SequenceDecoderScene');
     }
@@ -690,20 +691,6 @@ export default class SequenceDecoderScene extends Phaser.Scene {
         this.accuracyText.setText(`ACCURACY: ${Math.round(this.accuracy * 100)}%`);
     }
 
-    showFloatingFeedback(text, color) {
-        const W = this.scale.width;
-        const ft = this.add.text(W / 2, 355, text, {
-            fontFamily: 'system-ui, sans-serif',
-            fontSize: '17px', fontWeight: 'bold', fill: color
-        }).setOrigin(0.5);
-
-        this.tweens.add({
-            targets: ft, y: 330, alpha: 0,
-            duration: 1100,
-            onComplete: () => ft.destroy()
-        });
-    }
-
     // ══════════════════════════════════════════
     //  DDA & TELEMETRY
     // ══════════════════════════════════════════
@@ -732,13 +719,6 @@ export default class SequenceDecoderScene extends Phaser.Scene {
             });
         } catch (e) {
             console.warn('[Telemetry] Endpoint unreachable.', e);
-        }
-    }
-
-    registerFirstInteraction() {
-        if (!this.firstInteractionRegistered && this.roundStartTime > 0) {
-            this.firstInteractionLatency = this.time.now - this.roundStartTime;
-            this.firstInteractionRegistered = true;
         }
     }
 

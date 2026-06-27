@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
+import BaseCognitiveScene from './BaseCognitiveScene';
 import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
-export default class EquationBalanceScene extends Phaser.Scene {
+export default class EquationBalanceScene extends BaseCognitiveScene {
     constructor() {
         super('EquationBalanceScene');
     }
@@ -577,24 +578,6 @@ export default class EquationBalanceScene extends Phaser.Scene {
         this.accuracyText.setText(`ACCURACY: ${Math.round(this.accuracy * 100)}%`);
     }
 
-    showFloatingFeedback(text, color) {
-        const width = this.scale.width;
-        const txt = this.add.text(width / 2, 345, text, {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            fontSize: '18px',
-            fontWeight: 'bold',
-            fill: color
-        }).setOrigin(0.5);
-
-        this.tweens.add({
-            targets: txt,
-            y: 320,
-            alpha: 0,
-            duration: 1000,
-            onComplete: () => txt.destroy()
-        });
-    }
-
     // ==========================================
     // DDA & TELEMETRY API COMMUNICATORS
     // ==========================================
@@ -623,13 +606,6 @@ export default class EquationBalanceScene extends Phaser.Scene {
             });
         } catch (e) {
             console.warn('[Telemetry Dispatch] Endpoint unreachable, local caching triggered.', e);
-        }
-    }
-
-    registerFirstInteraction() {
-        if (!this.firstInteractionRegistered && this.roundStartTime > 0) {
-            this.firstInteractionLatency = this.time.now - this.roundStartTime;
-            this.firstInteractionRegistered = true;
         }
     }
 

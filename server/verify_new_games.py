@@ -1,4 +1,28 @@
-import requests
+import requests as _requests
+
+class RequestsWrapper:
+    def __init__(self):
+        self.token = None
+    
+    def post(self, url, *args, **kwargs):
+        if '/api/start-session' in url:
+            # intercept and login
+            username = kwargs.get('json', {}).get('username', 'test_user')
+            _login_res = _requests.post("http://127.0.0.1:5000/api/login", json={"username": username})
+            if _login_res.status_code == 200:
+                self.token = _login_res.json().get('token')
+                
+        if '/api/login' not in url and self.token:
+            kwargs.setdefault('headers', {})['Authorization'] = f'Bearer {self.token}'
+        return _requests.post(url, *args, **kwargs)
+        
+    def get(self, url, *args, **kwargs):
+        if self.token:
+            kwargs.setdefault('headers', {})['Authorization'] = f'Bearer {self.token}'
+        return _requests.get(url, *args, **kwargs)
+
+requests = RequestsWrapper()
+
 import json
 import sys
 import uuid

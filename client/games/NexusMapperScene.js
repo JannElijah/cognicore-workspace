@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
+import BaseCognitiveScene from './BaseCognitiveScene';
 import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
-export default class NexusMapperScene extends Phaser.Scene {
+export default class NexusMapperScene extends BaseCognitiveScene {
     constructor() {
         super('NexusMapperScene');
     }
@@ -354,24 +355,6 @@ export default class NexusMapperScene extends Phaser.Scene {
         this.accuracyText.setText(`ACCURACY: ${Math.round(this.accuracy * 100)}%`);
     }
 
-    showFloatingFeedback(text, color) {
-        const width = this.scale.width;
-        const txt = this.add.text(width / 2, 140, text, {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
-            fontSize: '18px',
-            fontWeight: 'bold',
-            fill: color
-        }).setOrigin(0.5);
-
-        this.tweens.add({
-            targets: txt,
-            y: 115,
-            alpha: 0,
-            duration: 1200,
-            onComplete: () => txt.destroy()
-        });
-    }
-
     async dispatchMetricTelemetry(solveTimeMs, roundAccuracy) {
         if (!this.sessionId) return;
 
@@ -395,13 +378,6 @@ export default class NexusMapperScene extends Phaser.Scene {
             });
         } catch (e) {
             console.warn('[Telemetry Dispatch] Failed to send NexusMapper telemetry', e);
-        }
-    }
-
-    registerFirstInteraction() {
-        if (!this.firstInteractionRegistered && this.stimulusSpawnTime > 0) {
-            this.firstInteractionLatency = this.time.now - this.stimulusSpawnTime;
-            this.firstInteractionRegistered = true;
         }
     }
 
