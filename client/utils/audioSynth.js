@@ -225,3 +225,6 @@ class AcousticDdaEngine {
 }
 
 export const audioDda = new AcousticDdaEngine();
+
+// Bind to window for global access by gameModeManager
+window.audioDda = audioDda;

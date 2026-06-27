@@ -372,6 +372,12 @@ function decorateSceneClass(SceneClass) {
         if (originalCreate) {
             originalCreate.call(this);
         }
+        
+        // --- SCREEN JUICE: DDA Vignette ---
+        const { width, height } = this.scale;
+        this.ddaVignette = this.add.rectangle(width/2, height/2, width, height, 0xff0000, 0);
+        this.ddaVignette.setDepth(9998); // just under UI
+        this.ddaVignette.setBlendMode(Phaser.BlendModes.MULTIPLY);
 
         // --- Particle Emitter Bootstrap ---
         // Use Phaser 3.60+ particle API (particles manager with emitter config)
@@ -467,6 +473,36 @@ function decorateSceneClass(SceneClass) {
         const deltaHits = currentHits - this._prevHits;
         const deltaMisses = currentMisses - this._prevMisses;
         const deltaAttempts = currentAttempts - this._prevAttempts;
+        
+        // --- SMART SCORE MULTIPLIERS ---
+        const currentScore = this.score || 0;
+        const deltaScore = currentScore - (this._prevScore || 0);
+        if (deltaScore > 0 && this.archetype) {
+             let multiplier = 1.0;
+             let bonusText = '';
+             
+             if (this.archetype === 'Fast Learner') {
+                 multiplier = 1.5;
+                 bonusText = 'SPEED BONUS!';
+             } else if (this.archetype === 'High Fatigue') {
+                 multiplier = 1.2; 
+                 bonusText = 'CONSISTENCY BONUS!';
+             } else if (this.archetype === 'Precision Expert') {
+                 multiplier = 1.3;
+                 bonusText = 'PRECISION BONUS!';
+             }
+             
+             if (multiplier > 1.0) {
+                 const bonus = Math.floor(deltaScore * (multiplier - 1.0));
+                 this.score += bonus;
+                 if (this.scoreText) this.scoreText.setText(`SCORE: ${this.score}`);
+                 
+                 if (originalShowFloatingText) {
+                     originalShowFloatingText.call(this, this.scale.width / 2, this.scale.height / 2 + 100, `+${bonus} ${bonusText}`, '#f59e0b');
+                 }
+             }
+        }
+        this._prevScore = this.score || 0;
 
         const isHit = deltaHits > 0;
         const isMiss = deltaMisses > 0 || (deltaAttempts > 0 && deltaHits === 0);
@@ -572,11 +608,41 @@ function decorateSceneClass(SceneClass) {
     // 3b. Patch showFloatingText to also trigger DDA shift audio when difficulty text changes
     const originalShowFloatingText = SceneClass.prototype.showFloatingText;
     if (originalShowFloatingText) {
-        SceneClass.prototype.showFloatingText = function(x, y, text, color) {
-            originalShowFloatingText.call(this, x, y, text, color);
-            if (typeof text === 'string' && text.includes('DIFFICULTY')) {
-                const isUp = text.includes('INCREASED') || text.includes('UP');
+        SceneClass.prototype.showFloatingText = function(x, y, textStr, color) {
+            originalShowFloatingText.call(this, x, y, textStr, color);
+            if (typeof textStr === 'string' && textStr.includes('DIFFICULTY')) {
+                const isUp = textStr.includes('INCREASED') || textStr.includes('UP');
                 try { cogniFX.playDDAShift(isUp ? 'up' : 'down'); } catch (_) {}
+                
+                // --- SCREEN JUICE & AUDIO BPM ---
+                if (window.audioDda) {
+                    window.audioDda.setDifficulty(this.difficultyLevel || 1);
+                    window.audioDda.setFrustration(this.archetype === 'High Fatigue');
+                }
+                
+                if (this.ddaVignette) {
+                    let targetColor = 0xff0000;
+                    let targetAlpha = 0;
+                    
+                    if (this.archetype === 'High Fatigue') {
+                        targetColor = 0x3b82f6; // calming blue
+                        targetAlpha = 0.2;
+                    } else if (this.difficultyLevel >= 4) {
+                        targetColor = 0xef4444; // intense red
+                        targetAlpha = 0.3;
+                    }
+                    
+                    if (targetAlpha > 0) {
+                        this.ddaVignette.fillColor = targetColor;
+                        this.tweens.add({
+                            targets: this.ddaVignette,
+                            alpha: targetAlpha,
+                            duration: 1000,
+                            yoyo: true, // Pulse it
+                            repeat: this.difficultyLevel >= 4 ? -1 : 1
+                        });
+                    }
+                }
             }
         };
     }
