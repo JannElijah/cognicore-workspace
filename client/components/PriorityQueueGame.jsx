@@ -1,8 +1,8 @@
+import useCogniStore from '../store/useCogniStore';
 import React, { useState, useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import PriorityQueueScene from '../games/PriorityQueueScene';
 import PauseOverlay from './PauseOverlay';
-import useCogniStore from '../store/useCogniStore';
 
 export default function PriorityQueueGame({
     username = 'default_player',

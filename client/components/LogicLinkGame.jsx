@@ -1,3 +1,4 @@
+import useCogniStore from '../store/useCogniStore';
 /**
  * ================================================================================
  * Chapter 2 Methodology Compliance: Software Engineering Architecture Patterns
@@ -15,7 +16,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import LogicLinkScene from '../games/LogicLinkScene';
 import PauseOverlay from './PauseOverlay';
-import useCogniStore from '../store/useCogniStore';
 
 
 export default function LogicLinkGame({ username = 'default_player', apiUrl = 'http://127.0.0.1:5000', onGameFinished }) {

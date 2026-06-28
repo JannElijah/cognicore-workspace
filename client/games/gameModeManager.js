@@ -453,21 +453,6 @@ function decorateSceneClass(SceneClass) {
                 fontWeight: 'bold',
                 fill: '#38bdf8' // Cyber Punk Cyan
             });
-        } else if (this.gameMode === 'timed') {
-            this.timedModeText = this.add.text(20, 80, `TIMED MODE`, {
-                fontFamily: 'Outfit, system-ui, -apple-system, sans-serif',
-                fontSize: '13px',
-                fontWeight: 'bold',
-                fill: '#f59e0b'
-            });
-        }
-
-        // Sync timerText to correct initial value for timed/endurance/survival modes
-        if (this.timerText && this.timeLeft !== undefined && this.timeLeft !== Infinity) {
-            const totalSec = Math.ceil(this.timeLeft / 1000);
-            const m = Math.floor(totalSec / 60);
-            const s = totalSec % 60;
-            this.timerText.setText(`${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`);
         }
     };
 

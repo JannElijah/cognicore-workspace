@@ -1,8 +1,8 @@
+import useCogniStore from '../store/useCogniStore';
 import React, { useState, useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import SynapseSpinScene from '../games/SynapseSpinScene';
 import PauseOverlay from './PauseOverlay';
-import useCogniStore from '../store/useCogniStore';
 
 export default function SynapseSpinGame({ username = 'default_player', apiUrl = 'http://127.0.0.1:5000', onGameFinished }) {
     const user = useCogniStore(state => state.user);
