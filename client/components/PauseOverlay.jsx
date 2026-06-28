@@ -25,8 +25,11 @@ export default function PauseOverlay({ isPaused, onTogglePause }) {
                     onMouseOver={(e) => e.target.style.filter = 'brightness(1.15)'}
                     onMouseOut={(e) => e.target.style.filter = 'brightness(1.0)'}
                 >
-                    Resume (Press P)
+                    RESUME SESSION
                 </button>
+                <div style={{ marginTop: '1.5rem', fontSize: '0.85rem', color: '#64748b', fontWeight: '500', letterSpacing: '0.05em' }}>
+                    Press <kbd style={{ background: 'rgba(255,255,255,0.1)', padding: '0.2rem 0.5rem', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.2)', color: '#f8fafc', fontFamily: 'monospace' }}>P</kbd> to toggle pause
+                </div>
             </div>
         </div>
     );

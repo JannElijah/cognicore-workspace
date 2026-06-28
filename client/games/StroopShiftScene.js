@@ -10,6 +10,7 @@
  * ================================================================================
  */
 import Phaser from 'phaser';
+import { CogniTheme } from '../utils/theme';
 import BaseCognitiveScene from './BaseCognitiveScene';
 import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
@@ -79,37 +80,33 @@ export default class StroopShiftScene extends BaseCognitiveScene {
         const height = this.scale.height;
 
         // 1. Sleek Background with Gradient (Premium Tech Look)
-        const bg = this.add.graphics();
-        bg.fillGradientStyle(0x0f172a, 0x0f172a, 0x1e1b4b, 0x1e1b4b, 1);
-        bg.fillRect(0, 0, width, height);
-
-        // Tech grid lines for design consistency
+        this.createStandardBackground();// Tech grid lines for design consistency
         const grid = this.add.grid(width / 2, height / 2, width, height, 80, 80, 0x000000, 0, 0x3b82f6, 0.03);
         grid.setOrigin(0.5);
 
         // 2. HUD Setup
         this.scoreText = this.add.text(20, 20, 'SCORE: 0', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
             fill: '#38bdf8'
         });
 
         this.accuracyText = this.add.text(20, 50, 'ACCURACY: 100%', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '16px',
             fill: '#94a3b8'
         });
 
         this.difficultyText = this.add.text(width - 20, 20, `DIFFICULTY: LEVEL ${this.difficultyLevel}`, {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
             fill: '#a855f7'
         }).setOrigin(1, 0);
 
         this.timerText = this.add.text(width / 2, 20, '00:30', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '32px',
             fontWeight: 'bold',
             fill: '#ffffff'
@@ -117,7 +114,7 @@ export default class StroopShiftScene extends BaseCognitiveScene {
 
         // Guide text below header
         this.add.text(width / 2, 95, 'SELECT THE FONT/INK COLOR (IGNORE THE WORD)', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '14px',
             fontWeight: '700',
             fill: '#64748b',
@@ -145,7 +142,7 @@ export default class StroopShiftScene extends BaseCognitiveScene {
             btnBg.fillRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 10);
             
             const btnTxt = this.add.text(0, 0, color.name, {
-                fontFamily: 'system-ui, -apple-system, sans-serif',
+                fontFamily: CogniTheme.fonts.body,
                 fontSize: '18px',
                 fontWeight: '800',
                 fill: color.hexStr
@@ -271,7 +268,7 @@ export default class StroopShiftScene extends BaseCognitiveScene {
 
         // Render Stimulus text in the center
         this.stimulusText = this.add.text(width / 2, height / 2 - 50, this.currentWordText, {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '72px',
             fontWeight: '900',
             fill: this.currentInkColor.hexStr,
@@ -358,7 +355,19 @@ export default class StroopShiftScene extends BaseCognitiveScene {
         this.recentReactionTimes.push(reactionTime);
 
         if (isCorrect) {
-            this.hits++;
+
+            if (this.showParticleBurst) {
+                const px = this.input.activePointer.x || this.scale.width / 2;
+                const py = this.input.activePointer.y || this.scale.height / 2;
+                this.showParticleBurst(px, py, 0xa855f7);
+            }
+    
+        if (this.showParticleBurst) {
+            const px = this.input.activePointer.x || this.scale.width / 2;
+            const py = this.input.activePointer.y || this.scale.height / 2;
+            this.showParticleBurst(px, py, 0xa855f7);
+        }
+        this.hits++;
             this.consecutiveHits++;
 
             const scoreGain = Math.max(10, Math.round(1000 - reactionTime / 2));
@@ -422,7 +431,7 @@ export default class StroopShiftScene extends BaseCognitiveScene {
 
     showFloatingText(x, y, text, color) {
         const txt = this.add.text(x, y, text, {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
             fill: color

@@ -9,6 +9,7 @@
  * ================================================================================
  */
 import Phaser from 'phaser';
+import { CogniTheme } from '../utils/theme';
 import BaseCognitiveScene from './BaseCognitiveScene';
 import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
@@ -71,37 +72,33 @@ export default class MatrixRecallScene extends BaseCognitiveScene {
         const height = this.scale.height;
 
         // 1. Premium dark-mode tech background
-        const bg = this.add.graphics();
-        bg.fillGradientStyle(0x09090b, 0x09090b, 0x1e1b4b, 0x1e1b4b, 1);
-        bg.fillRect(0, 0, width, height);
-
-        // Tech grid lines
+        this.createStandardBackground();// Tech grid lines
         const grid = this.add.grid(width / 2, height / 2, width, height, 80, 80, 0x000000, 0, 0x3b82f6, 0.03);
         grid.setOrigin(0.5);
 
         // 2. HUD Setup
         this.scoreText = this.add.text(20, 20, 'SCORE: 0', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
             fill: '#38bdf8' // neon blue
         });
 
         this.accuracyText = this.add.text(20, 50, 'ACCURACY: 100%', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '16px',
             fill: '#94a3b8'
         });
 
         this.difficultyText = this.add.text(width - 20, 20, `DIFFICULTY: LEVEL ${this.difficultyLevel}`, {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
             fill: '#a855f7' // neon purple
         }).setOrigin(1, 0);
 
         this.timerText = this.add.text(width / 2, 20, '00:45', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '32px',
             fontWeight: 'bold',
             fill: '#ffffff'
@@ -109,7 +106,7 @@ export default class MatrixRecallScene extends BaseCognitiveScene {
 
         // Status instruction message
         this.statusText = this.add.text(width / 2, 90, 'PREPARING MATRIX...', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '22px',
             fontWeight: '800',
             fill: '#e2e8f0',
@@ -391,6 +388,12 @@ export default class MatrixRecallScene extends BaseCognitiveScene {
 
     handleSuccessfulRecall() {
         this.gamePhase = 'FEEDBACK';
+
+        if (this.showParticleBurst) {
+            const px = this.input.activePointer.x || this.scale.width / 2;
+            const py = this.input.activePointer.y || this.scale.height / 2;
+            this.showParticleBurst(px, py, 0x38bdf8);
+        }
         this.hits++;
         this.totalAttempts++;
 

@@ -207,9 +207,11 @@ def train_retargeted_classifier():
     print("\nPerforming Grid Search for RandomForestClassifier hyperparameter optimization...")
     # Setup hyperparameter grids for tuning (optimized for execution speed < 5s)
     param_grid = {
-        'n_estimators': [30, 50, 80],
-        'max_depth': [4, 6, None],
-        'min_samples_split': [2, 5],
+        'n_estimators': [30, 50, 100, 150],
+        'max_depth': [4, 6, 8, None],
+        'min_samples_split': [2, 5, 10],
+        'min_samples_leaf': [1, 2, 4],
+        'class_weight': [None, 'balanced'],
         'criterion': ['gini', 'entropy']
     }
     

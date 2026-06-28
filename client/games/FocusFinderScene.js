@@ -9,6 +9,7 @@
  * ================================================================================
  */
 import Phaser from 'phaser';
+import { CogniTheme } from '../utils/theme';
 import BaseCognitiveScene from './BaseCognitiveScene';
 import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
@@ -182,11 +183,7 @@ export default class FocusFinderScene extends BaseCognitiveScene {
         const height = this.scale.height;
 
         // 1. Sleek Background with Gradient (Premium Tech Look)
-        const bg = this.add.graphics();
-        bg.fillGradientStyle(0x09090b, 0x09090b, 0x1e1b4b, 0x1e1b4b, 1);
-        bg.fillRect(0, 0, width, height);
-
-        // Tech grid lines
+        this.createStandardBackground();// Tech grid lines
         const grid = this.add.grid(width / 2, height / 2, width, height, 80, 80, 0x000000, 0, 0x3b82f6, 0.03);
         grid.setOrigin(0.5);
 
@@ -195,27 +192,27 @@ export default class FocusFinderScene extends BaseCognitiveScene {
 
         // 2. HUD Setup
         this.scoreText = this.add.text(20, 20, 'SCORE: 0', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
             fill: '#38bdf8'
         });
 
         this.accuracyText = this.add.text(20, 50, 'ACCURACY: 100%', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '16px',
             fill: '#94a3b8'
         });
 
         this.difficultyText = this.add.text(width - 20, 20, `DIFFICULTY: LEVEL ${this.difficultyLevel}`, {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
             fill: '#a855f7'
         }).setOrigin(1, 0);
 
         this.timerText = this.add.text(width / 2 - 120, 20, '00:30', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '32px',
             fontWeight: 'bold',
             fill: '#ffffff'
@@ -229,14 +226,14 @@ export default class FocusFinderScene extends BaseCognitiveScene {
         this.instructionPanel.strokeRoundedRect(width / 2 - 80, 12, 170, 76, 8);
 
         this.instructionText = this.add.text(width / 2 + 5, 26, 'FIND:', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '11px',
             fontWeight: 'bold',
             fill: '#94a3b8'
         }).setOrigin(0.5);
 
         this.targetNameText = this.add.text(width / 2 + 5, 46, '', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '13px',
             fontWeight: '900',
             fill: '#ffffff'
@@ -482,6 +479,12 @@ export default class FocusFinderScene extends BaseCognitiveScene {
     handleTargetClick(container) {
         if (this.isTutorialActive) return;
         this.totalClicks++;
+
+        if (this.showParticleBurst) {
+            const px = this.input.activePointer.x || this.scale.width / 2;
+            const py = this.input.activePointer.y || this.scale.height / 2;
+            this.showParticleBurst(px, py, 0xa855f7);
+        }
         this.hits++;
 
         const searchTime = this.time.now - this.targetSpawnTime;
@@ -547,7 +550,7 @@ export default class FocusFinderScene extends BaseCognitiveScene {
 
     showFloatingText(x, y, text, color) {
         const txt = this.add.text(x, y - 20, text, {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '16px',
             fontWeight: 'bold',
             fill: color

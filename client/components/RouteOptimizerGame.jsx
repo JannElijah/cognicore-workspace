@@ -347,7 +347,7 @@ export default function RouteOptimizerGame({
 
                     <div style={{ marginBottom: '2rem', textAlign: 'left' }}>
                         <div style={S.statRow}>
-                            <span>Final Score</span>
+                            <span>🏆 Final Score</span>
                             <span style={{ ...S.statVal, color: '#4ade80' }}>{finalStats?.score}</span>
                         </div>
                         <div style={S.statRow}>
@@ -359,11 +359,11 @@ export default function RouteOptimizerGame({
                             <span style={{ ...S.statVal, color: '#ef4444' }}>{finalStats?.misses}</span>
                         </div>
                         <div style={S.statRow}>
-                            <span>Optimization Accuracy</span>
+                            <span>🎯 Optimization Accuracy</span>
                             <span style={{ ...S.statVal, color: grade }}>{acc}%</span>
                         </div>
                         <div style={S.statRow}>
-                            <span>Max Difficulty Reached</span>
+                            <span>📈 Max Difficulty Reached</span>
                             <span style={{ ...S.statVal, color: '#a78bfa' }}>Level {finalStats?.difficultyLevel}</span>
                         </div>
                         <div style={S.statRow}>
@@ -371,7 +371,7 @@ export default function RouteOptimizerGame({
                             <span style={{ ...S.statVal, color: '#38bdf8' }}>{finalStats?.backtrack_count ?? 0}</span>
                         </div>
                         <div style={{ ...S.statRow, border: 'none' }}>
-                            <span>First Move Latency</span>
+                            <span>⚡ First Move Latency</span>
                             <span style={{ ...S.statVal, color: '#94a3b8' }}>
                                 {finalStats?.hesitation_ms ? `${Math.round(finalStats.hesitation_ms)}ms` : 'N/A'}
                             </span>

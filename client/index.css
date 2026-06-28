@@ -766,6 +766,39 @@ button:hover {
     }
 }
 
+
+/* --- UI/UX Polish & Animations --- */
+.telemetry-hud-container, .modal-content, .research-portal-panel {
+    background: rgba(15, 23, 42, 0.65) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(168, 85, 247, 0.4) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+    border-radius: 16px !important;
+    transition: all 0.3s ease-in-out;
+}
+
+button {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px -10px rgba(168, 85, 247, 0.7) !important;
+    filter: brightness(1.15) !important;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -773,4 +806,132 @@ button:hover {
 
 .portal-container, .milestone-toast-container {
     animation: fadeIn 0.4s ease-out, slideUp 0.5s ease-out;
+}
+
+@keyframes skeletonGlow {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-box {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: skeletonGlow 2.5s infinite linear;
+  border-radius: 6px;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes slideRight {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+
+/* ==========================================================================
+   Global UI/UX CogniCore Standard Overlays & Components
+   ========================================================================== */
+
+.premium-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 800px;
+    min-height: 600px;
+    height: auto;
+    background: linear-gradient(135deg, #020617 0%, #0c1a2e 50%, #0f172a 100%);
+    color: #f8fafc;
+    font-family: var(--font-body);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6), inset 0 1px 1px rgba(56,189,248,0.08);
+    border: 1px solid rgba(56,189,248,0.15);
+    padding: 2rem;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.premium-glass-card {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 18px;
+    border: 1px solid rgba(56,189,248,0.12);
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 520px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.4), 0 0 40px rgba(56,189,248,0.04);
+}
+
+.premium-title {
+    font-size: 2.4rem;
+    font-weight: 800;
+    font-family: var(--font-title);
+    background: linear-gradient(to right, #38bdf8, #a855f7);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    margin-bottom: 0.4rem;
+    letter-spacing: -0.02em;
+    display: inline-block;
+}
+
+.premium-subtitle {
+    font-size: 0.95rem;
+    color: #64748b;
+    margin-bottom: 0.5rem;
+    line-height: 1.5;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(56,189,248,0.05);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+    color: #cbd5e1;
+}
+
+.stat-val {
+    font-weight: 700;
+    font-family: var(--font-title);
+    font-size: 1.1rem;
+}
+
+.premium-button {
+    margin-top: 1.5rem;
+    padding: 0.8rem 2rem;
+    background: linear-gradient(135deg, rgba(56,189,248,0.1) 0%, rgba(168,85,247,0.1) 100%);
+    border: 1px solid rgba(56,189,248,0.3);
+    border-radius: 8px;
+    color: #38bdf8;
+    font-weight: 600;
+    font-size: 1rem;
+    font-family: var(--font-title);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    outline: none;
+}
+
+.premium-button:hover {
+    background: linear-gradient(135deg, rgba(56,189,248,0.2) 0%, rgba(168,85,247,0.2) 100%);
+    border-color: rgba(168,85,247,0.5);
+    color: #f8fafc;
+    box-shadow: 0 0 15px rgba(56,189,248,0.2);
+    transform: translateY(-1px);
+}
+
+.premium-button:active {
+    transform: translateY(1px);
 }

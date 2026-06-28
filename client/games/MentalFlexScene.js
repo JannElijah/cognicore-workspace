@@ -10,6 +10,7 @@
  * ================================================================================
  */
 import Phaser from 'phaser';
+import { CogniTheme } from '../utils/theme';
 import BaseCognitiveScene from './BaseCognitiveScene';
 import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
@@ -90,37 +91,33 @@ export default class MentalFlexScene extends BaseCognitiveScene {
         const height = this.scale.height;
 
         // 1. Slate dark neon theme background
-        const bg = this.add.graphics();
-        bg.fillGradientStyle(0x09090b, 0x09090b, 0x180f2b, 0x180f2b, 1);
-        bg.fillRect(0, 0, width, height);
-
-        // Grid lines
+        this.createStandardBackground();// Grid lines
         const grid = this.add.grid(width / 2, height / 2, width, height, 80, 80, 0x000000, 0, 0x8b5cf6, 0.03);
         grid.setOrigin(0.5);
 
         // 2. HUD Elements
         this.scoreText = this.add.text(20, 20, 'SCORE: 0', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
             fill: '#8b5cf6'
         });
 
         this.accuracyText = this.add.text(20, 50, 'ACCURACY: 100%', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '16px',
             fill: '#94a3b8'
         });
 
         this.difficultyText = this.add.text(width - 20, 20, `DIFFICULTY: LEVEL ${this.difficultyLevel}`, {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
             fill: '#c084fc'
         }).setOrigin(1, 0);
 
         this.timerText = this.add.text(width / 2, 20, '00:45', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '32px',
             fontWeight: 'bold',
             fill: '#ffffff'
@@ -128,7 +125,7 @@ export default class MentalFlexScene extends BaseCognitiveScene {
 
         // Active matching rule display panel
         this.ruleText = this.add.text(width / 2, 90, 'RULE: MATCH COLOR', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: '900',
             fill: '#eab308'
@@ -137,7 +134,7 @@ export default class MentalFlexScene extends BaseCognitiveScene {
 
         // Dynamic helper status alert
         this.statusText = this.add.text(width / 2, 125, 'Match cards based on the active rule!', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '14px',
             fontWeight: '700',
             fill: '#64748b',
@@ -454,7 +451,19 @@ export default class MentalFlexScene extends BaseCognitiveScene {
         }
         
         if (isCorrect) {
-            this.hits++;
+
+            if (this.showParticleBurst) {
+                const px = this.input.activePointer.x || this.scale.width / 2;
+                const py = this.input.activePointer.y || this.scale.height / 2;
+                this.showParticleBurst(px, py, 0x4ade80);
+            }
+    
+        if (this.showParticleBurst) {
+            const px = this.input.activePointer.x || this.scale.width / 2;
+            const py = this.input.activePointer.y || this.scale.height / 2;
+            this.showParticleBurst(px, py, 0x4ade80);
+        }
+        this.hits++;
             this.consecutiveHits++;
 
             // Score with speed rewards
@@ -565,7 +574,7 @@ export default class MentalFlexScene extends BaseCognitiveScene {
 
             const textVal = `RULE SHIFT: MATCH ${this.currentRule.toUpperCase()}!`;
             const bannerTxt = this.add.text(width / 2, height / 2 - 120, textVal, {
-                fontFamily: 'system-ui, -apple-system, sans-serif',
+                fontFamily: CogniTheme.fonts.body,
                 fontSize: '28px',
                 fontWeight: '900',
                 fill: '#ffffff'
@@ -615,7 +624,7 @@ export default class MentalFlexScene extends BaseCognitiveScene {
 
     showFeedbackText(x, y, text, color) {
         const txt = this.add.text(x, y, text, {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
             fill: color

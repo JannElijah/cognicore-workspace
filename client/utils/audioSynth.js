@@ -177,30 +177,66 @@ class AcousticDdaEngine {
       }
       
       const t = this.ctx.currentTime;
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
 
       if (success) {
-        // High C5 synth pop
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(523.25, t); // C5
-        gain.gain.setValueAtTime(0, t);
-        gain.gain.linearRampToValueAtTime(0.06, t + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
-        osc.start(t);
-        osc.stop(t + 0.2);
+        // Modern "coin pickup" double-beep arpeggio
+        const osc1 = this.ctx.createOscillator();
+        const osc2 = this.ctx.createOscillator();
+        const gain1 = this.ctx.createGain();
+        const gain2 = this.ctx.createGain();
+
+        osc1.type = 'sine';
+        osc2.type = 'sine';
+        
+        // Note 1: E5 (659.25 Hz)
+        osc1.frequency.setValueAtTime(659.25, t);
+        gain1.gain.setValueAtTime(0, t);
+        gain1.gain.linearRampToValueAtTime(0.08, t + 0.02);
+        gain1.gain.exponentialRampToValueAtTime(0.0001, t + 0.1);
+
+        // Note 2: G#5 (830.61 Hz) played slightly after
+        osc2.frequency.setValueAtTime(830.61, t + 0.08);
+        gain2.gain.setValueAtTime(0, t + 0.08);
+        gain2.gain.linearRampToValueAtTime(0.08, t + 0.1);
+        gain2.gain.exponentialRampToValueAtTime(0.0001, t + 0.25);
+
+        osc1.connect(gain1);
+        osc2.connect(gain2);
+        gain1.connect(this.ctx.destination);
+        gain2.connect(this.ctx.destination);
+
+        osc1.start(t);
+        osc1.stop(t + 0.15);
+        osc2.start(t + 0.08);
+        osc2.stop(t + 0.3);
+
       } else {
-        // Lower flat tone (F3) representing miss
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(174.61, t); // F3
+        // Deep low-pass failure thud
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        const filter = this.ctx.createBiquadFilter();
+
+        osc.type = 'sawtooth';
+        
+        // Fast pitch sweep down
+        osc.frequency.setValueAtTime(150, t);
+        osc.frequency.exponentialRampToValueAtTime(40, t + 0.3);
+
+        // Filter sweep
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(800, t);
+        filter.frequency.exponentialRampToValueAtTime(100, t + 0.3);
+
         gain.gain.setValueAtTime(0, t);
-        gain.gain.linearRampToValueAtTime(0.08, t + 0.05);
+        gain.gain.linearRampToValueAtTime(0.1, t + 0.05);
         gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+
+        osc.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+
         osc.start(t);
-        osc.stop(t + 0.45);
+        osc.stop(t + 0.4);
       }
     } catch (e) {
       console.warn("[Audio Synth] Error playing feedback:", e);

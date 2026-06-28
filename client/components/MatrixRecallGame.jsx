@@ -310,10 +310,10 @@ const handleRestart = () => {
 
     if (gameState === 'IDLE') {
         return (
-            <div style={styles.overlay}>
-                <div style={styles.card}>
-                    <h1 style={styles.title}>MATRIX RECALL</h1>
-                    <p style={styles.subtitle}>Working Spatial-Visual Memory Recall</p>
+            <div className='premium-overlay'>
+                <div className='premium-glass-card'>
+                    <h1 className='premium-title'>MATRIX RECALL</h1>
+                    <p className='premium-subtitle'>Working Spatial-Visual Memory Recall</p>
                     
                     {error && <div style={styles.errorMessage}>{error}</div>}
 
@@ -330,7 +330,7 @@ const handleRestart = () => {
 
                     <button 
                         onClick={startTrainingSession}
-                        style={styles.button}
+                        className='premium-button'
                         onMouseOver={(e) => e.target.style.filter = 'brightness(1.1)'}
                         onMouseOut={(e) => e.target.style.filter = 'brightness(1.0)'}
                     >
@@ -343,8 +343,8 @@ const handleRestart = () => {
 
     if (gameState === 'LOADING') {
         return (
-            <div style={styles.overlay}>
-                <div style={styles.card}>
+            <div className='premium-overlay'>
+                <div className='premium-glass-card'>
                     <div style={{
                         width: '40px',
                         height: '40px',
@@ -378,36 +378,36 @@ const handleRestart = () => {
 
     if (gameState === 'FINISHED') {
         return (
-            <div style={styles.overlay}>
-                <div style={styles.card}>
+            <div className='premium-overlay'>
+                <div className='premium-glass-card'>
                     <h1 style={{ 
                         ...styles.title, 
                         background: 'linear-gradient(to right, #4ade80, #a855f7)',
                         WebkitBackgroundClip: 'text',
                         backgroundClip: 'text' 
                     }}>SESSION COMPLETE</h1>
-                    <p style={styles.subtitle}>Memory telemetry successfully synced to database.</p>
+                    <p className='premium-subtitle'>Memory telemetry successfully synced to database.</p>
 
                     <div style={{ marginBottom: '2rem', textAlign: 'left' }}>
-                        <div style={styles.statRow}>
-                            <span>Final Score</span>
-                            <span style={{ ...styles.statVal, color: '#4ade80' }}>{finalStats?.score}</span>
+                        <div className='stat-row'>
+                            <span>🏆 Final Score</span>
+                            <span className="stat-val" style={{ color: '#4ade80'  }}>{finalStats?.score}</span>
                         </div>
-                        <div style={styles.statRow}>
+                        <div className='stat-row'>
                             <span>Matrices Recalled</span>
-                            <span style={styles.statVal}>{finalStats?.hits}</span>
+                            <span className='stat-val'>{finalStats?.hits}</span>
                         </div>
-                        <div style={styles.statRow}>
-                            <span>Errors</span>
-                            <span style={{ ...styles.statVal, color: '#ef4444' }}>{finalStats?.misses}</span>
+                        <div className='stat-row'>
+                            <span>❌ Errors</span>
+                            <span className="stat-val" style={{ color: '#ef4444'  }}>{finalStats?.misses}</span>
                         </div>
-                        <div style={styles.statRow}>
-                            <span>Recall Accuracy</span>
-                            <span style={styles.statVal}>{Math.round((finalStats?.accuracy || 0) * 100)}%</span>
+                        <div className='stat-row'>
+                            <span>🎯 Recall Accuracy</span>
+                            <span className='stat-val'>{Math.round((finalStats?.accuracy || 0) * 100)}%</span>
                         </div>
-                        <div style={styles.statRow}>
-                            <span>Max Difficulty Achieved</span>
-                            <span style={{ ...styles.statVal, color: '#38bdf8' }}>Level {finalStats?.difficultyLevel}</span>
+                        <div className='stat-row'>
+                            <span>📈 Max Difficulty Achieved</span>
+                            <span className="stat-val" style={{ color: '#38bdf8'  }}>Level {finalStats?.difficultyLevel}</span>
                         </div>
                     </div>
 
@@ -425,7 +425,7 @@ const handleRestart = () => {
 
                     <button 
                         onClick={handleRestart}
-                        style={styles.button}
+                        className='premium-button'
                         onMouseOver={(e) => e.target.style.filter = 'brightness(1.1)'}
                         onMouseOut={(e) => e.target.style.filter = 'brightness(1.0)'}
                     >

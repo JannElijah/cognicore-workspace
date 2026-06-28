@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { CogniTheme } from '../utils/theme';
 import BaseCognitiveScene from './BaseCognitiveScene';
 import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
@@ -61,51 +62,47 @@ export default class NeuralNBackScene extends BaseCognitiveScene {
         const height = this.scale.height;
 
         // Dark gradient background (Indigo/blue-grey theme)
-        const bg = this.add.graphics();
-        bg.fillGradientStyle(0x0f172a, 0x0f172a, 0x1e1b4b, 0x1e1b4b, 1);
-        bg.fillRect(0, 0, width, height);
-
-        // Tech grid lines decoration
+        this.createStandardBackground();// Tech grid lines decoration
         const grid = this.add.grid(width / 2, height / 2, width, height, 80, 80, 0x000000, 0, 0x3b82f6, 0.03);
         grid.setOrigin(0.5);
 
         // HUD Text
         this.scoreText = this.add.text(20, 20, 'SCORE: 0', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
             fill: '#38bdf8' // light blue
         });
 
         this.nValText = this.add.text(20, 50, `TARGET: ${this.nValue}-BACK`, {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '18px',
             fontWeight: 'bold',
             fill: '#a855f7' // purple
         });
 
         this.accuracyText = this.add.text(20, 80, 'ACCURACY: 100%', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '14px',
             fill: '#94a3b8'
         });
 
         this.difficultyText = this.add.text(width - 20, 20, `DIFFICULTY: LEVEL ${this.difficultyLevel}`, {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
             fill: '#38bdf8'
         }).setOrigin(1, 0);
 
         this.timerText = this.add.text(width / 2, 20, '00:45', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '32px',
             fontWeight: 'bold',
             fill: '#ffffff'
         }).setOrigin(0.5, 0);
 
         this.statusText = this.add.text(width / 2, 110, 'MATCH VISUAL POSITIONS IN SEQUENCE!', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '18px',
             fontWeight: '800',
             fill: '#e2e8f0',
@@ -149,7 +146,7 @@ export default class NeuralNBackScene extends BaseCognitiveScene {
         this.matchBtnBg.setInteractive(new Phaser.Geom.Rectangle(width / 2 - 120, 480, 240, 50), Phaser.Geom.Rectangle.Contains);
 
         this.matchBtnText = this.add.text(width / 2, 505, 'TAP TO MATCH', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '18px',
             fontWeight: 'bold',
             fill: '#ffffff'
@@ -317,7 +314,19 @@ export default class NeuralNBackScene extends BaseCognitiveScene {
 
         if (isMatch) {
             // Hit (Correct match response)
-            this.hits++;
+
+            if (this.showParticleBurst) {
+                const px = this.input.activePointer.x || this.scale.width / 2;
+                const py = this.input.activePointer.y || this.scale.height / 2;
+                this.showParticleBurst(px, py, 0x38bdf8);
+            }
+    
+        if (this.showParticleBurst) {
+            const px = this.input.activePointer.x || this.scale.width / 2;
+            const py = this.input.activePointer.y || this.scale.height / 2;
+            this.showParticleBurst(px, py, 0x38bdf8);
+        }
+        this.hits++;
             const points = 100 * this.difficultyLevel + Math.max(0, Math.round((this.stepDelay - solveTime) / 10));
             this.score += points;
             this.showFloatingFeedback(`+${points} MATCH!`, '#10b981');

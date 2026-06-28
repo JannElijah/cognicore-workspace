@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { CogniTheme } from '../utils/theme';
 import BaseCognitiveScene from './BaseCognitiveScene';
 import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
@@ -56,11 +57,7 @@ export default class SequenceDecoderScene extends BaseCognitiveScene {
         const H = this.scale.height;
 
         // ── Background: deep teal-navy gradient
-        const bg = this.add.graphics();
-        bg.fillGradientStyle(0x020617, 0x020617, 0x0c1a2e, 0x0c1a2e, 1);
-        bg.fillRect(0, 0, W, H);
-
-        // Subtle dot-grid overlay
+        this.createStandardBackground();// Subtle dot-grid overlay
         const dots = this.add.graphics();
         for (let x = 20; x < W; x += 40) {
             for (let y = 20; y < H; y += 40) {
@@ -71,28 +68,28 @@ export default class SequenceDecoderScene extends BaseCognitiveScene {
 
         // ── HUD
         this.scoreText = this.add.text(20, 18, 'SCORE: 0', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '22px', fontWeight: 'bold', fill: '#06b6d4'
         });
 
         this.accuracyText = this.add.text(20, 46, 'ACCURACY: 100%', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '15px', fill: '#94a3b8'
         });
 
         this.difficultyText = this.add.text(W - 20, 18,
             `DIFFICULTY: LEVEL ${this.difficultyLevel}`, {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '22px', fontWeight: 'bold', fill: '#a78bfa'
         }).setOrigin(1, 0);
 
         this.timerText = this.add.text(W / 2, 18, '01:00', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '30px', fontWeight: 'bold', fill: '#ffffff'
         }).setOrigin(0.5, 0);
 
         this.statusText = this.add.text(W / 2, 82, 'FIND THE PATTERN!', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '18px', fontWeight: '800', fill: '#e2e8f0',
             letterSpacing: '0.08em'
         }).setOrigin(0.5, 0);
@@ -106,7 +103,7 @@ export default class SequenceDecoderScene extends BaseCognitiveScene {
 
         // ── Pattern hint label (shows rule type at level 1 briefly)
         this.patternHintText = this.add.text(W / 2, 135, '', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '13px', fill: '#475569'
         }).setOrigin(0.5, 0);
 
@@ -119,7 +116,7 @@ export default class SequenceDecoderScene extends BaseCognitiveScene {
 
         // ── Instruction text below sequence
         this.instructionText = this.add.text(W / 2, 382, 'Select the value that correctly continues the pattern:', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '14px', fill: '#64748b'
         }).setOrigin(0.5, 0);
 
@@ -417,7 +414,7 @@ export default class SequenceDecoderScene extends BaseCognitiveScene {
             // Tile value text
             const label = isMissing ? '?' : val.toString();
             const txt = this.add.text(tileX + TILE_W / 2, centerY, label, {
-                fontFamily: 'Outfit, system-ui, sans-serif',
+                fontFamily: CogniTheme.fonts.body,
                 fontSize: isMissing ? '36px' : (label.length > 4 ? '18px' : '28px'),
                 fontWeight: 'bold',
                 fill: isMissing ? '#06b6d4' : '#e2e8f0'
@@ -428,7 +425,7 @@ export default class SequenceDecoderScene extends BaseCognitiveScene {
             if (idx < n - 1) {
                 const arrowX = tileX + TILE_W + GAP / 2;
                 const arrow = this.add.text(arrowX, centerY, '→', {
-                    fontFamily: 'system-ui, sans-serif',
+                    fontFamily: CogniTheme.fonts.body,
                     fontSize: '18px',
                     fill: '#334155'
                 }).setOrigin(0.5);
@@ -488,7 +485,7 @@ export default class SequenceDecoderScene extends BaseCognitiveScene {
             this.optionContainer.add(bg);
 
             const txt = this.add.text(x + BTN_W / 2, ROW_Y + BTN_H / 2, val.toString(), {
-                fontFamily: 'Outfit, system-ui, sans-serif',
+                fontFamily: CogniTheme.fonts.body,
                 fontSize: val.toString().length > 5 ? '16px' : '24px',
                 fontWeight: 'bold',
                 fill: '#cbd5e1'
@@ -582,6 +579,7 @@ export default class SequenceDecoderScene extends BaseCognitiveScene {
             this.showFloatingFeedback(`+${roundScore} PATTERN SOLVED!`, '#10b981');
             this.statusText.setText('PATTERN IDENTIFIED!').setFill('#10b981');
             this.cameras.main.flash(100, 6, 182, 212, 0.12);
+            this.showParticleBurst(this.input.activePointer.x, this.input.activePointer.y, 0xf59e0b);
 
             this.updateHUD();
             this.dispatchRoundTelemetry(solveTime, 1.0);

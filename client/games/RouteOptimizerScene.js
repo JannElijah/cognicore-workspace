@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { CogniTheme } from '../utils/theme';
 import BaseCognitiveScene from './BaseCognitiveScene';
 import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
@@ -133,11 +134,7 @@ export default class RouteOptimizerScene extends BaseCognitiveScene {
         const H = this.scale.height;
 
         // Background – dark green-navy gradient
-        const bg = this.add.graphics();
-        bg.fillGradientStyle(0x020617, 0x020617, 0x041a0d, 0x041a0d, 1);
-        bg.fillRect(0, 0, W, H);
-
-        // Dot grid
+        this.createStandardBackground();// Dot grid
         const dots = this.add.graphics();
         for (let x = 35; x < W; x += 55) {
             for (let y = 35; y < H; y += 55) {
@@ -148,24 +145,24 @@ export default class RouteOptimizerScene extends BaseCognitiveScene {
 
         // ── HUD
         this.scoreText = this.add.text(20, 18, 'SCORE: 0', {
-            fontFamily: 'system-ui, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '22px', fontWeight: 'bold', fill: '#22c55e'
         });
         this.accuracyText = this.add.text(20, 46, 'ACCURACY: 100%', {
-            fontFamily: 'system-ui, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '15px', fill: '#94a3b8'
         });
         this.difficultyText = this.add.text(W - 20, 18,
             `DIFFICULTY: LEVEL ${this.difficultyLevel}`, {
-            fontFamily: 'system-ui, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '22px', fontWeight: 'bold', fill: '#a78bfa'
         }).setOrigin(1, 0);
         this.timerText = this.add.text(W / 2, 18, '01:30', {
-            fontFamily: 'system-ui, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '30px', fontWeight: 'bold', fill: '#ffffff'
         }).setOrigin(0.5, 0);
         this.statusText = this.add.text(W / 2, 76, 'FIND THE CHEAPEST ROUTE!', {
-            fontFamily: 'system-ui, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '17px', fontWeight: '800', fill: '#e2e8f0'
         }).setOrigin(0.5, 0);
 
@@ -177,7 +174,7 @@ export default class RouteOptimizerScene extends BaseCognitiveScene {
 
         // Cost / route display
         this.costLabel = this.add.text(W / 2, 506, 'ROUTE: S   |   COST: 0', {
-            fontFamily: 'system-ui, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '15px', fontWeight: '600', fill: '#22c55e'
         }).setOrigin(0.5, 0);
 
@@ -195,7 +192,7 @@ export default class RouteOptimizerScene extends BaseCognitiveScene {
             this.resetPath();
         });
         this.resetBtnLabel = this.add.text(W / 2, 552, 'RESET PATH', {
-            fontFamily: 'system-ui, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '12px', fontWeight: '700', fill: '#22c55e'
         }).setOrigin(0.5);
 
@@ -396,7 +393,7 @@ export default class RouteOptimizerScene extends BaseCognitiveScene {
             this.graphContainer.add(pill);
 
             const wLbl = this.add.text(mx, my, weight.toString(), {
-                fontFamily: 'system-ui, sans-serif',
+                fontFamily: CogniTheme.fonts.body,
                 fontSize: '13px', fontWeight: '700', fill: '#475569'
             }).setOrigin(0.5);
             this.graphContainer.add(wLbl);
@@ -419,7 +416,7 @@ export default class RouteOptimizerScene extends BaseCognitiveScene {
 
             const textFill = isStart ? '#4ade80' : isEnd ? '#fb923c' : '#94a3b8';
             const lbl = this.add.text(x, y, id, {
-                fontFamily: 'system-ui, sans-serif',
+                fontFamily: CogniTheme.fonts.body,
                 fontSize: '17px', fontWeight: '800', fill: textFill
             }).setOrigin(0.5);
             this.graphContainer.add(lbl);
@@ -427,7 +424,7 @@ export default class RouteOptimizerScene extends BaseCognitiveScene {
             if (isStart || isEnd) {
                 const roleLbl = this.add.text(x, y + NODE_RADIUS + 9,
                     isStart ? 'START' : 'END', {
-                    fontFamily: 'system-ui, sans-serif',
+                    fontFamily: CogniTheme.fonts.body,
                     fontSize: '9px', fontWeight: '700',
                     fill: isStart ? '#22c55e' : '#f97316'
                 }).setOrigin(0.5, 0);
@@ -609,7 +606,19 @@ export default class RouteOptimizerScene extends BaseCognitiveScene {
         if (ratio === 1.0) {
             // ✅ Perfect — found the exact optimal route
             isHit = true;
-            this.hits++;
+
+            if (this.showParticleBurst) {
+                const px = this.input.activePointer.x || this.scale.width / 2;
+                const py = this.input.activePointer.y || this.scale.height / 2;
+                this.showParticleBurst(px, py, 0x4ade80);
+            }
+    
+        if (this.showParticleBurst) {
+            const px = this.input.activePointer.x || this.scale.width / 2;
+            const py = this.input.activePointer.y || this.scale.height / 2;
+            this.showParticleBurst(px, py, 0x4ade80);
+        }
+        this.hits++;
             const timeBonus = Math.max(0, Math.round((this.roundTimeLimit - solveTime) / 100));
             scorePoints = 160 * this.difficultyLevel + timeBonus;
             this._showFloat(`+${scorePoints}  OPTIMAL ROUTE!  (COST: ${pCost})`, '#4ade80');

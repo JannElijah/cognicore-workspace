@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { CogniTheme } from '../utils/theme';
 import BaseCognitiveScene from './BaseCognitiveScene';
 import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
@@ -74,36 +75,33 @@ export default class RuleShifterScene extends BaseCognitiveScene {
     }
 
     create() {
+        this.setupPauseHandling();
         const W = this.scale.width;
         const H = this.scale.height;
 
         // 1. Dark purple-navy gradient background
-        const bg = this.add.graphics();
-        bg.fillGradientStyle(0x02020a, 0x02020a, 0x0c071a, 0x0c071a, 1);
-        bg.fillRect(0, 0, W, H);
-
-        // Cyber Grid Lines
+        this.createStandardBackground();// Cyber Grid Lines
         const grid = this.add.grid(W / 2, H / 2, W, H, 80, 80, 0x000000, 0, 0xa855f7, 0.02);
         grid.setOrigin(0.5);
 
         // 2. HUD Setup
         this.scoreText = this.add.text(20, 18, 'SCORE: 0', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '22px', fontWeight: 'bold', fill: '#a855f7'
         });
 
         this.accuracyText = this.add.text(20, 46, 'ACCURACY: 100%', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '15px', fill: '#94a3b8'
         });
 
         this.difficultyText = this.add.text(W - 20, 18, `DIFFICULTY: LEVEL ${this.difficultyLevel}`, {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '22px', fontWeight: 'bold', fill: '#c084fc'
         }).setOrigin(1, 0);
 
         this.timerText = this.add.text(W / 2, 18, '01:00', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '30px', fontWeight: 'bold', fill: '#ffffff'
         }).setOrigin(0.5, 0);
 
@@ -115,12 +113,12 @@ export default class RuleShifterScene extends BaseCognitiveScene {
         rPanelBg.strokeRoundedRect(W / 2 - 200, 80, 400, 42, 8);
 
         this.rulePanelText = this.add.text(W / 2, 101, 'RULE: MATCH COLOR', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '16px', fontWeight: '800', fill: '#c084fc', letterSpacing: '0.05em'
         }).setOrigin(0.5);
 
         this.statusText = this.add.text(W / 2, 136, 'CHOOSE THE CORRECT MATCH CARD BELOW', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '13px', fontWeight: '600', fill: '#64748b'
         }).setOrigin(0.5, 0);
 
@@ -354,6 +352,8 @@ export default class RuleShifterScene extends BaseCognitiveScene {
     handleCardSelection(choiceCard) {
         this.registerFirstInteraction();
         this.selectedChoiceCard = choiceCard;
+        this.currentReactionTime = this.time.now - this.stimulusSpawnTime;
+        this.confidenceModalStartTime = this.time.now;
 
         // Visual feedback selection outline
         choiceCard.cardBg.clear();
@@ -378,13 +378,16 @@ export default class RuleShifterScene extends BaseCognitiveScene {
         this.confidenceModal.setActive(false);
         this.totalAttempts++;
 
+        const modalDuration = this.time.now - this.confidenceModalStartTime;
+        this.roundStartTime += modalDuration;
+
         const isCorrect = this._isMatch(
             this.queryCard.cardData,
             this.selectedChoiceCard.cardData,
             this.currentRule
         );
 
-        const latency = this.time.now - this.stimulusSpawnTime;
+        const latency = this.currentReactionTime;
         let points = 0;
 
         if (level === 'HIGH') {
@@ -394,6 +397,7 @@ export default class RuleShifterScene extends BaseCognitiveScene {
                 this.hits++;
                 this.statusText.setText('HIGH CONFIDENCE SUCCESS!').setFill('#22c55e');
                 this.cameras.main.flash(120, 34, 197, 94, 0.1);
+                this.showParticleBurst(this.input.activePointer.x, this.input.activePointer.y, 0xa855f7);
             } else {
                 points = -100;
                 this.misses++;
@@ -504,7 +508,7 @@ export default class RuleShifterScene extends BaseCognitiveScene {
         this.confidenceModal.add(plate);
 
         const heading = this.add.text(0, -38, 'CONFIDENCE LEVEL?', {
-            fontFamily: 'system-ui, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '11px', fontWeight: '800', fill: '#a855f7'
         }).setOrigin(0.5);
         this.confidenceModal.add(heading);
@@ -519,7 +523,7 @@ export default class RuleShifterScene extends BaseCognitiveScene {
         this.confidenceModal.add(btnHigh);
 
         const txtHigh = this.add.text(-50, 3, 'HIGH\n+200 / -100', {
-            fontFamily: 'system-ui, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '10px', fontWeight: '700', fill: '#ffffff', align: 'center'
         }).setOrigin(0.5);
         this.confidenceModal.add(txtHigh);
@@ -534,7 +538,7 @@ export default class RuleShifterScene extends BaseCognitiveScene {
         this.confidenceModal.add(btnLow);
 
         const txtLow = this.add.text(50, 3, 'LOW\n+50 / -10', {
-            fontFamily: 'system-ui, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '10px', fontWeight: '700', fill: '#ffffff', align: 'center'
         }).setOrigin(0.5);
         this.confidenceModal.add(txtLow);
@@ -585,7 +589,7 @@ export default class RuleShifterScene extends BaseCognitiveScene {
 
     _showFloat(text, x, y, color) {
         const ft = this.add.text(x, y, text, {
-            fontFamily: 'system-ui, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '18px', fontWeight: 'bold', fill: color
         }).setOrigin(0.5);
 

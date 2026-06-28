@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { audioDda } from '../utils/audioSynth';
 
-export default function LiveDdaHud({ gameType = 'Game', ddaParameters, cognitiveProfile, liveMetrics = [], advisorLogs = [], isMuted = false, onToggleMute }) {
+const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, cognitiveProfile, liveMetrics = [], advisorLogs = [], isMuted = false, onToggleMute }) {
     const handleToggleMute = onToggleMute;
 
     // Determine archetype details
@@ -181,6 +181,24 @@ export default function LiveDdaHud({ gameType = 'Game', ddaParameters, cognitive
                             transition: 'all 0.3s ease'
                         }} />
                     ))}
+                </div>
+            </div>
+
+            {/* Confidence Visualizer */}
+            <div style={{ marginBottom: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.35rem' }}>
+                    <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: '600' }}>DECISION CONFIDENCE</span>
+                    <span style={{ fontSize: '1.05rem', color: '#38bdf8', fontWeight: '900' }}>{confidence}%</span>
+                </div>
+                <div style={{ display: 'flex', gap: '4px', width: '100%', height: '8px', position: 'relative', overflow: 'hidden', borderRadius: '4px' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(255,255,255,0.05)' }} />
+                    <div style={{
+                        position: 'absolute', top: 0, left: 0, height: '100%',
+                        width: `${confidence}%`,
+                        background: 'linear-gradient(90deg, rgba(56, 189, 248, 0.2), #38bdf8)',
+                        transition: 'width 0.5s ease-out',
+                        boxShadow: '0 0 8px rgba(56, 189, 248, 0.4)'
+                    }} />
                 </div>
             </div>
 
@@ -408,4 +426,6 @@ export default function LiveDdaHud({ gameType = 'Game', ddaParameters, cognitive
             )}
         </div>
     );
-}
+});
+
+export default LiveDdaHud;

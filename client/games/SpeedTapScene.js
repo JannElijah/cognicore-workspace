@@ -12,6 +12,7 @@
  * ================================================================================
  */
 import Phaser from 'phaser';
+import { CogniTheme } from '../utils/theme';
 import BaseCognitiveScene from './BaseCognitiveScene';
 import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
@@ -115,37 +116,33 @@ export default class SpeedTapScene extends BaseCognitiveScene {
         const height = this.scale.height;
 
         // 1. Sleek Background with Gradient (Premium Tech Look)
-        const bg = this.add.graphics();
-        bg.fillGradientStyle(0x0f172a, 0x0f172a, 0x1e1b4b, 0x1e1b4b, 1);
-        bg.fillRect(0, 0, width, height);
-
-        // Grid lines for high-tech aesthetic
+        this.createStandardBackground();// Grid lines for high-tech aesthetic
         const grid = this.add.grid(width / 2, height / 2, width, height, 80, 80, 0x000000, 0, 0x3b82f6, 0.03);
         grid.setOrigin(0.5);
 
         // 2. HUD Setup (Glassmorphism inspired styling)
         this.scoreText = this.add.text(20, 20, 'SCORE: 0', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
             fill: '#38bdf8'
         });
 
         this.accuracyText = this.add.text(20, 50, 'ACCURACY: 100%', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '16px',
             fill: '#94a3b8'
         });
 
         this.difficultyText = this.add.text(width - 20, 20, `DIFFICULTY: LEVEL ${this.difficultyLevel}`, {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
             fill: '#a855f7'
         }).setOrigin(1, 0);
 
         this.timerText = this.add.text(width / 2, 20, '00:30', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '32px',
             fontWeight: 'bold',
             fill: '#ffffff'
@@ -303,7 +300,19 @@ export default class SpeedTapScene extends BaseCognitiveScene {
             this.removeTarget(container);
         } else {
             // Successful Hit
-            this.hits++;
+
+            if (this.showParticleBurst) {
+                const px = this.input.activePointer.x || this.scale.width / 2;
+                const py = this.input.activePointer.y || this.scale.height / 2;
+                this.showParticleBurst(px, py, 0xa855f7);
+            }
+    
+        if (this.showParticleBurst) {
+            const px = this.input.activePointer.x || this.scale.width / 2;
+            const py = this.input.activePointer.y || this.scale.height / 2;
+            this.showParticleBurst(px, py, 0xa855f7);
+        }
+        this.hits++;
             this.consecutiveHits++;
             
             const reactionTime = this.time.now - container.getData('spawnTime');
@@ -361,7 +370,7 @@ export default class SpeedTapScene extends BaseCognitiveScene {
 
     showFloatingText(x, y, text, color) {
         const txt = this.add.text(x, y - 20, text, {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '18px',
             fontWeight: 'bold',
             fill: color

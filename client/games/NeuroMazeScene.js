@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { CogniTheme } from '../utils/theme';
 import BaseCognitiveScene from './BaseCognitiveScene';
 import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
@@ -55,55 +56,52 @@ export default class NeuroMazeScene extends BaseCognitiveScene {
     }
 
     create() {
+        this.setupPauseHandling();
         const width = this.scale.width;
         const height = this.scale.height;
 
         // Dark gradient tech-cyber background (emerald/teal green theme)
-        const bg = this.add.graphics();
-        bg.fillGradientStyle(0x021e17, 0x021e17, 0x09090b, 0x09090b, 1);
-        bg.fillRect(0, 0, width, height);
-
-        // Tech grid lines decoration
+        this.createStandardBackground();// Tech grid lines decoration
         const grid = this.add.grid(width / 2, height / 2, width, height, 80, 80, 0x000000, 0, 0x10b981, 0.03);
         grid.setOrigin(0.5);
 
         // HUD Elements
         this.scoreText = this.add.text(20, 20, 'SCORE: 0', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
             fill: '#10b981' // emerald green
         });
 
         this.movesText = this.add.text(20, 50, `ENERGY MOVES: ${this.movesLeft}`, {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '18px',
             fontWeight: 'bold',
             fill: '#06b6d4' // cyan
         });
 
         this.accuracyText = this.add.text(20, 80, 'SUCCESS RATE: 100%', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '14px',
             fill: '#94a3b8'
         });
 
         this.difficultyText = this.add.text(width - 20, 20, `DIFFICULTY: LEVEL ${this.difficultyLevel}`, {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
             fill: '#10b981'
         }).setOrigin(1, 0);
 
         this.timerText = this.add.text(width / 2, 20, '00:45', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '32px',
             fontWeight: 'bold',
             fill: '#ffffff'
         }).setOrigin(0.5, 0);
 
         this.statusText = this.add.text(width / 2, 90, 'NAVIGATE THE NEURAL NETWORK!', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '20px',
             fontWeight: '800',
             fill: '#e2e8f0',
@@ -292,7 +290,7 @@ export default class NeuroMazeScene extends BaseCognitiveScene {
                 }
 
                 const label = this.add.text(x, y, labelText, {
-                    fontFamily: 'system-ui, sans-serif',
+                    fontFamily: CogniTheme.fonts.body,
                     fontSize: `${cellSize * 0.22}px`,
                     fontWeight: 'bold',
                     fill: '#000000'
@@ -470,6 +468,12 @@ export default class NeuroMazeScene extends BaseCognitiveScene {
 
     handleSuccessfulEscape() {
         this.gamePhase = 'FEEDBACK';
+
+        if (this.showParticleBurst) {
+            const px = this.input.activePointer.x || this.scale.width / 2;
+            const py = this.input.activePointer.y || this.scale.height / 2;
+            this.showParticleBurst(px, py, 0x4ade80);
+        }
         this.hits++;
         this.totalAttempts++;
 

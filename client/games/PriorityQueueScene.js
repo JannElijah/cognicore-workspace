@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { CogniTheme } from '../utils/theme';
 import BaseCognitiveScene from './BaseCognitiveScene';
 import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
@@ -100,11 +101,7 @@ export default class PriorityQueueScene extends BaseCognitiveScene {
         const H = this.scale.height;
 
         // Background
-        const bg = this.add.graphics();
-        bg.fillGradientStyle(0x020209, 0x020209, 0x0a0515, 0x0a0515, 1);
-        bg.fillRect(0, 0, W, H);
-
-        // Subtle grid
+        this.createStandardBackground();// Subtle grid
         this.add.grid(W / 2, H / 2, W, H, 64, 64, 0, 0, 0x16a34a, 0.025).setOrigin(0.5);
 
         // ── Belt track ──────────────────────────────────────
@@ -126,24 +123,24 @@ export default class PriorityQueueScene extends BaseCognitiveScene {
 
         // ── HUD ─────────────────────────────────────────────
         this.scoreText = this.add.text(20, 16, 'SCORE: 0', {
-            fontFamily: 'system-ui, sans-serif', fontSize: '22px',
+            fontFamily: CogniTheme.fonts.body, fontSize: '22px',
             fontStyle: 'bold', fill: '#22c55e'
         });
         this.accText = this.add.text(20, 44, 'ACCURACY: 100%', {
-            fontFamily: 'system-ui, sans-serif', fontSize: '14px', fill: '#94a3b8'
+            fontFamily: CogniTheme.fonts.body, fontSize: '14px', fill: '#94a3b8'
         });
         this.diffText = this.add.text(W - 18, 16, `DIFFICULTY: LVL ${this.difficultyLevel}`, {
-            fontFamily: 'system-ui, sans-serif', fontSize: '22px',
+            fontFamily: CogniTheme.fonts.body, fontSize: '22px',
             fontStyle: 'bold', fill: '#4ade80'
         }).setOrigin(1, 0);
 
         this.timerText = this.add.text(W / 2, 16, '01:15', {
-            fontFamily: 'system-ui, sans-serif', fontSize: '30px',
+            fontFamily: CogniTheme.fonts.body, fontSize: '30px',
             fontStyle: 'bold', fill: '#ffffff'
         }).setOrigin(0.5, 0);
 
         this.statusText = this.add.text(W / 2, this.beltY - 52, 'DRAG TASKS INTO THE CORRECT BIN', {
-            fontFamily: 'system-ui, sans-serif', fontSize: '12px',
+            fontFamily: CogniTheme.fonts.body, fontSize: '12px',
             fontStyle: '700', fill: '#4b5563', letterSpacing: '0.08em'
         }).setOrigin(0.5);
 
@@ -211,7 +208,7 @@ export default class PriorityQueueScene extends BaseCognitiveScene {
         warnG.fillStyle(0xef4444, 0.06);
         warnG.fillRect(0, beltY - trackH / 2, 55, trackH);
         this.add.text(28, beltY, 'MISS\nZONE', {
-            fontFamily: 'system-ui, sans-serif', fontSize: '9px',
+            fontFamily: CogniTheme.fonts.body, fontSize: '9px',
             fill: '#ef4444', align: 'center'
         }).setOrigin(0.5);
     }
@@ -229,13 +226,13 @@ export default class PriorityQueueScene extends BaseCognitiveScene {
         container.add(bg);
 
         const label = this.add.text(0, -16, cfg.label, {
-            fontFamily: 'system-ui, sans-serif', fontSize: '13px',
+            fontFamily: CogniTheme.fonts.body, fontSize: '13px',
             fontStyle: 'bold', fill: `#${cfg.color.toString(16).padStart(6, '0')}`
         }).setOrigin(0.5);
         container.add(label);
 
         const sub = this.add.text(0, 8, cfg.sublabel, {
-            fontFamily: 'system-ui, sans-serif', fontSize: '10px', fill: '#475569'
+            fontFamily: CogniTheme.fonts.body, fontSize: '10px', fill: '#475569'
         }).setOrigin(0.5);
         container.add(sub);
 
@@ -369,7 +366,7 @@ export default class PriorityQueueScene extends BaseCognitiveScene {
         const catLabel = this.ambiguityLevel >= 1
             ? '???' : task.cat;
         const catText = this.add.text(0, -cardH / 2 + 15, catLabel, {
-            fontFamily: 'system-ui, sans-serif', fontSize: '9px',
+            fontFamily: CogniTheme.fonts.body, fontSize: '9px',
             fontStyle: 'bold', fill: `#${cfg.color.toString(16).padStart(6, '0')}`
         }).setOrigin(0.5);
         container.add(catText);
@@ -382,7 +379,7 @@ export default class PriorityQueueScene extends BaseCognitiveScene {
 
         // Task label
         const taskLabel = this.add.text(0, 26, task.label, {
-            fontFamily: 'system-ui, sans-serif', fontSize: '10px',
+            fontFamily: CogniTheme.fonts.body, fontSize: '10px',
             fontStyle: '600', fill: '#cbd5e1', wordWrap: { width: cardW - 12 },
             align: 'center'
         }).setOrigin(0.5, 0);
@@ -537,7 +534,19 @@ export default class PriorityQueueScene extends BaseCognitiveScene {
         this._removeCard(card);
 
         if (isCorrect) {
-            this.hits++;
+
+            if (this.showParticleBurst) {
+                const px = this.input.activePointer.x || this.scale.width / 2;
+                const py = this.input.activePointer.y || this.scale.height / 2;
+                this.showParticleBurst(px, py, 0x4ade80);
+            }
+    
+        if (this.showParticleBurst) {
+            const px = this.input.activePointer.x || this.scale.width / 2;
+            const py = this.input.activePointer.y || this.scale.height / 2;
+            this.showParticleBurst(px, py, 0x4ade80);
+        }
+        this.hits++;
             const speedBonus = Math.max(0, Math.round((8000 - reactionTime) / 25));
             const points = 120 + speedBonus;
             this.score += points;
@@ -603,7 +612,7 @@ export default class PriorityQueueScene extends BaseCognitiveScene {
 
     _floatText(text, x, y, color) {
         const t = this.add.text(x, y, text, {
-            fontFamily: 'system-ui, sans-serif', fontSize: '16px',
+            fontFamily: CogniTheme.fonts.body, fontSize: '16px',
             fontStyle: 'bold', fill: color
         }).setOrigin(0.5).setDepth(20);
         this.tweens.add({

@@ -330,10 +330,10 @@ const handleRestart = () => {
     // ── IDLE screen
     if (gameState === 'IDLE') {
         return (
-            <div style={styles.overlay}>
-                <div style={styles.card}>
-                    <h1 style={styles.title}>SEQUENCE DECODER</h1>
-                    <p style={styles.subtitle}>Inductive Pattern Reasoning & Rule Abstraction Training</p>
+            <div className='premium-overlay'>
+                <div className='premium-glass-card'>
+                    <h1 className='premium-title'>SEQUENCE DECODER</h1>
+                    <p className='premium-subtitle'>Inductive Pattern Reasoning & Rule Abstraction Training</p>
                     <div style={styles.badge}>🧩 LOGICAL REASONING · PATTERN INDUCTION</div>
 
                     <div style={styles.featureGrid}>
@@ -370,7 +370,7 @@ const handleRestart = () => {
 
                     <button
                         onClick={startTrainingSession}
-                        style={styles.button}
+                        className='premium-button'
                         onMouseOver={e => e.target.style.filter = 'brightness(1.12)'}
                         onMouseOut={e => e.target.style.filter = 'brightness(1.0)'}
                     >
@@ -384,8 +384,8 @@ const handleRestart = () => {
     // ── LOADING screen
     if (gameState === 'LOADING') {
         return (
-            <div style={styles.overlay}>
-                <div style={styles.card}>
+            <div className='premium-overlay'>
+                <div className='premium-glass-card'>
                     <div style={{
                         width: '42px', height: '42px',
                         border: '4px solid rgba(6,182,212,0.15)',
@@ -418,40 +418,40 @@ const handleRestart = () => {
         const grade = accuracy >= 80 ? '#4ade80' : accuracy >= 50 ? '#f59e0b' : '#ef4444';
 
         return (
-            <div style={styles.overlay}>
-                <div style={styles.card}>
+            <div className='premium-overlay'>
+                <div className='premium-glass-card'>
                     <h1 style={{
                         ...styles.title,
                         background: 'linear-gradient(to right, #4ade80, #06b6d4)',
                         WebkitBackgroundClip: 'text',
                         backgroundClip: 'text'
                     }}>SESSION COMPLETE</h1>
-                    <p style={styles.subtitle}>Pattern induction telemetry synced to database.</p>
+                    <p className='premium-subtitle'>Pattern induction telemetry synced to database.</p>
 
                     <div style={{ marginBottom: '2rem', textAlign: 'left' }}>
-                        <div style={styles.statRow}>
-                            <span>Final Score</span>
-                            <span style={{ ...styles.statVal, color: '#4ade80' }}>{finalStats?.score}</span>
+                        <div className='stat-row'>
+                            <span>🏆 Final Score</span>
+                            <span className="stat-val" style={{ color: '#4ade80'  }}>{finalStats?.score}</span>
                         </div>
-                        <div style={styles.statRow}>
-                            <span>Patterns Decoded</span>
-                            <span style={styles.statVal}>{finalStats?.hits}</span>
+                        <div className='stat-row'>
+                            <span>✅ Patterns Decoded</span>
+                            <span className='stat-val'>{finalStats?.hits}</span>
                         </div>
-                        <div style={styles.statRow}>
-                            <span>Pattern Errors</span>
-                            <span style={{ ...styles.statVal, color: '#ef4444' }}>{finalStats?.misses}</span>
+                        <div className='stat-row'>
+                            <span>❌ Pattern Errors</span>
+                            <span className="stat-val" style={{ color: '#ef4444'  }}>{finalStats?.misses}</span>
                         </div>
-                        <div style={styles.statRow}>
-                            <span>Induction Accuracy</span>
-                            <span style={{ ...styles.statVal, color: grade }}>{accuracy}%</span>
+                        <div className='stat-row'>
+                            <span>🎯 Induction Accuracy</span>
+                            <span className="stat-val" style={{ color: grade  }}>{accuracy}%</span>
                         </div>
-                        <div style={styles.statRow}>
-                            <span>Max Difficulty Achieved</span>
-                            <span style={{ ...styles.statVal, color: '#a78bfa' }}>Level {finalStats?.difficultyLevel}</span>
+                        <div className='stat-row'>
+                            <span>📈 Max Difficulty Achieved</span>
+                            <span className="stat-val" style={{ color: '#a78bfa'  }}>Level {finalStats?.difficultyLevel}</span>
                         </div>
                         <div style={{ ...styles.statRow, border: 'none' }}>
-                            <span>First Response Latency</span>
-                            <span style={{ ...styles.statVal, color: '#38bdf8' }}>
+                            <span>⚡ First Response Latency</span>
+                            <span className="stat-val" style={{ color: '#38bdf8'  }}>
                                 {finalStats?.hesitation_ms ? `${Math.round(finalStats.hesitation_ms)}ms` : 'N/A'}
                             </span>
                         </div>
@@ -473,7 +473,7 @@ const handleRestart = () => {
 
                     <button
                         onClick={handleRestart}
-                        style={styles.button}
+                        className='premium-button'
                         onMouseOver={e => e.target.style.filter = 'brightness(1.12)'}
                         onMouseOut={e => e.target.style.filter = 'brightness(1.0)'}
                     >

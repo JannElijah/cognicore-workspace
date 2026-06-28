@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { CogniTheme } from '../utils/theme';
 import BaseCognitiveScene from './BaseCognitiveScene';
 import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
@@ -53,44 +54,40 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
         const height = this.scale.height;
 
         // Gradient dark violet/navy background
-        const bg = this.add.graphics();
-        bg.fillGradientStyle(0x09090b, 0x09090b, 0x111827, 0x111827, 1);
-        bg.fillRect(0, 0, width, height);
-
-        // Circular background grid overlay
+        this.createStandardBackground();// Circular background grid overlay
         const grid = this.add.grid(width / 2, height / 2, width, height, 60, 60, 0x000000, 0, 0xf59e0b, 0.02);
         grid.setOrigin(0.5);
 
         // HUD Elements
         this.scoreText = this.add.text(20, 20, 'SCORE: 0', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
             fill: '#f59e0b' // gold color for math logic theme
         });
 
         this.accuracyText = this.add.text(20, 50, 'ACCURACY: 100%', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '16px',
             fill: '#94a3b8'
         });
 
         this.difficultyText = this.add.text(width - 20, 20, `DIFFICULTY: LEVEL ${this.difficultyLevel}`, {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
             fill: '#a855f7'
         }).setOrigin(1, 0);
 
         this.timerText = this.add.text(width / 2, 20, '00:45', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '32px',
             fontWeight: 'bold',
             fill: '#ffffff'
         }).setOrigin(0.5, 0);
 
         this.statusText = this.add.text(width / 2, 90, 'BALANCE THE EQUATION!', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '20px',
             fontWeight: '800',
             fill: '#e2e8f0',
@@ -469,7 +466,19 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
         const btnHeight = bg.geom ? bg.geom.height : 65;
 
         if (isCorrect) {
-            this.hits++;
+
+            if (this.showParticleBurst) {
+                const px = this.input.activePointer.x || this.scale.width / 2;
+                const py = this.input.activePointer.y || this.scale.height / 2;
+                this.showParticleBurst(px, py, 0xf59e0b);
+            }
+    
+        if (this.showParticleBurst) {
+            const px = this.input.activePointer.x || this.scale.width / 2;
+            const py = this.input.activePointer.y || this.scale.height / 2;
+            this.showParticleBurst(px, py, 0xf59e0b);
+        }
+        this.hits++;
             this.totalAttempts++;
 
             // Visual feedback: Green fill

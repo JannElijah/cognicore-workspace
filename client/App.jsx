@@ -52,6 +52,18 @@ ChartJS.register(
   ScatterController
 );
 
+ChartJS.defaults.color = '#94a3b8';
+ChartJS.defaults.font.family = 'system-ui, -apple-system, sans-serif';
+ChartJS.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 23, 42, 0.95)';
+ChartJS.defaults.plugins.tooltip.titleColor = '#f8fafc';
+ChartJS.defaults.plugins.tooltip.bodyColor = '#e2e8f0';
+ChartJS.defaults.plugins.tooltip.borderColor = 'rgba(56, 189, 248, 0.3)';
+ChartJS.defaults.plugins.tooltip.borderWidth = 1;
+ChartJS.defaults.plugins.tooltip.padding = 12;
+ChartJS.defaults.plugins.tooltip.cornerRadius = 8;
+ChartJS.defaults.plugins.tooltip.displayColors = true;
+ChartJS.defaults.plugins.tooltip.boxPadding = 6;
+
 const ProgressRing = ({ radius, stroke, progress, color }) => {
   const normalizedRadius = radius - stroke * 2;
   const circumference = normalizedRadius * 2 * Math.PI;
@@ -431,6 +443,36 @@ export default function App() {
   const [selectedGameMode, setSelectedGameMode] = useState('timed');
   const [pendingGameToLaunch, setPendingGameToLaunch] = useState(null);
   const [hoveredMode, setHoveredMode] = useState(null);
+
+  const [appBooting, setAppBooting] = useState(true);
+  const [serverOnline, setServerOnline] = useState(true);
+
+  useEffect(() => {
+    // Fake boot sequence for presentation polish
+    const timer = setTimeout(() => {
+      setAppBooting(false);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    // Poll server health
+    const checkServer = async () => {
+      try {
+        await fetch('http://127.0.0.1:5000/api/evaluate', { 
+          method: 'POST', 
+          body: JSON.stringify({username: 'ping'}), 
+          headers: { 'Content-Type': 'application/json' } 
+        });
+        setServerOnline(true);
+      } catch (e) {
+        setServerOnline(false);
+      }
+    };
+    checkServer();
+    const interval = setInterval(checkServer, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     window.currentGameMode = selectedGameMode;
@@ -2278,6 +2320,31 @@ export default function App() {
 
   return (
     <div className="portal-container" style={{ position: 'relative' }}>
+      {appBooting && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+          background: '#02020a', zIndex: 999999, display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center', color: '#f8fafc', fontFamily: 'system-ui'
+        }}>
+          <div style={{ fontSize: '3rem', marginBottom: '2rem' }}>🧠</div>
+          <div style={{ width: '200px', height: '4px', background: '#1e293b', borderRadius: '4px', overflow: 'hidden' }}>
+            <div style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, #38bdf8, #a855f7)', animation: 'slideRight 1.5s ease-out' }}></div>
+          </div>
+          <p style={{ marginTop: '1rem', color: '#94a3b8', fontSize: '0.9rem', letterSpacing: '0.1em' }}>INITIALIZING COGNICORE NEURAL ENGINE...</p>
+        </div>
+      )}
+      {!serverOnline && !appBooting && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+          background: 'rgba(2, 6, 23, 0.85)', backdropFilter: 'blur(10px)',
+          zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          color: '#f8fafc', fontFamily: 'system-ui'
+        }}>
+          <div style={{ borderTopColor: '#ef4444', borderWidth: 4, borderStyle: 'solid', borderRadius: '50%', width: 50, height: 50, marginBottom: '1rem', animation: 'spin 2s linear infinite' }} />
+          <h2 style={{ letterSpacing: '0.05em' }}>Server Offline</h2>
+          <p style={{ color: '#94a3b8' }}>Awaiting secure telemetry connection to backend server.</p>
+        </div>
+      )}
       {milestoneNotification && (
         <div className="milestone-toast-container" style={{
           position: 'fixed',
@@ -2460,7 +2527,7 @@ export default function App() {
       </header>
 
       {/* Main Container */}
-      <main className="portal-main">
+      <main className="portal-main" key={activeGame ? 'game' : showDashboard ? 'dash' : portalView === 'researcher' ? 'research' : 'select'}>
         {showSoundTuner && (
           <div className="game-card" style={{
             padding: '1.5rem',
@@ -3997,8 +4064,9 @@ export default function App() {
                 <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>📈 Difficulty Adaptation History</h3>
                 <div style={{ position: 'relative', height: '240px', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px', padding: '10px' }}>
                   {chartsLoading ? (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8' }}>
-                      Loading line metrics...
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem', height: '100%' }}>
+                      <div className="skeleton-box" style={{ height: '15px', width: '30%' }}></div>
+                      <div className="skeleton-box" style={{ flex: 1, width: '100%' }}></div>
                     </div>
                   ) : latestSessionMetrics.length === 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#64748b', fontSize: '0.85rem', textAlign: 'center' }}>
@@ -4016,8 +4084,12 @@ export default function App() {
                 <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>📊 Cohort Comparison (vs Clinical)</h3>
                 <div style={{ position: 'relative', height: '240px', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px', padding: '10px' }}>
                   {chartsLoading ? (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8' }}>
-                      Loading comparison data...
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem', height: '100%' }}>
+                      <div className="skeleton-box" style={{ height: '15px', width: '40%' }}></div>
+                      <div style={{ display: 'flex', gap: '1rem', flex: 1, alignItems: 'flex-end' }}>
+                        <div className="skeleton-box" style={{ height: '60%', flex: 1 }}></div>
+                        <div className="skeleton-box" style={{ height: '90%', flex: 1 }}></div>
+                      </div>
                     </div>
                   ) : !cohortComparison || (cohortComparison.user_averages.reaction_time_ms === 0 && cohortComparison.user_averages.accuracy_rate === 0) ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#64748b', fontSize: '0.85rem', textAlign: 'center' }}>
@@ -4053,8 +4125,9 @@ export default function App() {
                 </p>
                 <div style={{ position: 'relative', height: '220px', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px', padding: '10px' }}>
                   {chartsLoading ? (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8' }}>
-                      Loading trend metrics...
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem', height: '100%' }}>
+                      <div className="skeleton-box" style={{ height: '15px', width: '30%' }}></div>
+                      <div className="skeleton-box" style={{ flex: 1, width: '100%' }}></div>
                     </div>
                   ) : reversedSessions.length === 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#64748b', fontSize: '0.8rem', textAlign: 'center' }}>
@@ -4077,8 +4150,11 @@ export default function App() {
                 </p>
                 <div style={{ position: 'relative', height: '220px', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px', padding: '10px' }}>
                   {chartsLoading ? (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8' }}>
-                      Loading domain accuracy...
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem', height: '100%', justifyContent: 'space-around' }}>
+                      <div className="skeleton-box" style={{ height: '20px', width: '70%' }}></div>
+                      <div className="skeleton-box" style={{ height: '20px', width: '90%' }}></div>
+                      <div className="skeleton-box" style={{ height: '20px', width: '50%' }}></div>
+                      <div className="skeleton-box" style={{ height: '20px', width: '80%' }}></div>
                     </div>
                   ) : sessionHistory.length === 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#64748b', fontSize: '0.8rem', textAlign: 'center' }}>
@@ -4100,8 +4176,11 @@ export default function App() {
                 </p>
                 <div style={{ position: 'relative', height: '220px', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px', padding: '10px' }}>
                   {chartsLoading ? (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8' }}>
-                      Loading game breakdown...
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem', height: '100%', justifyContent: 'space-around' }}>
+                      <div className="skeleton-box" style={{ height: '20px', width: '85%' }}></div>
+                      <div className="skeleton-box" style={{ height: '20px', width: '65%' }}></div>
+                      <div className="skeleton-box" style={{ height: '20px', width: '95%' }}></div>
+                      <div className="skeleton-box" style={{ height: '20px', width: '45%' }}></div>
                     </div>
                   ) : sortedGames.length === 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#64748b', fontSize: '0.8rem', textAlign: 'center' }}>

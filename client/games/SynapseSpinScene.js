@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { CogniTheme } from '../utils/theme';
 import BaseCognitiveScene from './BaseCognitiveScene';
 import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
 
@@ -50,44 +51,40 @@ export default class SynapseSpinScene extends BaseCognitiveScene {
         const height = this.scale.height;
 
         // Deep cyber navy/purple gradient
-        const bg = this.add.graphics();
-        bg.fillGradientStyle(0x0a0f1d, 0x0a0f1d, 0x1e1b4b, 0x1e1b4b, 1);
-        bg.fillRect(0, 0, width, height);
-
-        // Tech grid lines
+        this.createStandardBackground();// Tech grid lines
         const grid = this.add.grid(width / 2, height / 2, width, height, 80, 80, 0x000000, 0, 0x8b5cf6, 0.03);
         grid.setOrigin(0.5);
 
         // HUD Text
         this.scoreText = this.add.text(20, 20, 'SCORE: 0', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
             fill: '#a78bfa' // purple-indigo
         });
 
         this.accuracyText = this.add.text(20, 50, 'ACCURACY: 100%', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '14px',
             fill: '#94a3b8'
         });
 
         this.difficultyText = this.add.text(width - 20, 20, `DIFFICULTY: LEVEL ${this.difficultyLevel}`, {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
             fill: '#a78bfa'
         }).setOrigin(1, 0);
 
         this.timerText = this.add.text(width / 2, 20, '00:45', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '32px',
             fontWeight: 'bold',
             fill: '#ffffff'
         }).setOrigin(0.5, 0);
 
         this.statusText = this.add.text(width / 2, 90, 'IDENTIFY THE SAME SHAPE (MENTALLY ROTATED)!', {
-            fontFamily: 'system-ui, -apple-system, sans-serif',
+            fontFamily: CogniTheme.fonts.body,
             fontSize: '18px',
             fontWeight: '800',
             fill: '#e2e8f0',
@@ -240,7 +237,7 @@ export default class SynapseSpinScene extends BaseCognitiveScene {
 
             // Label text (A, B, C)
             const labelText = this.add.text(optionsX - 80, y, String.fromCharCode(65 + i), {
-                fontFamily: 'system-ui, sans-serif',
+                fontFamily: CogniTheme.fonts.body,
                 fontSize: '28px',
                 fontWeight: '900',
                 fill: '#e2e8f0'
@@ -307,7 +304,19 @@ export default class SynapseSpinScene extends BaseCognitiveScene {
         const isCorrect = selectedIndex === this.correctOptionIndex;
 
         if (isCorrect) {
-            this.hits++;
+
+            if (this.showParticleBurst) {
+                const px = this.input.activePointer.x || this.scale.width / 2;
+                const py = this.input.activePointer.y || this.scale.height / 2;
+                this.showParticleBurst(px, py, 0x38bdf8);
+            }
+    
+        if (this.showParticleBurst) {
+            const px = this.input.activePointer.x || this.scale.width / 2;
+            const py = this.input.activePointer.y || this.scale.height / 2;
+            this.showParticleBurst(px, py, 0x38bdf8);
+        }
+        this.hits++;
             const points = 150 * this.difficultyLevel + Math.max(0, Math.round((12000 - solveTime) / 10));
             this.score += points;
             this.showFloatingFeedback(`+${points} CORRECT!`, '#10b981');

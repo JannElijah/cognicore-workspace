@@ -273,11 +273,11 @@ export default function PriorityQueueGame({
 
                     <div style={{ marginBottom: '2rem', textAlign: 'left' }}>
                         {[
-                            ['Final Score',         finalStats?.score,              '#4ade80'],
-                            ['Correct Triage',      finalStats?.hits,               '#22c55e'],
-                            ['Missed / Wrong Bin',  finalStats?.misses,             '#ef4444'],
-                            ['Triage Accuracy',     `${acc}%`,                      grade],
-                            ['Peak DDA Level',      `Level ${finalStats?.difficultyLevel}`, '#22c55e'],
+                            ['🏆 Final Score',         finalStats?.score,              '#4ade80'],
+                            ['✅ Correct Triage',      finalStats?.hits,               '#22c55e'],
+                            ['❌ Missed / Wrong Bin',  finalStats?.misses,             '#ef4444'],
+                            ['🎯 Triage Accuracy',     `${acc}%`,                      grade],
+                            ['📈 Peak DDA Level',      `Level ${finalStats?.difficultyLevel}`, '#22c55e'],
                         ].map(([label, val, col]) => (
                             <div key={label} style={S.statRow}>
                                 <span>{label}</span>

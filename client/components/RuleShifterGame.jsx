@@ -334,27 +334,27 @@ export default function RuleShifterGame({
 
                     <div style={{ marginBottom: '2rem', textAlign: 'left' }}>
                         <div style={S.statRow}>
-                            <span>Final Score</span>
+                            <span>🏆 Final Score</span>
                             <span style={{ ...S.statVal, color: '#c084fc' }}>{finalStats?.score}</span>
                         </div>
                         <div style={S.statRow}>
-                            <span>Correct Set Matches</span>
+                            <span>✅ Correct Set Matches</span>
                             <span style={{ ...S.statVal, color: '#4ade80' }}>{finalStats?.hits}</span>
                         </div>
                         <div style={S.statRow}>
-                            <span>Cognitive Misses / Errors</span>
+                            <span>❌ Cognitive Misses / Errors</span>
                             <span style={{ ...S.statVal, color: '#ef4444' }}>{finalStats?.misses}</span>
                         </div>
                         <div style={S.statRow}>
-                            <span>Shifting Match Accuracy</span>
+                            <span>🎯 Shifting Match Accuracy</span>
                             <span style={{ ...S.statVal, color: grade }}>{acc}%</span>
                         </div>
                         <div style={S.statRow}>
-                            <span>High-Confidence Decisions</span>
+                            <span>⚖️ High-Confidence Decisions</span>
                             <span style={{ ...S.statVal, color: '#38bdf8' }}>{conf}%</span>
                         </div>
                         <div style={S.statRow}>
-                            <span>Highest DDA Level Reached</span>
+                            <span>📈 Highest DDA Level Reached</span>
                             <span style={{ ...S.statVal, color: '#a855f7' }}>Level {finalStats?.difficultyLevel}</span>
                         </div>
                     </div>
