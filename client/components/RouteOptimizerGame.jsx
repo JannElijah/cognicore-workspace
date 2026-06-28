@@ -1,3 +1,4 @@
+import useCogniStore from '../store/useCogniStore';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Phaser from 'phaser';
 import RouteOptimizerScene from '../games/RouteOptimizerScene';
@@ -9,13 +10,14 @@ export default function RouteOptimizerGame({
     apiUrl   = 'http://127.0.0.1:5000',
     onGameFinished
 }) {
+    const user = useCogniStore(state => state.user);
     const gameContainerRef  = useRef(null);
     const phaserInstanceRef = useRef(null);
 
     const [sessionId,        setSessionId]        = useState(null);
     const [ddaParameters,    setDdaParameters]    = useState(null);
     const [gameState,        setGameState]        = useState('IDLE');
-    const [inputUsername,    setInputUsername]    = useState(username);
+    const [inputUsername,    setInputUsername]    = useState(user?.username || username);
     const [finalStats,       setFinalStats]       = useState(null);
     const [cognitiveProfile, setCognitiveProfile] = useState(null);
     const [error,            setError]            = useState(null);
@@ -277,7 +279,9 @@ export default function RouteOptimizerGame({
 
                     {error && <div style={S.errorMsg}>{error}</div>}
 
-                    <label style={S.inputLabel}>Player Username</label>
+                    {!user?.username && (
+                        <>
+                            <label style={S.inputLabel}>Player Username</label>
                     <input
                         type="text"
                         value={inputUsername}
@@ -287,6 +291,8 @@ export default function RouteOptimizerGame({
                         onFocus={e => e.target.style.borderColor = '#22c55e'}
                         onBlur={e => e.target.style.borderColor = '#1e293b'}
                     />
+                        </>
+                    )}
                     <button
                         onClick={startTrainingSession}
                         style={S.button}

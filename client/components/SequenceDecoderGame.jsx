@@ -1,16 +1,18 @@
+import useCogniStore from '../store/useCogniStore';
 import React, { useState, useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import SequenceDecoderScene from '../games/SequenceDecoderScene';
 import PauseOverlay from './PauseOverlay';
 
 export default function SequenceDecoderGame({ username = 'default_player', apiUrl = 'http://127.0.0.1:5000', onGameFinished }) {
+    const user = useCogniStore(state => state.user);
     const gameContainerRef   = useRef(null);
     const phaserInstanceRef  = useRef(null);
 
     const [sessionId,       setSessionId]       = useState(null);
     const [ddaParameters,   setDdaParameters]   = useState(null);
     const [gameState,       setGameState]       = useState('IDLE'); // IDLE | LOADING | PLAYING | FINISHED
-    const [inputUsername,   setInputUsername]   = useState(username);
+    const [inputUsername,   setInputUsername]   = useState(user?.username || username);
     const [finalStats,      setFinalStats]      = useState(null);
     const [cognitiveProfile, setCognitiveProfile] = useState(null);
     const [error,           setError]           = useState(null);
@@ -357,7 +359,9 @@ const handleRestart = () => {
 
                     {error && <div style={styles.errorMsg}>{error}</div>}
 
-                    <label style={styles.inputLabel}>Player Username</label>
+                    {!user?.username && (
+                        <>
+                            <label style={styles.inputLabel}>Player Username</label>
                     <input
                         type="text"
                         value={inputUsername}
@@ -367,6 +371,8 @@ const handleRestart = () => {
                         onFocus={e => e.target.style.borderColor = '#06b6d4'}
                         onBlur={e => e.target.style.borderColor = '#1e293b'}
                     />
+                        </>
+                    )}
 
                     <button
                         onClick={startTrainingSession}

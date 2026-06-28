@@ -1,3 +1,4 @@
+import useCogniStore from '../store/useCogniStore';
 /**
  * ================================================================================
  * Chapter 2 Methodology Compliance: Software Engineering Architecture Patterns
@@ -17,13 +18,14 @@ import MemoryMatchScene from '../games/MemoryMatchScene';
 import PauseOverlay from './PauseOverlay';
 
 export default function MemoryMatchGame({ username = 'default_player', apiUrl = 'http://127.0.0.1:5000', onGameFinished }) {
+    const user = useCogniStore(state => state.user);
     const gameContainerRef = useRef(null);
     const phaserInstanceRef = useRef(null);
 
     const [sessionId, setSessionId] = useState(null);
     const [ddaParameters, setDdaParameters] = useState(null);
     const [gameState, setGameState] = useState('IDLE'); // IDLE | LOADING | PLAYING | FINISHED
-    const [inputUsername, setInputUsername] = useState(username);
+    const [inputUsername, setInputUsername] = useState(user?.username || username);
     const [finalStats, setFinalStats] = useState(null);
     const [cognitiveProfile, setCognitiveProfile] = useState(null);
     const [error, setError] = useState(null);
@@ -321,16 +323,20 @@ const handleRestart = () => {
                     
                     {error && <div style={styles.errorMessage}>{error}</div>}
 
-                    <div style={{ textAlign: 'left', marginBottom: '0.5rem' }}>
-                        <label style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: '500' }}>Player Username</label>
-                    </div>
-                    <input 
-                        type="text" 
-                        value={inputUsername} 
-                        onChange={(e) => setInputUsername(e.target.value)} 
-                        placeholder="Enter username" 
-                        style={styles.input}
-                    />
+                    {!user?.username && (
+                        <>
+                            <div style={{ textAlign: 'left', marginBottom: '0.5rem' }}>
+                                <label style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: '500' }}>Player Username</label>
+                            </div>
+                            <input 
+                                type="text" 
+                                value={inputUsername} 
+                                onChange={(e) => setInputUsername(e.target.value)} 
+                                placeholder="Enter username" 
+                                style={styles.input}
+                            />
+                        </>
+                    )}
 
                     <button 
                         onClick={startTrainingSession}
