@@ -1,8 +1,8 @@
-import useCogniStore from '../store/useCogniStore';
 import React, { useState, useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import RuleShifterScene from '../games/RuleShifterScene';
 import PauseOverlay from './PauseOverlay';
+import useCogniStore from '../store/useCogniStore';
 
 export default function RuleShifterGame({
     username = 'default_player',
