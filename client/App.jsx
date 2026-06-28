@@ -444,11 +444,6 @@ export default function App() {
   const [pendingGameToLaunch, setPendingGameToLaunch] = useState(null);
   const [hoveredMode, setHoveredMode] = useState(null);
 
-  // --- Game Mode Config States ---
-  const [configSurvivalLives, setConfigSurvivalLives] = useState(3);
-  const [configTargetGoal, setConfigTargetGoal] = useState(10);
-  const [configTimedDuration, setConfigTimedDuration] = useState(120000);
-
   const [appBooting, setAppBooting] = useState(true);
   const [serverOnline, setServerOnline] = useState(true);
 
@@ -5280,60 +5275,6 @@ export default function App() {
                   })()}
                 </div>
 
-                {/* --- Dynamic Configuration Panel --- */}
-                <div style={{ marginTop: '1rem', padding: '0.75rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  {activeModeId === 'target' && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <label style={{ fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 'bold' }}>Number of Trials</label>
-                      <select 
-                        value={configTargetGoal} 
-                        onChange={e => setConfigTargetGoal(Number(e.target.value))}
-                        style={{ background: '#0f172a', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '0.3rem 0.5rem', borderRadius: '6px', outline: 'none' }}
-                      >
-                        <option value={5}>5 Trials</option>
-                        <option value={10}>10 Trials</option>
-                        <option value={20}>20 Trials</option>
-                        <option value={50}>50 Trials</option>
-                      </select>
-                    </div>
-                  )}
-                  {activeModeId === 'timed' && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <label style={{ fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 'bold' }}>Session Duration</label>
-                      <select 
-                        value={configTimedDuration} 
-                        onChange={e => setConfigTimedDuration(Number(e.target.value))}
-                        style={{ background: '#0f172a', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '0.3rem 0.5rem', borderRadius: '6px', outline: 'none' }}
-                      >
-                        <option value={60000}>1 Minute</option>
-                        <option value={120000}>2 Minutes</option>
-                        <option value={300000}>5 Minutes</option>
-                        <option value={600000}>10 Minutes</option>
-                      </select>
-                    </div>
-                  )}
-                  {activeModeId === 'survival' && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <label style={{ fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 'bold' }}>Starting Lives</label>
-                      <select 
-                        value={configSurvivalLives} 
-                        onChange={e => setConfigSurvivalLives(Number(e.target.value))}
-                        style={{ background: '#0f172a', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '0.3rem 0.5rem', borderRadius: '6px', outline: 'none' }}
-                      >
-                        <option value={1}>1 Life (Hardcore)</option>
-                        <option value={3}>3 Lives</option>
-                        <option value={5}>5 Lives</option>
-                        <option value={10}>10 Lives</option>
-                      </select>
-                    </div>
-                  )}
-                  {['zen', 'time_attack', 'endurance'].includes(activeModeId) && (
-                    <div style={{ fontSize: '0.85rem', color: '#94a3b8', fontStyle: 'italic', textAlign: 'center' }}>
-                      This mode uses fixed standard configuration parameters.
-                    </div>
-                  )}
-                </div>
-
                 <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
                   <button
                     onClick={() => setPendingGameToLaunch(null)}
@@ -5355,11 +5296,6 @@ export default function App() {
                   
                   <button
                     onClick={() => {
-                      window.currentGameModeConfig = {
-                        targetGoal: configTargetGoal,
-                        survivalLives: configSurvivalLives,
-                        timedDuration: configTimedDuration
-                      };
                       setActiveGame(pendingGameToLaunch.id);
                       setPendingGameToLaunch(null);
                     }}

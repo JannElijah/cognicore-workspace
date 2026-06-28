@@ -258,23 +258,17 @@ function decorateSceneClass(SceneClass) {
         console.log(`[gameModeManager] Scene initializing with mode: ${this.gameMode}`);
 
         // Set up variables depending on the gameMode
-        const config = window.currentGameModeConfig || {};
-        
-        if (this.gameMode === 'timed') {
-            this.gameDuration = config.timedDuration || 120000;
-            this.timeLeft = this.gameDuration;
-            this.elapsedTime = 0;
-        } else if (this.gameMode === 'zen') {
+        if (this.gameMode === 'zen') {
             this.gameDuration = Infinity;
             this.timeLeft = Infinity;
             this.elapsedTime = 0;
         } else if (this.gameMode === 'survival') {
-            this.lives = config.survivalLives || 3;
+            this.lives = 3;
         } else if (this.gameMode === 'target') {
             this.gameDuration = Infinity;
             this.timeLeft = Infinity;
             this.elapsedTime = 0;
-            this.targetGoal = config.targetGoal || 10;
+            this.targetGoal = 10;
             this.trialsCompleted = 0;
         } else if (this.gameMode === 'time_attack') {
             this.gameDuration = Infinity;
@@ -472,7 +466,7 @@ function decorateSceneClass(SceneClass) {
             return;
         }
 
-        const currentHits = this.hits || this.correctSequences || 0;
+        const currentHits = this.hits || 0;
         const currentMisses = this.misses || 0;
         const currentAttempts = this.totalAttempts || this.totalClicks || this.totalTrials || 0;
 
@@ -553,11 +547,6 @@ function decorateSceneClass(SceneClass) {
             } else if (this.gameMode === 'endurance') {
                 this.timeLeft += 2000;
                 showFloatingTimeText(this, '+2s', '#22c55e');
-                if (this.timerText) {
-                    this.timerText.setTint(0x22c55e);
-                    this.time.delayedCall(300, () => this.timerText.clearTint());
-                    this.tweens.add({ targets: this.timerText, scale: 1.15, yoyo: true, duration: 150 });
-                }
             }
 
             if (this.gameMode === 'target') {
@@ -599,11 +588,6 @@ function decorateSceneClass(SceneClass) {
             } else if (this.gameMode === 'endurance') {
                 this.timeLeft = Math.max(0, this.timeLeft - 5000);
                 showFloatingTimeText(this, '-5s', '#ef4444');
-                if (this.timerText) {
-                    this.timerText.setTint(0xef4444);
-                    this.time.delayedCall(300, () => this.timerText.clearTint());
-                    this.tweens.add({ targets: this.timerText, x: this.timerText.x + 5, yoyo: true, repeat: 3, duration: 50 });
-                }
                 if (this.timeLeft <= 0) {
                     this.endGame();
                 }
