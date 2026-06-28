@@ -192,7 +192,8 @@ const DOMAINS_LIST = [
         title: 'Neural N-Back',
         icon: '🧩',
         objective: 'Track visual element sequences and identify target matches located N steps backwards.',
-        benefit: 'Exercises active mental template updates, temporal processing, and continuous memory storage.'
+        benefit: 'Exercises active mental template updates, temporal processing, and continuous memory storage.',
+        inProgress: true
       },
       {
         id: 'SynapseSpin',
@@ -3228,306 +3229,6 @@ export default function App() {
               )}
             </div>
 
-            <h2 className="section-title" style={{ marginTop: '2.5rem' }}>ISO 25010 Evaluation & Questionnaire (Pillar 2 Research Design)</h2>
-            <div className="eval-inputs-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem', marginBottom: '2rem', alignItems: 'start' }}>
-              
-              {/* Column 1: The Interactive Questionnaire Form */}
-              <div className="game-card" style={{ width: '100%', alignItems: 'stretch', padding: '2rem' }}>
-                <h3 style={{ color: '#38bdf8', marginBottom: '1.25rem', fontWeight: 'bold', fontSize: '1.25rem' }}>📋 Submit ISO 25010 Assessment</h3>
-                
-                {isoSuccess && (
-                  <div style={{ color: '#4ade80', background: 'rgba(74, 222, 128, 0.1)', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.875rem', border: '1px solid rgba(74, 222, 128, 0.2)' }}>
-                    {isoSuccess}
-                  </div>
-                )}
-                {isoError && (
-                  <div style={{ color: '#ef4444', background: 'rgba(239, 68, 68, 0.1)', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.875rem', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                    {isoError}
-                  </div>
-                )}
-
-                <form onSubmit={submitIsoEvaluation} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  
-                  {/* Functionality Score */}
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                      <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>1. Functional Suitability</span>
-                      <span style={{ fontSize: '0.85rem', color: '#a855f7', fontWeight: 'bold' }}>{isoForm.functionality_score} / 5</span>
-                    </div>
-                    <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.5rem' }}>Are all target cognitive domains and corresponding game tasks fully implemented and operational?</p>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      {[1, 2, 3, 4, 5].map((val) => (
-                        <button
-                          key={`func-${val}`}
-                          type="button"
-                          onClick={() => setIsoForm(prev => ({ ...prev, functionality_score: val }))}
-                          style={{
-                            flex: 1,
-                            padding: '0.5rem 0',
-                            background: isoForm.functionality_score === val ? 'linear-gradient(to right, #38bdf8, #a855f7)' : 'rgba(255, 255, 255, 0.05)',
-                            border: '1px solid ' + (isoForm.functionality_score === val ? 'transparent' : 'rgba(255, 255, 255, 0.1)'),
-                            borderRadius: '6px',
-                            color: '#ffffff',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                          }}
-                        >
-                          {val}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Usability Score */}
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                      <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>2. Usability</span>
-                      <span style={{ fontSize: '0.85rem', color: '#a855f7', fontWeight: 'bold' }}>{isoForm.usability_score} / 5</span>
-                    </div>
-                    <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.5rem' }}>Is the user interface layout intuitive and user inputs processed easily?</p>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      {[1, 2, 3, 4, 5].map((val) => (
-                        <button
-                          key={`usab-${val}`}
-                          type="button"
-                          onClick={() => setIsoForm(prev => ({ ...prev, usability_score: val }))}
-                          style={{
-                            flex: 1,
-                            padding: '0.5rem 0',
-                            background: isoForm.usability_score === val ? 'linear-gradient(to right, #38bdf8, #a855f7)' : 'rgba(255, 255, 255, 0.05)',
-                            border: '1px solid ' + (isoForm.usability_score === val ? 'transparent' : 'rgba(255, 255, 255, 0.1)'),
-                            borderRadius: '6px',
-                            color: '#ffffff',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                          }}
-                        >
-                          {val}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Reliability Score */}
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                      <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>3. Reliability</span>
-                      <span style={{ fontSize: '0.85rem', color: '#a855f7', fontWeight: 'bold' }}>{isoForm.reliability_score} / 5</span>
-                    </div>
-                    <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.5rem' }}>Do adaptive DDA loops and machine learning archetypes determine profiles reliably?</p>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      {[1, 2, 3, 4, 5].map((val) => (
-                        <button
-                          key={`rel-${val}`}
-                          type="button"
-                          onClick={() => setIsoForm(prev => ({ ...prev, reliability_score: val }))}
-                          style={{
-                            flex: 1,
-                            padding: '0.5rem 0',
-                            background: isoForm.reliability_score === val ? 'linear-gradient(to right, #38bdf8, #a855f7)' : 'rgba(255, 255, 255, 0.05)',
-                            border: '1px solid ' + (isoForm.reliability_score === val ? 'transparent' : 'rgba(255, 255, 255, 0.1)'),
-                            borderRadius: '6px',
-                            color: '#ffffff',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                          }}
-                        >
-                          {val}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Efficiency Score */}
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                      <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>4. Performance Efficiency</span>
-                      <span style={{ fontSize: '0.85rem', color: '#a855f7', fontWeight: 'bold' }}>{isoForm.efficiency_score} / 5</span>
-                    </div>
-                    <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.5rem' }}>Are telemetry endpoints and database reads/writes running with low response latency?</p>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      {[1, 2, 3, 4, 5].map((val) => (
-                        <button
-                          key={`eff-${val}`}
-                          type="button"
-                          onClick={() => setIsoForm(prev => ({ ...prev, efficiency_score: val }))}
-                          style={{
-                            flex: 1,
-                            padding: '0.5rem 0',
-                            background: isoForm.efficiency_score === val ? 'linear-gradient(to right, #38bdf8, #a855f7)' : 'rgba(255, 255, 255, 0.05)',
-                            border: '1px solid ' + (isoForm.efficiency_score === val ? 'transparent' : 'rgba(255, 255, 255, 0.1)'),
-                            borderRadius: '6px',
-                            color: '#ffffff',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                          }}
-                        >
-                          {val}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* UX Score */}
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                      <span style={{ fontSize: '0.9rem', fontWeight: '600' }}>5. User Experience (UX) Satisfaction</span>
-                      <span style={{ fontSize: '0.85rem', color: '#a855f7', fontWeight: 'bold' }}>{isoForm.ux_score} / 5</span>
-                    </div>
-                    <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.5rem' }}>Does the platform feel visually appealing, premium, and satisfying to play?</p>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      {[1, 2, 3, 4, 5].map((val) => (
-                        <button
-                          key={`ux-${val}`}
-                          type="button"
-                          onClick={() => setIsoForm(prev => ({ ...prev, ux_score: val }))}
-                          style={{
-                            flex: 1,
-                            padding: '0.5rem 0',
-                            background: isoForm.ux_score === val ? 'linear-gradient(to right, #38bdf8, #a855f7)' : 'rgba(255, 255, 255, 0.05)',
-                            border: '1px solid ' + (isoForm.ux_score === val ? 'transparent' : 'rgba(255, 255, 255, 0.1)'),
-                            borderRadius: '6px',
-                            color: '#ffffff',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                          }}
-                        >
-                          {val}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isoLoading}
-                    style={{
-                      padding: '0.75rem 1.5rem',
-                      background: 'linear-gradient(to right, #a855f7, #38bdf8)',
-                      border: 'none',
-                      borderRadius: '8px',
-                      color: '#ffffff',
-                      fontWeight: 'bold',
-                      cursor: 'pointer',
-                      marginTop: '0.5rem',
-                      fontSize: '0.95rem',
-                      boxShadow: '0 4px 12px rgba(168, 85, 247, 0.25)',
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    {isoLoading ? 'Recording Assessment...' : 'Submit Evaluation'}
-                  </button>
-                </form>
-              </div>
-
-              {/* Column 2: Live ISO 25010 Summary Dashboard */}
-              <div className="game-card" style={{ width: '100%', alignItems: 'stretch', padding: '2rem' }}>
-                <h3 style={{ color: '#38bdf8', marginBottom: '1.25rem', fontWeight: 'bold', fontSize: '1.25rem' }}>📊 Live Quality Metric Summary</h3>
-                <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '1.5rem' }}>
-                  Aggregate statistical quality indicators across all submitted researcher evaluations. This supplies real-time telemetry details for thesis verification.
-                </p>
-
-                {isoSummary && isoSummary.count > 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                    
-                    {/* Overall Evaluations Count Badge */}
-                    <div style={{ background: 'rgba(56, 189, 248, 0.05)', border: '1px solid rgba(56, 189, 248, 0.15)', borderRadius: '10px', padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#f8fafc' }}>Total Submitted Evaluations</span>
-                      <span style={{ background: '#38bdf8', color: '#09090b', fontWeight: '900', padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.95rem' }}>n = {isoSummary.count}</span>
-                    </div>
-
-                    {/* Progress Bars for averages */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      
-                      {/* Functional Suitability Avg */}
-                      <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
-                          <span style={{ color: '#e2e8f0', fontWeight: '500' }}>Functional Suitability</span>
-                          <span style={{ fontWeight: 'bold', color: '#38bdf8' }}>{isoSummary.avg_functionality} / 5</span>
-                        </div>
-                        <div style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${(isoSummary.avg_functionality / 5) * 100}%`, background: 'linear-gradient(to right, #38bdf8, #a855f7)', borderRadius: '4px' }}></div>
-                        </div>
-                      </div>
-
-                      {/* Usability Avg */}
-                      <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
-                          <span style={{ color: '#e2e8f0', fontWeight: '500' }}>Usability</span>
-                          <span style={{ fontWeight: 'bold', color: '#38bdf8' }}>{isoSummary.avg_usability} / 5</span>
-                        </div>
-                        <div style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${(isoSummary.avg_usability / 5) * 100}%`, background: 'linear-gradient(to right, #38bdf8, #a855f7)', borderRadius: '4px' }}></div>
-                        </div>
-                      </div>
-
-                      {/* Reliability Avg */}
-                      <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
-                          <span style={{ color: '#e2e8f0', fontWeight: '500' }}>Reliability</span>
-                          <span style={{ fontWeight: 'bold', color: '#38bdf8' }}>{isoSummary.avg_reliability} / 5</span>
-                        </div>
-                        <div style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${(isoSummary.avg_reliability / 5) * 100}%`, background: 'linear-gradient(to right, #38bdf8, #a855f7)', borderRadius: '4px' }}></div>
-                        </div>
-                      </div>
-
-                      {/* Efficiency Avg */}
-                      <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
-                          <span style={{ color: '#e2e8f0', fontWeight: '500' }}>Performance Efficiency</span>
-                          <span style={{ fontWeight: 'bold', color: '#38bdf8' }}>{isoSummary.avg_efficiency} / 5</span>
-                        </div>
-                        <div style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${(isoSummary.avg_efficiency / 5) * 100}%`, background: 'linear-gradient(to right, #38bdf8, #a855f7)', borderRadius: '4px' }}></div>
-                        </div>
-                      </div>
-
-                      {/* UX Avg */}
-                      <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
-                          <span style={{ color: '#e2e8f0', fontWeight: '500' }}>UX Satisfaction</span>
-                          <span style={{ fontWeight: 'bold', color: '#38bdf8' }}>{isoSummary.avg_ux} / 5</span>
-                        </div>
-                        <div style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${(isoSummary.avg_ux / 5) * 100}%`, background: 'linear-gradient(to right, #38bdf8, #a855f7)', borderRadius: '4px' }}></div>
-                        </div>
-                      </div>
-
-                    </div>
-
-                    {/* Overall Average Quality Score Indicator */}
-                    <div style={{
-                      marginTop: '1rem',
-                      padding: '1rem',
-                      borderRadius: '10px',
-                      background: 'rgba(168, 85, 247, 0.05)',
-                      border: '1px solid rgba(168, 85, 247, 0.15)',
-                      textAlign: 'center'
-                    }}>
-                      <div style={{ fontSize: '0.8rem', color: '#c084fc', textTransform: 'uppercase', fontWeight: 'bold' }}>Overall Quality Rating</div>
-                      <div style={{ fontSize: '2rem', fontWeight: '900', color: '#ffffff', marginTop: '0.25rem' }}>
-                        {((isoSummary.avg_functionality + isoSummary.avg_usability + isoSummary.avg_reliability + isoSummary.avg_efficiency + isoSummary.avg_ux) / 5).toFixed(2)} <span style={{ fontSize: '1rem', color: '#94a3b8' }}>/ 5</span>
-                      </div>
-                      <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.75rem', color: '#94a3b8' }}>
-                        Excellent compliance across ISO 25010 metrics targets.
-                      </p>
-                    </div>
-
-                  </div>
-                ) : (
-                  <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#64748b', fontSize: '0.9rem' }}>
-                    No evaluations submitted yet. Use the questionnaire form to submit the first entry.
-                  </div>
-                )}
-              </div>
-
-            </div>
           </>
         ) : (
           <div style={{ animation: 'fadeIn 0.4s ease-out', width: '100%' }}>
@@ -5046,13 +4747,16 @@ export default function App() {
                         <div 
                           key={game.id} 
                           className={`game-card theme-${dom.themeClass} active`}
-                          onClick={() => { setPendingGameToLaunch({ id: game.id, title: game.title, themeClass: dom.themeClass, icon: game.icon }); }}
+                          onClick={() => { 
+                            if (game.inProgress) return;
+                            setPendingGameToLaunch({ id: game.id, title: game.title, themeClass: dom.themeClass, icon: game.icon }); 
+                          }}
                           style={{
                             border: isPrescribed ? `2.5px solid ${theme.color}` : `1px solid ${theme.color}44`,
                             boxShadow: isPrescribed ? `0 0 25px ${theme.glow}` : '0 4px 15px rgba(0, 0, 0, 0.25)',
                             background: `linear-gradient(135deg, rgba(15, 23, 42, 0.6), ${theme.bg})`,
-                            opacity: 1.0,
-                            cursor: 'pointer',
+                            opacity: game.inProgress ? 0.6 : 1.0,
+                            cursor: game.inProgress ? 'not-allowed' : 'pointer',
                             position: 'relative',
                             overflow: 'hidden'
                           }}
@@ -5079,23 +4783,28 @@ export default function App() {
  
                           <button 
                             className="play-btn" 
-                            onClick={(e) => { e.stopPropagation(); setPendingGameToLaunch({ id: game.id, title: game.title, themeClass: dom.themeClass, icon: game.icon }); }}
+                            onClick={(e) => { 
+                              if (game.inProgress) return;
+                              e.stopPropagation(); 
+                              setPendingGameToLaunch({ id: game.id, title: game.title, themeClass: dom.themeClass, icon: game.icon }); 
+                            }}
+                            disabled={game.inProgress}
                             style={{
-                              background: isPrescribed ? theme.btnGradient : 'rgba(255, 255, 255, 0.02)',
-                              border: isPrescribed ? 'none' : `1.5px solid ${theme.color}`,
-                              color: isPrescribed ? '#ffffff' : theme.color,
+                              background: game.inProgress ? 'rgba(255, 255, 255, 0.05)' : isPrescribed ? theme.btnGradient : 'rgba(255, 255, 255, 0.02)',
+                              border: game.inProgress ? '1.5px dashed rgba(255, 255, 255, 0.2)' : isPrescribed ? 'none' : `1.5px solid ${theme.color}`,
+                              color: game.inProgress ? '#94a3b8' : isPrescribed ? '#ffffff' : theme.color,
                               marginTop: 'auto',
-                              cursor: 'pointer',
+                              cursor: game.inProgress ? 'not-allowed' : 'pointer',
                               width: '100%',
                               padding: '0.65rem',
                               borderRadius: '8px',
                               fontWeight: 'bold',
                               fontSize: '0.85rem',
-                              boxShadow: isPrescribed ? `0 4px 12px ${theme.btnGlow}` : 'none',
+                              boxShadow: game.inProgress ? 'none' : isPrescribed ? `0 4px 12px ${theme.btnGlow}` : 'none',
                               transition: 'all 0.2s'
                             }}
                           >
-                            {isPrescribed ? 'Launch Active Game' : 'Launch Game'}
+                            {game.inProgress ? 'In Progress 🚧' : isPrescribed ? 'Launch Active Game' : 'Launch Game'}
                           </button>
                         </div>
                       );

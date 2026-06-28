@@ -74,9 +74,9 @@ export default class NeuralNBackScene extends BaseCognitiveScene {
             fill: '#38bdf8' // light blue
         });
 
-        this.nValText = this.add.text(20, 50, `TARGET: ${this.nValue}-BACK`, {
+        this.nValText = this.add.text(20, 50, `TARGET: ${this.nValue}-BACK (Compare to ${this.nValue === 1 ? 'Previous Node' : this.nValue + ' Nodes Ago'})`, {
             fontFamily: CogniTheme.fonts.body,
-            fontSize: '18px',
+            fontSize: '14px',
             fontWeight: 'bold',
             fill: '#a855f7' // purple
         });
@@ -101,7 +101,7 @@ export default class NeuralNBackScene extends BaseCognitiveScene {
             fill: '#ffffff'
         }).setOrigin(0.5, 0);
 
-        this.statusText = this.add.text(width / 2, 110, 'MATCH VISUAL POSITIONS IN SEQUENCE!', {
+        this.statusText = this.add.text(width / 2, 110, `DOES THIS MATCH ${this.nValue} STEPS AGO?`, {
             fontFamily: CogniTheme.fonts.body,
             fontSize: '18px',
             fontWeight: '800',
@@ -134,8 +134,23 @@ export default class NeuralNBackScene extends BaseCognitiveScene {
             activeCirc.strokeCircle(x, y, 22);
             activeCirc.setVisible(false);
 
-            this.gridNodes.push({ x, y, bg: bgCirc, active: activeCirc });
+            const text = this.add.text(x, y, (i + 1).toString(), {
+                fontFamily: CogniTheme.fonts.body,
+                fontSize: '18px',
+                fontWeight: 'bold',
+                fill: '#ffffff'
+            }).setOrigin(0.5);
+
+            this.gridNodes.push({ x, y, bg: bgCirc, active: activeCirc, text });
         }
+
+        // History Tracker
+        this.historyTrackerText = this.add.text(width / 2, 420, 'SEQUENCE: ', {
+            fontFamily: CogniTheme.fonts.body,
+            fontSize: '18px',
+            fontWeight: 'bold',
+            fill: '#a855f7'
+        }).setOrigin(0.5);
 
         // Draw "MATCH" Button for Mobile Compatibility
         this.matchBtnBg = this.add.graphics();
@@ -203,9 +218,9 @@ export default class NeuralNBackScene extends BaseCognitiveScene {
         createMlHud(this, 0x38bdf8);
         createTutorialOverlay(this, {
             title: "NEURAL N-BACK",
-            domain: "spatial_visual_memory",
-            instructions: "• Watch the glowing grid positions sequence.\n\n• Determine if the current position matches the one N steps back.\n\n• Press MATCH (keyboard or button) to register a hit.",
-            themeColorHex: 0x38bdf8,
+            domain: "working_memory",
+            instructions: "• A sequence of grid locations will light up one by one.\n\n• If the CURRENT location matches the location from N steps ago, press MATCH.\n\n• Use the SEQUENCE tracker at the bottom to help remember the history!",
+            themeColorHex: 0xf59e0b,
             onStart: () => this.startGameplay()
         });
     }
@@ -283,6 +298,10 @@ export default class NeuralNBackScene extends BaseCognitiveScene {
             duration: 150,
             ease: 'Back.easeOut'
         });
+
+        // Update history tracker
+        const visibleHistory = this.history.slice(- (this.nValue + 1)).map(i => i + 1);
+        this.historyTrackerText.setText(`SEQUENCE: ${visibleHistory.join(' ➔ ')}`);
 
         // Set stimulus spawn timestamps
         this.stimulusSpawnTime = this.time.now;
@@ -416,7 +435,7 @@ export default class NeuralNBackScene extends BaseCognitiveScene {
                     this.nValue = params.n_value;
                     this.stepDelay = params.step_delay;
 
-                    this.nValText.setText(`TARGET: ${this.nValue}-BACK`);
+                    this.nValText.setText(`TARGET: ${this.nValue}-BACK (Compare to ${this.nValue === 1 ? 'Previous Node' : this.nValue + ' Nodes Ago'})`);
                     this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);
                     if (data.cognitive_profile) {
                         this.archetype = data.cognitive_profile.archetype || this.archetype;
@@ -443,7 +462,7 @@ export default class NeuralNBackScene extends BaseCognitiveScene {
             console.warn('[DDA Bridge] Connection failed', e);
         }
 
-        this.statusText.setText('MATCH VISUAL POSITIONS IN SEQUENCE!').setFill('#e2e8f0');
+        this.statusText.setText(`DOES THIS MATCH ${this.nValue} STEPS AGO?`).setFill('#e2e8f0');
     }
 
     endGame() {
@@ -453,7 +472,9 @@ export default class NeuralNBackScene extends BaseCognitiveScene {
         this.gridNodes.forEach(node => {
             if (node.bg) node.bg.destroy();
             if (node.active) node.active.destroy();
+            if (node.text) node.text.destroy();
         });
+        if (this.historyTrackerText) this.historyTrackerText.destroy();
         if (this.matchBtnBg) this.matchBtnBg.destroy();
         if (this.matchBtnText) this.matchBtnText.destroy();
 

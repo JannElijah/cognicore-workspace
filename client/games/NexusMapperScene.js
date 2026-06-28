@@ -40,7 +40,7 @@ export default class NexusMapperScene extends BaseCognitiveScene {
         this.puzzleStartTime = 0;
 
         // Visual letters used as glyphs
-        this.glyphsPool = ['Ω', 'Ψ', 'Φ', 'Δ', 'Σ', 'Ξ', 'Θ', 'Λ'];
+        this.glyphsPool = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
         // Timers
         this.countdownTimer = null;
@@ -90,10 +90,10 @@ export default class NexusMapperScene extends BaseCognitiveScene {
             fill: '#ffffff'
         }).setOrigin(0.5, 0);
 
-        this.statusText = this.add.text(width / 2, 90, 'MEMORIZE GLYPH LOCATIONS!', {
+        this.statusText = this.add.text(width / 2, 90, 'MEMORIZE LETTER LOCATIONS!', {
             fontFamily: CogniTheme.fonts.body,
-            fontSize: '20px',
-            fontWeight: '800',
+            fontSize: '24px',
+            fontWeight: '900',
             fill: '#38bdf8',
             letterSpacing: '0.05em'
         }).setOrigin(0.5, 0);
@@ -120,7 +120,7 @@ export default class NexusMapperScene extends BaseCognitiveScene {
         createTutorialOverlay(this, {
             title: "NEXUS MAPPER",
             domain: "spatial_visual_memory",
-            instructions: "• Memorize the glowing node map network configuration.\n\n• Reconstruct the connections from memory in correct order.\n\n• Accuracy and response times govern DDA node progression.",
+            instructions: "• Memorize the letter locations on the node map.\n\n• Reconstruct their positions from memory.\n\n• Accuracy and response times govern difficulty.",
             themeColorHex: 0x38bdf8,
             onStart: () => this.startGameplay()
         });
@@ -151,7 +151,7 @@ export default class NexusMapperScene extends BaseCognitiveScene {
         if (this.timeLeft <= 0 || this.gamePhase === 'GAMEOVER') return;
 
         this.gamePhase = 'MEMORIZE';
-        this.statusText.setText('MEMORIZE GLYPH LOCATIONS!').setFill('#38bdf8');
+        this.statusText.setText('MEMORIZE LETTER LOCATIONS!').setFill('#38bdf8');
 
         // Cleanup previous layouts
         this.gridCells.forEach(row => {
@@ -266,7 +266,7 @@ export default class NexusMapperScene extends BaseCognitiveScene {
         }
 
         this.currentRecallTarget = this.recallTargets.pop();
-        this.statusText.setText(`TAP LOCATION OF GLYPH: '${this.currentRecallTarget.glyph}'`).setFill('#0ea5e9');
+        this.statusText.setText(`FIND THE EXACT LOCATION FOR: '${this.currentRecallTarget.glyph}'`).setFill('#0ea5e9');
         this.puzzleStartTime = this.time.now;
     }
 

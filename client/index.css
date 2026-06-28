@@ -1,13 +1,13 @@
 :root {
-  --bg-dark: #09090b;
-  --bg-card: rgba(15, 23, 42, 0.4);
-  --border-glass: rgba(255, 255, 255, 0.08);
-  --color-primary: #38bdf8;
-  --color-secondary: #a855f7;
-  --color-success: #4ade80;
-  --color-danger: #f87171;
+  --bg-dark: #0f172a;
+  --bg-card: rgba(30, 41, 59, 0.5);
+  --border-glass: rgba(255, 255, 255, 0.1);
+  --color-primary: #3b82f6;
+  --color-secondary: #8b5cf6;
+  --color-success: #10b981;
+  --color-danger: #ef4444;
   --text-main: #f8fafc;
-  --text-muted: #94a3b8;
+  --text-muted: #cbd5e1;
   --font-title: 'Outfit', 'Inter', -apple-system, sans-serif;
   --font-body: 'Inter', -apple-system, sans-serif;
 }
@@ -305,22 +305,28 @@ body {
 
 .back-btn {
   align-self: flex-start;
-  background: none;
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--border-glass);
   color: var(--text-muted);
-  font-size: 0.9rem;
-  font-weight: 500;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.65rem 1.25rem;
+  border-radius: 9999px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .back-btn:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.08);
   border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
 
 @keyframes fadeIn {

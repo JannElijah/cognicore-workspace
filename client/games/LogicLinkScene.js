@@ -50,7 +50,7 @@ export default class LogicLinkScene extends BaseCognitiveScene {
         this.clickedSequence = []; // Stores node coordinates clicked by user
         this.gamePhase = 'PLAYING'; // PLAYING | FEEDBACK | GAMEOVER
         this.puzzleStartTime = 0;
-        
+
         this.countdownTimer = null;
 
         // Micro-behavior metrics
@@ -193,7 +193,7 @@ export default class LogicLinkScene extends BaseCognitiveScene {
 
         // Pick sequence cells
         this.sequenceNodes = availableIndexes.slice(0, this.sequenceLength);
-        
+
         // Pick distractor cells
         const distractorNodes = availableIndexes.slice(this.sequenceLength, this.sequenceLength + this.distractorsCount);
 
@@ -215,7 +215,7 @@ export default class LogicLinkScene extends BaseCognitiveScene {
 
                 let numberVal = 0;
                 let txt = null;
-                
+
                 // If it is in the sequence list
                 if (this.sequenceNodes.includes(index)) {
                     numberVal = this.sequenceNodes.indexOf(index) + 1;
@@ -234,7 +234,7 @@ export default class LogicLinkScene extends BaseCognitiveScene {
                         fontWeight: '900',
                         fill: '#ffffff'
                     }).setOrigin(0.5);
-                } 
+                }
                 // If it is a distractor
                 else if (distractorNodes.includes(index)) {
                     numberVal = -1; // -1 represents distractor
@@ -279,8 +279,8 @@ export default class LogicLinkScene extends BaseCognitiveScene {
                             ease: 'Power1'
                         });
                         bg.lineStyle(
-                            numberVal > 0 ? 2.5 : 1.5, 
-                            numberVal > 0 ? 0xf59e0b : 0xffffff, 
+                            numberVal > 0 ? 2.5 : 1.5,
+                            numberVal > 0 ? 0xf59e0b : 0xffffff,
                             numberVal > 0 ? 0.8 : 0.08
                         );
                         bg.strokeCircle(0, 0, cellSize * 0.45);
@@ -373,7 +373,7 @@ export default class LogicLinkScene extends BaseCognitiveScene {
         this.totalAttempts++;
 
         const solveTime = this.time.now - this.puzzleStartTime;
-        
+
         // Calculate dynamic reward
         const baseReward = 150 * this.sequenceLength;
         const speedBonus = Math.max(0, Math.round((15000 - solveTime) / 10));
@@ -428,7 +428,7 @@ export default class LogicLinkScene extends BaseCognitiveScene {
     scheduleNextPuzzle() {
         this.time.delayedCall(1600, () => {
             if (this.timeLeft <= 0) return;
-            
+
             // Query DDA adaptations every 3 puzzles
             if (this.totalAttempts % 3 === 0) {
                 this.adaptDifficulty();
@@ -440,13 +440,13 @@ export default class LogicLinkScene extends BaseCognitiveScene {
 
     updateHUD() {
         this.scoreText.setText(`SCORE: ${this.score}`);
-        
+
         if (this.totalAttempts > 0) {
             this.accuracy = this.hits / this.totalAttempts;
         } else {
             this.accuracy = 1.0;
         }
-        
+
         this.accuracyText.setText(`ACCURACY: ${Math.round(this.accuracy * 100)}%`);
     }
 

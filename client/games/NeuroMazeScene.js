@@ -21,10 +21,9 @@ export default class NeuroMazeScene extends BaseCognitiveScene {
         // DDA variables (Problem Solving & Strategy)
         const dda = data.ddaParameters || {};
         this.difficultyLevel = dda.difficulty_level || 1;
-        this.gridSize = dda.grid_size || 6;
-        this.maxMoves = dda.max_moves || 20;
-        this.blockedRatio = dda.blocked_ratio || 0.1;
-        this.speedMultiplier = dda.speed_multiplier || 1.0;
+        this.gridSize = dda.grid_size || 4;
+        this.blockedRatio = dda.blocked_ratio || 0.25;
+        this.maxMoves = dda.max_moves || (this.gridSize * 1.5 + 2);
 
         // Session Stats
         this.score = 0;
@@ -365,6 +364,14 @@ export default class NeuroMazeScene extends BaseCognitiveScene {
 
     handleCellClick(tx, ty) {
         if (this.gamePhase !== 'PLAYING' || this.isMoving) return;
+
+        // Restrict to adjacent cells only
+        const isAdjacent = Math.abs(tx - this.playerGridX) + Math.abs(ty - this.playerGridY) === 1;
+        if (!isAdjacent) {
+            this.cameras.main.shake(50, 0.002);
+            this.showFloatingFeedback('MOVE STEP BY STEP!', '#f59e0b');
+            return;
+        }
 
         // Pathfinder search
         const path = this.findBFSPath(this.playerGridX, this.playerGridY, tx, ty);

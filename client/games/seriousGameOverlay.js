@@ -55,9 +55,10 @@ export function createTutorialOverlay(scene, { title, domain, instructions, them
     // Instructions bullet points
     const instructionsText = scene.add.text(width / 2, modalY + 140, instructions, {
         fontFamily: 'system-ui, -apple-system, sans-serif',
-        fontSize: '15px',
-        fill: '#94a3b8',
-        lineSpacing: 8
+        fontSize: '18px',
+        fontWeight: '500',
+        fill: '#e2e8f0',
+        lineSpacing: 12
     }).setOrigin(0.5, 0);
 
     // Button controls

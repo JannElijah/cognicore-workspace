@@ -420,28 +420,28 @@ function decorateSceneClass(SceneClass) {
 
         // Draw custom HUD overlay
         if (this.gameMode === 'survival') {
-            this.livesText = this.add.text(20, 80, `LIVES: ${this.lives}`, {
+            this.livesText = this.add.text(20, 110, `LIVES: ${this.lives}`, {
                 fontFamily: 'Outfit, system-ui, -apple-system, sans-serif',
                 fontSize: '16px',
                 fontWeight: 'bold',
                 fill: '#ef4444' // Crimson Neon
             });
         } else if (this.gameMode === 'target') {
-            this.targetGoalText = this.add.text(20, 80, `TRIALS: 0 / ${this.targetGoal}`, {
+            this.targetGoalText = this.add.text(20, 110, `TRIALS: 0 / ${this.targetGoal}`, {
                 fontFamily: 'Outfit, system-ui, -apple-system, sans-serif',
                 fontSize: '16px',
                 fontWeight: 'bold',
                 fill: '#e2e8f0' // Premium Slate
             });
         } else if (this.gameMode === 'time_attack') {
-            this.targetGoalText = this.add.text(20, 80, `TARGETS: 0 / ${this.correctHitGoal}`, {
+            this.targetGoalText = this.add.text(20, 110, `TARGETS: 0 / ${this.correctHitGoal}`, {
                 fontFamily: 'Outfit, system-ui, -apple-system, sans-serif',
                 fontSize: '16px',
                 fontWeight: 'bold',
                 fill: '#10b981' // Neon Emerald
             });
         } else if (this.gameMode === 'zen') {
-            this.zenModeText = this.add.text(20, 80, `ZEN TRAINING MODE`, {
+            this.zenModeText = this.add.text(20, 110, `ZEN TRAINING MODE`, {
                 fontFamily: 'Outfit, system-ui, -apple-system, sans-serif',
                 fontSize: '13px',
                 fontWeight: 'bold',

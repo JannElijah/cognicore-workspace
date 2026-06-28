@@ -61,8 +61,8 @@ export default class PriorityQueueScene extends BaseCognitiveScene {
 
         const dda = data.ddaParameters || {};
         this.difficultyLevel  = dda.difficulty_level  || 1;
-        this.beltSpeed        = dda.belt_speed        || 38;  // px/sec card travels left
-        this.spawnInterval    = dda.spawn_interval    || 4200; // ms between cards
+        this.beltSpeed        = dda.belt_speed        || 140;  // px/sec card travels left
+        this.spawnInterval    = dda.spawn_interval    || 1200; // ms between cards
         this.maxCards         = dda.max_cards         || 3;
         this.ambiguityLevel   = dda.ambiguity_level   || 0;   // 0=clear labels, 1=no labels
         this.gameDuration     = dda.time_limit        || 75000;
