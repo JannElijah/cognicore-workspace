@@ -175,5 +175,18 @@ class ArchetypeModel:
         else:
             return {"archetype": "Plateauing", "confidence_score": 0.75}
 
+    def predict_trajectory(self, current_level, acc_slope, rt_slope):
+        """Predicts cognitive trajectory and future level dynamically using linear metrics."""
+        if acc_slope > 0.02 and rt_slope < -15.0:
+            return f"At your current accelerated rate, you are on track to master Level {min(5, current_level+1)} logic tasks within the next 3 sessions. Your reaction time is dramatically improving."
+        elif acc_slope > 0.0:
+            return f"You show steady, consistent improvement. Focus on maintaining accuracy and you will naturally reach Level {min(5, current_level+1)}."
+        elif acc_slope < -0.05 and rt_slope > 20.0:
+            return "Signs of cognitive fatigue detected. Your trajectory indicates a temporary decline in speed. Taking short breaks will immediately restore your performance."
+        elif rt_slope > 0.0:
+            return "Your accuracy is holding up, but reaction speed is slightly slowing. Try to trust your instincts more to regain momentum."
+        else:
+            return "Your performance has plateaued at an optimal baseline. Focus on reducing hesitation to push through to the next milestone."
+
 # Instantiate the global model instance
 archetype_classifier = ArchetypeModel()

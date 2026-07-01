@@ -12,6 +12,26 @@
   --font-body: 'Inter', -apple-system, sans-serif;
 }
 
+[data-theme="theme-blue"] {
+  --color-primary: #3b82f6;
+  --color-secondary: #8b5cf6;
+}
+
+[data-theme="theme-red"] {
+  --color-primary: #ef4444;
+  --color-secondary: #f97316;
+}
+
+[data-theme="theme-purple"] {
+  --color-primary: #a855f7;
+  --color-secondary: #ec4899;
+}
+
+[data-theme="theme-yellow"] {
+  --color-primary: #eab308;
+  --color-secondary: #f59e0b;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;

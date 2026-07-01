@@ -18,6 +18,8 @@ import { Radar, Line, Bar, Scatter } from 'react-chartjs-2';
 import LiveDdaHud from './components/LiveDdaHud';
 import ErrorBoundary from './components/ErrorBoundary';
 import useCogniStore from './store/useCogniStore';
+import Shop from './components/Shop';
+import PretestResults from './components/PretestResults';
 
 const SpeedTapGame = lazy(() => import('./components/SpeedTapGame'));
 const MemoryMatchGame = lazy(() => import('./components/MemoryMatchGame'));
@@ -480,6 +482,7 @@ export default function App() {
   }, [selectedGameMode]);
 
   const [showDashboard, setShowDashboard] = useState(false);
+  const [showShop, setShowShop] = useState(false);
   const [lastGameStats, setLastGameStats] = useState(null);
   const [portalView, setPortalView] = useState('participant'); // 'participant' | 'researcher'
 
@@ -490,6 +493,7 @@ export default function App() {
   const [postTestScores, setPostTestScores] = useState(null);
   const [weakestDomain, setWeakestDomain] = useState(null);
   const [prescribedGame, setPrescribedGame] = useState(null);
+  const [personalizedReport, setPersonalizedReport] = useState(null);
   const [hasPlayedPrescribed, setHasPlayedPrescribed] = useState(false);
   const [assessmentStage, setAssessmentStage] = useState('none'); // 'none' | 'pre-test' | 'post-test' | 'completed'
   const [evaluationReport, setEvaluationReport] = useState(null);
@@ -561,6 +565,7 @@ export default function App() {
           setPreTestScores(data.pre_test);
           setWeakestDomain(data.weakest_domain);
           setPrescribedGame(data.prescribed_game);
+          setPersonalizedReport(data.personalized_report);
           
           if (data.post_test) {
             setPostTestScores(data.post_test);
@@ -2449,23 +2454,45 @@ export default function App() {
           )}
           
           {activeGame === null && portalView === 'participant' && (
-            <button 
-              className="dashboard-toggle-btn" 
-              onClick={() => setShowDashboard(!showDashboard)}
-              style={{
-                background: showDashboard ? 'rgba(255, 255, 255, 0.05)' : 'linear-gradient(to right, #38bdf8, #a855f7)',
-                color: '#ffffff',
-                border: '1px solid ' + (showDashboard ? 'rgba(255, 255, 255, 0.2)' : 'transparent'),
-                padding: '0.5rem 1rem',
-                borderRadius: '8px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                boxShadow: showDashboard ? 'none' : '0 4px 12px rgba(124, 58, 237, 0.3)',
-                transition: 'all 0.2s'
-              }}
-            >
-              {showDashboard ? '← Back to Training Hub' : '📊 Analytics Dashboard'}
-            </button>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button 
+                className="dashboard-toggle-btn" 
+                onClick={() => setShowShop(true)}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  color: '#fbbf24',
+                  border: '1px solid rgba(245, 158, 11, 0.3)',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                <span>🛒</span> Rewards Shop
+              </button>
+              
+              <button 
+                className="dashboard-toggle-btn" 
+                onClick={() => setShowDashboard(!showDashboard)}
+                style={{
+                  background: showDashboard ? 'rgba(255, 255, 255, 0.05)' : 'linear-gradient(to right, #38bdf8, #a855f7)',
+                  color: '#ffffff',
+                  border: '1px solid ' + (showDashboard ? 'rgba(255, 255, 255, 0.2)' : 'transparent'),
+                  padding: '0.5rem 1rem',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  boxShadow: showDashboard ? 'none' : '0 4px 12px rgba(124, 58, 237, 0.3)',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {showDashboard ? '← Back to Training Hub' : '📊 Analytics Dashboard'}
+              </button>
+            </div>
           )}
 
           <button 
@@ -4127,6 +4154,24 @@ export default function App() {
           // ORIGINAL GAME LOBBY
           // ==========================================
           <div className="lobby-content">
+            {preTestScores && !hasPlayedPrescribed && (
+              <div style={{ marginBottom: '3rem' }}>
+                <PretestResults 
+                  preTestScores={preTestScores} 
+                  weakestDomain={weakestDomain} 
+                  prescribedGame={prescribedGame}
+                  personalizedReport={personalizedReport}
+                  onStartPrescribedGame={() => {
+                    const domain = DOMAINS_LIST.find(d => d.games.some(g => g.id === prescribedGame));
+                    const gameInfo = domain?.games.find(g => g.id === prescribedGame);
+                    if (gameInfo && domain) {
+                      setPendingGameToLaunch({ ...gameInfo, themeClass: domain.themeClass });
+                    }
+                  }}
+                />
+              </div>
+            )}
+            
             <div className="intro-card">
               <h1>Adaptive Neuro-Training Portal</h1>
               <p>Welcome to CogniCore. Access clinically validated serious game modules designed to assess cognitive processing speed, selective attention, and executive function. Real-time telemetry is recorded to construct your adaptive cognitive profile.</p>
@@ -5036,6 +5081,8 @@ export default function App() {
       <footer className="portal-footer">
         <p>&copy; {new Date().getFullYear()} CogniCore Cognitive Training Platform. All rights reserved.</p>
       </footer>
+      
+      {showShop && <Shop onClose={() => setShowShop(false)} />}
     </div>
   );
 }

@@ -18,6 +18,9 @@ from flask_cors import CORS
 import sqlite3
 import os
 import time
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Import Machine Learning Classifier Strategy
 from model import archetype_classifier
@@ -361,7 +364,7 @@ def init_db():
 init_db()
 
 # Helper function to map difficulty levels to gameplay parameters
-def calculate_dda_parameters(difficulty_level, game_type='SpeedTap'):
+def calculate_dda_parameters(difficulty_level, game_type='SpeedTap', user_avg_rt=None):
     # Bound difficulty level between 1 and 5
     level = max(1, min(5, int(difficulty_level)))
     
@@ -734,6 +737,14 @@ def calculate_dda_parameters(difficulty_level, game_type='SpeedTap'):
                 "rules_pool": ["color", "shape", "count"]
             }
         }
+        
+        # Apply dynamic AI scaling for time_limit based on user performance
+        if user_avg_rt is not None and user_avg_rt > 0:
+            for lvl in configs:
+                # Base formula: User's average RT + (6 - difficulty) * 500ms grace period
+                dynamic_limit = user_avg_rt + ((6 - lvl) * 500)
+                min_floor = 1200 if lvl == 5 else 1500
+                configs[lvl]["time_limit"] = int(max(min_floor, min(8000, dynamic_limit)))
     elif game_type in ['EquationBalance', 'equation_balance']:
         # Map levels to game-specific variables for the Equation Balance game
         configs = {
@@ -954,6 +965,50 @@ def login():
         traceback.print_exc()
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
+def generate_pros_cons(scores_map):
+    # Map technical jargon to plain English
+    human_map = {
+        "spatial_visual_memory": "Visual Memory & Spatial Awareness",
+        "logical_mathematical": "Logic & Problem Solving",
+        "reflexes_and_focus": "Quick Thinking & Attention",
+        "executive_strategy": "Planning & Adaptability"
+    }
+    
+    sorted_domains = sorted(scores_map.items(), key=lambda x: x[1], reverse=True)
+    top_domain = sorted_domains[0]
+    weakest_domain = sorted_domains[-1]
+    
+    top_name = human_map[top_domain[0]]
+    weakest_name = human_map[weakest_domain[0]]
+    
+    pros = []
+    if top_domain[0] == "spatial_visual_memory":
+        pros.append(f"Your {top_name} is excellent! You excel at remembering visual details and navigating complex spaces.")
+    elif top_domain[0] == "logical_mathematical":
+        pros.append(f"Your {top_name} is outstanding! You have a strong ability to recognize patterns and solve problems logically.")
+    elif top_domain[0] == "reflexes_and_focus":
+        pros.append(f"Your {top_name} is sharp! You react quickly and maintain focus even when distractions are present.")
+    else:
+        pros.append(f"Your {top_name} is great! You are highly adaptable and excel at shifting strategies on the fly.")
+        
+    weaknesses = []
+    if weakest_domain[0] == "spatial_visual_memory":
+        weaknesses.append(f"You might occasionally struggle with {weakest_name}. Remembering exact locations or visual sequences can be challenging.")
+    elif weakest_domain[0] == "logical_mathematical":
+        weaknesses.append(f"Your {weakest_name} could use a boost. Complex math or multi-step logic puzzles might take you longer to process.")
+    elif weakest_domain[0] == "reflexes_and_focus":
+        weaknesses.append(f"Your {weakest_name} is your weak point. You might find your attention drifting or reactions slowing when overwhelmed.")
+    else:
+        weaknesses.append(f"Your {weakest_name} needs training. Adapting to sudden rule changes or juggling multiple tasks can feel stressful.")
+        
+    return {
+        "top_skill": top_name,
+        "weakest_skill": weakest_name,
+        "pros": pros,
+        "weaknesses": weaknesses,
+        "summary_message": f"Overall, you show great potential in {top_name}, but your {weakest_name} needs targeted training. We recommend playing the prescribed games daily."
+    }
+
 @app.route('/api/submit-assessment', methods=['POST'])
 def submit_assessment():
     """
@@ -1057,7 +1112,8 @@ def submit_assessment():
                 "executive_strategy": round(executive_score, 2)
             },
             "weakest_domain": weakest_domain,
-            "prescribed_game": prescribed_game
+            "prescribed_game": prescribed_game,
+            "personalized_report": generate_pros_cons(scores_map)
         }), 201
 
     except Exception as e:
@@ -1144,7 +1200,8 @@ def get_assessment_status(username):
                     "pre_test": pre_data,
                     "post_test": post_data,
                     "weakest_domain": weakest_domain,
-                    "prescribed_game": prescribed_game
+                    "prescribed_game": prescribed_game,
+                    "personalized_report": generate_pros_cons(pre_data) if pre_data else None
                 }), 200
         finally:
             conn.close()
@@ -1368,8 +1425,8 @@ def adjust_difficulty(current_user_id, current_username):
                     (smooth_diff, session_id)
                 )
                     
-                # Calculate new parameters
-                dda_params = calculate_dda_parameters(new_difficulty, game_type)
+                # Calculate new parameters using active avg_rt for dynamic timer scaling
+                dda_params = calculate_dda_parameters(new_difficulty, game_type, user_avg_rt=avg_rt)
                 
                 # Cognitive Profiling Archetype Determination using Random Forest
                 # Features: avg_accuracy, avg_rt, acc_slope, rt_slope
@@ -1427,6 +1484,8 @@ def adjust_difficulty(current_user_id, current_username):
                 pred_res = archetype_classifier.predict(avg_accuracy, avg_rt, acc_slope, rt_slope)
                 archetype = pred_res["archetype"]
                 confidence = pred_res["confidence_score"]
+                
+                trajectory_msg = archetype_classifier.predict_trajectory(new_difficulty, acc_slope, rt_slope)
                         
                 # Insert or update cognitive profile
                 cursor.execute("SELECT id FROM cognitive_profiles WHERE user_id = ?", (user_id,))
@@ -1468,6 +1527,7 @@ def adjust_difficulty(current_user_id, current_username):
                 "confidence_score": confidence,
                 "accuracy_slope": acc_slope,
                 "reaction_time_slope": rt_slope,
+                "trajectory_prediction": trajectory_msg,
                 "history_accuracy": history_acc,
                 "history_reaction_time": history_rt
             }
@@ -1556,14 +1616,189 @@ def submit_metrics(current_user_id, current_username):
                     """,
                     (session_id, reaction_time, accuracy, difficulty, cognitive_domain, game_type, error_count, hesitation_ms, spam_click_count, rule_shift_latency_ms, path_efficiency)
                 )
+                
+                # Gamification: Award XP and Coins
+                cursor.execute("SELECT user_id FROM game_sessions WHERE id = ?", (session_id,))
+                user_row = cursor.fetchone()
+                xp_gained = difficulty * 15
+                coins_gained = int(accuracy * 10) + (difficulty * 2)
+                
+                if user_row:
+                    uid = user_row['user_id']
+                    try:
+                        cursor.execute("""
+                            INSERT INTO user_profiles (user_id, xp, coins, level) 
+                            VALUES (?, ?, ?, 1) 
+                            ON CONFLICT(user_id) DO UPDATE SET 
+                                xp = user_profiles.xp + excluded.xp,
+                                coins = user_profiles.coins + excluded.coins
+                        """, (uid, xp_gained, coins_gained))
+                        
+                        # Check level up
+                        cursor.execute("SELECT xp, level FROM user_profiles WHERE user_id = ?", (uid,))
+                        prof = cursor.fetchone()
+                        if prof:
+                            new_level = (prof['xp'] // 500) + 1
+                            if new_level > prof['level']:
+                                cursor.execute("UPDATE user_profiles SET level = ? WHERE user_id = ?", (new_level, uid))
+                    except Exception as pg_err:
+                        # Fail silently on gamification for now if table isn't migrated
+                        print(f"Gamification update skipped: {pg_err}")
         finally:
             conn.close()
  
-        return jsonify({"status": "success", "message": "Metrics recorded"}), 201
+        return jsonify({
+            "status": "success", 
+            "message": "Metrics recorded",
+            "rewards": {
+                "xp": xp_gained,
+                "coins": coins_gained
+            }
+        }), 201
  
     except Exception as e:
         app.logger.error(f"Error in submit_metrics: {e}")
         return jsonify({"status": "error", "message": f"Database or server error: {str(e)}"}), 500
+
+@app.route('/api/user-inventory/<username>', methods=['GET'])
+@token_required
+def get_user_inventory(current_user_id, current_username, username):
+    if current_username != username:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 403
+    
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT coins, equipped_avatar, equipped_banner, equipped_theme FROM user_profiles WHERE user_id = ?", (current_user_id,))
+        prof = cursor.fetchone()
+        
+        if not prof:
+            cursor.execute("INSERT INTO user_profiles (user_id) VALUES (?)", (current_user_id,))
+            conn.commit()
+            cursor.execute("SELECT coins, equipped_avatar, equipped_banner, equipped_theme FROM user_profiles WHERE user_id = ?", (current_user_id,))
+            prof = cursor.fetchone()
+        
+        cursor.execute("SELECT item_type, item_id FROM user_inventory WHERE user_id = ?", (current_user_id,))
+        inv_rows = cursor.fetchall()
+        
+        inventory = []
+        for row in inv_rows:
+            is_equipped = False
+            if row['item_type'] == 'avatar' and row['item_id'] == prof['equipped_avatar']:
+                is_equipped = True
+            elif row['item_type'] == 'banner' and row['item_id'] == prof['equipped_banner']:
+                is_equipped = True
+            elif row['item_type'] == 'theme' and row['item_id'] == prof['equipped_theme']:
+                is_equipped = True
+                
+            inventory.append({
+                "item_type": row['item_type'],
+                "item_id": row['item_id'],
+                "is_equipped": is_equipped
+            })
+            
+        return jsonify({
+            "status": "success",
+            "coins": prof['coins'] if prof else 0,
+            "inventory": inventory
+        }), 200
+    finally:
+        conn.close()
+
+@app.route('/api/purchase', methods=['POST'])
+@token_required
+def api_purchase(current_user_id, current_username):
+    data = request.get_json() or {}
+    item_id = str(data.get('item_id', '')).strip()
+    
+    # Define catalog
+    catalog = {
+        'theme-red': {'type': 'theme', 'price': 200},
+        'theme-blue': {'type': 'theme', 'price': 200},
+        'theme-purple': {'type': 'theme', 'price': 250},
+        'theme-yellow': {'type': 'theme', 'price': 200},
+        'avatar-robot': {'type': 'avatar', 'price': 500},
+        'avatar-brain': {'type': 'avatar', 'price': 500},
+        'avatar-hacker': {'type': 'avatar', 'price': 750},
+    }
+    
+    if item_id not in catalog:
+        return jsonify({"status": "error", "message": "Item not found in catalog."}), 404
+        
+    item_info = catalog[item_id]
+    price = item_info['price']
+    item_type = item_info['type']
+    
+    conn = get_db_connection()
+    try:
+        with conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT coins FROM user_profiles WHERE user_id = ?", (current_user_id,))
+            prof = cursor.fetchone()
+            if not prof:
+                cursor.execute("INSERT INTO user_profiles (user_id) VALUES (?)", (current_user_id,))
+                prof = {'coins': 0}
+                
+            current_coins = prof['coins']
+            if current_coins < price:
+                return jsonify({"status": "error", "message": "Insufficient coins."}), 400
+                
+            cursor.execute("UPDATE user_profiles SET coins = coins - ? WHERE user_id = ?", (price, current_user_id))
+            
+            try:
+                cursor.execute(
+                    "INSERT INTO user_inventory (user_id, item_type, item_id) VALUES (?, ?, ?)",
+                    (current_user_id, item_type, item_id)
+                )
+            except Exception as e:
+                # Likely already owned
+                return jsonify({"status": "error", "message": "Item already owned."}), 400
+                
+            return jsonify({
+                "status": "success", 
+                "message": f"Successfully purchased {item_id}", 
+                "coins": current_coins - price,
+                "item": {
+                    "item_id": item_id,
+                    "item_type": item_type,
+                    "is_equipped": False
+                }
+            }), 200
+    finally:
+        conn.close()
+
+@app.route('/api/equip', methods=['POST'])
+@token_required
+def api_equip(current_user_id, current_username):
+    data = request.get_json() or {}
+    item_id = str(data.get('item_id', '')).strip()
+    
+    conn = get_db_connection()
+    try:
+        with conn:
+            cursor = conn.cursor()
+            # Verify ownership
+            cursor.execute("SELECT item_type FROM user_inventory WHERE user_id = ? AND item_id = ?", (current_user_id, item_id))
+            item_row = cursor.fetchone()
+            if not item_row:
+                return jsonify({"status": "error", "message": "Item not owned."}), 400
+                
+            item_type = item_row['item_type']
+            
+            if item_type == 'avatar':
+                cursor.execute("UPDATE user_profiles SET equipped_avatar = ? WHERE user_id = ?", (item_id, current_user_id))
+            elif item_type == 'banner':
+                cursor.execute("UPDATE user_profiles SET equipped_banner = ? WHERE user_id = ?", (item_id, current_user_id))
+            elif item_type == 'theme':
+                cursor.execute("UPDATE user_profiles SET equipped_theme = ? WHERE user_id = ?", (item_id, current_user_id))
+                
+            return jsonify({
+                "status": "success", 
+                "message": f"Successfully equipped {item_id}",
+                "item_type": item_type
+            }), 200
+    finally:
+        conn.close()
 
 @app.route('/api/submit-metrics/batch', methods=['POST'])
 def submit_metrics_batch():

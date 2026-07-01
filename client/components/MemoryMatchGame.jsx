@@ -76,7 +76,7 @@ export default function MemoryMatchGame({ username = 'default_player', apiUrl = 
         }
 
         console.log('[React MM Wrapper] Starting Phaser game instance...');
-        
+
         // Phaser configuration with auto-scaling Scale Manager for mobile responsiveness
         const config = {
             type: Phaser.AUTO,
@@ -104,7 +104,7 @@ export default function MemoryMatchGame({ username = 'default_player', apiUrl = 
             cognitiveProfile: cognitiveProfile,
             onGameOver: async (stats) => {
                 setFinalStats(stats);
-                
+
                 let profileInfo = null;
                 // Fetch final cognitive profile archetype updates from the database
                 try {
@@ -145,7 +145,7 @@ export default function MemoryMatchGame({ username = 'default_player', apiUrl = 
         };
     }, [gameState, sessionId, apiUrl, ddaParameters, onGameFinished]);
 
-    
+
     // Handle pause state transitions
     useEffect(() => {
         if (phaserInstanceRef.current && gameState === 'PLAYING') {
@@ -189,7 +189,7 @@ export default function MemoryMatchGame({ username = 'default_player', apiUrl = 
         };
     }, [gameState]);
 
-const handleRestart = () => {
+    const handleRestart = () => {
         setGameState('IDLE');
         setSessionId(null);
         setDdaParameters(null);
@@ -318,21 +318,21 @@ const handleRestart = () => {
                 <div className='premium-glass-card'>
                     <h1 className='premium-title'>MEMORY MATCH</h1>
                     <p className='premium-subtitle'>Working Memory & Pattern Recall Training</p>
-                    
+
                     {error && <div style={styles.errorMessage}>{error}</div>}
 
                     <div style={{ textAlign: 'left', marginBottom: '0.5rem' }}>
                         <label style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: '500' }}>Player Username</label>
                     </div>
-                    <input 
-                        type="text" 
-                        value={inputUsername} 
-                        onChange={(e) => setInputUsername(e.target.value)} 
-                        placeholder="Enter username" 
+                    <input
+                        type="text"
+                        value={inputUsername}
+                        onChange={(e) => setInputUsername(e.target.value)}
+                        placeholder="Enter username"
                         style={styles.input}
                     />
 
-                    <button 
+                    <button
                         onClick={startTrainingSession}
                         className='premium-button'
                         onMouseOver={(e) => e.target.style.filter = 'brightness(1.1)'}
@@ -384,18 +384,18 @@ const handleRestart = () => {
         return (
             <div className='premium-overlay'>
                 <div className='premium-glass-card'>
-                    <h1 style={{ 
-                        ...styles.title, 
+                    <h1 style={{
+                        ...styles.title,
                         background: 'linear-gradient(to right, #4ade80, #a855f7)',
                         WebkitBackgroundClip: 'text',
-                        backgroundClip: 'text' 
+                        backgroundClip: 'text'
                     }}>SESSION COMPLETE</h1>
                     <p className='premium-subtitle'>Memory telemetry successfully synced to database.</p>
 
                     <div style={{ marginBottom: '2rem', textAlign: 'left' }}>
                         <div className='stat-row'>
                             <span>🏆 Final Score</span>
-                            <span className="stat-val" style={{ color: '#4ade80'  }}>{finalStats?.score}</span>
+                            <span className="stat-val" style={{ color: '#4ade80' }}>{finalStats?.score}</span>
                         </div>
                         <div className='stat-row'>
                             <span>Sequences Recalled</span>
@@ -403,7 +403,7 @@ const handleRestart = () => {
                         </div>
                         <div className='stat-row'>
                             <span>❌ Mismatches / Errors</span>
-                            <span className="stat-val" style={{ color: '#ef4444'  }}>{finalStats?.misses}</span>
+                            <span className="stat-val" style={{ color: '#ef4444' }}>{finalStats?.misses}</span>
                         </div>
                         <div className='stat-row'>
                             <span>🎯 Recall Accuracy</span>
@@ -411,7 +411,7 @@ const handleRestart = () => {
                         </div>
                         <div className='stat-row'>
                             <span>📈 Max Difficulty Achieved</span>
-                            <span className="stat-val" style={{ color: '#38bdf8'  }}>Level {finalStats?.difficultyLevel}</span>
+                            <span className="stat-val" style={{ color: '#38bdf8' }}>Level {finalStats?.difficultyLevel}</span>
                         </div>
                     </div>
 
@@ -427,7 +427,7 @@ const handleRestart = () => {
                         </div>
                     )}
 
-                    <button 
+                    <button
                         onClick={handleRestart}
                         className='premium-button'
                         onMouseOver={(e) => e.target.style.filter = 'brightness(1.1)'}

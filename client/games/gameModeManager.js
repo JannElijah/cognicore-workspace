@@ -566,8 +566,10 @@ function decorateSceneClass(SceneClass) {
 
             // 1. Proportional screen-shake (intensity scales with difficulty)
             try {
-                const shakeIntensity = 0.004 + (this.difficultyLevel || 1) * 0.0012;
-                this.cameras.main.shake(90, Math.min(0.012, shakeIntensity));
+                if (!window.reduceFlashes) {
+                    const shakeIntensity = 0.004 + (this.difficultyLevel || 1) * 0.0012;
+                    this.cameras.main.shake(90, Math.min(0.012, shakeIntensity));
+                }
             } catch (_) {}
 
             // 2. Audio miss tone
@@ -634,13 +636,18 @@ function decorateSceneClass(SceneClass) {
                     
                     if (targetAlpha > 0) {
                         this.ddaVignette.fillColor = targetColor;
-                        this.tweens.add({
-                            targets: this.ddaVignette,
-                            alpha: targetAlpha,
-                            duration: 1000,
-                            yoyo: true, // Pulse it
-                            repeat: this.difficultyLevel >= 4 ? -1 : 1
-                        });
+                        if (!window.reduceFlashes) {
+                            this.tweens.add({
+                                targets: this.ddaVignette,
+                                alpha: targetAlpha,
+                                duration: 1000,
+                                yoyo: true, // Pulse it
+                                repeat: this.difficultyLevel >= 4 ? -1 : 1
+                            });
+                        } else {
+                            // Static low alpha instead of flashing for seizure-safe mode
+                            this.ddaVignette.alpha = targetAlpha * 0.5; 
+                        }
                     }
                 }
             }
