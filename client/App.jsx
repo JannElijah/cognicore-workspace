@@ -19,6 +19,10 @@ import LiveDdaHud from './components/LiveDdaHud';
 import ErrorBoundary from './components/ErrorBoundary';
 import useCogniStore from './store/useCogniStore';
 import Shop from './components/Shop';
+import RewardModal from './components/RewardModal';
+import LeaderboardModal from './components/LeaderboardModal';
+import ProfileModal from './components/ProfileModal';
+import DailyQuests from './components/DailyQuests';
 import PretestResults from './components/PretestResults';
 
 const SpeedTapGame = lazy(() => import('./components/SpeedTapGame'));
@@ -442,6 +446,10 @@ const COGNITIVE_QUESTIONS = [
 ];
 
 export default function App() {
+  const { coins, totalXp, inventory, fetchInventory } = useCogniStore();
+  const currentLevel = totalXp ? Math.floor(totalXp / 500) + 1 : 1;
+  const currentLevelXp = totalXp ? totalXp % 500 : 0;
+  const xpPercent = Math.floor((currentLevelXp / 500) * 100);
   const [activeGame, setActiveGame] = useState(null);
   const [selectedGameMode, setSelectedGameMode] = useState('timed');
   const [pendingGameToLaunch, setPendingGameToLaunch] = useState(null);
@@ -457,6 +465,15 @@ export default function App() {
     }, 1500);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    const activeTheme = inventory.find(i => i.item_type === 'theme' && i.is_equipped);
+    if (activeTheme) {
+      document.body.setAttribute('data-theme', activeTheme.item_id);
+    } else {
+      document.body.removeAttribute('data-theme');
+    }
+  }, [inventory]);
 
   useEffect(() => {
     // Poll server health
@@ -483,6 +500,10 @@ export default function App() {
 
   const [showDashboard, setShowDashboard] = useState(false);
   const [showShop, setShowShop] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [gameRewardsModal, setGameRewardsModal] = useState(null);
+  const sessionRewardsRef = useRef({ xp: 0, coins: 0, leveled_up: false });
   const [lastGameStats, setLastGameStats] = useState(null);
   const [portalView, setPortalView] = useState('participant'); // 'participant' | 'researcher'
 
@@ -550,6 +571,7 @@ export default function App() {
           const loginData = await loginRes.json();
           if (loginData.status === 'success') {
               useCogniStore.getState().login(loginData.user, loginData.token);
+              useCogniStore.getState().fetchInventory();
           }
       }
 
@@ -891,6 +913,18 @@ export default function App() {
                 }
               });
             }
+            
+            if (response.ok) {
+              response.clone().json().then(data => {
+                if (data && data.status === 'success' && data.rewards) {
+                  sessionRewardsRef.current.xp += data.rewards.xp || 0;
+                  sessionRewardsRef.current.coins += data.rewards.coins || 0;
+                  if (data.rewards.leveled_up) sessionRewardsRef.current.leveled_up = true;
+                }
+              }).catch(e => {
+                // Ignore parse errors if response isn't JSON
+              });
+            }
           } catch (e) {
             console.error('[Telemetry HUD] Error parsing submit-metrics', e);
           }
@@ -1081,6 +1115,12 @@ export default function App() {
     setLiveMetrics([]);
     audioDda.stop();
     setHasPlayedPrescribed(true);
+    
+    // Check and show rewards modal if any rewards were accumulated
+    if (sessionRewardsRef.current.xp > 0 || sessionRewardsRef.current.coins > 0) {
+      setGameRewardsModal({ ...sessionRewardsRef.current });
+      sessionRewardsRef.current = { xp: 0, coins: 0, leveled_up: false };
+    }
   }, [activeGame]);
 
   const handleBackToLobby = () => {
@@ -2412,8 +2452,37 @@ export default function App() {
       )}
       {/* Top Header */}
       <header className="portal-header">
-        <div className="logo-glow" onClick={() => { setActiveGame(null); setShowDashboard(false); setPortalView('participant'); }} style={{ cursor: 'pointer' }}>
-          🧠 COGNICORE
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div className="logo-glow" onClick={() => { setActiveGame(null); setShowDashboard(false); setPortalView('participant'); }} style={{ cursor: 'pointer', alignSelf: 'flex-start' }}>
+            🧠 COGNICORE
+          </div>
+          {currentUser !== '' && portalView === 'participant' && (
+            <button 
+              onClick={() => setShowProfileModal(true)}
+              title="View Profile & Stats"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.1)', background: 'rgba(255, 255, 255, 0.05)', cursor: 'pointer', transition: 'all 0.2s', textAlign: 'left' }}
+              onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+              onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+            >
+              <div style={{ width: '42px', height: '42px', background: 'rgba(56, 189, 248, 0.15)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '2px solid #38bdf8' }}>
+                {inventory.find(i => i.item_type === 'avatar' && i.is_equipped)?.item_id === 'avatar-robot' ? '🤖' :
+                 inventory.find(i => i.item_type === 'avatar' && i.is_equipped)?.item_id === 'avatar-brain' ? '🧠' :
+                 inventory.find(i => i.item_type === 'avatar' && i.is_equipped)?.item_id === 'avatar-hacker' ? '👨‍💻' : '👤'}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: '120px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontWeight: 'bold', fontSize: '0.95rem', color: '#f8fafc' }}>{currentUser}</span>
+                  <span style={{ fontSize: '0.75rem', color: '#a855f7', fontWeight: 'bold' }}>Lv. {currentLevel}</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '0.2rem', fontWeight: '600' }}>🪙 {coins}</span>
+                  <div style={{ flex: 1, height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
+                    <div style={{ width: `${xpPercent}%`, height: '100%', background: 'linear-gradient(to right, #38bdf8, #a855f7)' }}></div>
+                  </div>
+                </div>
+              </div>
+            </button>
+          )}
         </div>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           {activeGame === null && (
@@ -2457,40 +2526,51 @@ export default function App() {
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button 
                 className="dashboard-toggle-btn" 
+                title="Store"
                 onClick={() => setShowShop(true)}
                 style={{
                   background: 'rgba(255, 255, 255, 0.05)',
                   color: '#fbbf24',
                   border: '1px solid rgba(245, 158, 11, 0.3)',
-                  padding: '0.5rem 1rem',
+                  padding: '0.5rem',
                   borderRadius: '8px',
                   fontWeight: '600',
                   cursor: 'pointer',
                   transition: 'all 0.2s',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '0.5rem'
+                  justifyContent: 'center',
+                  width: '38px',
+                  height: '38px'
                 }}
               >
-                <span>🛒</span> Rewards Shop
+                <span>🛒</span>
               </button>
+
+
               
               <button 
                 className="dashboard-toggle-btn" 
+                title="Detailed History"
                 onClick={() => setShowDashboard(!showDashboard)}
                 style={{
                   background: showDashboard ? 'rgba(255, 255, 255, 0.05)' : 'linear-gradient(to right, #38bdf8, #a855f7)',
                   color: '#ffffff',
                   border: '1px solid ' + (showDashboard ? 'rgba(255, 255, 255, 0.2)' : 'transparent'),
-                  padding: '0.5rem 1rem',
+                  padding: '0.5rem',
                   borderRadius: '8px',
                   fontWeight: '600',
                   cursor: 'pointer',
                   boxShadow: showDashboard ? 'none' : '0 4px 12px rgba(124, 58, 237, 0.3)',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '38px',
+                  height: '38px'
                 }}
               >
-                {showDashboard ? '← Back to Training Hub' : '📊 Analytics Dashboard'}
+                {showDashboard ? '🔙' : '📊'}
               </button>
             </div>
           )}
@@ -4495,6 +4575,7 @@ export default function App() {
                 </div>
 
               </div>
+              <DailyQuests />
             </div>
 
             {/* Quasi-Experimental Analytics Banner */}
@@ -5083,6 +5164,9 @@ export default function App() {
       </footer>
       
       {showShop && <Shop onClose={() => setShowShop(false)} />}
+      {showProfileModal && <ProfileModal onClose={() => setShowProfileModal(false)} />}
+      {showLeaderboard && <LeaderboardModal onClose={() => setShowLeaderboard(false)} />}
+      {gameRewardsModal && <RewardModal rewards={gameRewardsModal} onClose={() => { setGameRewardsModal(null); fetchInventory(); }} />}
     </div>
   );
 }

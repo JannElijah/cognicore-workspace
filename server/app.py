@@ -336,6 +336,33 @@ def init_db():
         )
     """)
     
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS daily_tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            task_description TEXT NOT NULL,
+            target_amount INTEGER NOT NULL,
+            current_amount INTEGER DEFAULT 0,
+            is_completed INTEGER DEFAULT 0,
+            reward_coins INTEGER DEFAULT 200,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    """)
+    
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS user_achievements (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            achievement_id TEXT NOT NULL,
+            current_amount INTEGER DEFAULT 0,
+            is_completed INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            UNIQUE(user_id, achievement_id)
+        )
+    """)
+    
     # Programmatic column migrations:
     # Add current_smooth_difficulty to game_sessions if it doesn't exist
     try:
@@ -1623,6 +1650,8 @@ def submit_metrics(current_user_id, current_username):
                 xp_gained = difficulty * 15
                 coins_gained = int(accuracy * 10) + (difficulty * 2)
                 
+                leveled_up = False
+                
                 if user_row:
                     uid = user_row['user_id']
                     try:
@@ -1637,28 +1666,236 @@ def submit_metrics(current_user_id, current_username):
                         # Check level up
                         cursor.execute("SELECT xp, level FROM user_profiles WHERE user_id = ?", (uid,))
                         prof = cursor.fetchone()
+                        new_level = 1
                         if prof:
                             new_level = (prof['xp'] // 500) + 1
                             if new_level > prof['level']:
-                                cursor.execute("UPDATE user_profiles SET level = ? WHERE user_id = ?", (new_level, uid))
+                                leveled_up = True
+                                coins_gained += 500 # 500 bonus
+                                cursor.execute("UPDATE user_profiles SET level = ?, coins = coins + 500 WHERE user_id = ?", (new_level, uid))
+                                
+                        # Update daily tasks
+                        cursor.execute("UPDATE daily_tasks SET current_amount = current_amount + 1 WHERE user_id = ? AND task_description = 'Play 3 Training Games' AND date(created_at) = date('now', 'localtime')", (uid,))
+                        if accuracy >= 0.8:
+                            cursor.execute("UPDATE daily_tasks SET current_amount = current_amount + 1 WHERE user_id = ? AND task_description = 'Achieve 80% accuracy in any game' AND date(created_at) = date('now', 'localtime')", (uid,))
+                        if reaction_time < 800:
+                            cursor.execute("UPDATE daily_tasks SET current_amount = current_amount + 1 WHERE user_id = ? AND task_description = 'Achieve reaction time under 800ms' AND date(created_at) = date('now', 'localtime')", (uid,))
+                            
+                        # Update permanent achievements
+                        # 1. Speed Demon
+                        if reaction_time < 400:
+                            cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'speed_demon')", (uid,))
+                            cursor.execute("UPDATE user_achievements SET current_amount = current_amount + 1 WHERE user_id = ? AND achievement_id = 'speed_demon' AND is_completed = 0", (uid,))
+                            cursor.execute("SELECT current_amount FROM user_achievements WHERE user_id = ? AND achievement_id = 'speed_demon' AND is_completed = 0", (uid,))
+                            ach_sd = cursor.fetchone()
+                            if ach_sd and ach_sd['current_amount'] >= 10:
+                                cursor.execute("UPDATE user_achievements SET is_completed = 1 WHERE user_id = ? AND achievement_id = 'speed_demon'", (uid,))
+                                cursor.execute("INSERT OR IGNORE INTO user_inventory (user_id, item_id, item_type, is_equipped) VALUES (?, 'avatar-speed-demon', 'avatar', 0)", (uid,))
+                        
+                        # 2. Scholar
+                        if new_level >= 10:
+                            cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'scholar')", (uid,))
+                            cursor.execute("SELECT is_completed FROM user_achievements WHERE user_id = ? AND achievement_id = 'scholar'", (uid,))
+                            ach_sc = cursor.fetchone()
+                            if ach_sc and ach_sc['is_completed'] == 0:
+                                cursor.execute("UPDATE user_achievements SET is_completed = 1, current_amount = 1 WHERE user_id = ? AND achievement_id = 'scholar'", (uid,))
+                                cursor.execute("INSERT OR IGNORE INTO user_inventory (user_id, item_id, item_type, is_equipped) VALUES (?, 'banner-scholar', 'banner', 0)", (uid,))
+
+                        # 3. First Steps
+                        cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'first_steps')", (uid,))
+                        cursor.execute("SELECT is_completed FROM user_achievements WHERE user_id = ? AND achievement_id = 'first_steps'", (uid,))
+                        ach_fs = cursor.fetchone()
+                        if ach_fs and ach_fs['is_completed'] == 0:
+                            cursor.execute("UPDATE user_achievements SET is_completed = 1, current_amount = 1 WHERE user_id = ? AND achievement_id = 'first_steps'", (uid,))
+                            cursor.execute("UPDATE users SET coins = coins + 100 WHERE id = ?", (uid,))
+                            coins_gained += 100
+
+                        # 4. Consistency
+                        cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'consistency')", (uid,))
+                        cursor.execute("UPDATE user_achievements SET current_amount = current_amount + 1 WHERE user_id = ? AND achievement_id = 'consistency' AND is_completed = 0", (uid,))
+                        cursor.execute("SELECT current_amount FROM user_achievements WHERE user_id = ? AND achievement_id = 'consistency' AND is_completed = 0", (uid,))
+                        ach_con = cursor.fetchone()
+                        if ach_con and ach_con['current_amount'] >= 50:
+                            cursor.execute("UPDATE user_achievements SET is_completed = 1 WHERE user_id = ? AND achievement_id = 'consistency'", (uid,))
+                            cursor.execute("UPDATE users SET coins = coins + 500 WHERE id = ?", (uid,))
+                            coins_gained += 500
+
+                        # 5. Accuracy Master
+                        if accuracy == 100:
+                            cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'accuracy_master')", (uid,))
+                            cursor.execute("UPDATE user_achievements SET current_amount = current_amount + 1 WHERE user_id = ? AND achievement_id = 'accuracy_master' AND is_completed = 0", (uid,))
+                            cursor.execute("SELECT current_amount FROM user_achievements WHERE user_id = ? AND achievement_id = 'accuracy_master' AND is_completed = 0", (uid,))
+                            ach_am = cursor.fetchone()
+                            if ach_am and ach_am['current_amount'] >= 5:
+                                cursor.execute("UPDATE user_achievements SET is_completed = 1 WHERE user_id = ? AND achievement_id = 'accuracy_master'", (uid,))
+                                cursor.execute("UPDATE users SET coins = coins + 1000 WHERE id = ?", (uid,))
+                                coins_gained += 1000
+                                
                     except Exception as pg_err:
                         # Fail silently on gamification for now if table isn't migrated
                         print(f"Gamification update skipped: {pg_err}")
         finally:
+            conn.commit()
             conn.close()
- 
+
         return jsonify({
             "status": "success", 
             "message": "Metrics recorded",
             "rewards": {
                 "xp": xp_gained,
-                "coins": coins_gained
+                "coins": coins_gained,
+                "leveled_up": leveled_up
             }
         }), 201
  
     except Exception as e:
         app.logger.error(f"Error in submit_metrics: {e}")
         return jsonify({"status": "error", "message": f"Database or server error: {str(e)}"}), 500
+
+@app.route('/api/user-analytics/<username>', methods=['GET'])
+@token_required
+def get_user_analytics(current_user_id, current_username, username):
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        
+        # Check if user exists
+        cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+        user = cursor.fetchone()
+        if not user:
+            return jsonify({"status": "error", "message": "User not found"}), 404
+        target_uid = user['id']
+        
+        # Fetch metrics grouped by domain
+        cursor.execute("""
+            SELECT 
+                cognitive_domain, 
+                AVG(accuracy_rate) as avg_accuracy, 
+                AVG(reaction_time) as avg_rt 
+            FROM performance_metrics 
+            JOIN game_sessions ON performance_metrics.session_id = game_sessions.id 
+            WHERE game_sessions.user_id = ?
+            GROUP BY cognitive_domain
+        """, (target_uid,))
+        domain_stats = cursor.fetchall()
+        
+        # Fetch time series (daily average accuracy/rt)
+        cursor.execute("""
+            SELECT 
+                date(game_sessions.start_time) as day, 
+                AVG(accuracy_rate) as avg_accuracy, 
+                AVG(reaction_time) as avg_rt
+            FROM performance_metrics
+            JOIN game_sessions ON performance_metrics.session_id = game_sessions.id
+            WHERE game_sessions.user_id = ?
+            GROUP BY date(game_sessions.start_time)
+            ORDER BY day ASC
+            LIMIT 14
+        """, (target_uid,))
+        timeline_stats = cursor.fetchall()
+        
+        return jsonify({
+            "status": "success",
+            "domain_stats": [dict(row) for row in domain_stats],
+            "timeline_stats": [dict(row) for row in timeline_stats]
+        }), 200
+    finally:
+        conn.close()
+
+@app.route('/api/leaderboard', methods=['GET'])
+def get_leaderboard():
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT users.username, user_profiles.xp, user_profiles.level, user_profiles.equipped_avatar, user_profiles.equipped_banner
+            FROM user_profiles
+            JOIN users ON user_profiles.user_id = users.id
+            ORDER BY user_profiles.xp DESC
+            LIMIT 50
+        """)
+        leaders = cursor.fetchall()
+        
+        return jsonify({
+            "status": "success",
+            "leaderboard": [dict(l) for l in leaders]
+        }), 200
+    finally:
+        conn.close()
+
+@app.route('/api/achievements', methods=['GET'])
+@token_required
+def get_achievements(current_user_id, current_username):
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT achievement_id, current_amount, is_completed, created_at FROM user_achievements WHERE user_id = ?", (current_user_id,))
+        achievements = cursor.fetchall()
+        
+        return jsonify({
+            "status": "success",
+            "achievements": [dict(a) for a in achievements]
+        }), 200
+    finally:
+        conn.close()
+
+@app.route('/api/quests', methods=['GET'])
+@token_required
+def get_daily_quests(current_user_id, current_username):
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        
+        # Check if tasks exist for today
+        cursor.execute("SELECT id, task_description, target_amount, current_amount, is_completed, reward_coins FROM daily_tasks WHERE user_id = ? AND date(created_at) = date('now', 'localtime')", (current_user_id,))
+        tasks = cursor.fetchall()
+        
+        if not tasks:
+            # Create new tasks for today
+            new_tasks = [
+                ("Play 3 Training Games", 3, 200),
+                ("Achieve 80% accuracy in any game", 1, 200),
+                ("Achieve reaction time under 800ms", 1, 200)
+            ]
+            for desc, tgt, rew in new_tasks:
+                cursor.execute("INSERT INTO daily_tasks (user_id, task_description, target_amount, reward_coins) VALUES (?, ?, ?, ?)", (current_user_id, desc, tgt, rew))
+            conn.commit()
+            
+            cursor.execute("SELECT id, task_description, target_amount, current_amount, is_completed, reward_coins FROM daily_tasks WHERE user_id = ? AND date(created_at) = date('now', 'localtime')", (current_user_id,))
+            tasks = cursor.fetchall()
+            
+        return jsonify({
+            "status": "success",
+            "quests": [dict(t) for t in tasks]
+        }), 200
+    finally:
+        conn.close()
+
+@app.route('/api/quests/claim/<int:quest_id>', methods=['POST'])
+@token_required
+def claim_quest(current_user_id, current_username, quest_id):
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT is_completed, current_amount, target_amount, reward_coins FROM daily_tasks WHERE id = ? AND user_id = ?", (quest_id, current_user_id))
+        quest = cursor.fetchone()
+        
+        if not quest:
+            return jsonify({"status": "error", "message": "Quest not found"}), 404
+            
+        if quest['is_completed'] == 1:
+            return jsonify({"status": "error", "message": "Quest already claimed"}), 400
+            
+        if quest['current_amount'] < quest['target_amount']:
+            return jsonify({"status": "error", "message": "Quest not finished"}), 400
+            
+        cursor.execute("UPDATE daily_tasks SET is_completed = 1 WHERE id = ?", (quest_id,))
+        cursor.execute("UPDATE user_profiles SET coins = coins + ? WHERE user_id = ?", (quest['reward_coins'], current_user_id))
+        conn.commit()
+        
+        return jsonify({"status": "success", "reward": quest['reward_coins']}), 200
+    finally:
+        conn.close()
 
 @app.route('/api/user-inventory/<username>', methods=['GET'])
 @token_required
@@ -1669,13 +1906,13 @@ def get_user_inventory(current_user_id, current_username, username):
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
-        cursor.execute("SELECT coins, equipped_avatar, equipped_banner, equipped_theme FROM user_profiles WHERE user_id = ?", (current_user_id,))
+        cursor.execute("SELECT coins, equipped_avatar, equipped_banner, equipped_theme, reduce_flashes, total_xp FROM user_profiles WHERE user_id = ?", (current_user_id,))
         prof = cursor.fetchone()
         
         if not prof:
             cursor.execute("INSERT INTO user_profiles (user_id) VALUES (?)", (current_user_id,))
             conn.commit()
-            cursor.execute("SELECT coins, equipped_avatar, equipped_banner, equipped_theme FROM user_profiles WHERE user_id = ?", (current_user_id,))
+            cursor.execute("SELECT coins, equipped_avatar, equipped_banner, equipped_theme, reduce_flashes, total_xp FROM user_profiles WHERE user_id = ?", (current_user_id,))
             prof = cursor.fetchone()
         
         cursor.execute("SELECT item_type, item_id FROM user_inventory WHERE user_id = ?", (current_user_id,))
@@ -1700,8 +1937,27 @@ def get_user_inventory(current_user_id, current_username, username):
         return jsonify({
             "status": "success",
             "coins": prof['coins'] if prof else 0,
+            "total_xp": prof['total_xp'] if prof else 0,
+            "reduce_flashes": bool(prof['reduce_flashes']) if prof else False,
             "inventory": inventory
         }), 200
+    finally:
+        conn.close()
+
+@app.route('/api/settings/accessibility', methods=['POST'])
+@token_required
+def update_accessibility(current_user_id, current_username):
+    data = request.json
+    reduce_flashes = data.get('reduce_flashes', False)
+    
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("UPDATE user_profiles SET reduce_flashes = ? WHERE user_id = ?", (reduce_flashes, current_user_id))
+        conn.commit()
+        return jsonify({"status": "success", "reduce_flashes": reduce_flashes}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
     finally:
         conn.close()
 

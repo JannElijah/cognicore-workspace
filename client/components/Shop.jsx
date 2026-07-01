@@ -186,7 +186,13 @@ const Shop = ({ onClose }) => {
                       boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                     }}>
                       <div style={{ marginBottom: '1rem' }}>
-                        <h4 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#f8fafc', margin: '0 0 0.5rem 0' }}>{item.name}</h4>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0 0 0.5rem 0' }}>
+                          {item.id === 'theme-red' && <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 8px #ef4444' }}></div>}
+                          {item.id === 'theme-blue' && <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#3b82f6', boxShadow: '0 0 8px #3b82f6' }}></div>}
+                          {item.id === 'theme-purple' && <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#a855f7', boxShadow: '0 0 8px #a855f7' }}></div>}
+                          {item.id === 'theme-yellow' && <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#eab308', boxShadow: '0 0 8px #eab308' }}></div>}
+                          <h4 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#f8fafc', margin: 0 }}>{item.name}</h4>
+                        </div>
                         <p style={{ color: '#94a3b8', fontSize: '0.875rem', margin: 0, minHeight: '40px' }}>{item.description}</p>
                       </div>
 
