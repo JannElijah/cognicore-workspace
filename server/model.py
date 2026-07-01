@@ -15,13 +15,10 @@ Chapter 2 Methodology Compliance: Software Engineering Architecture Patterns
 import numpy as np
 import os
 import pickle
-from functools import lru_cache
 
 # Try importing scikit-learn
 try:
-    from sklearn.ensemble import RandomForestClassifier
-    from sklearn.cluster import KMeans
-    from sklearn.preprocessing import StandardScaler
+    from sklearn.ensemble import RandomForestClassifier, IsolationForest
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False
@@ -29,6 +26,7 @@ except ImportError:
 class ArchetypeModel:
     def __init__(self):
         self.model = None
+        self.fatigue_model = None
         self.clustering_model = None
         self.scaler = None
         self.is_loaded_from_disk = False
@@ -119,6 +117,11 @@ class ArchetypeModel:
             self.model.fit(X_classifier, y)
             print("[ML Model Service] Random Forest Longitudinal Classifier trained successfully.")
 
+            # Train the Isolation Forest for Fatigue / Anomaly Detection
+            self.fatigue_model = IsolationForest(n_estimators=100, contamination=0.05, random_state=42)
+            self.fatigue_model.fit(X_classifier)
+            print("[ML Model Service] Isolation Forest Anomaly Detector trained successfully.")
+
             # Save the trained models to disk
             dir_path = os.path.dirname(__file__) if '__file__' in globals() else ''
             model_path = os.path.join(dir_path, 'cognitive_model.pkl')
@@ -174,6 +177,30 @@ class ArchetypeModel:
             return {"archetype": "High Fatigue", "confidence_score": 0.80}
         else:
             return {"archetype": "Plateauing", "confidence_score": 0.75}
+
+    def detect_fatigue(self, avg_accuracy, avg_rt_ms, acc_slope, rt_slope):
+        """
+        Uses IsolationForest to detect if current session metrics are anomalous (e.g. erratic fatigue).
+        Returns True if anomalous, False otherwise.
+        """
+        if SKLEARN_AVAILABLE and self.fatigue_model is not None:
+            try:
+                features = [[avg_accuracy, avg_rt_ms, acc_slope, rt_slope]]
+                prediction = self.fatigue_model.predict(features)[0]
+                # IsolationForest returns -1 for outliers/anomalies, 1 for inliers
+                is_anomaly = prediction == -1
+                
+                # Further qualify the anomaly: if it's an anomaly AND they are performing poorly, it's fatigue
+                if is_anomaly and (avg_accuracy < 0.60 or avg_rt_ms > 800.0 or rt_slope > 10.0):
+                    return True
+                return False
+            except Exception as e:
+                print(f"[ML Fatigue Model] Inference failed: {e}")
+                return False
+                
+        # Fallback heuristic
+        return (avg_accuracy < 0.40 and avg_rt_ms > 1000.0)
+
 
     def predict_trajectory(self, current_level, acc_slope, rt_slope):
         """Predicts cognitive trajectory and future level dynamically using linear metrics."""

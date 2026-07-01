@@ -3421,10 +3421,12 @@ def get_model_status():
     try:
         from model import SKLEARN_AVAILABLE
         conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(DISTINCT session_id) FROM performance_metrics")
-        dataset_size = cursor.fetchone()[0]
-        conn.close()
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(DISTINCT session_id) FROM performance_metrics")
+            dataset_size = cursor.fetchone()[0]
+        finally:
+            conn.close()
 
         hyperparams = None
         rf_classes = None
@@ -3485,27 +3487,29 @@ def get_model_clusters():
     try:
         import numpy as np
         conn = get_db_connection()
-        cursor = conn.cursor()
-        query = """
-            SELECT 
-                gs.id AS session_id,
-                u.username,
-                gs.game_type,
-                AVG(pm.accuracy_rate) AS avg_acc,
-                AVG(pm.reaction_time) AS avg_rt,
-                AVG(pm.hesitation_ms) AS avg_hes,
-                AVG(pm.spam_click_count) AS avg_spam,
-                AVG(pm.rule_shift_latency_ms) AS avg_rule,
-                AVG(pm.path_efficiency) AS avg_path
-            FROM game_sessions gs
-            JOIN users u ON gs.user_id = u.id
-            JOIN performance_metrics pm ON gs.id = pm.session_id
-            GROUP BY gs.id
-            ORDER BY gs.id ASC
-        """
-        cursor.execute(query)
-        rows = cursor.fetchall()
-        conn.close()
+        try:
+            cursor = conn.cursor()
+            query = """
+                SELECT 
+                    gs.id AS session_id,
+                    u.username,
+                    gs.game_type,
+                    AVG(pm.accuracy_rate) AS avg_acc,
+                    AVG(pm.reaction_time) AS avg_rt,
+                    AVG(pm.hesitation_ms) AS avg_hes,
+                    AVG(pm.spam_click_count) AS avg_spam,
+                    AVG(pm.rule_shift_latency_ms) AS avg_rule,
+                    AVG(pm.path_efficiency) AS avg_path
+                FROM game_sessions gs
+                JOIN users u ON gs.user_id = u.id
+                JOIN performance_metrics pm ON gs.id = pm.session_id
+                GROUP BY gs.id
+                ORDER BY gs.id ASC
+            """
+            cursor.execute(query)
+            rows = cursor.fetchall()
+        finally:
+            conn.close()
 
         user_sessions = {}
         for r in rows:

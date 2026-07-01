@@ -22,7 +22,8 @@ const useCogniStore = create((set) => ({
     const state = useCogniStore.getState();
     if (!state.user || !state.token) return;
     try {
-      const res = await fetch(`http://127.0.0.1:5000/api/user-inventory/${state.user}`, {
+      const username = typeof state.user === 'string' ? state.user : state.user.username;
+      const res = await fetch(`http://127.0.0.1:5000/api/user-inventory/${username}`, {
         headers: { 'Authorization': `Bearer ${state.token}` }
       });
       const data = await res.json();

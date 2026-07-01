@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import useCogniStore from '../store/useCogniStore';
+import audioEngine from '../utils/audioEngine';
 
 const SHOP_ITEMS = [
   { id: 'theme-red', type: 'theme', name: 'Crimson Synapse', description: 'Deep red energetic UI theme.', price: 200, category: 'Themes' },
@@ -46,6 +47,7 @@ const Shop = ({ onClose }) => {
   }, [user, token, fetchInventory]);
 
   const handlePurchase = async (itemId) => {
+    audioEngine.playClick();
     setPurchaseMsg(null);
     try {
       const res = await fetch(`http://127.0.0.1:5000/api/purchase`, {
@@ -57,17 +59,20 @@ const Shop = ({ onClose }) => {
         body: JSON.stringify({ user_id: user, item_id: itemId })
       });
       const data = await res.json();
-      if (data.status === 'success') {
+      if (res.ok && data.status === 'success') {
+        audioEngine.playSuccess();
         setCoins(data.coins);
         setInventory([...inventory, data.item]);
         setPurchaseMsg(`Successfully purchased!`);
         fetchInventory(); // sync global
         setTimeout(() => setPurchaseMsg(null), 3000);
       } else {
+        audioEngine.playError();
         setPurchaseMsg(`Failed: ${data.message}`);
         setTimeout(() => setPurchaseMsg(null), 3000);
       }
     } catch (err) {
+      audioEngine.playError();
       setPurchaseMsg('Error during purchase.');
     }
   };

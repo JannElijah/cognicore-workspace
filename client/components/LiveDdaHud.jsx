@@ -166,6 +166,28 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
                 </div>
             </div>
 
+            {cognitiveProfile?.fatigue_warning && (
+                <div style={{
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid #ef4444',
+                    borderRadius: '8px',
+                    padding: '0.75rem',
+                    color: '#fca5a5',
+                    fontSize: '0.85rem',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                }}>
+                    <span style={{ fontSize: '1.25rem' }}>⚠️</span>
+                    <div>
+                        <div style={{ color: '#ef4444', marginBottom: '0.2rem' }}>High Fatigue Detected</div>
+                        <div style={{ fontSize: '0.75rem', color: '#f87171', fontWeight: 'normal' }}>Your reaction times and inputs are degrading. Consider resting to maintain data quality.</div>
+                    </div>
+                </div>
+            )}
+
             {/* Level Gauge */}
             <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.35rem' }}>

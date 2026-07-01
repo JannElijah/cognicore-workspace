@@ -22,6 +22,7 @@ import Shop from './components/Shop';
 import RewardModal from './components/RewardModal';
 import LeaderboardModal from './components/LeaderboardModal';
 import ProfileModal from './components/ProfileModal';
+import DailyRewardModal from './components/DailyRewardModal';
 import DailyQuests from './components/DailyQuests';
 import PretestResults from './components/PretestResults';
 
@@ -41,6 +42,7 @@ const NeuralNBackGame = lazy(() => import('./components/NeuralNBackGame'));
 const SynapseSpinGame = lazy(() => import('./components/SynapseSpinGame'));
 const NexusMapperGame = lazy(() => import('./components/NexusMapperGame'));
 import { audioDda } from './utils/audioSynth';
+import audioEngine from './utils/audioEngine';
 
 
 // Register Chart.js modules
@@ -571,7 +573,12 @@ export default function App() {
           const loginData = await loginRes.json();
           if (loginData.status === 'success') {
               useCogniStore.getState().login(loginData.user, loginData.token);
-              useCogniStore.getState().fetchInventory();
+              if (loginData.daily_reward && loginData.daily_reward.granted) {
+                  setDailyRewardData(loginData.daily_reward);
+                  audioEngine.playSuccess();
+              } else {
+                  useCogniStore.getState().fetchInventory();
+              }
           }
       }
 
@@ -816,6 +823,7 @@ export default function App() {
   const [bpmMultiplier, setBpmMultiplier] = useState(audioDda.bpmMultiplier);
   const [showSoundTuner, setShowSoundTuner] = useState(false);
   const [smoothingAlpha, setSmoothingAlpha] = useState(1.0);
+  const [dailyRewardData, setDailyRewardData] = useState(null);
   const smoothingAlphaRef = useRef(1.0);
 
   useEffect(() => {
@@ -1118,6 +1126,11 @@ export default function App() {
     
     // Check and show rewards modal if any rewards were accumulated
     if (sessionRewardsRef.current.xp > 0 || sessionRewardsRef.current.coins > 0) {
+      if (sessionRewardsRef.current.leveled_up) {
+        audioEngine.playLevelUp();
+      } else {
+        audioEngine.playSuccess();
+      }
       setGameRewardsModal({ ...sessionRewardsRef.current });
       sessionRewardsRef.current = { xp: 0, coins: 0, leveled_up: false };
     }
@@ -2476,6 +2489,9 @@ export default function App() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
                   <span style={{ fontSize: '0.75rem', color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '0.2rem', fontWeight: '600' }}>🪙 {coins}</span>
+                  {dailyRewardData && dailyRewardData.streak > 0 && (
+                    <span style={{ fontSize: '0.75rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.1rem', fontWeight: 'bold' }}>🔥 {dailyRewardData.streak}</span>
+                  )}
                   <div style={{ flex: 1, height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
                     <div style={{ width: `${xpPercent}%`, height: '100%', background: 'linear-gradient(to right, #38bdf8, #a855f7)' }}></div>
                   </div>
@@ -4257,6 +4273,34 @@ export default function App() {
               <p>Welcome to CogniCore. Access clinically validated serious game modules designed to assess cognitive processing speed, selective attention, and executive function. Real-time telemetry is recorded to construct your adaptive cognitive profile.</p>
             </div>
 
+            {/* Daily Personalized Workout */}
+            {weakestDomain && DOMAINS_LIST.find(d => d.id === weakestDomain) && (
+              <div style={{ marginBottom: '3.5rem' }}>
+                <h2 className="section-title" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  🧠 Daily Personalized Workout <span style={{ fontSize: '1rem', color: '#a855f7', fontWeight: 'normal', marginLeft: '0.5rem' }}>— Target: {DOMAINS_LIST.find(d => d.id === weakestDomain).title}</span>
+                </h2>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                  {DOMAINS_LIST.find(d => d.id === weakestDomain).games.slice(0, 3).map((game) => (
+                    <div key={game.id} className="game-card glass-panel" style={{ cursor: 'pointer', position: 'relative', overflow: 'hidden' }} onClick={() => { audioEngine.playClick(); launchGame(game.id); }} onMouseEnter={() => audioEngine.playHover()}>
+                      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '4px', background: 'linear-gradient(90deg, #a855f7, #38bdf8)' }}></div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                        <div style={{ fontSize: '2.5rem', width: '60px', height: '60px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {game.icon}
+                        </div>
+                        <div>
+                          <h3 style={{ margin: '0 0 0.25rem 0', color: '#f8fafc', fontSize: '1.25rem' }}>{game.title}</h3>
+                          <span style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', background: 'rgba(168, 85, 247, 0.2)', color: '#c084fc', borderRadius: '4px', fontWeight: 'bold' }}>Recommended</span>
+                        </div>
+                      </div>
+                      <p style={{ color: '#cbd5e1', fontSize: '0.9rem', margin: '0 0 1rem 0', lineHeight: 1.5 }}>
+                        {game.objective}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Cognitive Targets & Milestones (Option C) */}
             <div className="goals-section-container" style={{ marginBottom: '3.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
@@ -4873,8 +4917,10 @@ export default function App() {
                         <div 
                           key={game.id} 
                           className={`game-card theme-${dom.themeClass} active`}
+                          onMouseEnter={() => !game.inProgress && audioEngine.playHover()}
                           onClick={() => { 
                             if (game.inProgress) return;
+                            audioEngine.playClick();
                             setPendingGameToLaunch({ id: game.id, title: game.title, themeClass: dom.themeClass, icon: game.icon }); 
                           }}
                           style={{
@@ -4909,9 +4955,11 @@ export default function App() {
  
                           <button 
                             className="play-btn" 
+                            onMouseEnter={() => !game.inProgress && audioEngine.playHover()}
                             onClick={(e) => { 
                               if (game.inProgress) return;
                               e.stopPropagation(); 
+                              audioEngine.playClick();
                               setPendingGameToLaunch({ id: game.id, title: game.title, themeClass: dom.themeClass, icon: game.icon }); 
                             }}
                             disabled={game.inProgress}
@@ -5165,6 +5213,7 @@ export default function App() {
       
       {showShop && <Shop onClose={() => setShowShop(false)} />}
       {showProfileModal && <ProfileModal onClose={() => setShowProfileModal(false)} />}
+      {dailyRewardData && dailyRewardData.granted && <DailyRewardModal rewardData={dailyRewardData} onClose={() => { setDailyRewardData({...dailyRewardData, granted: false}); fetchInventory(); }} />}
       {showLeaderboard && <LeaderboardModal onClose={() => setShowLeaderboard(false)} />}
       {gameRewardsModal && <RewardModal rewards={gameRewardsModal} onClose={() => { setGameRewardsModal(null); fetchInventory(); }} />}
     </div>
