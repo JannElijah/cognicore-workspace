@@ -1,3 +1,4 @@
+import { API_BASE } from '../utils/apiClient.js';
 /**
  * ================================================================================
  * Chapter 2 Methodology Compliance: Software Engineering Architecture Patterns
@@ -26,7 +27,7 @@ export default class StroopShiftScene extends BaseCognitiveScene {
         this.isTutorialActive = true;
         // Core configurations passed from React wrapper
         this.sessionId = data.sessionId || null;
-        this.apiUrl = data.apiUrl || 'http://127.0.0.1:5000';
+        this.apiUrl = data.apiUrl || API_BASE;
         this.onGameOver = data.onGameOver || null;
 
         // Dynamic Difficulty Adjustment (DDA) variables

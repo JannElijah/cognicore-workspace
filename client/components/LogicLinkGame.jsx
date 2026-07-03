@@ -1,3 +1,4 @@
+import { API_BASE } from '../utils/apiClient.js';
 /**
  * ================================================================================
  * Chapter 2 Methodology Compliance: Software Engineering Architecture Patterns
@@ -17,7 +18,7 @@ import LogicLinkScene from '../games/LogicLinkScene';
 import PauseOverlay from './PauseOverlay';
 
 
-export default function LogicLinkGame({ username = 'default_player', apiUrl = 'http://127.0.0.1:5000', onGameFinished }) {
+export default function LogicLinkGame({ username = 'default_player', apiUrl = API_BASE, onGameFinished }) {
     const gameContainerRef = useRef(null);
     const phaserInstanceRef = useRef(null);
 

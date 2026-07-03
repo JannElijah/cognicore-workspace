@@ -1,13 +1,15 @@
+import { API_BASE } from '../utils/apiClient.js';
 import Phaser from 'phaser';
 import cogniFX from '../utils/cogniFX.js';
 import useCogniStore from '../store/useCogniStore.js';
+import { saveTelemetry, getTelemetryQueue, clearTelemetryQueue } from '../utils/indexedDB.js';
 
 // Initialize global game mode tracking variable
 window.currentGameMode = 'timed';
 
 // Global Telemetry Buffers
 let memoryTelemetryBuffer = [];
-let lastUsedApiUrlBase = 'http://127.0.0.1:5000';
+let lastUsedApiUrlBase = API_BASE;
 
 function extractApiUrlBase(url) {
     if (typeof url === 'string' && url.includes('/api/')) {
@@ -16,23 +18,24 @@ function extractApiUrlBase(url) {
     return lastUsedApiUrlBase;
 }
 
-// Queue metrics to LocalStorage if offline or connection fails
-function queueOfflineTelemetry(url, options) {
+// Queue metrics to IndexedDB if offline or connection fails
+async function queueOfflineTelemetry(url, options) {
     try {
         const body = JSON.parse(options.body);
         let metricsToQueue = [];
         if (url.includes('/batch')) {
-            metricsToQueue = body.metrics || [];
+            metricsToQueue = body.telemetry || body.metrics || [];
         } else {
             metricsToQueue = [body];
         }
         
         if (metricsToQueue.length === 0) return;
         
-        const existing = JSON.parse(localStorage.getItem('cognicore_offline_telemetry') || '[]');
-        const updated = [...existing, ...metricsToQueue];
-        localStorage.setItem('cognicore_offline_telemetry', JSON.stringify(updated));
-        console.log(`[gameModeManager] Queued ${metricsToQueue.length} metrics offline. Local queue size: ${updated.length}`);
+        for (const metric of metricsToQueue) {
+            metric.is_offline_sync = true;
+            await saveTelemetry(metric);
+        }
+        console.log(`[gameModeManager] Queued ${metricsToQueue.length} metrics to IndexedDB offline storage.`);
     } catch (e) {
         console.error('[gameModeManager] Failed to queue offline telemetry:', e);
     }
@@ -57,7 +60,7 @@ async function flushMemoryBuffer() {
         const response = await originalFetch(`${base}/api/submit-metrics/batch`, {
             method: 'POST',
             headers: headers,
-            body: JSON.stringify({ metrics: metricsToFlush })
+            body: JSON.stringify({ telemetry: metricsToFlush })
         });
         if (response.ok) {
             try {
@@ -71,18 +74,18 @@ async function flushMemoryBuffer() {
             }
         } else {
             console.warn('[gameModeManager] Batch flush failed on server, queueing to offline storage.');
-            queueOfflineTelemetry(`${base}/api/submit-metrics/batch`, { body: JSON.stringify({ metrics: metricsToFlush }) });
+            queueOfflineTelemetry(`${base}/api/submit-metrics/batch`, { body: JSON.stringify({ telemetry: metricsToFlush }) });
         }
     } catch (err) {
         console.warn('[gameModeManager] Batch flush connection exception, queueing to offline storage.', err);
-        queueOfflineTelemetry(`${base}/api/submit-metrics/batch`, { body: JSON.stringify({ metrics: metricsToFlush }) });
+        queueOfflineTelemetry(`${base}/api/submit-metrics/batch`, { body: JSON.stringify({ telemetry: metricsToFlush }) });
     }
 }
 
-// Flush offline LocalStorage queue metrics to batch endpoint
+// Flush offline IndexedDB queue metrics to batch endpoint
 async function flushOfflineTelemetry() {
     if (!navigator.onLine) return;
-    const existing = JSON.parse(localStorage.getItem('cognicore_offline_telemetry') || '[]');
+    const existing = await getTelemetryQueue();
     if (existing.length === 0) return;
     
     const base = lastUsedApiUrlBase;
@@ -98,14 +101,18 @@ async function flushOfflineTelemetry() {
         const response = await originalFetch(`${base}/api/submit-metrics/batch`, {
             method: 'POST',
             headers: headers,
-            body: JSON.stringify({ metrics: existing })
+            body: JSON.stringify({ telemetry: existing })
         });
+        
         if (response.ok) {
-            localStorage.removeItem('cognicore_offline_telemetry');
-            console.log('[gameModeManager] Offline metrics successfully synchronized!');
+            await clearTelemetryQueue();
+            console.log('[gameModeManager] Offline telemetry successfully synced to server.');
+            window.dispatchEvent(new CustomEvent('telemetry-sync-success'));
+        } else {
+            console.warn('[gameModeManager] Failed to sync offline telemetry to server, keeping in IndexedDB.');
         }
-    } catch (e) {
-        console.warn('[gameModeManager] Offline sync failed, will retry later.', e);
+    } catch (err) {
+        console.warn('[gameModeManager] Connection failed during offline sync, will retry later.');
     }
 }
 

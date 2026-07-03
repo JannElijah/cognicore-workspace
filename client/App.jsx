@@ -1,3 +1,4 @@
+import { API_BASE } from './utils/apiClient.js';
 import React, { useState, useEffect, useRef, useCallback, Suspense, lazy } from 'react';
 import {
   Chart as ChartJS,
@@ -18,6 +19,7 @@ import { Radar, Line, Bar, Scatter } from 'react-chartjs-2';
 import LiveDdaHud from './components/LiveDdaHud';
 import ErrorBoundary from './components/ErrorBoundary';
 import useCogniStore from './store/useCogniStore';
+import { supabase } from './utils/supabaseClient';
 import Shop from './components/Shop';
 import RewardModal from './components/RewardModal';
 import LeaderboardModal from './components/LeaderboardModal';
@@ -45,7 +47,6 @@ const SynapseSpinGame = lazy(() => import('./components/SynapseSpinGame'));
 const NexusMapperGame = lazy(() => import('./components/NexusMapperGame'));
 import { audioDda } from './utils/audioSynth';
 import audioEngine from './utils/audioEngine';
-import { API_BASE } from './utils/api';
 
 
 // Register Chart.js modules
@@ -534,7 +535,7 @@ export default function App() {
   const fetchCohortAnalytics = async () => {
     setCohortLoading(true);
     try {
-      const res = await fetch(`http://127.0.0.1:5000/api/cohort-analytics`);
+      const res = await fetch(`${API_BASE}/api/cohort-analytics`);
       if (!res.ok) throw new Error("Failed to fetch cohort analytics.");
       const data = await res.json();
       if (data.status === 'success') {
@@ -563,17 +564,42 @@ export default function App() {
     try {
       const trimmedName = username.trim();
       
-      const loginRes = await fetch('http://127.0.0.1:5000/api/login', {
+      const email = `${trimmedName}@cognicore.com`.toLowerCase();
+      const password = `cogni-core-default-pw-123`;
+      
+      // Try Supabase Sign In
+      let { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (authError && authError.message.includes('Invalid login credentials')) {
+          // If user doesn't exist, sign them up
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ 
+              email, 
+              password,
+              options: { data: { username: trimmedName } }
+          });
+          if (signUpError) throw new Error(signUpError.message);
+          authData = signUpData;
+      } else if (authError) {
+          throw new Error(authError.message);
+      }
+      
+      const token = authData.session.access_token;
+      
+      // Sync user with backend to trigger daily rewards and streak
+      const syncRes = await fetch(API_BASE + '/api/sync-user', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: trimmedName })
+          headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+          }
       });
-      if (loginRes.ok) {
-          const loginData = await loginRes.json();
-          if (loginData.status === 'success') {
-              useCogniStore.getState().login(loginData.user, loginData.token);
-              if (loginData.daily_reward && loginData.daily_reward.granted) {
-                  setDailyRewardData(loginData.daily_reward);
+      
+      if (syncRes.ok) {
+          const syncData = await syncRes.json();
+          if (syncData.status === 'success') {
+              useCogniStore.getState().login(syncData.user, token);
+              if (syncData.daily_reward && syncData.daily_reward.granted) {
+                  setDailyRewardData(syncData.daily_reward);
                   audioEngine.playSuccess();
               } else {
                   useCogniStore.getState().fetchInventory();
@@ -581,7 +607,7 @@ export default function App() {
           }
       }
 
-      const res = await fetch(`http://127.0.0.1:5000/api/assessment-status/${trimmedName}`);
+      const res = await fetch(`${API_BASE}/api/assessment-status/${trimmedName}`);
 
       if (!res.ok) throw new Error("Failed to connect to backend server.");
       const data = await res.json();
@@ -602,7 +628,7 @@ export default function App() {
           } else {
             setAssessmentStage('none');
             // Fetch session history to check if they already played the prescribed game
-            const historyRes = await fetch(`http://127.0.0.1:5000/api/user-session-history/${trimmedName}`);
+            const historyRes = await fetch(`${API_BASE}/api/user-session-history/${trimmedName}`);
             if (historyRes.ok) {
               const histData = await historyRes.json();
               const played = (histData.sessions || []).some(s => s.game_type === data.prescribed_game);
@@ -668,7 +694,7 @@ export default function App() {
       const attention_score = ((q3_corr + q7_corr + q11_corr) / 3.0) * 100.0;
       const executive_score = ((q4_corr + q8_corr + q12_corr) / 3.0) * 100.0;
 
-      const res = await fetch(`http://127.0.0.1:5000/api/submit-assessment`, {
+      const res = await fetch(`${API_BASE}/api/submit-assessment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -718,7 +744,7 @@ export default function App() {
 
   const fetchEvaluationReport = async (username) => {
     try {
-      const res = await fetch(`http://127.0.0.1:5000/api/evaluate`, {
+      const res = await fetch(`${API_BASE}/api/evaluate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username })
@@ -1049,9 +1075,9 @@ export default function App() {
     try {
       // 1. Fetch user session history, cohort comparison, and archetype progression concurrently
       const [historyRes, compRes, progressionRes] = await Promise.all([
-        fetch(`http://127.0.0.1:5000/api/user-session-history/${username}`),
-        fetch(`http://127.0.0.1:5000/api/cohort-comparison/${username}`),
-        fetch(`http://127.0.0.1:5000/api/archetype-progression/${username}`)
+        fetch(`${API_BASE}/api/user-session-history/${username}`),
+        fetch(`${API_BASE}/api/cohort-comparison/${username}`),
+        fetch(`${API_BASE}/api/archetype-progression/${username}`)
       ]);
 
       if (!historyRes.ok) throw new Error('Failed to load session history.');
@@ -1072,7 +1098,7 @@ export default function App() {
       // 2. Fetch latest session metrics sequentially (dependent on latestSid from historyRes)
       if (sessions.length > 0) {
         const latestSid = sessions[0].session_id;
-        const metricsRes = await fetch(`http://127.0.0.1:5000/api/session-metrics/${latestSid}`);
+        const metricsRes = await fetch(`${API_BASE}/api/session-metrics/${latestSid}`);
         if (!metricsRes.ok) throw new Error('Failed to load latest session metrics.');
         const metricsData = await metricsRes.json();
         setLatestSessionMetrics(metricsData.metrics || []);
@@ -1182,7 +1208,7 @@ export default function App() {
     }
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/evaluate', {
+      const response = await fetch(API_BASE + '/api/evaluate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -1223,7 +1249,7 @@ export default function App() {
     setEvalError(null);
     setEvalResult(null);
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/cohort-db-scores');
+      const response = await fetch(API_BASE + '/api/cohort-db-scores');
       if (!response.ok) {
         throw new Error(`Server returned HTTP ${response.status}`);
       }
@@ -1248,7 +1274,7 @@ export default function App() {
   // Fetch ISO summary
   const fetchIsoSummary = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/iso-evaluations/summary');
+      const response = await fetch(API_BASE + '/api/iso-evaluations/summary');
       if (!response.ok) throw new Error('Failed to fetch ISO summary');
       const data = await response.json();
       if (data.status === 'success') {
@@ -1263,7 +1289,7 @@ export default function App() {
     setSandboxLoading(true);
     setSandboxError(null);
     try {
-      const corrRes = await fetch(`http://127.0.0.1:5000/api/research/correlations?var1=${var1}&var2=${var2}&cohort=${cohort}&username=${activeDashboardUser}`);
+      const corrRes = await fetch(`${API_BASE}/api/research/correlations?var1=${var1}&var2=${var2}&cohort=${cohort}&username=${activeDashboardUser}`);
       if (!corrRes.ok) throw new Error('Failed to compute correlation statistics.');
       const corrData = await corrRes.json();
       if (corrData.status === 'success') {
@@ -1272,7 +1298,7 @@ export default function App() {
         throw new Error(corrData.message || 'Correlation computation failed.');
       }
 
-      const curveRes = await fetch(`http://127.0.0.1:5000/api/research/learning-curves/${activeDashboardUser}`);
+      const curveRes = await fetch(`${API_BASE}/api/research/learning-curves/${activeDashboardUser}`);
       if (!curveRes.ok) throw new Error('Failed to load learning curve statistics.');
       const curveData = await curveRes.json();
       if (curveData.status === 'success') {
@@ -1487,7 +1513,7 @@ export default function App() {
   // Unsupervised Archetype Clustering & Model Retraining methods
   const fetchModelStatus = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/model/status');
+      const res = await fetch(API_BASE + '/api/model/status');
       if (!res.ok) throw new Error('Failed to load active model status.');
       const data = await res.json();
       if (data.status === 'success') {
@@ -1502,7 +1528,7 @@ export default function App() {
     setClusterLoading(true);
     setClusterError(null);
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/model/clusters');
+      const res = await fetch(API_BASE + '/api/model/clusters');
       if (!res.ok) throw new Error('Failed to load clustered session points.');
       const data = await res.json();
       if (data.status === 'success') {
@@ -1522,7 +1548,7 @@ export default function App() {
     setRetrainLoading(true);
     setRetrainMetrics(null);
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/model/retrain', {
+      const res = await fetch(API_BASE + '/api/model/retrain', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -1536,7 +1562,7 @@ export default function App() {
         const intervalId = setInterval(async () => {
           pollCount++;
           try {
-            const statusRes = await fetch('http://127.0.0.1:5000/api/model/status');
+            const statusRes = await fetch(API_BASE + '/api/model/status');
             if (statusRes.ok) {
               const statusData = await statusRes.json();
               if (statusData.training_status === 'idle') {
@@ -1733,7 +1759,7 @@ export default function App() {
     setGoalsLoading(true);
     setGoalsError(null);
     try {
-      const response = await fetch(`http://127.0.0.1:5000/api/training-goals/${username}`);
+      const response = await fetch(`${API_BASE}/api/training-goals/${username}`);
       if (!response.ok) throw new Error('Failed to load training goals.');
       const data = await response.json();
       if (data.status === 'success') {
@@ -1764,7 +1790,7 @@ export default function App() {
       return;
     }
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/training-goals', {
+      const response = await fetch(API_BASE + '/api/training-goals', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -1792,7 +1818,7 @@ export default function App() {
 
   const deleteGoal = async (goalId) => {
     try {
-      const response = await fetch(`http://127.0.0.1:5000/api/training-goals/${goalId}`, {
+      const response = await fetch(`${API_BASE}/api/training-goals/${goalId}`, {
         method: 'DELETE'
       });
       if (!response.ok) throw new Error('Failed to delete goal.');
@@ -1830,7 +1856,7 @@ export default function App() {
     setIsoSuccess(null);
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/api/iso-evaluations', {
+      const response = await fetch(API_BASE + '/api/iso-evaluations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

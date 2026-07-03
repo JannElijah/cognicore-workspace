@@ -1,3 +1,4 @@
+import { API_BASE } from '../utils/apiClient.js';
 /**
  * ================================================================================
  * Chapter 2 Methodology Compliance: Software Engineering Architecture Patterns
@@ -14,7 +15,7 @@ import Phaser from 'phaser';
 import MatrixRecallScene from '../games/MatrixRecallScene';
 import PauseOverlay from './PauseOverlay';
 
-export default function MatrixRecallGame({ username = 'default_player', apiUrl = 'http://127.0.0.1:5000', onGameFinished }) {
+export default function MatrixRecallGame({ username = 'default_player', apiUrl = API_BASE, onGameFinished }) {
     const gameContainerRef = useRef(null);
     const phaserInstanceRef = useRef(null);
 

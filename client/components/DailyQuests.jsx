@@ -1,3 +1,4 @@
+import { API_BASE } from '../utils/apiClient.js';
 import React, { useState, useEffect } from 'react';
 import useCogniStore from '../store/useCogniStore';
 
@@ -12,7 +13,7 @@ const DailyQuests = () => {
 
   const fetchQuests = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/quests', {
+      const res = await fetch(API_BASE + '/api/quests', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -32,7 +33,7 @@ const DailyQuests = () => {
 
   const handleClaim = async (questId) => {
     try {
-      const res = await fetch(`http://127.0.0.1:5000/api/quests/claim/${questId}`, {
+      const res = await fetch(`${API_BASE}/api/quests/claim/${questId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

@@ -57,8 +57,9 @@ import jwt
 from functools import wraps
 import datetime
 import hashlib
+from schemas import validate_json, StartSessionRequest, SubmitMetricsRequest, DDARequest, SubmitAssessmentRequest, SyncOfflineTelemetryRequest
 
-from auth import token_required, SECRET_KEY
+from auth import token_required
 
 def safe_float(val, default=None):
     try:
@@ -946,46 +947,22 @@ def health_check():
     return jsonify({"status": "ok"}), 200
 
 
-@app.route('/api/login', methods=['POST'])
+@app.route('/api/sync-user', methods=['POST'])
 @limiter.limit("10 per minute")
-def login():
+@token_required
+def sync_user(current_user_id, current_username):
+    """
+    Called after Supabase Auth login on the frontend.
+    The @token_required decorator verifies the JWT and automatically creates
+    the internal integer user ID if this is the first login.
+    This route just handles daily streak and returns coins.
+    """
     try:
-        data = request.get_json() or {}
-        username = str(data.get('username', '')).strip()
-        pin = str(data.get('pin', '')).strip()
-
-        if not username:
-            return jsonify({'status': 'error', 'message': 'Username is required'}), 400
-        if len(username) < 2 or len(username) > 50:
-            return jsonify({'status': 'error', 'message': 'Username must be 2-50 characters'}), 400
-
-        # Hash PIN for storage/comparison (SHA-256 with a server salt)
-        def hash_pin(raw_pin, user_salt):
-            return hashlib.sha256(f"{raw_pin}:{user_salt}:{SECRET_KEY}".encode()).hexdigest()
-
         conn = get_db_connection()
         try:
             with conn:
                 cursor = conn.cursor()
-                cursor.execute("SELECT id, pin_hash FROM users WHERE username = %s", (username,))
-                user = cursor.fetchone()
-                if user:
-                    user_id = user['id']
-                    stored_pin_hash = user['pin_hash']
-                    # If user has a PIN set, validate it
-                    if stored_pin_hash:
-                        if not pin:
-                            return jsonify({'status': 'error', 'message': 'This account has a PIN. Please enter your PIN.', 'requires_pin': True}), 401
-                        computed = hash_pin(pin, str(user_id))
-                        if computed != stored_pin_hash:
-                            return jsonify({'status': 'error', 'message': 'Incorrect PIN. Please try again.'}), 401
-                else:
-                    # New user — create account, optionally save PIN
-                    cursor.execute("INSERT INTO users (username) VALUES (%s) RETURNING id", (username,))
-                    user_id = cursor.fetchone()['id']
-                    if pin:
-                        pin_hash = hash_pin(pin, str(user_id))
-                        cursor.execute("UPDATE users SET pin_hash = %s WHERE id = %s", (pin_hash, user_id))
+                user_id = current_user_id
                 
                 # Check / Update Login Streak
                 cursor.execute("SELECT last_login_date, current_streak, longest_streak FROM user_streaks WHERE user_id = %s", (user_id,))
@@ -1104,19 +1081,11 @@ def login():
         finally:
             conn.close()
             
-        token = jwt.encode({
-            'user_id': user_id,
-            'username': username,
-            'has_pin': bool(user['pin_hash'] if user and user.get('pin_hash') else (pin != '')),
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=2)
-        }, SECRET_KEY, algorithm="HS256")
-        
         return jsonify({
             'status': 'success',
-            'token': token,
             'user': {
                 'id': user_id,
-                'username': username
+                'username': current_username
             },
             'daily_reward': daily_reward
         }), 200
@@ -1171,16 +1140,16 @@ def generate_pros_cons(scores_map):
     }
 
 @app.route('/api/submit-assessment', methods=['POST'])
-def submit_assessment():
+@token_required
+@validate_json(SubmitAssessmentRequest)
+def submit_assessment(current_user_id, current_username):
     """
     Submits user pre-test or post-test assessment scores.
     Determines cognitive domain strengths/weaknesses and prescribes the target game module.
     """
     try:
-        data = request.get_json() or {}
-        username = str(data.get('username', 'default_player')).strip()
-        if not username:
-            username = 'default_player'
+        data = request.validated_data.dict()
+        username = current_username
         assessment_type = str(data.get('assessment_type', 'pre-test')).strip().lower()
         if assessment_type not in ('pre-test', 'post-test'):
             return jsonify({"status": "error", "message": "assessment_type must be either 'pre-test' or 'post-test'."}), 400
@@ -1224,14 +1193,7 @@ def submit_assessment():
         try:
             with conn:
                 cursor = conn.cursor()
-                # Get or create user
-                cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
-                user = cursor.fetchone()
-                if user:
-                    user_id = user['id']
-                else:
-                    cursor.execute("INSERT INTO users (username) VALUES (%s) RETURNING id", (username,))
-                    user_id = cursor.fetchone()['id']
+                user_id = current_user_id
                 
                 # Insert into cognitive_assessments
                 cursor.execute(
@@ -1372,13 +1334,14 @@ def get_assessment_status(username):
 
 @app.route('/api/start-session', methods=['POST'])
 @token_required
+@validate_json(StartSessionRequest)
 def start_session(current_user_id, current_username):
     """
     Starts a new game session.
     Returns: session_id, user_id, and initial DDA game parameters.
     """
     try:
-        data = request.get_json() or {}
+        data = request.validated_data.dict()
         username = current_username
         user_id = current_user_id
         game_type = str(data.get('game_type', 'SpeedTap')).strip()
@@ -1417,6 +1380,10 @@ def start_session(current_user_id, current_username):
                     initial_difficulty = row['difficulty_level']
                 else:
                     initial_difficulty = 1
+                    
+                # Standardize Daily Challenge to exactly difficulty level 3
+                if game_mode == 'daily_challenge':
+                    initial_difficulty = 3
                     
                 # Initialize smooth difficulty state for the session
                 cursor.execute(
@@ -1481,13 +1448,14 @@ def calculate_ols_slope(y_vals):
 
 @app.route('/api/dda', methods=['POST'])
 @token_required
+@validate_json(DDARequest)
 def adjust_difficulty(current_user_id, current_username):
     """
     Analyzes recent performance telemetry for a session, updates difficulty parameters, 
     and classifies/updates the user's cognitive profile archetype.
     """
     try:
-        data = request.get_json() or {}
+        data = request.validated_data.dict()
         session_id = safe_int(data.get('session_id'))
         if not session_id or session_id <= 0:
             return jsonify({"status": "error", "message": "Valid positive session_id is required."}), 400
@@ -1497,13 +1465,26 @@ def adjust_difficulty(current_user_id, current_username):
             with conn:
                 cursor = conn.cursor()
                 
-                # Verify session and get user_id and game_type
-                cursor.execute("SELECT user_id, game_type FROM game_sessions WHERE id = %s", (session_id,))
+                # Verify session and get user_id, game_type, game_mode
+                cursor.execute("SELECT user_id, game_type, game_mode FROM game_sessions WHERE id = %s", (session_id,))
                 session = cursor.fetchone()
                 if not session:
                     return jsonify({"status": "error", "message": "Invalid session_id"}), 404
                 user_id = session['user_id']
                 game_type = session['game_type']
+                game_mode = session['game_mode']
+                
+                # Daily Challenge bypasses DDA and remains locked at Level 3
+                if game_mode == 'daily_challenge':
+                    return jsonify({
+                        "status": "success",
+                        "new_difficulty": 3,
+                        "is_level_up": False,
+                        "is_level_down": False,
+                        "classification": None,
+                        "advisor_message": None,
+                        "debug": "DDA disabled for daily challenge"
+                    })
                 
                 domain = GAME_TO_DOMAIN.get(game_type, "reflexes_and_focus")
         
@@ -2068,19 +2049,17 @@ def get_user_analytics(current_user_id, current_username, username):
 
 @app.route('/api/submit-metrics/batch', methods=['POST'])
 @token_required
+@validate_json(SyncOfflineTelemetryRequest)
 def submit_metrics_batch(current_user_id, current_username):
     """
     Submits a batch of game metrics telemetry to database in a single transaction.
     """
     try:
-        data = request.get_json() or {}
-        if isinstance(data, list):
-            metrics_list = data
-        elif isinstance(data, dict) and "metrics" in data:
-            metrics_list = data["metrics"]
-        else:
-            return jsonify({"status": "error", "message": "Expected list of metrics or dictionary with 'metrics' key."}), 400
-            
+        data = request.validated_data.dict()
+        
+        # Pydantic schema expects a dict with 'telemetry' list
+        metrics_list = data.get("telemetry", [])
+        
         if not metrics_list:
             return jsonify({"status": "success", "message": "No metrics to record"}), 201
             

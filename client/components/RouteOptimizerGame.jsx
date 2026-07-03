@@ -1,3 +1,4 @@
+import { API_BASE } from '../utils/apiClient.js';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Phaser from 'phaser';
 import RouteOptimizerScene from '../games/RouteOptimizerScene';
@@ -6,7 +7,7 @@ import PauseOverlay from './PauseOverlay';
 
 export default function RouteOptimizerGame({
     username = 'default_player',
-    apiUrl   = 'http://127.0.0.1:5000',
+    apiUrl   = API_BASE,
     onGameFinished
 }) {
     const gameContainerRef  = useRef(null);

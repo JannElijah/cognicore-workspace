@@ -1,3 +1,4 @@
+import { API_BASE } from '../utils/apiClient.js';
 import Phaser from 'phaser';
 import { CogniTheme } from '../utils/theme';
 import BaseCognitiveScene from './BaseCognitiveScene';
@@ -15,7 +16,7 @@ export default class NeuroMazeScene extends BaseCognitiveScene {
         this.isTutorialActive = true;
         // Core configuration passed from React wrapper
         this.sessionId = data.sessionId || null;
-        this.apiUrl = data.apiUrl || 'http://127.0.0.1:5000';
+        this.apiUrl = data.apiUrl || API_BASE;
         this.onGameOver = data.onGameOver || null;
 
         // DDA variables (Problem Solving & Strategy)

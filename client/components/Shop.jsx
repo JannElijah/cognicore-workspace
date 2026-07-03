@@ -1,3 +1,4 @@
+import { API_BASE } from '../utils/apiClient.js';
 import React, { useState, useEffect } from 'react';
 import useCogniStore from '../store/useCogniStore';
 import audioEngine from '../utils/audioEngine';
@@ -26,7 +27,7 @@ const Shop = ({ onClose }) => {
   useEffect(() => {
     const loadUserData = async () => {
       try {
-        const res = await fetch(`http://127.0.0.1:5000/api/user-inventory/${user}`, {
+        const res = await fetch(`${API_BASE}/api/user-inventory/${user}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
@@ -53,7 +54,7 @@ const Shop = ({ onClose }) => {
     audioEngine.playClick();
     setPurchaseMsg(null);
     try {
-      const res = await fetch(`http://127.0.0.1:5000/api/purchase`, {
+      const res = await fetch(`${API_BASE}/api/purchase`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -82,7 +83,7 @@ const Shop = ({ onClose }) => {
 
   const handleEquip = async (itemId) => {
     try {
-      const res = await fetch(`http://127.0.0.1:5000/api/equip`, {
+      const res = await fetch(`${API_BASE}/api/equip`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

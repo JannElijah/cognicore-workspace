@@ -1,3 +1,4 @@
+import { API_BASE } from '../utils/apiClient.js';
 import Phaser from 'phaser';
 import { CogniTheme } from '../utils/theme';
 import BaseCognitiveScene from './BaseCognitiveScene';
@@ -14,7 +15,7 @@ export default class SynapseSpinScene extends BaseCognitiveScene {
         this.archetypeConfidence = profile.confidence_score || 0.0;
         this.isTutorialActive = true;
         this.sessionId = data.sessionId || null;
-        this.apiUrl = data.apiUrl || 'http://127.0.0.1:5000';
+        this.apiUrl = data.apiUrl || API_BASE;
         this.onGameOver = data.onGameOver || null;
 
         const dda = data.ddaParameters || {};

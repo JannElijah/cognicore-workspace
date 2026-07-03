@@ -1,3 +1,4 @@
+import { API_BASE } from '../utils/apiClient.js';
 /**
  * ================================================================================
  * Chapter 2 Methodology Compliance: Software Engineering Architecture Patterns
@@ -17,7 +18,7 @@ import SpeedTapScene from '../games/SpeedTapScene';
 import PauseOverlay from './PauseOverlay';
 
 
-export default function SpeedTapGame({ username = 'default_player', apiUrl = 'http://127.0.0.1:5000', onGameFinished }) {
+export default function SpeedTapGame({ username = 'default_player', apiUrl = API_BASE, onGameFinished }) {
     const gameContainerRef = useRef(null);
     const phaserInstanceRef = useRef(null);
 

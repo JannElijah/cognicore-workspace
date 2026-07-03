@@ -1,3 +1,4 @@
+import { API_BASE } from '../utils/apiClient.js';
 import { create } from 'zustand';
 
 const useCogniStore = create((set) => ({
@@ -23,7 +24,7 @@ const useCogniStore = create((set) => ({
     if (!state.user || !state.token) return;
     try {
       const username = typeof state.user === 'string' ? state.user : state.user.username;
-      const res = await fetch(`http://127.0.0.1:5000/api/user-inventory/${username}`, {
+      const res = await fetch(`${API_BASE}/api/user-inventory/${username}`, {
         headers: { 'Authorization': `Bearer ${state.token}` }
       });
       const data = await res.json();

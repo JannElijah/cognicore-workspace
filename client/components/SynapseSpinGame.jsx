@@ -1,9 +1,10 @@
+import { API_BASE } from '../utils/apiClient.js';
 import React, { useState, useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import SynapseSpinScene from '../games/SynapseSpinScene';
 import PauseOverlay from './PauseOverlay';
 
-export default function SynapseSpinGame({ username = 'default_player', apiUrl = 'http://127.0.0.1:5000', onGameFinished }) {
+export default function SynapseSpinGame({ username = 'default_player', apiUrl = API_BASE, onGameFinished }) {
     const gameContainerRef = useRef(null);
     const phaserInstanceRef = useRef(null);
 

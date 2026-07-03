@@ -1,4 +1,6 @@
+import { API_BASE } from '../utils/apiClient.js';
 import React, { useState, useEffect } from 'react';
+import { supabase } from '../utils/supabaseClient.js';
 
 const LeaderboardModal = ({ onClose }) => {
   const [leaders, setLeaders] = useState([]);
@@ -6,11 +8,27 @@ const LeaderboardModal = ({ onClose }) => {
 
   useEffect(() => {
     fetchLeaderboard();
+    
+    // Subscribe to realtime changes on user_profiles
+    const channel = supabase.channel('leaderboard-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'user_profiles' },
+        (payload) => {
+          console.log('Leaderboard update received!', payload);
+          fetchLeaderboard(); // Refetch when profiles change
+        }
+      )
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchLeaderboard = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/leaderboard');
+      const res = await fetch(API_BASE + '/api/leaderboard');
       if (res.ok) {
         const data = await res.json();
         if (data.status === 'success') {

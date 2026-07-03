@@ -1,3 +1,4 @@
+import { API_BASE } from '../utils/apiClient.js';
 import React, { useState, useEffect } from 'react';
 import useCogniStore from '../store/useCogniStore';
 import { Radar, Line } from 'react-chartjs-2';
@@ -54,7 +55,7 @@ const ProfileModal = ({ onClose }) => {
     setLoading(true);
     try {
       // 1. Fetch Leaderboard to find own profile data (XP, Level, etc)
-      const lbRes = await fetch('http://127.0.0.1:5000/api/leaderboard');
+      const lbRes = await fetch(API_BASE + '/api/leaderboard');
       if (lbRes.ok) {
         const lbData = await lbRes.json();
         const me = lbData.leaderboard.find(p => p.username === username);
@@ -62,7 +63,7 @@ const ProfileModal = ({ onClose }) => {
       }
 
       // 2. Fetch Analytics
-      const anRes = await fetch(`http://127.0.0.1:5000/api/user-analytics/${username}`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const anRes = await fetch(`${API_BASE}/api/user-analytics/${username}`, { headers: { 'Authorization': `Bearer ${token}` } });
       if (anRes.ok) {
         const anData = await anRes.json();
         setDomainStats(anData.domain_stats || []);
@@ -73,7 +74,7 @@ const ProfileModal = ({ onClose }) => {
       }
 
       // 3. Fetch Achievements
-      const achRes = await fetch('http://127.0.0.1:5000/api/achievements', { headers: { 'Authorization': `Bearer ${token}` } });
+      const achRes = await fetch(API_BASE + '/api/achievements', { headers: { 'Authorization': `Bearer ${token}` } });
       if (achRes.ok) {
         const achData = await achRes.json();
         setAchievements(achData.achievements || []);
@@ -91,7 +92,7 @@ const ProfileModal = ({ onClose }) => {
     setLocalReduceFlashes(newValue);
     setIsSaving(true);
     try {
-      const res = await fetch('http://127.0.0.1:5000/api/settings/accessibility', {
+      const res = await fetch(API_BASE + '/api/settings/accessibility', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ reduce_flashes: newValue })
