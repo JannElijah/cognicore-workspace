@@ -15,6 +15,8 @@ Chapter 2 Methodology Compliance: Software Engineering Architecture Patterns
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from psycopg2.pool import ThreadedConnectionPool
@@ -38,6 +40,14 @@ app = Flask(__name__)
 # CORS restricts your React/Phaser frontend to authorized origins
 CORS(app, origins=["http://localhost:5173", "http://127.0.0.1:5173"])
 
+# Rate limiter to prevent brute-force and spam
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=[],
+    storage_uri="memory://"
+)
+
 from routes.leaderboard import leaderboard_bp
 from routes.gamification import gamification_bp
 app.register_blueprint(leaderboard_bp)
@@ -46,11 +56,9 @@ app.register_blueprint(gamification_bp)
 import jwt
 from functools import wraps
 import datetime
+import hashlib
 
 from auth import token_required, SECRET_KEY
- 
-
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cognicore.db')
 
 def safe_float(val, default=None):
     try:
@@ -353,13 +361,21 @@ def init_db():
     except psycopg2.Error:
         pass
     
+    # Add pin_hash column to users table (for optional PIN authentication)
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN pin_hash VARCHAR(64) DEFAULT NULL")
+        print("[DB Migration] Added pin_hash column to users")
+    except psycopg2.Error:
+        pass
+
     # Create indexes for query optimizations
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_performance_metrics_session ON performance_metrics (session_id)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_game_sessions_user ON game_sessions (user_id)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_cognitive_assessments_user ON cognitive_assessments (user_id)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_performance_metrics_domain ON performance_metrics (cognitive_domain)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_performance_metrics_recorded ON performance_metrics (recorded_at)")
-    
+
+    conn.commit()
     conn.close()
 
 # Run database schema migration on startup
@@ -924,25 +940,52 @@ def index():
     }), 200
 
 
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """Lightweight health probe for frontend polling."""
+    return jsonify({"status": "ok"}), 200
+
+
 @app.route('/api/login', methods=['POST'])
+@limiter.limit("10 per minute")
 def login():
     try:
         data = request.get_json() or {}
         username = str(data.get('username', '')).strip()
+        pin = str(data.get('pin', '')).strip()
+
         if not username:
             return jsonify({'status': 'error', 'message': 'Username is required'}), 400
-            
+        if len(username) < 2 or len(username) > 50:
+            return jsonify({'status': 'error', 'message': 'Username must be 2-50 characters'}), 400
+
+        # Hash PIN for storage/comparison (SHA-256 with a server salt)
+        def hash_pin(raw_pin, user_salt):
+            return hashlib.sha256(f"{raw_pin}:{user_salt}:{SECRET_KEY}".encode()).hexdigest()
+
         conn = get_db_connection()
         try:
             with conn:
                 cursor = conn.cursor()
-                cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+                cursor.execute("SELECT id, pin_hash FROM users WHERE username = %s", (username,))
                 user = cursor.fetchone()
                 if user:
                     user_id = user['id']
+                    stored_pin_hash = user['pin_hash']
+                    # If user has a PIN set, validate it
+                    if stored_pin_hash:
+                        if not pin:
+                            return jsonify({'status': 'error', 'message': 'This account has a PIN. Please enter your PIN.', 'requires_pin': True}), 401
+                        computed = hash_pin(pin, str(user_id))
+                        if computed != stored_pin_hash:
+                            return jsonify({'status': 'error', 'message': 'Incorrect PIN. Please try again.'}), 401
                 else:
+                    # New user — create account, optionally save PIN
                     cursor.execute("INSERT INTO users (username) VALUES (%s) RETURNING id", (username,))
                     user_id = cursor.fetchone()['id']
+                    if pin:
+                        pin_hash = hash_pin(pin, str(user_id))
+                        cursor.execute("UPDATE users SET pin_hash = %s WHERE id = %s", (pin_hash, user_id))
                 
                 # Check / Update Login Streak
                 cursor.execute("SELECT last_login_date, current_streak, longest_streak FROM user_streaks WHERE user_id = %s", (user_id,))
@@ -1064,7 +1107,8 @@ def login():
         token = jwt.encode({
             'user_id': user_id,
             'username': username,
-            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
+            'has_pin': bool(user['pin_hash'] if user and user.get('pin_hash') else (pin != '')),
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=2)
         }, SECRET_KEY, algorithm="HS256")
         
         return jsonify({
@@ -1939,7 +1983,6 @@ def submit_metrics(current_user_id, current_username):
                         traceback.print_exc()
                         print(f"Gamification update skipped: {pg_err}")
         finally:
-            conn.commit()
             conn.close()
 
         return jsonify({
@@ -1960,10 +2003,14 @@ def submit_metrics(current_user_id, current_username):
 @app.route('/api/user-analytics/<username>', methods=['GET'])
 @token_required
 def get_user_analytics(current_user_id, current_username, username):
+    # Ownership check: users can only view their own analytics
+    if current_username != username:
+        return jsonify({'status': 'error', 'message': 'Unauthorized: you can only view your own analytics'}), 403
+
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
-        
+
         # Check if user exists
         cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
         user = cursor.fetchone()
@@ -2020,7 +2067,8 @@ def get_user_analytics(current_user_id, current_username, username):
 
 
 @app.route('/api/submit-metrics/batch', methods=['POST'])
-def submit_metrics_batch():
+@token_required
+def submit_metrics_batch(current_user_id, current_username):
     """
     Submits a batch of game metrics telemetry to database in a single transaction.
     """
@@ -3647,7 +3695,4 @@ def get_metrics():
 
 
 if __name__ == '__main__':
-    if not os.path.exists(DB_PATH):
-        print(f"Database not found at {DB_PATH}. Please make sure it exists.")
-    
     app.run(debug=True, port=5000)

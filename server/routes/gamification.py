@@ -32,15 +32,19 @@ def get_daily_quests(current_user_id, current_username):
         tasks = cursor.fetchall()
         
         if not tasks:
-            # Create new tasks for today
+            # Create new tasks for today atomically
             new_tasks = [
                 ("Play 3 Training Games", 3, 200),
                 ("Achieve 80% accuracy in any game", 1, 200),
                 ("Achieve reaction time under 800ms", 1, 200)
             ]
-            for desc, tgt, rew in new_tasks:
-                cursor.execute("INSERT INTO daily_tasks (user_id, task_description, target_amount, reward_coins) VALUES (%s, %s, %s, %s)", (current_user_id, desc, tgt, rew))
-            conn.commit()
+            try:
+                for desc, tgt, rew in new_tasks:
+                    cursor.execute("INSERT INTO daily_tasks (user_id, task_description, target_amount, reward_coins) VALUES (%s, %s, %s, %s)", (current_user_id, desc, tgt, rew))
+                conn.commit()
+            except Exception:
+                conn.rollback()
+                raise
             
             cursor.execute("SELECT id, task_description, target_amount, current_amount, is_completed, reward_coins FROM daily_tasks WHERE user_id = %s AND DATE(created_at) = CURRENT_DATE", (current_user_id,))
             tasks = cursor.fetchall()

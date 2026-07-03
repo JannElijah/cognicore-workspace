@@ -45,6 +45,7 @@ const SynapseSpinGame = lazy(() => import('./components/SynapseSpinGame'));
 const NexusMapperGame = lazy(() => import('./components/NexusMapperGame'));
 import { audioDda } from './utils/audioSynth';
 import audioEngine from './utils/audioEngine';
+import { API_BASE } from './utils/api';
 
 
 // Register Chart.js modules
@@ -480,15 +481,11 @@ export default function App() {
   }, [inventory]);
 
   useEffect(() => {
-    // Poll server health
+    // Poll server health using lightweight /api/health endpoint
     const checkServer = async () => {
       try {
-        await fetch('http://127.0.0.1:5000/api/evaluate', { 
-          method: 'POST', 
-          body: JSON.stringify({username: 'ping'}), 
-          headers: { 'Content-Type': 'application/json' } 
-        });
-        setServerOnline(true);
+        const res = await fetch(`${API_BASE}/api/health`);
+        setServerOnline(res.ok);
       } catch (e) {
         setServerOnline(false);
       }
@@ -2396,9 +2393,6 @@ export default function App() {
 
   return (
     <div className="portal-container" style={{ position: 'relative' }}>
-      {appBooting && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
       {appBooting ? (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           <div className="logo-glow" style={{ fontSize: '3rem', marginBottom: '2rem', animation: 'pulse 2s infinite' }}>

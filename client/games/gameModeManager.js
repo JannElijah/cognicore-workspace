@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import cogniFX from '../utils/cogniFX.js';
+import useCogniStore from '../store/useCogniStore.js';
 
 // Initialize global game mode tracking variable
 window.currentGameMode = 'timed';
@@ -46,10 +47,16 @@ async function flushMemoryBuffer() {
     const base = lastUsedApiUrlBase;
     console.log(`[gameModeManager] Flushing ${metricsToFlush.length} buffered metrics to server...`);
     
+    const token = useCogniStore.getState().token;
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+    
     try {
         const response = await originalFetch(`${base}/api/submit-metrics/batch`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: headers,
             body: JSON.stringify({ metrics: metricsToFlush })
         });
         if (response.ok) {
@@ -80,10 +87,17 @@ async function flushOfflineTelemetry() {
     
     const base = lastUsedApiUrlBase;
     console.log(`[gameModeManager] Connection restored. Flushing ${existing.length} offline metrics...`);
+    
+    const token = useCogniStore.getState().token;
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
+    
     try {
         const response = await originalFetch(`${base}/api/submit-metrics/batch`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: headers,
             body: JSON.stringify({ metrics: existing })
         });
         if (response.ok) {

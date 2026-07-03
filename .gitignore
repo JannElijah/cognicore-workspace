@@ -24,6 +24,11 @@ pip-delete-this-directory.txt
 .env
 .env.local
 
+# Backup files
+*.bak
+*.sqbpro
+*_backup_*.db
+
 # Logs and databases
 *.log
 npm-debug.log*
@@ -35,3 +40,8 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 .DS_Store
+
+# Model artifacts (regenerated on startup)
+server/cognitive_model.pkl
+server/clustering_model.pkl
+server/scaler.pkl
