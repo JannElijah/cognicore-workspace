@@ -10,6 +10,9 @@ const SHOP_ITEMS = [
   { id: 'avatar-robot', type: 'avatar', name: 'Mech-Node', description: 'Robotic cognitive assistant avatar.', price: 500, category: 'Avatars' },
   { id: 'avatar-brain', type: 'avatar', name: 'Cerebrum Prime', description: 'Glowing brain master avatar.', price: 500, category: 'Avatars' },
   { id: 'avatar-hacker', type: 'avatar', name: 'Data Runner', description: 'Cyberpunk hacker aesthetic avatar.', price: 750, category: 'Avatars' },
+  { id: 'banner-neon', type: 'banner', name: 'Neon Grid', description: 'Cyberpunk synthwave background.', price: 300, category: 'Banners' },
+  { id: 'banner-stellar', type: 'banner', name: 'Stellar Void', description: 'Deep space galactic background.', price: 400, category: 'Banners' },
+  { id: 'banner-cyber', type: 'banner', name: 'Cyber Matrix', description: 'Digital matrix data stream background.', price: 500, category: 'Banners' },
 ];
 
 const Shop = ({ onClose }) => {
@@ -167,7 +170,7 @@ const Shop = ({ onClose }) => {
             </div>
           )}
 
-          {['Themes', 'Avatars'].map(category => (
+          {['Themes', 'Avatars', 'Banners'].map(category => (
             <div key={category} style={{ marginBottom: '2.5rem' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#e2e8f0', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid #1e293b' }}>
                 {category}

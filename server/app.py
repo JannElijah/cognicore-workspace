@@ -768,10 +768,10 @@ def calculate_dda_parameters(difficulty_level, game_type='SpeedTap', user_avg_rt
         # Apply dynamic AI scaling for time_limit based on user performance
         if user_avg_rt is not None and user_avg_rt > 0:
             for lvl in configs:
-                # Base formula: User's average RT + (6 - difficulty) * 500ms grace period
-                dynamic_limit = user_avg_rt + ((6 - lvl) * 500)
-                min_floor = 1200 if lvl == 5 else 1500
-                configs[lvl]["time_limit"] = int(max(min_floor, min(8000, dynamic_limit)))
+                # Base formula: User's average RT + (6 - difficulty) * 1000ms grace period
+                dynamic_limit = user_avg_rt + ((6 - lvl) * 1000)
+                min_floor = 1500 if lvl == 5 else 2000
+                configs[lvl]["time_limit"] = int(max(min_floor, min(10000, dynamic_limit)))
     elif game_type in ['EquationBalance', 'equation_balance']:
         # Map levels to game-specific variables for the Equation Balance game
         configs = {
@@ -1907,10 +1907,20 @@ def get_user_analytics(current_user_id, current_username, username):
         """, (target_uid,))
         timeline_stats = cursor.fetchall()
         
+        # Fetch latest archetype
+        cursor.execute("""
+            SELECT archetype_name, confidence_score, trajectory_msg
+            FROM archetype_history 
+            WHERE user_id = ? 
+            ORDER BY timestamp DESC, id DESC LIMIT 1
+        """, (target_uid,))
+        latest_archetype_row = cursor.fetchone()
+        
         return jsonify({
             "status": "success",
             "domain_stats": [dict(row) for row in domain_stats],
-            "timeline_stats": [dict(row) for row in timeline_stats]
+            "timeline_stats": [dict(row) for row in timeline_stats],
+            "cognitive_profile": dict(latest_archetype_row) if latest_archetype_row else None
         }), 200
     finally:
         conn.close()
@@ -2089,6 +2099,9 @@ def api_purchase(current_user_id, current_username):
         'avatar-robot': {'type': 'avatar', 'price': 500},
         'avatar-brain': {'type': 'avatar', 'price': 500},
         'avatar-hacker': {'type': 'avatar', 'price': 750},
+        'banner-neon': {'type': 'banner', 'price': 300},
+        'banner-stellar': {'type': 'banner', 'price': 400},
+        'banner-cyber': {'type': 'banner', 'price': 500},
     }
     
     if item_id not in catalog:

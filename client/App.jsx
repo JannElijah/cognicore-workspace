@@ -26,6 +26,7 @@ import DailyRewardModal from './components/DailyRewardModal';
 import AchievementToast from './components/AchievementToast';
 import DailyQuests from './components/DailyQuests';
 import PretestResults from './components/PretestResults';
+import SeizureDisclaimerModal from './components/SeizureDisclaimerModal';
 
 const SpeedTapGame = lazy(() => import('./components/SpeedTapGame'));
 const MemoryMatchGame = lazy(() => import('./components/MemoryMatchGame'));
@@ -150,28 +151,28 @@ const DOMAINS_LIST = [
     themeClass: 'reflex',
     title: 'Reflex & Attentional Focus',
     icon: '⚡',
-    description: 'Enhance sensory processing, motor reaction speeds, target discrimination, and distraction filtering.',
+    description: 'Improve your reaction time, focus, and ability to ignore distractions under pressure.',
     games: [
       {
         id: 'SpeedTap',
         title: 'Speed Tap',
         icon: '⚡',
-        objective: 'Identify and select highlighted target boxes under a ticking clock, avoiding distractors.',
-        benefit: 'Speeds up motor reflexes and decision making under time pressure, reducing error rate.'
+        objective: 'Quickly tap the highlighted targets before time runs out, while ignoring the wrong ones.',
+        benefit: 'Helps you make faster decisions and react quicker in fast-paced situations.'
       },
       {
         id: 'FocusFinder',
         title: 'Focus Finder',
         icon: '🎯',
-        objective: 'Locate moving target objects hidden dynamically within a dense field of distractor elements.',
-        benefit: 'Improves visual search capabilities, spatial attention filtering, and processing speed.'
+        objective: 'Find the hidden targets moving around in a crowded, messy space.',
+        benefit: 'Improves your ability to focus on what matters in a busy environment.'
       },
       {
         id: 'StroopShift',
         title: 'Stroop Shift',
         icon: '🎨',
-        objective: 'Match target features while inhibiting cognitive Stroop color-word conflict distractors.',
-        benefit: 'Enhances cognitive inhibition, task switching speed, and selective attention control.'
+        objective: 'Pick the correct color while ignoring tricky mismatched words (like the word "RED" painted in blue).',
+        benefit: 'Trains your brain to overcome confusion and switch tasks easily.'
       }
     ]
   },
@@ -180,14 +181,14 @@ const DOMAINS_LIST = [
     themeClass: 'memory',
     title: 'Spatial-Visual Memory',
     icon: '🧠',
-    description: 'Improve active working memory storage, pattern retention, visual-spatial configuration, and object-location binding.',
+    description: 'Boost your ability to remember patterns, shapes, and where things are located.',
     games: [
       {
         id: 'MemoryMatch',
         title: 'Memory Match',
         icon: '🃏',
-        objective: 'Flip and match visual card pairs arranged in grid-based memory matrices.',
-        benefit: 'Enhances working memory buffer capacity, spatial mapping, and quick visual association.'
+        objective: 'Flip and match pairs of hidden cards on a grid.',
+        benefit: 'Helps you remember information longer and recall visual details quickly.'
       },
       {
         id: 'MatrixRecall',
@@ -225,21 +226,21 @@ const DOMAINS_LIST = [
     themeClass: 'reasoning',
     title: 'Logical-Mathematical Reasoning',
     icon: '🔢',
-    description: 'Develop numerical calculation, sequence pattern induction, path search planning, and combinatorial optimization logic.',
+    description: 'Sharpen your math skills, problem-solving abilities, and logical thinking.',
     games: [
       {
         id: 'LogicLink',
         title: 'Logic Link',
         icon: '🔗',
-        objective: 'Connect nodes in exact ascending sequence, avoiding node collisions and path overlaps.',
-        benefit: 'Exercises logical path planning, pattern recognition, and structured problem solving.'
+        objective: 'Connect the dots in order without crossing lines.',
+        benefit: 'Trains you to plan ahead and solve tricky puzzles efficiently.'
       },
       {
         id: 'EquationBalance',
         title: 'Equation Balance',
         icon: '⚖️',
-        objective: 'Balance complex mathematical expressions by inputting correct operators or operands.',
-        benefit: 'Improves mathematical logic, numerical calculation speed, and deductive calculation.'
+        objective: 'Figure out the missing numbers or symbols to balance the scale.',
+        benefit: 'Makes you faster and more confident with everyday math and logic.'
       },
       {
         id: 'SequenceDecoder',
@@ -306,7 +307,7 @@ const COGNITIVE_QUESTIONS = [
     id: 'q1',
     domain: 'spatial_visual_memory',
     title: 'Spatial-Visual Memory (1/3)',
-    text: 'A 4x4 grid contains active tiles at (row 1, col 2), (row 2, col 4), and (row 4, col 3). Which option displays these exact coordinates?',
+    text: 'Imagine a grid with 4 rows and 4 columns. Which of these options correctly points to the tiles in row 1 column 2, row 2 column 4, and row 4 column 3?',
     options: [
       { key: 'A', text: '(1,2), (2,4), (4,3)' },
       { key: 'B', text: '(2,1), (4,2), (3,4)' },
@@ -318,7 +319,7 @@ const COGNITIVE_QUESTIONS = [
     id: 'q2',
     domain: 'logical_mathematical',
     title: 'Logical-Mathematical (1/3)',
-    text: 'Complete the Fibonacci-like pattern sequence: 2, 3, 5, 8, 13, 21, ?',
+    text: 'What number comes next in this pattern? 2, 3, 5, 8, 13, 21, ?',
     options: [
       { key: 'A', text: '29' },
       { key: 'B', text: '34' },
@@ -330,7 +331,7 @@ const COGNITIVE_QUESTIONS = [
     id: 'q3',
     domain: 'reflexes_and_focus',
     title: 'Reflexes & Focus (1/3)',
-    text: 'Stroop Conflict: The word "BLUE" is written in RED ink. What is the actual ink color of the word?',
+    text: 'If you see the word "BLUE" printed in red ink, what is the color of the ink?',
     options: [
       { key: 'A', text: 'Blue' },
       { key: 'B', text: 'Green' },
@@ -342,7 +343,7 @@ const COGNITIVE_QUESTIONS = [
     id: 'q4',
     domain: 'executive_strategy',
     title: 'Executive Strategy (1/3)',
-    text: 'In a grid-maze, you start at (0,0) and want to reach (3,3). Moving right costs 2 points, moving down costs 3 points. Diagonal moves are blocked. What is the minimum cost to reach the target?',
+    text: 'Imagine navigating a maze. Moving right costs 2 energy points, moving down costs 3. You can\'t move diagonally. If you need to go 3 spaces right and 3 spaces down, what\'s the total energy cost?',
     options: [
       { key: 'A', text: '15' },
       { key: 'B', text: '12' },
@@ -354,7 +355,7 @@ const COGNITIVE_QUESTIONS = [
     id: 'q5',
     domain: 'spatial_visual_memory',
     title: 'Spatial-Visual Memory (2/3)',
-    text: 'A 3x3 pattern of colored blocks: Blue-Red-Blue (Row 1), Green-Green-Red (Row 2), Blue-Green-Red (Row 3). If we rotate this entire grid 90 degrees clockwise, what is the sequence of Row 1?',
+    text: 'Imagine a 3x3 Rubik\'s cube face: Blue-Red-Blue on top, Green-Green-Red in the middle, Blue-Green-Red on bottom. If you rotate it 90 degrees clockwise, what are the colors of the new top row?',
     options: [
       { key: 'A', text: 'Red-Green-Blue' },
       { key: 'B', text: 'Blue-Red-Green' },
@@ -366,7 +367,7 @@ const COGNITIVE_QUESTIONS = [
     id: 'q6',
     domain: 'logical_mathematical',
     title: 'Logical-Mathematical (2/3)',
-    text: 'Algebraic Puzzle: A + B = 10, A * B = 24, B - A = 2 (where B > A). If X = B * 3 - A, what is X?',
+    text: 'Math puzzle: A + B = 10, A * B = 24, and B is bigger than A. If you multiply B by 3 and subtract A, what number do you get?',
     options: [
       { key: 'A', text: '10' },
       { key: 'B', text: '16' },
@@ -2398,15 +2399,143 @@ export default function App() {
       {appBooting && (
         <div style={{
           position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-          background: '#02020a', zIndex: 999999, display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center', color: '#f8fafc', fontFamily: 'system-ui'
-        }}>
-          <div style={{ fontSize: '3rem', marginBottom: '2rem' }}>🧠</div>
-          <div style={{ width: '200px', height: '4px', background: '#1e293b', borderRadius: '4px', overflow: 'hidden' }}>
-            <div style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, #38bdf8, #a855f7)', animation: 'slideRight 1.5s ease-out' }}></div>
+      {appBooting ? (
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="logo-glow" style={{ fontSize: '3rem', marginBottom: '2rem', animation: 'pulse 2s infinite' }}>
+            CogniCore
           </div>
-          <p style={{ marginTop: '1rem', color: '#94a3b8', fontSize: '0.9rem', letterSpacing: '0.1em' }}>INITIALIZING COGNICORE NEURAL ENGINE...</p>
+          <div style={{ color: '#94a3b8' }}>Initializing neural pathways...</div>
         </div>
+      ) : (
+        <>
+          <SeizureDisclaimerModal />
+          {/* Header */}
+          <header className="portal-header">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div className="logo-glow" onClick={() => { setActiveGame(null); setShowDashboard(false); setPortalView('participant'); }} style={{ cursor: 'pointer', alignSelf: 'flex-start' }}>
+                🧠 COGNICORE
+              </div>
+              {currentUser !== '' && portalView === 'participant' && (
+                <button 
+                  onClick={() => setShowProfileModal(true)}
+                  title="View Profile & Stats"
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.1)', background: 'rgba(255, 255, 255, 0.05)', cursor: 'pointer', transition: 'all 0.2s', textAlign: 'left' }}
+                  onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+                  onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
+                >
+                  <div style={{ width: '42px', height: '42px', background: 'rgba(56, 189, 248, 0.15)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '2px solid #38bdf8' }}>
+                    {inventory.find(i => i.item_type === 'avatar' && i.is_equipped)?.item_id === 'avatar-robot' ? '🤖' :
+                     inventory.find(i => i.item_type === 'avatar' && i.is_equipped)?.item_id === 'avatar-brain' ? '🧠' :
+                     inventory.find(i => i.item_type === 'avatar' && i.is_equipped)?.item_id === 'avatar-hacker' ? '👨‍💻' : '👤'}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: '120px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 'bold', fontSize: '0.95rem', color: '#f8fafc' }}>{currentUser}</span>
+                      <span style={{ fontSize: '0.75rem', color: '#a855f7', fontWeight: 'bold' }}>Lv. {currentLevel}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
+                      <span style={{ fontSize: '0.75rem', color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '0.2rem', fontWeight: '600' }}>🪙 {coins}</span>
+                      {dailyRewardData && dailyRewardData.streak > 0 && (
+                        <span style={{ fontSize: '0.75rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.1rem', fontWeight: 'bold' }}>🔥 {dailyRewardData.streak}</span>
+                      )}
+                      <div style={{ flex: 1, height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
+                        <div style={{ width: `${xpPercent}%`, height: '100%', background: 'linear-gradient(to right, #38bdf8, #a855f7)' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+              {activeGame === null && (
+                <div style={{ display: 'flex', gap: '0.5rem', background: 'rgba(255, 255, 255, 0.05)', padding: '0.25rem', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                  <button 
+                    onClick={() => { setPortalView('participant'); }}
+                    style={{
+                      background: portalView === 'participant' ? 'linear-gradient(to right, #38bdf8, #a855f7)' : 'transparent',
+                      border: 'none',
+                      color: '#ffffff',
+                      padding: '0.4rem 0.8rem',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontWeight: '600',
+                      fontSize: '0.85rem',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    🎮 Participant Portal
+                  </button>
+                  <button 
+                    onClick={() => { setPortalView('researcher'); }}
+                    style={{
+                      background: portalView === 'researcher' ? 'linear-gradient(to right, #38bdf8, #a855f7)' : 'transparent',
+                      border: 'none',
+                      color: '#ffffff',
+                      padding: '0.4rem 0.8rem',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontWeight: '600',
+                      fontSize: '0.85rem',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    🔬 Researcher Portal
+                  </button>
+                </div>
+              )}
+              
+              {activeGame === null && portalView === 'participant' && (
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button 
+                    className="dashboard-toggle-btn" 
+                    title="Store"
+                    onClick={() => setShowShop(true)}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      color: '#fbbf24',
+                      border: '1px solid rgba(245, 158, 11, 0.3)',
+                      padding: '0.5rem',
+                      borderRadius: '8px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '38px',
+                      height: '38px'
+                    }}
+                  >
+                    <span>🛒</span>
+                  </button>
+                  <button 
+                    className="dashboard-toggle-btn" 
+                    title="Detailed History"
+                    onClick={() => setShowDashboard(!showDashboard)}
+                    style={{
+                      background: showDashboard ? 'rgba(255, 255, 255, 0.05)' : 'linear-gradient(to right, #38bdf8, #a855f7)',
+                      color: '#ffffff',
+                      border: '1px solid ' + (showDashboard ? 'rgba(255, 255, 255, 0.2)' : 'transparent'),
+                      padding: '0.5rem',
+                      borderRadius: '8px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      boxShadow: showDashboard ? 'none' : '0 4px 12px rgba(124, 58, 237, 0.3)',
+                      transition: 'all 0.2s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '38px',
+                      height: '38px'
+                    }}
+                  >
+                    {showDashboard ? '🔙' : '📊'}
+                  </button>
+                </div>
+              )}
+            </div>
+          </header>
+        </>
       )}
       {!serverOnline && !appBooting && (
         <div style={{

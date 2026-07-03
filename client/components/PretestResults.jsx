@@ -113,11 +113,15 @@ const PretestResults = ({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div style={{ background: 'rgba(20, 83, 45, 0.2)', border: '1px solid rgba(22, 101, 52, 0.3)', borderRadius: '8px', padding: '1rem' }}>
                 <h4 style={{ color: '#4ade80', fontWeight: '600', marginBottom: '0.25rem', fontSize: '0.875rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Cognitive Strengths</h4>
-                <p style={{ color: '#cbd5e1', fontSize: '0.875rem', lineHeight: '1.6' }}>{personalizedReport.pros}</p>
+                <ul style={{ margin: 0, paddingLeft: '1.2rem', color: '#cbd5e1', fontSize: '0.875rem', lineHeight: '1.6' }}>
+                  {(personalizedReport.pros || []).map((pro, i) => <li key={i}>{pro}</li>)}
+                </ul>
               </div>
               <div style={{ background: 'rgba(127, 29, 29, 0.2)', border: '1px solid rgba(153, 27, 27, 0.3)', borderRadius: '8px', padding: '1rem' }}>
                 <h4 style={{ color: '#f87171', fontWeight: '600', marginBottom: '0.25rem', fontSize: '0.875rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Target Weakness</h4>
-                <p style={{ color: '#cbd5e1', fontSize: '0.875rem', lineHeight: '1.6' }}>{personalizedReport.cons}</p>
+                <ul style={{ margin: 0, paddingLeft: '1.2rem', color: '#cbd5e1', fontSize: '0.875rem', lineHeight: '1.6' }}>
+                  {(personalizedReport.weaknesses || []).map((con, i) => <li key={i}>{con}</li>)}
+                </ul>
               </div>
             </div>
           ) : (

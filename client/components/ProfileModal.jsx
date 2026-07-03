@@ -15,6 +15,7 @@ const ProfileModal = ({ onClose }) => {
   const [profileData, setProfileData] = useState(null);
   const [domainStats, setDomainStats] = useState([]);
   const [timelineStats, setTimelineStats] = useState([]);
+  const [cognitiveProfile, setCognitiveProfile] = useState(null);
   const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -66,6 +67,9 @@ const ProfileModal = ({ onClose }) => {
         const anData = await anRes.json();
         setDomainStats(anData.domain_stats || []);
         setTimelineStats(anData.timeline_stats || []);
+        if (anData.cognitive_profile) {
+          setCognitiveProfile(anData.cognitive_profile);
+        }
       }
 
       // 3. Fetch Achievements
@@ -120,7 +124,15 @@ const ProfileModal = ({ onClose }) => {
   const lineOptions = { scales: { x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } }, y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' }, min: 0, max: 100 } }, plugins: { legend: { display: false } }, maintainAspectRatio: false };
 
   const equippedAvatar = (inventory || []).find(i => i.item_type === 'avatar' && i.is_equipped)?.item_id;
-  const avatarIcon = equippedAvatar === 'avatar-robot' ? '🤖' : equippedAvatar === 'avatar-brain' ? '🧠' : equippedAvatar === 'avatar-hacker' ? '👨‍💻' : equippedAvatar === 'avatar-speed-demon' ? '⚡' : '👤';
+  const avatarIcon = equippedAvatar === 'avatar-robot' ? '🤖' : equippedAvatar === 'avatar-brain' ? '🧠' : equippedAvatar === 'avatar-hacker' ? '👨‍💻' : '👤';
+
+  const equippedBanner = (inventory || []).find(i => i.item_type === 'banner' && i.is_equipped)?.item_id;
+  const bannerBackgrounds = {
+    'banner-neon': 'linear-gradient(135deg, rgba(255, 0, 127, 0.2) 0%, rgba(121, 40, 202, 0.2) 100%)',
+    'banner-stellar': 'linear-gradient(135deg, rgba(15, 32, 39, 0.5) 0%, rgba(32, 58, 67, 0.5) 50%, rgba(44, 83, 100, 0.5) 100%)',
+    'banner-cyber': 'linear-gradient(135deg, rgba(0, 180, 219, 0.2) 0%, rgba(0, 131, 176, 0.2) 100%)',
+  };
+  const headerBg = equippedBanner && bannerBackgrounds[equippedBanner] ? bannerBackgrounds[equippedBanner] : 'transparent';
 
   // XP Calculations
   const xp = profileData ? profileData.xp : 0;
@@ -134,7 +146,7 @@ const ProfileModal = ({ onClose }) => {
       <div style={{ background: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(148, 163, 184, 0.2)', borderRadius: '16px', width: '95%', maxWidth: '800px', height: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }}>
         
         {/* Header (Avatar & Tabs) */}
-        <div style={{ display: 'flex', flexDirection: 'column', borderBottom: '1px solid rgba(148, 163, 184, 0.1)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', borderBottom: '1px solid rgba(148, 163, 184, 0.1)', background: headerBg }}>
           <div style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
               <div style={{ width: '64px', height: '64px', background: 'rgba(56, 189, 248, 0.15)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', border: '2px solid #38bdf8' }}>
@@ -152,7 +164,7 @@ const ProfileModal = ({ onClose }) => {
           </div>
           
           <div style={{ display: 'flex', px: '1.5rem', background: 'rgba(0,0,0,0.2)' }}>
-            {['overview', 'stats', 'badges', 'settings'].map(tab => (
+            {['overview', 'stats', 'ai report', 'badges', 'settings'].map(tab => (
               <button key={tab} onClick={() => setActiveTab(tab)} style={{
                 flex: 1, padding: '1rem', background: 'transparent', border: 'none',
                 borderBottom: activeTab === tab ? '2px solid #38bdf8' : '2px solid transparent',
@@ -198,6 +210,34 @@ const ProfileModal = ({ onClose }) => {
                   <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '1rem', borderRadius: '12px', height: '300px' }}>
                     <h3 style={{ color: '#e2e8f0', margin: '0 0 1rem 0', fontSize: '1.1rem', textAlign: 'center' }}>Accuracy Trend</h3>
                     {timelineStats.length > 0 ? <Line data={lineData} options={lineOptions} /> : <div style={{ color: '#94a3b8', textAlign: 'center' }}>No data</div>}
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'ai report' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '1.5rem', borderRadius: '12px' }}>
+                    <h3 style={{ margin: '0 0 1rem 0', color: '#f8fafc', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Cognitive AI Diagnostics</h3>
+                    {cognitiveProfile ? (
+                      <div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', alignItems: 'center' }}>
+                          <span style={{ color: '#94a3b8' }}>Archetype Profile:</span>
+                          <span style={{ color: '#38bdf8', fontWeight: 'bold', fontSize: '1.25rem' }}>{cognitiveProfile.archetype_name}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
+                          <span style={{ color: '#94a3b8' }}>AI Confidence Score:</span>
+                          <span style={{ color: '#10b981', fontWeight: 'bold' }}>{Math.round(cognitiveProfile.confidence_score * 100)}%</span>
+                        </div>
+                        <div style={{ background: 'rgba(0, 0, 0, 0.2)', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #a855f7' }}>
+                          <h4 style={{ margin: '0 0 0.5rem 0', color: '#e2e8f0' }}>Predicted Trajectory</h4>
+                          <p style={{ margin: 0, color: '#94a3b8', lineHeight: '1.5' }}>{cognitiveProfile.trajectory_msg}</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ color: '#94a3b8', textAlign: 'center', padding: '2rem' }}>
+                        Play more games to generate your AI Cognitive Profile.
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
