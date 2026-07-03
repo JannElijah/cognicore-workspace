@@ -24,12 +24,25 @@ const ProfileModal = ({ onClose }) => {
 
   const username = typeof user === 'object' && user !== null ? user.username : user;
 
+  const RARITY_STYLES = {
+    common: { gradient: 'linear-gradient(135deg, #64748b, #94a3b8)', glow: 'rgba(148, 163, 184, 0.15)', border: 'rgba(148, 163, 184, 0.3)', label: 'Common', labelColor: '#94a3b8' },
+    rare: { gradient: 'linear-gradient(135deg, #3b82f6, #60a5fa)', glow: 'rgba(59, 130, 246, 0.15)', border: 'rgba(59, 130, 246, 0.4)', label: 'Rare', labelColor: '#60a5fa' },
+    epic: { gradient: 'linear-gradient(135deg, #a855f7, #c084fc)', glow: 'rgba(168, 85, 247, 0.15)', border: 'rgba(168, 85, 247, 0.4)', label: 'Epic', labelColor: '#c084fc' },
+    legendary: { gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)', glow: 'rgba(245, 158, 11, 0.15)', border: 'rgba(245, 158, 11, 0.4)', label: 'Legendary', labelColor: '#fbbf24' },
+  };
+
   const achievementMeta = {
-    'speed_demon': { title: 'Speed Demon', description: 'Achieve a reaction time under 400ms 10 times.', reward: 'Exclusive Avatar: ⚡', target: 10 },
-    'scholar': { title: 'Scholar', description: 'Reach Level 10.', reward: 'Exclusive Banner: Scholar', target: 1 },
-    'first_steps': { title: 'First Steps', description: 'Complete your first cognitive training game.', reward: '100 Coins', target: 1 },
-    'consistency': { title: 'Consistent Trainer', description: 'Complete 50 cognitive training games.', reward: '500 Coins', target: 50 },
-    'accuracy_master': { title: 'Accuracy Master', description: 'Achieve a perfect 100% accuracy score 5 times.', reward: '1,000 Coins', target: 5 }
+    'first_steps': { title: 'First Steps', icon: '👣', description: 'Complete your first cognitive training game.', reward: '100 Coins', target: 1, rarity: 'common' },
+    'consistency': { title: 'Consistent Trainer', icon: '🔥', description: 'Complete 50 cognitive training games.', reward: '500 Coins', target: 50, rarity: 'rare' },
+    'sharpshooter': { title: 'Sharpshooter', icon: '🏹', description: 'Achieve 90%+ accuracy 20 times.', reward: '500 Coins', target: 20, rarity: 'rare' },
+    'versatile_mind': { title: 'Versatile Mind', icon: '🎮', description: 'Play all 5 different game types.', reward: '400 Coins', target: 5, rarity: 'rare' },
+    'on_fire': { title: 'On Fire', icon: '🔥', description: 'Achieve a 7-day login streak.', reward: '750 Coins', target: 7, rarity: 'rare' },
+    'speed_demon': { title: 'Speed Demon', icon: '⚡', description: 'Achieve a reaction time under 400ms 10 times.', reward: 'Exclusive Avatar', target: 10, rarity: 'epic' },
+    'scholar': { title: 'Scholar', icon: '🎓', description: 'Reach Level 10.', reward: 'Exclusive Banner', target: 1, rarity: 'epic' },
+    'lightning_reflexes': { title: 'Lightning Reflexes', icon: '⚡', description: 'Achieve a reaction time under 300ms.', reward: '200 Coins + Exclusive Banner', target: 1, rarity: 'epic' },
+    'brain_marathon': { title: 'Brain Marathon', icon: '🧠', description: 'Complete 10 cognitive games in a single day.', reward: '300 Coins', target: 10, rarity: 'epic' },
+    'accuracy_master': { title: 'Accuracy Master', icon: '🎯', description: 'Achieve a perfect 100% accuracy score 5 times.', reward: '1,000 Coins', target: 5, rarity: 'legendary' },
+    'peak_performer': { title: 'Peak Performer', icon: '🏔️', description: 'Reach maximum difficulty level 5.', reward: '1,000 Coins', target: 1, rarity: 'legendary' },
   };
 
   useEffect(() => {
@@ -198,11 +211,33 @@ const ProfileModal = ({ onClose }) => {
                     const completed = serverData ? serverData.is_completed === 1 : false;
                     const progress = Math.min(current, meta.target);
                     const percent = Math.floor((progress / meta.target) * 100);
+                    const rarity = RARITY_STYLES[meta.rarity] || RARITY_STYLES.common;
 
                     return (
-                      <div key={id} style={{ background: completed ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.03)', border: `1px solid ${completed ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.05)'}`, padding: '1rem', borderRadius: '12px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                          <h3 style={{ color: completed ? '#10b981' : '#e2e8f0', margin: 0 }}>{meta.title} {completed && '✅'}</h3>
+                      <div key={id} style={{
+                        background: completed ? rarity.glow : 'rgba(255, 255, 255, 0.03)',
+                        border: `1px solid ${completed ? rarity.border : 'rgba(255, 255, 255, 0.05)'}`,
+                        padding: '1rem', borderRadius: '12px',
+                        opacity: completed ? 1 : 0.85,
+                        transition: 'all 0.3s ease',
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                            <span style={{ fontSize: '1.4rem' }}>{meta.icon}</span>
+                            <div>
+                              <h3 style={{ color: completed ? rarity.labelColor : '#e2e8f0', margin: 0, fontSize: '0.95rem' }}>
+                                {meta.title} {completed && '✅'}
+                              </h3>
+                              <span style={{
+                                fontSize: '0.6rem', fontWeight: 'bold', textTransform: 'uppercase',
+                                letterSpacing: '0.08em',
+                                background: rarity.gradient,
+                                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                              }}>
+                                {rarity.label}
+                              </span>
+                            </div>
+                          </div>
                           <div style={{ color: '#fbbf24', fontSize: '0.8rem', fontWeight: 'bold' }}>🎁 {meta.reward}</div>
                         </div>
                         <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: '0 0 1rem 0' }}>{meta.description}</p>
@@ -211,7 +246,12 @@ const ProfileModal = ({ onClose }) => {
                             <span>Progress</span><span>{progress} / {meta.target}</span>
                           </div>
                           <div style={{ width: '100%', height: '8px', background: '#334155', borderRadius: '4px' }}>
-                            <div style={{ width: `${percent}%`, height: '100%', background: completed ? '#10b981' : '#38bdf8', borderRadius: '4px' }} />
+                            <div style={{
+                              width: `${percent}%`, height: '100%',
+                              background: completed ? rarity.gradient : '#38bdf8',
+                              borderRadius: '4px',
+                              transition: 'width 0.5s ease',
+                            }} />
                           </div>
                         </div>
                       </div>

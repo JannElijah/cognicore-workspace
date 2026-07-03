@@ -1564,6 +1564,191 @@ def adjust_difficulty(current_user_id, current_username):
         app.logger.error(f"Error in adjust_difficulty: {e}")
         return jsonify({"status": "error", "message": f"Database or server error: {str(e)}"}), 500
 
+def execute_gamification(cursor, uid, reaction_time, accuracy, difficulty, game_type):
+    xp_gained = difficulty * 15
+    coins_gained = int(accuracy * 10) + (difficulty * 2)
+    leveled_up = False
+    newly_unlocked = []
+
+    # 1. Update Profile XP & Coins
+    cursor.execute("""
+        INSERT INTO user_profiles (user_id, xp, coins, level) 
+        VALUES (?, ?, ?, 1) 
+        ON CONFLICT(user_id) DO UPDATE SET 
+            xp = user_profiles.xp + excluded.xp,
+            coins = user_profiles.coins + excluded.coins
+    """, (uid, xp_gained, coins_gained))
+
+    # Check level up
+    cursor.execute("SELECT xp, level FROM user_profiles WHERE user_id = ?", (uid,))
+    prof = cursor.fetchone()
+    new_level = 1
+    if prof:
+        new_level = (prof['xp'] // 500) + 1
+        if new_level > prof['level']:
+            leveled_up = True
+            coins_gained += 500 # 500 bonus
+            cursor.execute("UPDATE user_profiles SET level = ?, coins = coins + 500 WHERE user_id = ?", (new_level, uid))
+
+    # Update daily tasks
+    cursor.execute("UPDATE daily_tasks SET current_amount = current_amount + 1 WHERE user_id = ? AND task_description = 'Play 3 Training Games' AND date(created_at) = date('now', 'localtime')", (uid,))
+    if accuracy >= 0.8:
+        cursor.execute("UPDATE daily_tasks SET current_amount = current_amount + 1 WHERE user_id = ? AND task_description = 'Achieve 80% accuracy in any game' AND date(created_at) = date('now', 'localtime')", (uid,))
+    if reaction_time < 800:
+        cursor.execute("UPDATE daily_tasks SET current_amount = current_amount + 1 WHERE user_id = ? AND task_description = 'Achieve reaction time under 800ms' AND date(created_at) = date('now', 'localtime')", (uid,))
+
+    # Update permanent achievements
+    # 1. Speed Demon (RT < 400ms, 10 times)
+    if reaction_time < 400:
+        cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'speed_demon')", (uid,))
+        cursor.execute("UPDATE user_achievements SET current_amount = current_amount + 1 WHERE user_id = ? AND achievement_id = 'speed_demon' AND is_completed = 0", (uid,))
+        cursor.execute("SELECT current_amount FROM user_achievements WHERE user_id = ? AND achievement_id = 'speed_demon' AND is_completed = 0", (uid,))
+        ach_sd = cursor.fetchone()
+        if ach_sd and ach_sd['current_amount'] >= 10:
+            cursor.execute("UPDATE user_achievements SET is_completed = 1 WHERE user_id = ? AND achievement_id = 'speed_demon'", (uid,))
+            cursor.execute("INSERT OR IGNORE INTO user_inventory (user_id, item_id, item_type) VALUES (?, 'avatar-speed-demon', 'avatar')", (uid,))
+            newly_unlocked.append('speed_demon')
+
+    # 2. Scholar (Reach Level 10)
+    if new_level >= 10:
+        cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'scholar')", (uid,))
+        cursor.execute("SELECT is_completed FROM user_achievements WHERE user_id = ? AND achievement_id = 'scholar'", (uid,))
+        ach_sc = cursor.fetchone()
+        if ach_sc and ach_sc['is_completed'] == 0:
+            cursor.execute("UPDATE user_achievements SET is_completed = 1, current_amount = 1 WHERE user_id = ? AND achievement_id = 'scholar'", (uid,))
+            cursor.execute("INSERT OR IGNORE INTO user_inventory (user_id, item_id, item_type) VALUES (?, 'banner-scholar', 'banner')", (uid,))
+            newly_unlocked.append('scholar')
+
+    # 3. First Steps (Complete 1 game)
+    cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'first_steps')", (uid,))
+    cursor.execute("SELECT is_completed FROM user_achievements WHERE user_id = ? AND achievement_id = 'first_steps'", (uid,))
+    ach_fs = cursor.fetchone()
+    if ach_fs and ach_fs['is_completed'] == 0:
+        cursor.execute("UPDATE user_achievements SET is_completed = 1, current_amount = 1 WHERE user_id = ? AND achievement_id = 'first_steps'", (uid,))
+        cursor.execute("UPDATE user_profiles SET coins = coins + 100 WHERE user_id = ?", (uid,))
+        coins_gained += 100
+        newly_unlocked.append('first_steps')
+
+    # 4. Consistency (Complete 50 games)
+    cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'consistency')", (uid,))
+    cursor.execute("UPDATE user_achievements SET current_amount = current_amount + 1 WHERE user_id = ? AND achievement_id = 'consistency' AND is_completed = 0", (uid,))
+    cursor.execute("SELECT current_amount FROM user_achievements WHERE user_id = ? AND achievement_id = 'consistency' AND is_completed = 0", (uid,))
+    ach_con = cursor.fetchone()
+    if ach_con and ach_con['current_amount'] >= 50:
+        cursor.execute("UPDATE user_achievements SET is_completed = 1 WHERE user_id = ? AND achievement_id = 'consistency'", (uid,))
+        cursor.execute("UPDATE user_profiles SET coins = coins + 500 WHERE user_id = ?", (uid,))
+        coins_gained += 500
+        newly_unlocked.append('consistency')
+
+    # 5. Accuracy Master (100% accuracy, 5 times)
+    if accuracy >= 1.0:
+        cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'accuracy_master')", (uid,))
+        cursor.execute("UPDATE user_achievements SET current_amount = current_amount + 1 WHERE user_id = ? AND achievement_id = 'accuracy_master' AND is_completed = 0", (uid,))
+        cursor.execute("SELECT current_amount FROM user_achievements WHERE user_id = ? AND achievement_id = 'accuracy_master' AND is_completed = 0", (uid,))
+        ach_am = cursor.fetchone()
+        if ach_am and ach_am['current_amount'] >= 5:
+            cursor.execute("UPDATE user_achievements SET is_completed = 1 WHERE user_id = ? AND achievement_id = 'accuracy_master'", (uid,))
+            cursor.execute("UPDATE user_profiles SET coins = coins + 1000 WHERE user_id = ?", (uid,))
+            coins_gained += 1000
+            newly_unlocked.append('accuracy_master')
+
+    # 6. Sharpshooter (90%+ accuracy, 20 times)
+    if accuracy >= 0.9:
+        cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'sharpshooter')", (uid,))
+        cursor.execute("UPDATE user_achievements SET current_amount = current_amount + 1 WHERE user_id = ? AND achievement_id = 'sharpshooter' AND is_completed = 0", (uid,))
+        cursor.execute("SELECT current_amount FROM user_achievements WHERE user_id = ? AND achievement_id = 'sharpshooter' AND is_completed = 0", (uid,))
+        ach_ss = cursor.fetchone()
+        if ach_ss and ach_ss['current_amount'] >= 20:
+            cursor.execute("UPDATE user_achievements SET is_completed = 1 WHERE user_id = ? AND achievement_id = 'sharpshooter'", (uid,))
+            cursor.execute("UPDATE user_profiles SET coins = coins + 500 WHERE user_id = ?", (uid,))
+            coins_gained += 500
+            newly_unlocked.append('sharpshooter')
+
+    # 7. Lightning Reflexes (RT under 300ms)
+    if reaction_time < 300:
+        cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'lightning_reflexes')", (uid,))
+        cursor.execute("SELECT is_completed FROM user_achievements WHERE user_id = ? AND achievement_id = 'lightning_reflexes'", (uid,))
+        ach_lr = cursor.fetchone()
+        if ach_lr and ach_lr['is_completed'] == 0:
+            cursor.execute("UPDATE user_achievements SET is_completed = 1, current_amount = 1 WHERE user_id = ? AND achievement_id = 'lightning_reflexes'", (uid,))
+            cursor.execute("UPDATE user_profiles SET coins = coins + 200 WHERE user_id = ?", (uid,))
+            cursor.execute("INSERT OR IGNORE INTO user_inventory (user_id, item_id, item_type) VALUES (?, 'banner-lightning', 'banner')", (uid,))
+            coins_gained += 200
+            newly_unlocked.append('lightning_reflexes')
+
+    # 8. Peak Performer (Reach difficulty level 5)
+    if difficulty >= 5:
+        cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'peak_performer')", (uid,))
+        cursor.execute("SELECT is_completed FROM user_achievements WHERE user_id = ? AND achievement_id = 'peak_performer'", (uid,))
+        ach_pp = cursor.fetchone()
+        if ach_pp and ach_pp['is_completed'] == 0:
+            cursor.execute("UPDATE user_achievements SET is_completed = 1, current_amount = 1 WHERE user_id = ? AND achievement_id = 'peak_performer'", (uid,))
+            cursor.execute("UPDATE user_profiles SET coins = coins + 1000 WHERE user_id = ?", (uid,))
+            coins_gained += 1000
+            newly_unlocked.append('peak_performer')
+
+    # 9. Versatile Mind (Play all 5 game types)
+    if game_type:
+        cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'versatile_mind')", (uid,))
+        cursor.execute("SELECT COUNT(DISTINCT gs.game_type) as gt_count FROM game_sessions gs WHERE gs.user_id = ? AND gs.game_type IS NOT NULL", (uid,))
+        gt_row = cursor.fetchone()
+        if gt_row and gt_row['gt_count'] >= 5:
+            cursor.execute("SELECT is_completed FROM user_achievements WHERE user_id = ? AND achievement_id = 'versatile_mind'", (uid,))
+            ach_vm = cursor.fetchone()
+            if ach_vm and ach_vm['is_completed'] == 0:
+                cursor.execute("UPDATE user_achievements SET is_completed = 1, current_amount = ? WHERE user_id = ? AND achievement_id = 'versatile_mind'", (gt_row['gt_count'], uid))
+                cursor.execute("UPDATE user_profiles SET coins = coins + 400 WHERE user_id = ?", (uid,))
+                coins_gained += 400
+                newly_unlocked.append('versatile_mind')
+            else:
+                cursor.execute("UPDATE user_achievements SET current_amount = ? WHERE user_id = ? AND achievement_id = 'versatile_mind' AND is_completed = 0", (gt_row['gt_count'], uid))
+        elif gt_row:
+            cursor.execute("UPDATE user_achievements SET current_amount = ? WHERE user_id = ? AND achievement_id = 'versatile_mind' AND is_completed = 0", (gt_row['gt_count'], uid))
+
+    # 10. Brain Marathon (Complete 10 games in a single day)
+    cursor.execute("""
+        SELECT COUNT(*) as games_today 
+        FROM game_sessions 
+        WHERE user_id = ? AND date(start_time, 'localtime') = date('now', 'localtime')
+    """, (uid,))
+    games_today_row = cursor.fetchone()
+    if games_today_row:
+        games_today = games_today_row['games_today']
+        cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'brain_marathon')", (uid,))
+        if games_today >= 10:
+            cursor.execute("SELECT is_completed FROM user_achievements WHERE user_id = ? AND achievement_id = 'brain_marathon'", (uid,))
+            ach_bm = cursor.fetchone()
+            if ach_bm and ach_bm['is_completed'] == 0:
+                cursor.execute("UPDATE user_achievements SET is_completed = 1, current_amount = ? WHERE user_id = ? AND achievement_id = 'brain_marathon'", (games_today, uid))
+                cursor.execute("UPDATE user_profiles SET coins = coins + 300 WHERE user_id = ?", (uid,))
+                coins_gained += 300
+                newly_unlocked.append('brain_marathon')
+            else:
+                cursor.execute("UPDATE user_achievements SET current_amount = ? WHERE user_id = ? AND achievement_id = 'brain_marathon' AND is_completed = 0", (games_today, uid))
+        else:
+            cursor.execute("UPDATE user_achievements SET current_amount = ? WHERE user_id = ? AND achievement_id = 'brain_marathon' AND is_completed = 0", (games_today, uid))
+
+    # 11. On Fire (7-day login streak)
+    cursor.execute("SELECT current_streak FROM user_streaks WHERE user_id = ?", (uid,))
+    streak_row = cursor.fetchone()
+    if streak_row:
+        current_streak = streak_row['current_streak']
+        cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'on_fire')", (uid,))
+        if current_streak >= 7:
+            cursor.execute("SELECT is_completed FROM user_achievements WHERE user_id = ? AND achievement_id = 'on_fire'", (uid,))
+            ach_of = cursor.fetchone()
+            if ach_of and ach_of['is_completed'] == 0:
+                cursor.execute("UPDATE user_achievements SET is_completed = 1, current_amount = ? WHERE user_id = ? AND achievement_id = 'on_fire'", (current_streak, uid))
+                cursor.execute("UPDATE user_profiles SET coins = coins + 750 WHERE user_id = ?", (uid,))
+                coins_gained += 750
+                newly_unlocked.append('on_fire')
+            else:
+                cursor.execute("UPDATE user_achievements SET current_amount = ? WHERE user_id = ? AND achievement_id = 'on_fire' AND is_completed = 0", (current_streak, uid))
+        else:
+            cursor.execute("UPDATE user_achievements SET current_amount = ? WHERE user_id = ? AND achievement_id = 'on_fire' AND is_completed = 0", (current_streak, uid))
+
+    return xp_gained, coins_gained, leveled_up, newly_unlocked
+
 @app.route('/api/submit-metrics', methods=['POST'])
 @token_required
 def submit_metrics(current_user_id, current_username):
@@ -1588,7 +1773,7 @@ def submit_metrics(current_user_id, current_username):
         difficulty = safe_int(diff_val)
         
         if session_id is None or reaction_time is None or accuracy is None or difficulty is None:
-            return jsonify({"status": "error", "message": "Missing required fields"}), 400
+            return jsonify({"status": "error", "message": "session_id, reaction_time, accuracy_rate and difficulty_level are required fields."}), 400
             
         # Bounds validation
         if session_id <= 0:
@@ -1647,92 +1832,19 @@ def submit_metrics(current_user_id, current_username):
                 # Gamification: Award XP and Coins
                 cursor.execute("SELECT user_id FROM game_sessions WHERE id = ?", (session_id,))
                 user_row = cursor.fetchone()
-                xp_gained = difficulty * 15
-                coins_gained = int(accuracy * 10) + (difficulty * 2)
                 
+                xp_gained = 0
+                coins_gained = 0
                 leveled_up = False
+                newly_unlocked = []
                 
                 if user_row:
                     uid = user_row['user_id']
                     try:
-                        cursor.execute("""
-                            INSERT INTO user_profiles (user_id, xp, coins, level) 
-                            VALUES (?, ?, ?, 1) 
-                            ON CONFLICT(user_id) DO UPDATE SET 
-                                xp = user_profiles.xp + excluded.xp,
-                                coins = user_profiles.coins + excluded.coins
-                        """, (uid, xp_gained, coins_gained))
-                        
-                        # Check level up
-                        cursor.execute("SELECT xp, level FROM user_profiles WHERE user_id = ?", (uid,))
-                        prof = cursor.fetchone()
-                        new_level = 1
-                        if prof:
-                            new_level = (prof['xp'] // 500) + 1
-                            if new_level > prof['level']:
-                                leveled_up = True
-                                coins_gained += 500 # 500 bonus
-                                cursor.execute("UPDATE user_profiles SET level = ?, coins = coins + 500 WHERE user_id = ?", (new_level, uid))
-                                
-                        # Update daily tasks
-                        cursor.execute("UPDATE daily_tasks SET current_amount = current_amount + 1 WHERE user_id = ? AND task_description = 'Play 3 Training Games' AND date(created_at) = date('now', 'localtime')", (uid,))
-                        if accuracy >= 0.8:
-                            cursor.execute("UPDATE daily_tasks SET current_amount = current_amount + 1 WHERE user_id = ? AND task_description = 'Achieve 80% accuracy in any game' AND date(created_at) = date('now', 'localtime')", (uid,))
-                        if reaction_time < 800:
-                            cursor.execute("UPDATE daily_tasks SET current_amount = current_amount + 1 WHERE user_id = ? AND task_description = 'Achieve reaction time under 800ms' AND date(created_at) = date('now', 'localtime')", (uid,))
-                            
-                        # Update permanent achievements
-                        # 1. Speed Demon
-                        if reaction_time < 400:
-                            cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'speed_demon')", (uid,))
-                            cursor.execute("UPDATE user_achievements SET current_amount = current_amount + 1 WHERE user_id = ? AND achievement_id = 'speed_demon' AND is_completed = 0", (uid,))
-                            cursor.execute("SELECT current_amount FROM user_achievements WHERE user_id = ? AND achievement_id = 'speed_demon' AND is_completed = 0", (uid,))
-                            ach_sd = cursor.fetchone()
-                            if ach_sd and ach_sd['current_amount'] >= 10:
-                                cursor.execute("UPDATE user_achievements SET is_completed = 1 WHERE user_id = ? AND achievement_id = 'speed_demon'", (uid,))
-                                cursor.execute("INSERT OR IGNORE INTO user_inventory (user_id, item_id, item_type, is_equipped) VALUES (?, 'avatar-speed-demon', 'avatar', 0)", (uid,))
-                        
-                        # 2. Scholar
-                        if new_level >= 10:
-                            cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'scholar')", (uid,))
-                            cursor.execute("SELECT is_completed FROM user_achievements WHERE user_id = ? AND achievement_id = 'scholar'", (uid,))
-                            ach_sc = cursor.fetchone()
-                            if ach_sc and ach_sc['is_completed'] == 0:
-                                cursor.execute("UPDATE user_achievements SET is_completed = 1, current_amount = 1 WHERE user_id = ? AND achievement_id = 'scholar'", (uid,))
-                                cursor.execute("INSERT OR IGNORE INTO user_inventory (user_id, item_id, item_type, is_equipped) VALUES (?, 'banner-scholar', 'banner', 0)", (uid,))
-
-                        # 3. First Steps
-                        cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'first_steps')", (uid,))
-                        cursor.execute("SELECT is_completed FROM user_achievements WHERE user_id = ? AND achievement_id = 'first_steps'", (uid,))
-                        ach_fs = cursor.fetchone()
-                        if ach_fs and ach_fs['is_completed'] == 0:
-                            cursor.execute("UPDATE user_achievements SET is_completed = 1, current_amount = 1 WHERE user_id = ? AND achievement_id = 'first_steps'", (uid,))
-                            cursor.execute("UPDATE users SET coins = coins + 100 WHERE id = ?", (uid,))
-                            coins_gained += 100
-
-                        # 4. Consistency
-                        cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'consistency')", (uid,))
-                        cursor.execute("UPDATE user_achievements SET current_amount = current_amount + 1 WHERE user_id = ? AND achievement_id = 'consistency' AND is_completed = 0", (uid,))
-                        cursor.execute("SELECT current_amount FROM user_achievements WHERE user_id = ? AND achievement_id = 'consistency' AND is_completed = 0", (uid,))
-                        ach_con = cursor.fetchone()
-                        if ach_con and ach_con['current_amount'] >= 50:
-                            cursor.execute("UPDATE user_achievements SET is_completed = 1 WHERE user_id = ? AND achievement_id = 'consistency'", (uid,))
-                            cursor.execute("UPDATE users SET coins = coins + 500 WHERE id = ?", (uid,))
-                            coins_gained += 500
-
-                        # 5. Accuracy Master
-                        if accuracy == 100:
-                            cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'accuracy_master')", (uid,))
-                            cursor.execute("UPDATE user_achievements SET current_amount = current_amount + 1 WHERE user_id = ? AND achievement_id = 'accuracy_master' AND is_completed = 0", (uid,))
-                            cursor.execute("SELECT current_amount FROM user_achievements WHERE user_id = ? AND achievement_id = 'accuracy_master' AND is_completed = 0", (uid,))
-                            ach_am = cursor.fetchone()
-                            if ach_am and ach_am['current_amount'] >= 5:
-                                cursor.execute("UPDATE user_achievements SET is_completed = 1 WHERE user_id = ? AND achievement_id = 'accuracy_master'", (uid,))
-                                cursor.execute("UPDATE users SET coins = coins + 1000 WHERE id = ?", (uid,))
-                                coins_gained += 1000
-                                
+                        xp_gained, coins_gained, leveled_up, newly_unlocked = execute_gamification(
+                            cursor, uid, reaction_time, accuracy, difficulty, game_type
+                        )
                     except Exception as pg_err:
-                        # Fail silently on gamification for now if table isn't migrated
                         print(f"Gamification update skipped: {pg_err}")
         finally:
             conn.commit()
@@ -1744,7 +1856,8 @@ def submit_metrics(current_user_id, current_username):
             "rewards": {
                 "xp": xp_gained,
                 "coins": coins_gained,
-                "leveled_up": leveled_up
+                "leveled_up": leveled_up,
+                "newly_unlocked": newly_unlocked
             }
         }), 201
  
@@ -2075,6 +2188,10 @@ def submit_metrics_batch():
             
         conn = get_db_connection()
         recorded_count = 0
+        total_xp = 0
+        total_coins = 0
+        leveled_up_flag = False
+        newly_unlocked_set = set()
         try:
             with conn:
                 cursor = conn.cursor()
@@ -2132,11 +2249,36 @@ def submit_metrics_batch():
                         """,
                         (session_id, reaction_time, accuracy, difficulty, cognitive_domain, game_type, error_count, hesitation_ms, spam_click_count, rule_shift_latency_ms, path_efficiency)
                     )
+                    
+                    cursor.execute("SELECT user_id FROM game_sessions WHERE id = ?", (session_id,))
+                    user_row = cursor.fetchone()
+                    if user_row:
+                        uid = user_row['user_id']
+                        try:
+                            xp_gained, coins_gained, leveled_up, newly_unlocked = execute_gamification(
+                                cursor, uid, reaction_time, accuracy, difficulty, game_type
+                            )
+                            total_xp += xp_gained
+                            total_coins += coins_gained
+                            if leveled_up:
+                                leveled_up_flag = True
+                            newly_unlocked_set.update(newly_unlocked)
+                        except Exception as pg_err:
+                            print(f"Gamification update skipped in batch: {pg_err}")
                     recorded_count += 1
         finally:
             conn.close()
             
-        return jsonify({"status": "success", "message": f"{recorded_count} metrics recorded"}), 201
+        return jsonify({
+            "status": "success", 
+            "message": f"{recorded_count} metrics recorded",
+            "rewards": {
+                "xp": total_xp,
+                "coins": total_coins,
+                "leveled_up": leveled_up_flag,
+                "newly_unlocked": list(newly_unlocked_set)
+            }
+        }), 201
         
     except Exception as e:
         app.logger.error(f"Error in submit_metrics_batch: {e}")

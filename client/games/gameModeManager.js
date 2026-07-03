@@ -52,7 +52,17 @@ async function flushMemoryBuffer() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ metrics: metricsToFlush })
         });
-        if (!response.ok) {
+        if (response.ok) {
+            try {
+                const data = await response.json();
+                if (data && data.rewards && data.rewards.newly_unlocked && data.rewards.newly_unlocked.length > 0) {
+                    const event = new CustomEvent('achievements-unlocked', { detail: data.rewards.newly_unlocked });
+                    window.dispatchEvent(event);
+                }
+            } catch (e) {
+                console.error('[gameModeManager] Error parsing batch rewards:', e);
+            }
+        } else {
             console.warn('[gameModeManager] Batch flush failed on server, queueing to offline storage.');
             queueOfflineTelemetry(`${base}/api/submit-metrics/batch`, { body: JSON.stringify({ metrics: metricsToFlush }) });
         }
@@ -152,6 +162,17 @@ window.fetch = async function (url, options) {
                     headers: { 'Content-Type': 'application/json' }
                 });
             }
+            
+            try {
+                const data = await response.clone().json();
+                if (data && data.rewards && data.rewards.newly_unlocked && data.rewards.newly_unlocked.length > 0) {
+                    const event = new CustomEvent('achievements-unlocked', { detail: data.rewards.newly_unlocked });
+                    window.dispatchEvent(event);
+                }
+            } catch (e) {
+                console.error('[gameModeManager] Error parsing direct batch rewards:', e);
+            }
+            
             return response;
         } catch (err) {
             queueOfflineTelemetry(url, options);

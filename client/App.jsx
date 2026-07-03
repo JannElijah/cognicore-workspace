@@ -23,6 +23,7 @@ import RewardModal from './components/RewardModal';
 import LeaderboardModal from './components/LeaderboardModal';
 import ProfileModal from './components/ProfileModal';
 import DailyRewardModal from './components/DailyRewardModal';
+import AchievementToast from './components/AchievementToast';
 import DailyQuests from './components/DailyQuests';
 import PretestResults from './components/PretestResults';
 
@@ -824,11 +825,26 @@ export default function App() {
   const [showSoundTuner, setShowSoundTuner] = useState(false);
   const [smoothingAlpha, setSmoothingAlpha] = useState(1.0);
   const [dailyRewardData, setDailyRewardData] = useState(null);
+  const [activeAchievements, setActiveAchievements] = useState([]);
   const smoothingAlphaRef = useRef(1.0);
 
   useEffect(() => {
     smoothingAlphaRef.current = smoothingAlpha;
   }, [smoothingAlpha]);
+
+  useEffect(() => {
+    const handleAchievementsUnlocked = (e) => {
+      if (e.detail && e.detail.length > 0) {
+        setActiveAchievements(prev => {
+          // Prevent duplicates in current active list
+          const uniqueNew = e.detail.filter(id => !prev.includes(id));
+          return [...prev, ...uniqueNew];
+        });
+      }
+    };
+    window.addEventListener('achievements-unlocked', handleAchievementsUnlocked);
+    return () => window.removeEventListener('achievements-unlocked', handleAchievementsUnlocked);
+  }, []);
 
   useEffect(() => {
     const originalFetch = window.fetch;
@@ -5216,6 +5232,7 @@ export default function App() {
       {dailyRewardData && dailyRewardData.granted && <DailyRewardModal rewardData={dailyRewardData} onClose={() => { setDailyRewardData({...dailyRewardData, granted: false}); fetchInventory(); }} />}
       {showLeaderboard && <LeaderboardModal onClose={() => setShowLeaderboard(false)} />}
       {gameRewardsModal && <RewardModal rewards={gameRewardsModal} onClose={() => { setGameRewardsModal(null); fetchInventory(); }} />}
+      {activeAchievements.length > 0 && <AchievementToast achievementIds={activeAchievements} onDone={() => setActiveAchievements([])} />}
     </div>
   );
 }
