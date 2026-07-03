@@ -91,13 +91,13 @@ def get_user_inventory(current_user_id, current_username, username):
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
-        cursor.execute("SELECT coins, equipped_avatar, equipped_banner, equipped_theme, reduce_flashes, total_xp FROM user_profiles WHERE user_id = %s", (current_user_id,))
+        cursor.execute("SELECT coins, equipped_avatar, equipped_banner, equipped_theme, reduce_flashes, xp FROM user_profiles WHERE user_id = %s", (current_user_id,))
         prof = cursor.fetchone()
         
         if not prof:
             cursor.execute("INSERT INTO user_profiles (user_id) VALUES (%s)", (current_user_id,))
             conn.commit()
-            cursor.execute("SELECT coins, equipped_avatar, equipped_banner, equipped_theme, reduce_flashes, total_xp FROM user_profiles WHERE user_id = %s", (current_user_id,))
+            cursor.execute("SELECT coins, equipped_avatar, equipped_banner, equipped_theme, reduce_flashes, xp FROM user_profiles WHERE user_id = %s", (current_user_id,))
             prof = cursor.fetchone()
         
         cursor.execute("SELECT item_type, item_id FROM user_inventory WHERE user_id = %s", (current_user_id,))
@@ -122,7 +122,7 @@ def get_user_inventory(current_user_id, current_username, username):
         return jsonify({
             "status": "success",
             "coins": prof['coins'] if prof else 0,
-            "total_xp": prof['total_xp'] if prof else 0,
+            "total_xp": prof['xp'] if prof else 0,
             "reduce_flashes": bool(prof['reduce_flashes']) if prof else False,
             "inventory": inventory
         }), 200
