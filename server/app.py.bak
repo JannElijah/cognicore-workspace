@@ -15,9 +15,7 @@ Chapter 2 Methodology Compliance: Software Engineering Architecture Patterns
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import psycopg2
-from psycopg2.extras import RealDictCursor
-from psycopg2.pool import ThreadedConnectionPool
+import sqlite3
 import os
 import time
 from dotenv import load_dotenv
@@ -35,19 +33,38 @@ except ImportError:
     SCIPY_AVAILABLE = False
 
 app = Flask(__name__)
-# CORS restricts your React/Phaser frontend to authorized origins
-CORS(app, origins=["http://localhost:5173", "http://127.0.0.1:5173"])
-
-from routes.leaderboard import leaderboard_bp
-from routes.gamification import gamification_bp
-app.register_blueprint(leaderboard_bp)
-app.register_blueprint(gamification_bp)
+# CORS allows your React/Phaser frontend to communicate with this backend
+CORS(app)
 
 import jwt
 from functools import wraps
 import datetime
 
-from auth import token_required, SECRET_KEY
+SECRET_KEY = os.environ.get("JWT_SECRET", "cognicore_super_secret_key_123")
+
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = None
+        if 'Authorization' in request.headers:
+            parts = request.headers['Authorization'].split()
+            if len(parts) == 2 and parts[0] == 'Bearer':
+                token = parts[1]
+        
+        if not token:
+            return jsonify({'status': 'error', 'message': 'Token is missing!'}), 401
+            
+        try:
+            data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+            current_user_id = data['user_id']
+            current_username = data['username']
+        except jwt.ExpiredSignatureError:
+            return jsonify({'status': 'error', 'message': 'Token has expired!'}), 401
+        except Exception as e:
+            return jsonify({'status': 'error', 'message': 'Token is invalid!'}), 401
+            
+        return f(current_user_id, current_username, *args, **kwargs)
+    return decorated
  
 
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cognicore.db')
@@ -66,17 +83,19 @@ def safe_int(val, default=None):
 
 def db_execute_with_retry(cursor, sql, params=(), max_retries=5):
     """
-    Executes a database statement with exponential backoff retry logic.
-    Catches psycopg2.OperationalError and retries
+    Executes a SQLite statement with exponential backoff retry logic.
+    Catches sqlite3.OperationalError (database is locked) and retries
     up to max_retries times with delays: 50ms, 100ms, 200ms, 400ms, 800ms.
+    This ensures concurrent telemetry writes from multiple games never
+    permanently fail due to transient SQLite locking contention.
     """
     backoff_ms = 50
     for attempt in range(max_retries):
         try:
             cursor.execute(sql, params)
             return  # success
-        except psycopg2.OperationalError as e:
-            if attempt < max_retries - 1:
+        except sqlite3.OperationalError as e:
+            if 'locked' in str(e).lower() and attempt < max_retries - 1:
                 time.sleep(backoff_ms / 1000.0)
                 backoff_ms *= 2  # exponential backoff
             else:
@@ -169,86 +188,93 @@ GAME_TO_DOMAIN = {
     "nexus_mapper": "spatial_visual_memory"
 }
 
-from database import get_db_connection, init_pool
+# Helper function to get database connection
+def get_db_connection():
+    conn = sqlite3.connect(DB_PATH, timeout=30.0)
+    conn.execute("PRAGMA synchronous=NORMAL")
+    conn.execute("PRAGMA foreign_keys = ON;")
+    conn.row_factory = sqlite3.Row
+    return conn
 
 # Programmatic Schema Migration / Initialization
 def init_db():
+    # Set WAL mode once on the database file at startup
+    conn = sqlite3.connect(DB_PATH, timeout=30.0)
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.close()
+
     conn = get_db_connection()
     cursor = conn.cursor()
     
     # Ensure core tables exist before running migrations
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
-            username VARCHAR(255) NOT NULL UNIQUE,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
     
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS game_sessions (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-            game_type VARCHAR(255) NOT NULL,
-            start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            game_type TEXT NOT NULL,
+            start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(id)
         )
     """)
     
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS performance_metrics (
-            id SERIAL PRIMARY KEY,
-            session_id INTEGER REFERENCES game_sessions(id) ON DELETE CASCADE,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id INTEGER,
             reaction_time REAL,
             accuracy_rate REAL,
             difficulty_level INTEGER,
-            recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(session_id) REFERENCES game_sessions(id)
         )
     """)
     
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS cognitive_profiles (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-            archetype_name VARCHAR(255),
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            archetype_name TEXT,
             confidence_score REAL,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(user_id) REFERENCES users(id)
         )
     """)
     
-    # Get existing columns in performance_metrics using PostgreSQL catalog
-    cursor.execute("""
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name = 'performance_metrics'
-    """)
-    columns = [row['column_name'] for row in cursor.fetchall()]
+    cursor.execute("PRAGMA table_info(performance_metrics)")
+    columns = [row['name'] for row in cursor.fetchall()]
     
-    # Re-fetch or run programmatic column migrations if needed
+    # Programmatic column migrations:
+    # 1. Rename reaction_time_ms to reaction_time if it exists and reaction_time does not
     if "reaction_time_ms" in columns and "reaction_time" not in columns:
         cursor.execute("ALTER TABLE performance_metrics RENAME COLUMN reaction_time_ms TO reaction_time")
         print("[DB Migration] Renamed reaction_time_ms to reaction_time")
+    # 2. Rename timestamp to recorded_at if it exists and recorded_at does not
     if "timestamp" in columns and "recorded_at" not in columns:
         cursor.execute("ALTER TABLE performance_metrics RENAME COLUMN timestamp TO recorded_at")
         print("[DB Migration] Renamed timestamp to recorded_at")
         
-    # Re-fetch columns
-    cursor.execute("""
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name = 'performance_metrics'
-    """)
-    columns = [row['column_name'] for row in cursor.fetchall()]
+    # Re-fetch table info after potential renaming
+    cursor.execute("PRAGMA table_info(performance_metrics)")
+    columns = [row['name'] for row in cursor.fetchall()]
 
     if "cognitive_domain" not in columns:
-        cursor.execute("ALTER TABLE performance_metrics ADD COLUMN cognitive_domain VARCHAR(255)")
+        cursor.execute("ALTER TABLE performance_metrics ADD COLUMN cognitive_domain TEXT")
     if "game_type" not in columns:
-        cursor.execute("ALTER TABLE performance_metrics ADD COLUMN game_type VARCHAR(255)")
+        cursor.execute("ALTER TABLE performance_metrics ADD COLUMN game_type TEXT")
     if "error_count" not in columns:
-        cursor.execute("ALTER TABLE performance_metrics ADD COLUMN error_count INTEGER DEFAULT 0")
+        cursor.execute("ALTER TABLE performance_metrics ADD COLUMN error_count INTEGER")
     if "hesitation_ms" not in columns:
-        cursor.execute("ALTER TABLE performance_metrics ADD COLUMN hesitation_ms REAL DEFAULT 0.0")
+        cursor.execute("ALTER TABLE performance_metrics ADD COLUMN hesitation_ms REAL")
     if "spam_click_count" not in columns:
-        cursor.execute("ALTER TABLE performance_metrics ADD COLUMN spam_click_count INTEGER DEFAULT 0")
+        cursor.execute("ALTER TABLE performance_metrics ADD COLUMN spam_click_count INTEGER")
     if "rule_shift_latency_ms" not in columns:
         cursor.execute("ALTER TABLE performance_metrics ADD COLUMN rule_shift_latency_ms REAL")
     if "path_efficiency" not in columns:
@@ -257,7 +283,7 @@ def init_db():
     # Create iso_evaluations table if it doesn't exist
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS iso_evaluations (
-            id SERIAL PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             functionality_score INTEGER NOT NULL,
             usability_score INTEGER NOT NULL,
             reliability_score INTEGER NOT NULL,
@@ -270,87 +296,85 @@ def init_db():
     # Create cognitive_assessments table if it doesn't exist
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS cognitive_assessments (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            assessment_type VARCHAR(50) CHECK(assessment_type IN ('pre-test', 'post-test')),
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            assessment_type TEXT CHECK(assessment_type IN ('pre-test', 'post-test')),
             spatial_visual_score REAL NOT NULL,
             logical_math_score REAL NOT NULL,
             attention_score REAL NOT NULL,
             executive_score REAL NOT NULL,
-            completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
     """)
     
     # Create archetype_history table if it doesn't exist
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS archetype_history (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            session_id INTEGER REFERENCES game_sessions(id) ON DELETE CASCADE,
-            archetype_name VARCHAR(255) NOT NULL,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            session_id INTEGER,
+            archetype_name TEXT NOT NULL,
             confidence_score REAL NOT NULL,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (session_id) REFERENCES game_sessions(id)
         )
     """)
 
-    # Create training_goals table if it doesn't exist
+    # Create training_goals table if it doesn't exist (Option C)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS training_goals (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            domain VARCHAR(255) NOT NULL,
-            metric_type VARCHAR(255) NOT NULL,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            domain TEXT NOT NULL,
+            metric_type TEXT NOT NULL,
             target_value REAL NOT NULL,
             is_completed INTEGER DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
         )
     """)
     
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS daily_tasks (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
             task_description TEXT NOT NULL,
             target_amount INTEGER NOT NULL,
             current_amount INTEGER DEFAULT 0,
             is_completed INTEGER DEFAULT 0,
             reward_coins INTEGER DEFAULT 200,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         )
     """)
     
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS user_achievements (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            achievement_id VARCHAR(255) NOT NULL,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            achievement_id TEXT NOT NULL,
             current_amount INTEGER DEFAULT 0,
             is_completed INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
             UNIQUE(user_id, achievement_id)
         )
     """)
     
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS user_streaks (
-            user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-            last_login_date DATE,
-            current_streak INTEGER DEFAULT 1,
-            longest_streak INTEGER DEFAULT 1
-        )
-    """)
-    
     # Programmatic column migrations:
+    # Add current_smooth_difficulty to game_sessions if it doesn't exist
     try:
         cursor.execute("ALTER TABLE game_sessions ADD COLUMN current_smooth_difficulty REAL DEFAULT 1.0")
         print("[DB Migration] Added current_smooth_difficulty column to game_sessions")
-    except psycopg2.Error:
+    except sqlite3.OperationalError:
         pass
 
     try:
-        cursor.execute("ALTER TABLE game_sessions ADD COLUMN game_mode VARCHAR(50) DEFAULT 'timed'")
+        cursor.execute("ALTER TABLE game_sessions ADD COLUMN game_mode TEXT DEFAULT 'timed'")
         print("[DB Migration] Added game_mode column to game_sessions")
-    except psycopg2.Error:
+    except sqlite3.OperationalError:
         pass
     
     # Create indexes for query optimizations
@@ -360,6 +384,7 @@ def init_db():
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_performance_metrics_domain ON performance_metrics (cognitive_domain)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_performance_metrics_recorded ON performance_metrics (recorded_at)")
     
+    conn.commit()
     conn.close()
 
 # Run database schema migration on startup
@@ -707,35 +732,35 @@ def calculate_dda_parameters(difficulty_level, game_type='SpeedTap', user_avg_rt
                 "difficulty_level": 1,
                 "rule_shift_frequency": 5,      # Shift rule every 5 correct matches
                 "choices_count": 2,             # 2 cards to choose from
-                "time_limit": 6000,             # ms to make a decision
+                "time_limit": 4000,             # ms to make a decision
                 "rules_pool": ["color", "shape"] # Only two potential rules
             },
             2: {
                 "difficulty_level": 2,
                 "rule_shift_frequency": 4,
                 "choices_count": 3,
-                "time_limit": 5000,
+                "time_limit": 3200,
                 "rules_pool": ["color", "shape"]
             },
             3: {
                 "difficulty_level": 3,
                 "rule_shift_frequency": 3,
                 "choices_count": 3,
-                "time_limit": 4200,
+                "time_limit": 2500,
                 "rules_pool": ["color", "shape", "count"] # Introduces count rule
             },
             4: {
                 "difficulty_level": 4,
                 "rule_shift_frequency": 3,
                 "choices_count": 4,
-                "time_limit": 3500,
+                "time_limit": 2000,
                 "rules_pool": ["color", "shape", "count"]
             },
             5: {
                 "difficulty_level": 5,
                 "rule_shift_frequency": 2,      # Shifting rules very frequently
                 "choices_count": 4,
-                "time_limit": 3000,             # Extremely fast reaction required
+                "time_limit": 1500,             # Extremely fast reaction required
                 "rules_pool": ["color", "shape", "count"]
             }
         }
@@ -791,7 +816,7 @@ def calculate_dda_parameters(difficulty_level, game_type='SpeedTap', user_avg_rt
         configs = {
             1: {
                 "difficulty_level": 1,
-                "sequence_length": 4,             # tiles shown including the %s tile
+                "sequence_length": 4,             # tiles shown including the ? tile
                 "pattern_types": ["arithmetic"],  # only simple +d patterns
                 "missing_position": "last",        # always the last tile is hidden
                 "time_limit": 12000               # 12 seconds per round
@@ -936,128 +961,14 @@ def login():
         try:
             with conn:
                 cursor = conn.cursor()
-                cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+                cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
                 user = cursor.fetchone()
                 if user:
                     user_id = user['id']
                 else:
-                    cursor.execute("INSERT INTO users (username) VALUES (%s) RETURNING id", (username,))
-                    user_id = cursor.fetchone()['id']
-                
-                # Check / Update Login Streak
-                cursor.execute("SELECT last_login_date, current_streak, longest_streak FROM user_streaks WHERE user_id = %s", (user_id,))
-                streak_row = cursor.fetchone()
-                
-                daily_reward = {
-                    "granted": False,
-                    "streak": 1,
-                    "coins": 0
-                }
-                
-                import datetime
-                today = datetime.date.today()
-                
-                if not streak_row:
-                    # First login streak entry ever
-                    cursor.execute("""
-                        INSERT INTO user_streaks (user_id, last_login_date, current_streak, longest_streak)
-                        VALUES (%s, %s, 1, 1)
-                    """, (user_id, today))
+                    db_execute_with_retry(cursor, "INSERT INTO users (username) VALUES (?)", (username,))
+                    user_id = cursor.lastrowid
                     
-                    coins_reward = 100
-                    cursor.execute("""
-                        INSERT INTO user_profiles (user_id, coins)
-                        VALUES (%s, %s)
-                        ON CONFLICT(user_id) DO UPDATE SET coins = user_profiles.coins + excluded.coins
-                    """, (user_id, coins_reward))
-                    
-                    daily_reward = {
-                        "granted": True,
-                        "streak": 1,
-                        "coins": coins_reward
-                    }
-                else:
-                    last_login = streak_row['last_login_date']
-                    current_streak = streak_row['current_streak']
-                    longest_streak = streak_row['longest_streak']
-                    
-                    if last_login is None:
-                        # Streak table entry exists but last_login_date is null
-                        cursor.execute("""
-                            UPDATE user_streaks 
-                            SET last_login_date = %s, current_streak = 1, longest_streak = GREATEST(longest_streak, 1) 
-                            WHERE user_id = %s
-                        """, (today, user_id))
-                        
-                        coins_reward = 100
-                        cursor.execute("""
-                            INSERT INTO user_profiles (user_id, coins)
-                            VALUES (%s, %s)
-                            ON CONFLICT(user_id) DO UPDATE SET coins = user_profiles.coins + excluded.coins
-                        """, (user_id, coins_reward))
-                        
-                        daily_reward = {
-                            "granted": True,
-                            "streak": 1,
-                            "coins": coins_reward
-                        }
-                    else:
-                        if isinstance(last_login, str):
-                            last_login_date = datetime.datetime.strptime(last_login, "%Y-%m-%d").date()
-                        else:
-                            last_login_date = last_login
-                            
-                        if last_login_date == today:
-                            # Already logged in today
-                            daily_reward = {
-                                "granted": False,
-                                "streak": current_streak,
-                                "coins": 0
-                            }
-                        elif last_login_date == today - datetime.timedelta(days=1):
-                            # Yesterday - increment streak
-                            new_streak = current_streak + 1
-                            new_longest = max(longest_streak, new_streak)
-                            
-                            cursor.execute("""
-                                UPDATE user_streaks 
-                                SET last_login_date = %s, current_streak = %s, longest_streak = %s 
-                                WHERE user_id = %s
-                            """, (today, new_streak, new_longest, user_id))
-                            
-                            coins_reward = min(500, 100 + (new_streak - 1) * 50)
-                            
-                            cursor.execute("""
-                                INSERT INTO user_profiles (user_id, coins)
-                                VALUES (%s, %s)
-                                ON CONFLICT(user_id) DO UPDATE SET coins = user_profiles.coins + excluded.coins
-                            """, (user_id, coins_reward))
-                            
-                            daily_reward = {
-                                "granted": True,
-                                "streak": new_streak,
-                                "coins": coins_reward
-                            }
-                        else:
-                            # Streak broken - reset to 1
-                            cursor.execute("""
-                                UPDATE user_streaks 
-                                SET last_login_date = %s, current_streak = 1 
-                                WHERE user_id = %s
-                            """, (today, user_id))
-                            
-                            coins_reward = 100
-                            cursor.execute("""
-                                INSERT INTO user_profiles (user_id, coins)
-                                VALUES (%s, %s)
-                                ON CONFLICT(user_id) DO UPDATE SET coins = user_profiles.coins + excluded.coins
-                            """, (user_id, coins_reward))
-                            
-                            daily_reward = {
-                                "granted": True,
-                                "streak": 1,
-                                "coins": coins_reward
-                            }
         finally:
             conn.close()
             
@@ -1073,8 +984,7 @@ def login():
             'user': {
                 'id': user_id,
                 'username': username
-            },
-            'daily_reward': daily_reward
+            }
         }), 200
         
     except Exception as e:
@@ -1181,20 +1091,20 @@ def submit_assessment():
             with conn:
                 cursor = conn.cursor()
                 # Get or create user
-                cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+                cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
                 user = cursor.fetchone()
                 if user:
                     user_id = user['id']
                 else:
-                    cursor.execute("INSERT INTO users (username) VALUES (%s) RETURNING id", (username,))
-                    user_id = cursor.fetchone()['id']
+                    cursor.execute("INSERT INTO users (username) VALUES (?)", (username,))
+                    user_id = cursor.lastrowid
                 
                 # Insert into cognitive_assessments
                 cursor.execute(
                     """
                     INSERT INTO cognitive_assessments 
                     (user_id, assessment_type, spatial_visual_score, logical_math_score, attention_score, executive_score)
-                    VALUES (%s, %s, %s, %s, %s, %s)
+                    VALUES (?, ?, ?, ?, ?, ?)
                     """,
                     (user_id, assessment_type, spatial_visual_score, logical_math_score, attention_score, executive_score)
                 )
@@ -1245,7 +1155,7 @@ def get_assessment_status(username):
         try:
             with conn:
                 cursor = conn.cursor()
-                cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+                cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
                 user = cursor.fetchone()
                 if not user:
                     return jsonify({
@@ -1263,7 +1173,7 @@ def get_assessment_status(username):
                     """
                     SELECT spatial_visual_score, logical_math_score, attention_score, executive_score 
                     FROM cognitive_assessments 
-                    WHERE user_id = %s AND assessment_type = 'pre-test'
+                    WHERE user_id = ? AND assessment_type = 'pre-test'
                     ORDER BY completed_at DESC, id DESC LIMIT 1
                     """,
                     (user_id,)
@@ -1275,7 +1185,7 @@ def get_assessment_status(username):
                     """
                     SELECT spatial_visual_score, logical_math_score, attention_score, executive_score 
                     FROM cognitive_assessments 
-                    WHERE user_id = %s AND assessment_type = 'post-test'
+                    WHERE user_id = ? AND assessment_type = 'post-test'
                     ORDER BY completed_at DESC, id DESC LIMIT 1
                     """,
                     (user_id,)
@@ -1350,21 +1260,21 @@ def start_session(current_user_id, current_username):
                 # Create game session
                 db_execute_with_retry(
                     cursor,
-                    "INSERT INTO game_sessions (user_id, game_type, game_mode) VALUES (%s, %s, %s) RETURNING id",
+                    "INSERT INTO game_sessions (user_id, game_type, game_mode) VALUES (?, ?, ?)",
                     (user_id, game_type, game_mode)
                 )
-                session_id = cursor.fetchone()['id']
+                session_id = cursor.lastrowid
                 
                 # Get initial DDA parameters based on parent domain history for this user
                 domain = GAME_TO_DOMAIN.get(game_type, "reflexes_and_focus")
                 domain_games = [g for g, d in GAME_TO_DOMAIN.items() if d == domain]
-                placeholders = ",".join("%s" for _ in domain_games)
+                placeholders = ",".join("?" for _ in domain_games)
                 
                 query = f"""
                     SELECT pm.difficulty_level 
                     FROM performance_metrics pm
                     JOIN game_sessions gs ON pm.session_id = gs.id
-                    WHERE gs.user_id = %s AND (pm.cognitive_domain = %s OR gs.game_type IN ({placeholders}))
+                    WHERE gs.user_id = ? AND (pm.cognitive_domain = ? OR gs.game_type IN ({placeholders}))
                     ORDER BY pm.recorded_at DESC, pm.id DESC LIMIT 1
                 """
                 cursor.execute(query, [user_id, domain] + domain_games)
@@ -1376,13 +1286,13 @@ def start_session(current_user_id, current_username):
                     
                 # Initialize smooth difficulty state for the session
                 cursor.execute(
-                    "UPDATE game_sessions SET current_smooth_difficulty = %s WHERE id = %s",
+                    "UPDATE game_sessions SET current_smooth_difficulty = ? WHERE id = ?",
                     (float(initial_difficulty), session_id)
                 )
                 
                 # Fetch existing cognitive profile archetype if available
                 cursor.execute(
-                    "SELECT archetype_name, confidence_score FROM cognitive_profiles WHERE user_id = %s",
+                    "SELECT archetype_name, confidence_score FROM cognitive_profiles WHERE user_id = ?",
                     (user_id,)
                 )
                 prof = cursor.fetchone()
@@ -1454,7 +1364,7 @@ def adjust_difficulty(current_user_id, current_username):
                 cursor = conn.cursor()
                 
                 # Verify session and get user_id and game_type
-                cursor.execute("SELECT user_id, game_type FROM game_sessions WHERE id = %s", (session_id,))
+                cursor.execute("SELECT user_id, game_type FROM game_sessions WHERE id = ?", (session_id,))
                 session = cursor.fetchone()
                 if not session:
                     return jsonify({"status": "error", "message": "Invalid session_id"}), 404
@@ -1476,8 +1386,8 @@ def adjust_difficulty(current_user_id, current_username):
                     """
                     SELECT reaction_time, accuracy_rate, difficulty_level 
                     FROM performance_metrics 
-                    WHERE session_id = %s AND (cognitive_domain = %s OR game_type = %s)
-                    ORDER BY recorded_at DESC, id DESC LIMIT %s
+                    WHERE session_id = ? AND (cognitive_domain = ? OR game_type = ?)
+                    ORDER BY recorded_at DESC, id DESC LIMIT ?
                     """,
                     (session_id, domain, game_type, k)
                 )
@@ -1489,8 +1399,8 @@ def adjust_difficulty(current_user_id, current_username):
                         """
                         SELECT reaction_time, accuracy_rate, difficulty_level 
                         FROM performance_metrics 
-                        WHERE session_id = %s 
-                        ORDER BY recorded_at DESC, id DESC LIMIT %s
+                        WHERE session_id = ? 
+                        ORDER BY recorded_at DESC, id DESC LIMIT ?
                         """,
                         (session_id, k)
                     )
@@ -1514,7 +1424,7 @@ def adjust_difficulty(current_user_id, current_username):
                 alpha = max(0.1, min(1.0, alpha))
                 
                 # Fetch current smooth difficulty from session
-                cursor.execute("SELECT current_smooth_difficulty FROM game_sessions WHERE id = %s", (session_id,))
+                cursor.execute("SELECT current_smooth_difficulty FROM game_sessions WHERE id = ?", (session_id,))
                 sess_row = cursor.fetchone()
                 if sess_row and sess_row['current_smooth_difficulty'] is not None:
                     current_smooth_difficulty = sess_row['current_smooth_difficulty']
@@ -1538,7 +1448,7 @@ def adjust_difficulty(current_user_id, current_username):
                 
                 # Save updated smooth difficulty to database
                 cursor.execute(
-                    "UPDATE game_sessions SET current_smooth_difficulty = %s WHERE id = %s",
+                    "UPDATE game_sessions SET current_smooth_difficulty = ? WHERE id = ?",
                     (smooth_diff, session_id)
                 )
                     
@@ -1566,7 +1476,7 @@ def adjust_difficulty(current_user_id, current_username):
                                 AVG(pm.reaction_time) AS avg_rt
                             FROM game_sessions gs
                             JOIN performance_metrics pm ON gs.id = pm.session_id
-                            WHERE gs.user_id = %s AND gs.id <= %s
+                            WHERE gs.user_id = ? AND gs.id <= ?
                             GROUP BY gs.id
                             ORDER BY gs.id DESC
                             LIMIT 20
@@ -1605,14 +1515,14 @@ def adjust_difficulty(current_user_id, current_username):
                 trajectory_msg = archetype_classifier.predict_trajectory(new_difficulty, acc_slope, rt_slope)
                         
                 # Insert or update cognitive profile
-                cursor.execute("SELECT id FROM cognitive_profiles WHERE user_id = %s", (user_id,))
+                cursor.execute("SELECT id FROM cognitive_profiles WHERE user_id = ?", (user_id,))
                 profile = cursor.fetchone()
                 if profile:
                     cursor.execute(
                         """
                         UPDATE cognitive_profiles 
-                        SET archetype_name = %s, confidence_score = %s, updated_at = CURRENT_TIMESTAMP 
-                        WHERE user_id = %s
+                        SET archetype_name = ?, confidence_score = ?, updated_at = CURRENT_TIMESTAMP 
+                        WHERE user_id = ?
                         """,
                         (archetype, confidence, user_id)
                     )
@@ -1620,7 +1530,7 @@ def adjust_difficulty(current_user_id, current_username):
                     cursor.execute(
                         """
                         INSERT INTO cognitive_profiles (user_id, archetype_name, confidence_score) 
-                        VALUES (%s, %s, %s)
+                        VALUES (?, ?, ?)
                         """,
                         (user_id, archetype, confidence)
                     )
@@ -1629,7 +1539,7 @@ def adjust_difficulty(current_user_id, current_username):
                 cursor.execute(
                     """
                     INSERT INTO archetype_history (user_id, session_id, archetype_name, confidence_score) 
-                    VALUES (%s, %s, %s, %s)
+                    VALUES (?, ?, ?, ?)
                     """,
                     (user_id, session_id, archetype, confidence)
                 )
@@ -1663,14 +1573,14 @@ def execute_gamification(cursor, uid, reaction_time, accuracy, difficulty, game_
     # 1. Update Profile XP & Coins
     cursor.execute("""
         INSERT INTO user_profiles (user_id, xp, coins, level) 
-        VALUES (%s, %s, %s, 1) 
+        VALUES (?, ?, ?, 1) 
         ON CONFLICT(user_id) DO UPDATE SET 
             xp = user_profiles.xp + excluded.xp,
             coins = user_profiles.coins + excluded.coins
     """, (uid, xp_gained, coins_gained))
 
     # Check level up
-    cursor.execute("SELECT xp, level FROM user_profiles WHERE user_id = %s", (uid,))
+    cursor.execute("SELECT xp, level FROM user_profiles WHERE user_id = ?", (uid,))
     prof = cursor.fetchone()
     new_level = 1
     if prof:
@@ -1678,164 +1588,164 @@ def execute_gamification(cursor, uid, reaction_time, accuracy, difficulty, game_
         if new_level > prof['level']:
             leveled_up = True
             coins_gained += 500 # 500 bonus
-            cursor.execute("UPDATE user_profiles SET level = %s, coins = coins + 500 WHERE user_id = %s", (new_level, uid))
+            cursor.execute("UPDATE user_profiles SET level = ?, coins = coins + 500 WHERE user_id = ?", (new_level, uid))
 
     # Update daily tasks
-    cursor.execute("UPDATE daily_tasks SET current_amount = current_amount + 1 WHERE user_id = %s AND task_description = 'Play 3 Training Games' AND DATE(created_at) = CURRENT_DATE", (uid,))
+    cursor.execute("UPDATE daily_tasks SET current_amount = current_amount + 1 WHERE user_id = ? AND task_description = 'Play 3 Training Games' AND date(created_at) = date('now', 'localtime')", (uid,))
     if accuracy >= 0.8:
-        cursor.execute("UPDATE daily_tasks SET current_amount = current_amount + 1 WHERE user_id = %s AND task_description = 'Achieve 80%% accuracy in any game' AND DATE(created_at) = CURRENT_DATE", (uid,))
+        cursor.execute("UPDATE daily_tasks SET current_amount = current_amount + 1 WHERE user_id = ? AND task_description = 'Achieve 80% accuracy in any game' AND date(created_at) = date('now', 'localtime')", (uid,))
     if reaction_time < 800:
-        cursor.execute("UPDATE daily_tasks SET current_amount = current_amount + 1 WHERE user_id = %s AND task_description = 'Achieve reaction time under 800ms' AND DATE(created_at) = CURRENT_DATE", (uid,))
+        cursor.execute("UPDATE daily_tasks SET current_amount = current_amount + 1 WHERE user_id = ? AND task_description = 'Achieve reaction time under 800ms' AND date(created_at) = date('now', 'localtime')", (uid,))
 
     # Update permanent achievements
     # 1. Speed Demon (RT < 400ms, 10 times)
     if reaction_time < 400:
-        cursor.execute("INSERT INTO user_achievements (user_id, achievement_id) VALUES (%s, 'speed_demon') ON CONFLICT DO NOTHING", (uid,))
-        cursor.execute("UPDATE user_achievements SET current_amount = current_amount + 1 WHERE user_id = %s AND achievement_id = 'speed_demon' AND is_completed = 0", (uid,))
-        cursor.execute("SELECT current_amount FROM user_achievements WHERE user_id = %s AND achievement_id = 'speed_demon' AND is_completed = 0", (uid,))
+        cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'speed_demon')", (uid,))
+        cursor.execute("UPDATE user_achievements SET current_amount = current_amount + 1 WHERE user_id = ? AND achievement_id = 'speed_demon' AND is_completed = 0", (uid,))
+        cursor.execute("SELECT current_amount FROM user_achievements WHERE user_id = ? AND achievement_id = 'speed_demon' AND is_completed = 0", (uid,))
         ach_sd = cursor.fetchone()
         if ach_sd and ach_sd['current_amount'] >= 10:
-            cursor.execute("UPDATE user_achievements SET is_completed = 1 WHERE user_id = %s AND achievement_id = 'speed_demon'", (uid,))
-            cursor.execute("INSERT INTO user_inventory (user_id, item_id, item_type) VALUES (%s, 'avatar-speed-demon', 'avatar') ON CONFLICT DO NOTHING", (uid,))
+            cursor.execute("UPDATE user_achievements SET is_completed = 1 WHERE user_id = ? AND achievement_id = 'speed_demon'", (uid,))
+            cursor.execute("INSERT OR IGNORE INTO user_inventory (user_id, item_id, item_type) VALUES (?, 'avatar-speed-demon', 'avatar')", (uid,))
             newly_unlocked.append('speed_demon')
 
     # 2. Scholar (Reach Level 10)
     if new_level >= 10:
-        cursor.execute("INSERT INTO user_achievements (user_id, achievement_id) VALUES (%s, 'scholar') ON CONFLICT DO NOTHING", (uid,))
-        cursor.execute("SELECT is_completed FROM user_achievements WHERE user_id = %s AND achievement_id = 'scholar'", (uid,))
+        cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'scholar')", (uid,))
+        cursor.execute("SELECT is_completed FROM user_achievements WHERE user_id = ? AND achievement_id = 'scholar'", (uid,))
         ach_sc = cursor.fetchone()
         if ach_sc and ach_sc['is_completed'] == 0:
-            cursor.execute("UPDATE user_achievements SET is_completed = 1, current_amount = 1 WHERE user_id = %s AND achievement_id = 'scholar'", (uid,))
-            cursor.execute("INSERT INTO user_inventory (user_id, item_id, item_type) VALUES (%s, 'banner-scholar', 'banner') ON CONFLICT DO NOTHING", (uid,))
+            cursor.execute("UPDATE user_achievements SET is_completed = 1, current_amount = 1 WHERE user_id = ? AND achievement_id = 'scholar'", (uid,))
+            cursor.execute("INSERT OR IGNORE INTO user_inventory (user_id, item_id, item_type) VALUES (?, 'banner-scholar', 'banner')", (uid,))
             newly_unlocked.append('scholar')
 
     # 3. First Steps (Complete 1 game)
-    cursor.execute("INSERT INTO user_achievements (user_id, achievement_id) VALUES (%s, 'first_steps') ON CONFLICT DO NOTHING", (uid,))
-    cursor.execute("SELECT is_completed FROM user_achievements WHERE user_id = %s AND achievement_id = 'first_steps'", (uid,))
+    cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'first_steps')", (uid,))
+    cursor.execute("SELECT is_completed FROM user_achievements WHERE user_id = ? AND achievement_id = 'first_steps'", (uid,))
     ach_fs = cursor.fetchone()
     if ach_fs and ach_fs['is_completed'] == 0:
-        cursor.execute("UPDATE user_achievements SET is_completed = 1, current_amount = 1 WHERE user_id = %s AND achievement_id = 'first_steps'", (uid,))
-        cursor.execute("UPDATE user_profiles SET coins = coins + 100 WHERE user_id = %s", (uid,))
+        cursor.execute("UPDATE user_achievements SET is_completed = 1, current_amount = 1 WHERE user_id = ? AND achievement_id = 'first_steps'", (uid,))
+        cursor.execute("UPDATE user_profiles SET coins = coins + 100 WHERE user_id = ?", (uid,))
         coins_gained += 100
         newly_unlocked.append('first_steps')
 
     # 4. Consistency (Complete 50 games)
-    cursor.execute("INSERT INTO user_achievements (user_id, achievement_id) VALUES (%s, 'consistency') ON CONFLICT DO NOTHING", (uid,))
-    cursor.execute("UPDATE user_achievements SET current_amount = current_amount + 1 WHERE user_id = %s AND achievement_id = 'consistency' AND is_completed = 0", (uid,))
-    cursor.execute("SELECT current_amount FROM user_achievements WHERE user_id = %s AND achievement_id = 'consistency' AND is_completed = 0", (uid,))
+    cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'consistency')", (uid,))
+    cursor.execute("UPDATE user_achievements SET current_amount = current_amount + 1 WHERE user_id = ? AND achievement_id = 'consistency' AND is_completed = 0", (uid,))
+    cursor.execute("SELECT current_amount FROM user_achievements WHERE user_id = ? AND achievement_id = 'consistency' AND is_completed = 0", (uid,))
     ach_con = cursor.fetchone()
     if ach_con and ach_con['current_amount'] >= 50:
-        cursor.execute("UPDATE user_achievements SET is_completed = 1 WHERE user_id = %s AND achievement_id = 'consistency'", (uid,))
-        cursor.execute("UPDATE user_profiles SET coins = coins + 500 WHERE user_id = %s", (uid,))
+        cursor.execute("UPDATE user_achievements SET is_completed = 1 WHERE user_id = ? AND achievement_id = 'consistency'", (uid,))
+        cursor.execute("UPDATE user_profiles SET coins = coins + 500 WHERE user_id = ?", (uid,))
         coins_gained += 500
         newly_unlocked.append('consistency')
 
     # 5. Accuracy Master (100% accuracy, 5 times)
     if accuracy >= 1.0:
-        cursor.execute("INSERT INTO user_achievements (user_id, achievement_id) VALUES (%s, 'accuracy_master') ON CONFLICT DO NOTHING", (uid,))
-        cursor.execute("UPDATE user_achievements SET current_amount = current_amount + 1 WHERE user_id = %s AND achievement_id = 'accuracy_master' AND is_completed = 0", (uid,))
-        cursor.execute("SELECT current_amount FROM user_achievements WHERE user_id = %s AND achievement_id = 'accuracy_master' AND is_completed = 0", (uid,))
+        cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'accuracy_master')", (uid,))
+        cursor.execute("UPDATE user_achievements SET current_amount = current_amount + 1 WHERE user_id = ? AND achievement_id = 'accuracy_master' AND is_completed = 0", (uid,))
+        cursor.execute("SELECT current_amount FROM user_achievements WHERE user_id = ? AND achievement_id = 'accuracy_master' AND is_completed = 0", (uid,))
         ach_am = cursor.fetchone()
         if ach_am and ach_am['current_amount'] >= 5:
-            cursor.execute("UPDATE user_achievements SET is_completed = 1 WHERE user_id = %s AND achievement_id = 'accuracy_master'", (uid,))
-            cursor.execute("UPDATE user_profiles SET coins = coins + 1000 WHERE user_id = %s", (uid,))
+            cursor.execute("UPDATE user_achievements SET is_completed = 1 WHERE user_id = ? AND achievement_id = 'accuracy_master'", (uid,))
+            cursor.execute("UPDATE user_profiles SET coins = coins + 1000 WHERE user_id = ?", (uid,))
             coins_gained += 1000
             newly_unlocked.append('accuracy_master')
 
     # 6. Sharpshooter (90%+ accuracy, 20 times)
     if accuracy >= 0.9:
-        cursor.execute("INSERT INTO user_achievements (user_id, achievement_id) VALUES (%s, 'sharpshooter') ON CONFLICT DO NOTHING", (uid,))
-        cursor.execute("UPDATE user_achievements SET current_amount = current_amount + 1 WHERE user_id = %s AND achievement_id = 'sharpshooter' AND is_completed = 0", (uid,))
-        cursor.execute("SELECT current_amount FROM user_achievements WHERE user_id = %s AND achievement_id = 'sharpshooter' AND is_completed = 0", (uid,))
+        cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'sharpshooter')", (uid,))
+        cursor.execute("UPDATE user_achievements SET current_amount = current_amount + 1 WHERE user_id = ? AND achievement_id = 'sharpshooter' AND is_completed = 0", (uid,))
+        cursor.execute("SELECT current_amount FROM user_achievements WHERE user_id = ? AND achievement_id = 'sharpshooter' AND is_completed = 0", (uid,))
         ach_ss = cursor.fetchone()
         if ach_ss and ach_ss['current_amount'] >= 20:
-            cursor.execute("UPDATE user_achievements SET is_completed = 1 WHERE user_id = %s AND achievement_id = 'sharpshooter'", (uid,))
-            cursor.execute("UPDATE user_profiles SET coins = coins + 500 WHERE user_id = %s", (uid,))
+            cursor.execute("UPDATE user_achievements SET is_completed = 1 WHERE user_id = ? AND achievement_id = 'sharpshooter'", (uid,))
+            cursor.execute("UPDATE user_profiles SET coins = coins + 500 WHERE user_id = ?", (uid,))
             coins_gained += 500
             newly_unlocked.append('sharpshooter')
 
     # 7. Lightning Reflexes (RT under 300ms)
     if reaction_time < 300:
-        cursor.execute("INSERT INTO user_achievements (user_id, achievement_id) VALUES (%s, 'lightning_reflexes') ON CONFLICT DO NOTHING", (uid,))
-        cursor.execute("SELECT is_completed FROM user_achievements WHERE user_id = %s AND achievement_id = 'lightning_reflexes'", (uid,))
+        cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'lightning_reflexes')", (uid,))
+        cursor.execute("SELECT is_completed FROM user_achievements WHERE user_id = ? AND achievement_id = 'lightning_reflexes'", (uid,))
         ach_lr = cursor.fetchone()
         if ach_lr and ach_lr['is_completed'] == 0:
-            cursor.execute("UPDATE user_achievements SET is_completed = 1, current_amount = 1 WHERE user_id = %s AND achievement_id = 'lightning_reflexes'", (uid,))
-            cursor.execute("UPDATE user_profiles SET coins = coins + 200 WHERE user_id = %s", (uid,))
-            cursor.execute("INSERT INTO user_inventory (user_id, item_id, item_type) VALUES (%s, 'banner-lightning', 'banner') ON CONFLICT DO NOTHING", (uid,))
+            cursor.execute("UPDATE user_achievements SET is_completed = 1, current_amount = 1 WHERE user_id = ? AND achievement_id = 'lightning_reflexes'", (uid,))
+            cursor.execute("UPDATE user_profiles SET coins = coins + 200 WHERE user_id = ?", (uid,))
+            cursor.execute("INSERT OR IGNORE INTO user_inventory (user_id, item_id, item_type) VALUES (?, 'banner-lightning', 'banner')", (uid,))
             coins_gained += 200
             newly_unlocked.append('lightning_reflexes')
 
     # 8. Peak Performer (Reach difficulty level 5)
     if difficulty >= 5:
-        cursor.execute("INSERT INTO user_achievements (user_id, achievement_id) VALUES (%s, 'peak_performer') ON CONFLICT DO NOTHING", (uid,))
-        cursor.execute("SELECT is_completed FROM user_achievements WHERE user_id = %s AND achievement_id = 'peak_performer'", (uid,))
+        cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'peak_performer')", (uid,))
+        cursor.execute("SELECT is_completed FROM user_achievements WHERE user_id = ? AND achievement_id = 'peak_performer'", (uid,))
         ach_pp = cursor.fetchone()
         if ach_pp and ach_pp['is_completed'] == 0:
-            cursor.execute("UPDATE user_achievements SET is_completed = 1, current_amount = 1 WHERE user_id = %s AND achievement_id = 'peak_performer'", (uid,))
-            cursor.execute("UPDATE user_profiles SET coins = coins + 1000 WHERE user_id = %s", (uid,))
+            cursor.execute("UPDATE user_achievements SET is_completed = 1, current_amount = 1 WHERE user_id = ? AND achievement_id = 'peak_performer'", (uid,))
+            cursor.execute("UPDATE user_profiles SET coins = coins + 1000 WHERE user_id = ?", (uid,))
             coins_gained += 1000
             newly_unlocked.append('peak_performer')
 
     # 9. Versatile Mind (Play all 5 game types)
     if game_type:
-        cursor.execute("INSERT INTO user_achievements (user_id, achievement_id) VALUES (%s, 'versatile_mind') ON CONFLICT DO NOTHING", (uid,))
-        cursor.execute("SELECT COUNT(DISTINCT gs.game_type) as gt_count FROM game_sessions gs WHERE gs.user_id = %s AND gs.game_type IS NOT NULL", (uid,))
+        cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'versatile_mind')", (uid,))
+        cursor.execute("SELECT COUNT(DISTINCT gs.game_type) as gt_count FROM game_sessions gs WHERE gs.user_id = ? AND gs.game_type IS NOT NULL", (uid,))
         gt_row = cursor.fetchone()
         if gt_row and gt_row['gt_count'] >= 5:
-            cursor.execute("SELECT is_completed FROM user_achievements WHERE user_id = %s AND achievement_id = 'versatile_mind'", (uid,))
+            cursor.execute("SELECT is_completed FROM user_achievements WHERE user_id = ? AND achievement_id = 'versatile_mind'", (uid,))
             ach_vm = cursor.fetchone()
             if ach_vm and ach_vm['is_completed'] == 0:
-                cursor.execute("UPDATE user_achievements SET is_completed = 1, current_amount = %s WHERE user_id = %s AND achievement_id = 'versatile_mind'", (gt_row['gt_count'], uid))
-                cursor.execute("UPDATE user_profiles SET coins = coins + 400 WHERE user_id = %s", (uid,))
+                cursor.execute("UPDATE user_achievements SET is_completed = 1, current_amount = ? WHERE user_id = ? AND achievement_id = 'versatile_mind'", (gt_row['gt_count'], uid))
+                cursor.execute("UPDATE user_profiles SET coins = coins + 400 WHERE user_id = ?", (uid,))
                 coins_gained += 400
                 newly_unlocked.append('versatile_mind')
             else:
-                cursor.execute("UPDATE user_achievements SET current_amount = %s WHERE user_id = %s AND achievement_id = 'versatile_mind' AND is_completed = 0", (gt_row['gt_count'], uid))
+                cursor.execute("UPDATE user_achievements SET current_amount = ? WHERE user_id = ? AND achievement_id = 'versatile_mind' AND is_completed = 0", (gt_row['gt_count'], uid))
         elif gt_row:
-            cursor.execute("UPDATE user_achievements SET current_amount = %s WHERE user_id = %s AND achievement_id = 'versatile_mind' AND is_completed = 0", (gt_row['gt_count'], uid))
+            cursor.execute("UPDATE user_achievements SET current_amount = ? WHERE user_id = ? AND achievement_id = 'versatile_mind' AND is_completed = 0", (gt_row['gt_count'], uid))
 
     # 10. Brain Marathon (Complete 10 games in a single day)
     cursor.execute("""
         SELECT COUNT(*) as games_today 
         FROM game_sessions 
-        WHERE user_id = %s AND DATE(start_time AT TIME ZONE 'UTC') = CURRENT_DATE
+        WHERE user_id = ? AND date(start_time, 'localtime') = date('now', 'localtime')
     """, (uid,))
     games_today_row = cursor.fetchone()
     if games_today_row:
         games_today = games_today_row['games_today']
-        cursor.execute("INSERT INTO user_achievements (user_id, achievement_id) VALUES (%s, 'brain_marathon') ON CONFLICT DO NOTHING", (uid,))
+        cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'brain_marathon')", (uid,))
         if games_today >= 10:
-            cursor.execute("SELECT is_completed FROM user_achievements WHERE user_id = %s AND achievement_id = 'brain_marathon'", (uid,))
+            cursor.execute("SELECT is_completed FROM user_achievements WHERE user_id = ? AND achievement_id = 'brain_marathon'", (uid,))
             ach_bm = cursor.fetchone()
             if ach_bm and ach_bm['is_completed'] == 0:
-                cursor.execute("UPDATE user_achievements SET is_completed = 1, current_amount = %s WHERE user_id = %s AND achievement_id = 'brain_marathon'", (games_today, uid))
-                cursor.execute("UPDATE user_profiles SET coins = coins + 300 WHERE user_id = %s", (uid,))
+                cursor.execute("UPDATE user_achievements SET is_completed = 1, current_amount = ? WHERE user_id = ? AND achievement_id = 'brain_marathon'", (games_today, uid))
+                cursor.execute("UPDATE user_profiles SET coins = coins + 300 WHERE user_id = ?", (uid,))
                 coins_gained += 300
                 newly_unlocked.append('brain_marathon')
             else:
-                cursor.execute("UPDATE user_achievements SET current_amount = %s WHERE user_id = %s AND achievement_id = 'brain_marathon' AND is_completed = 0", (games_today, uid))
+                cursor.execute("UPDATE user_achievements SET current_amount = ? WHERE user_id = ? AND achievement_id = 'brain_marathon' AND is_completed = 0", (games_today, uid))
         else:
-            cursor.execute("UPDATE user_achievements SET current_amount = %s WHERE user_id = %s AND achievement_id = 'brain_marathon' AND is_completed = 0", (games_today, uid))
+            cursor.execute("UPDATE user_achievements SET current_amount = ? WHERE user_id = ? AND achievement_id = 'brain_marathon' AND is_completed = 0", (games_today, uid))
 
     # 11. On Fire (7-day login streak)
-    cursor.execute("SELECT current_streak FROM user_streaks WHERE user_id = %s", (uid,))
+    cursor.execute("SELECT current_streak FROM user_streaks WHERE user_id = ?", (uid,))
     streak_row = cursor.fetchone()
     if streak_row:
         current_streak = streak_row['current_streak']
-        cursor.execute("INSERT INTO user_achievements (user_id, achievement_id) VALUES (%s, 'on_fire') ON CONFLICT DO NOTHING", (uid,))
+        cursor.execute("INSERT OR IGNORE INTO user_achievements (user_id, achievement_id) VALUES (?, 'on_fire')", (uid,))
         if current_streak >= 7:
-            cursor.execute("SELECT is_completed FROM user_achievements WHERE user_id = %s AND achievement_id = 'on_fire'", (uid,))
+            cursor.execute("SELECT is_completed FROM user_achievements WHERE user_id = ? AND achievement_id = 'on_fire'", (uid,))
             ach_of = cursor.fetchone()
             if ach_of and ach_of['is_completed'] == 0:
-                cursor.execute("UPDATE user_achievements SET is_completed = 1, current_amount = %s WHERE user_id = %s AND achievement_id = 'on_fire'", (current_streak, uid))
-                cursor.execute("UPDATE user_profiles SET coins = coins + 750 WHERE user_id = %s", (uid,))
+                cursor.execute("UPDATE user_achievements SET is_completed = 1, current_amount = ? WHERE user_id = ? AND achievement_id = 'on_fire'", (current_streak, uid))
+                cursor.execute("UPDATE user_profiles SET coins = coins + 750 WHERE user_id = ?", (uid,))
                 coins_gained += 750
                 newly_unlocked.append('on_fire')
             else:
-                cursor.execute("UPDATE user_achievements SET current_amount = %s WHERE user_id = %s AND achievement_id = 'on_fire' AND is_completed = 0", (current_streak, uid))
+                cursor.execute("UPDATE user_achievements SET current_amount = ? WHERE user_id = ? AND achievement_id = 'on_fire' AND is_completed = 0", (current_streak, uid))
         else:
-            cursor.execute("UPDATE user_achievements SET current_amount = %s WHERE user_id = %s AND achievement_id = 'on_fire' AND is_completed = 0", (current_streak, uid))
+            cursor.execute("UPDATE user_achievements SET current_amount = ? WHERE user_id = ? AND achievement_id = 'on_fire' AND is_completed = 0", (current_streak, uid))
 
     return xp_gained, coins_gained, leveled_up, newly_unlocked
 
@@ -1897,7 +1807,7 @@ def submit_metrics(current_user_id, current_username):
                 cursor = conn.cursor()
                 
                 if not game_type:
-                    cursor.execute("SELECT game_type FROM game_sessions WHERE id = %s", (session_id,))
+                    cursor.execute("SELECT game_type FROM game_sessions WHERE id = ?", (session_id,))
                     session_row = cursor.fetchone()
                     if session_row:
                         game_type = session_row['game_type']
@@ -1914,13 +1824,13 @@ def submit_metrics(current_user_id, current_username):
                     """
                     INSERT INTO performance_metrics 
                     (session_id, reaction_time, accuracy_rate, difficulty_level, cognitive_domain, game_type, error_count, hesitation_ms, spam_click_count, rule_shift_latency_ms, path_efficiency) 
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (session_id, reaction_time, accuracy, difficulty, cognitive_domain, game_type, error_count, hesitation_ms, spam_click_count, rule_shift_latency_ms, path_efficiency)
                 )
                 
                 # Gamification: Award XP and Coins
-                cursor.execute("SELECT user_id FROM game_sessions WHERE id = %s", (session_id,))
+                cursor.execute("SELECT user_id FROM game_sessions WHERE id = ?", (session_id,))
                 user_row = cursor.fetchone()
                 
                 xp_gained = 0
@@ -1935,8 +1845,6 @@ def submit_metrics(current_user_id, current_username):
                             cursor, uid, reaction_time, accuracy, difficulty, game_type
                         )
                     except Exception as pg_err:
-                        import traceback
-                        traceback.print_exc()
                         print(f"Gamification update skipped: {pg_err}")
         finally:
             conn.commit()
@@ -1965,7 +1873,7 @@ def get_user_analytics(current_user_id, current_username, username):
         cursor = conn.cursor()
         
         # Check if user exists
-        cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+        cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
         user = cursor.fetchone()
         if not user:
             return jsonify({"status": "error", "message": "User not found"}), 404
@@ -1979,7 +1887,7 @@ def get_user_analytics(current_user_id, current_username, username):
                 AVG(reaction_time) as avg_rt 
             FROM performance_metrics 
             JOIN game_sessions ON performance_metrics.session_id = game_sessions.id 
-            WHERE game_sessions.user_id = %s
+            WHERE game_sessions.user_id = ?
             GROUP BY cognitive_domain
         """, (target_uid,))
         domain_stats = cursor.fetchall()
@@ -1992,7 +1900,7 @@ def get_user_analytics(current_user_id, current_username, username):
                 AVG(reaction_time) as avg_rt
             FROM performance_metrics
             JOIN game_sessions ON performance_metrics.session_id = game_sessions.id
-            WHERE game_sessions.user_id = %s
+            WHERE game_sessions.user_id = ?
             GROUP BY date(game_sessions.start_time)
             ORDER BY day ASC
             LIMIT 14
@@ -2003,7 +1911,7 @@ def get_user_analytics(current_user_id, current_username, username):
         cursor.execute("""
             SELECT archetype_name, confidence_score, trajectory_msg
             FROM archetype_history 
-            WHERE user_id = %s 
+            WHERE user_id = ? 
             ORDER BY timestamp DESC, id DESC LIMIT 1
         """, (target_uid,))
         latest_archetype_row = cursor.fetchone()
@@ -2017,7 +1925,262 @@ def get_user_analytics(current_user_id, current_username, username):
     finally:
         conn.close()
 
+@app.route('/api/leaderboard', methods=['GET'])
+def get_leaderboard():
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT users.username, user_profiles.xp, user_profiles.level, user_profiles.equipped_avatar, user_profiles.equipped_banner
+            FROM user_profiles
+            JOIN users ON user_profiles.user_id = users.id
+            ORDER BY user_profiles.xp DESC
+            LIMIT 50
+        """)
+        leaders = cursor.fetchall()
+        
+        return jsonify({
+            "status": "success",
+            "leaderboard": [dict(l) for l in leaders]
+        }), 200
+    finally:
+        conn.close()
 
+@app.route('/api/achievements', methods=['GET'])
+@token_required
+def get_achievements(current_user_id, current_username):
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT achievement_id, current_amount, is_completed, created_at FROM user_achievements WHERE user_id = ?", (current_user_id,))
+        achievements = cursor.fetchall()
+        
+        return jsonify({
+            "status": "success",
+            "achievements": [dict(a) for a in achievements]
+        }), 200
+    finally:
+        conn.close()
+
+@app.route('/api/quests', methods=['GET'])
+@token_required
+def get_daily_quests(current_user_id, current_username):
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        
+        # Check if tasks exist for today
+        cursor.execute("SELECT id, task_description, target_amount, current_amount, is_completed, reward_coins FROM daily_tasks WHERE user_id = ? AND date(created_at) = date('now', 'localtime')", (current_user_id,))
+        tasks = cursor.fetchall()
+        
+        if not tasks:
+            # Create new tasks for today
+            new_tasks = [
+                ("Play 3 Training Games", 3, 200),
+                ("Achieve 80% accuracy in any game", 1, 200),
+                ("Achieve reaction time under 800ms", 1, 200)
+            ]
+            for desc, tgt, rew in new_tasks:
+                cursor.execute("INSERT INTO daily_tasks (user_id, task_description, target_amount, reward_coins) VALUES (?, ?, ?, ?)", (current_user_id, desc, tgt, rew))
+            conn.commit()
+            
+            cursor.execute("SELECT id, task_description, target_amount, current_amount, is_completed, reward_coins FROM daily_tasks WHERE user_id = ? AND date(created_at) = date('now', 'localtime')", (current_user_id,))
+            tasks = cursor.fetchall()
+            
+        return jsonify({
+            "status": "success",
+            "quests": [dict(t) for t in tasks]
+        }), 200
+    finally:
+        conn.close()
+
+@app.route('/api/quests/claim/<int:quest_id>', methods=['POST'])
+@token_required
+def claim_quest(current_user_id, current_username, quest_id):
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT is_completed, current_amount, target_amount, reward_coins FROM daily_tasks WHERE id = ? AND user_id = ?", (quest_id, current_user_id))
+        quest = cursor.fetchone()
+        
+        if not quest:
+            return jsonify({"status": "error", "message": "Quest not found"}), 404
+            
+        if quest['is_completed'] == 1:
+            return jsonify({"status": "error", "message": "Quest already claimed"}), 400
+            
+        if quest['current_amount'] < quest['target_amount']:
+            return jsonify({"status": "error", "message": "Quest not finished"}), 400
+            
+        cursor.execute("UPDATE daily_tasks SET is_completed = 1 WHERE id = ?", (quest_id,))
+        cursor.execute("UPDATE user_profiles SET coins = coins + ? WHERE user_id = ?", (quest['reward_coins'], current_user_id))
+        conn.commit()
+        
+        return jsonify({"status": "success", "reward": quest['reward_coins']}), 200
+    finally:
+        conn.close()
+
+@app.route('/api/user-inventory/<username>', methods=['GET'])
+@token_required
+def get_user_inventory(current_user_id, current_username, username):
+    if current_username != username:
+        return jsonify({"status": "error", "message": "Unauthorized"}), 403
+    
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT coins, equipped_avatar, equipped_banner, equipped_theme, reduce_flashes, total_xp FROM user_profiles WHERE user_id = ?", (current_user_id,))
+        prof = cursor.fetchone()
+        
+        if not prof:
+            cursor.execute("INSERT INTO user_profiles (user_id) VALUES (?)", (current_user_id,))
+            conn.commit()
+            cursor.execute("SELECT coins, equipped_avatar, equipped_banner, equipped_theme, reduce_flashes, total_xp FROM user_profiles WHERE user_id = ?", (current_user_id,))
+            prof = cursor.fetchone()
+        
+        cursor.execute("SELECT item_type, item_id FROM user_inventory WHERE user_id = ?", (current_user_id,))
+        inv_rows = cursor.fetchall()
+        
+        inventory = []
+        for row in inv_rows:
+            is_equipped = False
+            if row['item_type'] == 'avatar' and row['item_id'] == prof['equipped_avatar']:
+                is_equipped = True
+            elif row['item_type'] == 'banner' and row['item_id'] == prof['equipped_banner']:
+                is_equipped = True
+            elif row['item_type'] == 'theme' and row['item_id'] == prof['equipped_theme']:
+                is_equipped = True
+                
+            inventory.append({
+                "item_type": row['item_type'],
+                "item_id": row['item_id'],
+                "is_equipped": is_equipped
+            })
+            
+        return jsonify({
+            "status": "success",
+            "coins": prof['coins'] if prof else 0,
+            "total_xp": prof['total_xp'] if prof else 0,
+            "reduce_flashes": bool(prof['reduce_flashes']) if prof else False,
+            "inventory": inventory
+        }), 200
+    finally:
+        conn.close()
+
+@app.route('/api/settings/accessibility', methods=['POST'])
+@token_required
+def update_accessibility(current_user_id, current_username):
+    data = request.json
+    reduce_flashes = data.get('reduce_flashes', False)
+    
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("UPDATE user_profiles SET reduce_flashes = ? WHERE user_id = ?", (reduce_flashes, current_user_id))
+        conn.commit()
+        return jsonify({"status": "success", "reduce_flashes": reduce_flashes}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/purchase', methods=['POST'])
+@token_required
+def api_purchase(current_user_id, current_username):
+    data = request.get_json() or {}
+    item_id = str(data.get('item_id', '')).strip()
+    
+    # Define catalog
+    catalog = {
+        'theme-red': {'type': 'theme', 'price': 200},
+        'theme-blue': {'type': 'theme', 'price': 200},
+        'theme-purple': {'type': 'theme', 'price': 250},
+        'theme-yellow': {'type': 'theme', 'price': 200},
+        'avatar-robot': {'type': 'avatar', 'price': 500},
+        'avatar-brain': {'type': 'avatar', 'price': 500},
+        'avatar-hacker': {'type': 'avatar', 'price': 750},
+        'banner-neon': {'type': 'banner', 'price': 300},
+        'banner-stellar': {'type': 'banner', 'price': 400},
+        'banner-cyber': {'type': 'banner', 'price': 500},
+    }
+    
+    if item_id not in catalog:
+        return jsonify({"status": "error", "message": "Item not found in catalog."}), 404
+        
+    item_info = catalog[item_id]
+    price = item_info['price']
+    item_type = item_info['type']
+    
+    conn = get_db_connection()
+    try:
+        with conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT coins FROM user_profiles WHERE user_id = ?", (current_user_id,))
+            prof = cursor.fetchone()
+            if not prof:
+                cursor.execute("INSERT INTO user_profiles (user_id) VALUES (?)", (current_user_id,))
+                prof = {'coins': 0}
+                
+            current_coins = prof['coins']
+            if current_coins < price:
+                return jsonify({"status": "error", "message": "Insufficient coins."}), 400
+                
+            cursor.execute("UPDATE user_profiles SET coins = coins - ? WHERE user_id = ?", (price, current_user_id))
+            
+            try:
+                cursor.execute(
+                    "INSERT INTO user_inventory (user_id, item_type, item_id) VALUES (?, ?, ?)",
+                    (current_user_id, item_type, item_id)
+                )
+            except Exception as e:
+                # Likely already owned
+                return jsonify({"status": "error", "message": "Item already owned."}), 400
+                
+            return jsonify({
+                "status": "success", 
+                "message": f"Successfully purchased {item_id}", 
+                "coins": current_coins - price,
+                "item": {
+                    "item_id": item_id,
+                    "item_type": item_type,
+                    "is_equipped": False
+                }
+            }), 200
+    finally:
+        conn.close()
+
+@app.route('/api/equip', methods=['POST'])
+@token_required
+def api_equip(current_user_id, current_username):
+    data = request.get_json() or {}
+    item_id = str(data.get('item_id', '')).strip()
+    
+    conn = get_db_connection()
+    try:
+        with conn:
+            cursor = conn.cursor()
+            # Verify ownership
+            cursor.execute("SELECT item_type FROM user_inventory WHERE user_id = ? AND item_id = ?", (current_user_id, item_id))
+            item_row = cursor.fetchone()
+            if not item_row:
+                return jsonify({"status": "error", "message": "Item not owned."}), 400
+                
+            item_type = item_row['item_type']
+            
+            if item_type == 'avatar':
+                cursor.execute("UPDATE user_profiles SET equipped_avatar = ? WHERE user_id = ?", (item_id, current_user_id))
+            elif item_type == 'banner':
+                cursor.execute("UPDATE user_profiles SET equipped_banner = ? WHERE user_id = ?", (item_id, current_user_id))
+            elif item_type == 'theme':
+                cursor.execute("UPDATE user_profiles SET equipped_theme = ? WHERE user_id = ?", (item_id, current_user_id))
+                
+            return jsonify({
+                "status": "success", 
+                "message": f"Successfully equipped {item_id}",
+                "item_type": item_type
+            }), 200
+    finally:
+        conn.close()
 
 @app.route('/api/submit-metrics/batch', methods=['POST'])
 def submit_metrics_batch():
@@ -2078,7 +2241,7 @@ def submit_metrics_batch():
                         if session_id in session_game_types:
                             game_type = session_game_types[session_id]
                         else:
-                            cursor.execute("SELECT game_type FROM game_sessions WHERE id = %s", (session_id,))
+                            cursor.execute("SELECT game_type FROM game_sessions WHERE id = ?", (session_id,))
                             session_row = cursor.fetchone()
                             if session_row:
                                 game_type = session_row['game_type']
@@ -2095,12 +2258,12 @@ def submit_metrics_batch():
                         """
                         INSERT INTO performance_metrics 
                         (session_id, reaction_time, accuracy_rate, difficulty_level, cognitive_domain, game_type, error_count, hesitation_ms, spam_click_count, rule_shift_latency_ms, path_efficiency) 
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """,
                         (session_id, reaction_time, accuracy, difficulty, cognitive_domain, game_type, error_count, hesitation_ms, spam_click_count, rule_shift_latency_ms, path_efficiency)
                     )
                     
-                    cursor.execute("SELECT user_id FROM game_sessions WHERE id = %s", (session_id,))
+                    cursor.execute("SELECT user_id FROM game_sessions WHERE id = ?", (session_id,))
                     user_row = cursor.fetchone()
                     if user_row:
                         uid = user_row['user_id']
@@ -2114,8 +2277,6 @@ def submit_metrics_batch():
                                 leveled_up_flag = True
                             newly_unlocked_set.update(newly_unlocked)
                         except Exception as pg_err:
-                            import traceback
-                            traceback.print_exc()
                             print(f"Gamification update skipped in batch: {pg_err}")
                     recorded_count += 1
         finally:
@@ -2159,7 +2320,7 @@ def evaluate_thesis():
             try:
                 cursor = conn.cursor()
                 # Resolve user ID
-                cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+                cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
                 user_row = cursor.fetchone()
                 if not user_row:
                     return jsonify({"status": "error", "message": f"User '{username}' not found."}), 404
@@ -2170,7 +2331,7 @@ def evaluate_thesis():
                     """
                     SELECT spatial_visual_score, logical_math_score, attention_score, executive_score 
                     FROM cognitive_assessments 
-                    WHERE user_id = %s AND assessment_type = 'pre-test'
+                    WHERE user_id = ? AND assessment_type = 'pre-test'
                     ORDER BY completed_at DESC, id DESC LIMIT 1
                     """,
                     (user_id,)
@@ -2182,7 +2343,7 @@ def evaluate_thesis():
                     """
                     SELECT spatial_visual_score, logical_math_score, attention_score, executive_score 
                     FROM cognitive_assessments 
-                    WHERE user_id = %s AND assessment_type = 'post-test'
+                    WHERE user_id = ? AND assessment_type = 'post-test'
                     ORDER BY completed_at DESC, id DESC LIMIT 1
                     """,
                     (user_id,)
@@ -2552,7 +2713,7 @@ def submit_iso_evaluation():
                     """
                     INSERT INTO iso_evaluations 
                     (functionality_score, usability_score, reliability_score, efficiency_score, ux_score) 
-                    VALUES (%s, %s, %s, %s, %s)
+                    VALUES (?, ?, ?, ?, ?)
                     """,
                     scores
                 )
@@ -2668,7 +2829,7 @@ def get_cohort_db_scores():
                 SELECT pm.accuracy_rate 
                 FROM performance_metrics pm
                 JOIN game_sessions gs ON pm.session_id = gs.id
-                WHERE gs.user_id = %s
+                WHERE gs.user_id = ?
                 ORDER BY gs.start_time ASC, pm.id ASC
                 """,
                 (uid,)
@@ -2777,7 +2938,7 @@ def get_user_session_history(username):
         cursor = conn.cursor()
         
         # Get user
-        cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+        cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
         user = cursor.fetchone()
         if not user:
             return jsonify({"status": "success", "sessions": []}), 200
@@ -2797,7 +2958,7 @@ def get_user_session_history(username):
                 COUNT(pm.id) AS rounds_count
             FROM game_sessions gs
             LEFT JOIN performance_metrics pm ON gs.id = pm.session_id
-            WHERE gs.user_id = %s
+            WHERE gs.user_id = ?
             GROUP BY gs.id
             ORDER BY gs.start_time DESC
             """,
@@ -2833,7 +2994,7 @@ def get_session_metrics(session_id):
         cursor = conn.cursor()
         
         # Verify if session exists
-        cursor.execute("SELECT id FROM game_sessions WHERE id = %s", (session_id,))
+        cursor.execute("SELECT id FROM game_sessions WHERE id = ?", (session_id,))
         if not cursor.fetchone():
             return jsonify({"status": "error", "message": f"Session ID {session_id} not found."}), 404
 
@@ -2841,7 +3002,7 @@ def get_session_metrics(session_id):
             """
             SELECT id, reaction_time, accuracy_rate, difficulty_level, recorded_at, rule_shift_latency_ms, path_efficiency
             FROM performance_metrics
-            WHERE session_id = %s
+            WHERE session_id = ?
             ORDER BY id ASC
             """,
             (session_id,)
@@ -2885,7 +3046,7 @@ def get_cohort_comparison(username):
             FROM performance_metrics pm
             JOIN game_sessions gs ON pm.session_id = gs.id
             JOIN users u ON gs.user_id = u.id
-            WHERE u.username = %s
+            WHERE u.username = ?
             """,
             (username,)
         )
@@ -2937,7 +3098,7 @@ def get_archetype_progression(username):
         cursor = conn.cursor()
         
         # Get user
-        cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+        cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
         user = cursor.fetchone()
         if not user:
             return jsonify({"status": "success", "history": []}), 200
@@ -2949,7 +3110,7 @@ def get_archetype_progression(username):
             SELECT ah.id, ah.session_id, gs.game_type, ah.archetype_name, ah.confidence_score, ah.timestamp
             FROM archetype_history ah
             LEFT JOIN game_sessions gs ON ah.session_id = gs.id
-            WHERE ah.user_id = %s
+            WHERE ah.user_id = ?
             ORDER BY ah.timestamp ASC, ah.id ASC
             """,
             (user_id,)
@@ -3049,7 +3210,7 @@ def get_research_correlations():
                     FROM performance_metrics pm
                     JOIN game_sessions gs ON pm.session_id = gs.id
                     JOIN users u ON gs.user_id = u.id
-                    WHERE u.username = %s AND pm.{var1} IS NOT NULL AND pm.{var2} IS NOT NULL
+                    WHERE u.username = ? AND pm.{var1} IS NOT NULL AND pm.{var2} IS NOT NULL
                 """
                 cursor.execute(query, (active_username,))
             elif cohort == 'clinical':
@@ -3138,7 +3299,7 @@ def get_learning_curves(username):
             FROM game_sessions gs
             JOIN users u ON gs.user_id = u.id
             LEFT JOIN performance_metrics pm ON pm.session_id = gs.id
-            WHERE u.username = %s OR u.username LIKE 'clinical_subject_%'
+            WHERE u.username = ? OR u.username LIKE 'clinical_subject_%'
             GROUP BY gs.id
             ORDER BY gs.user_id, gs.start_time ASC
         """, (username,))
@@ -3227,17 +3388,17 @@ def get_training_goals(username):
     try:
         cursor = conn.cursor()
 
-        cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+        cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
         user = cursor.fetchone()
         if not user:
             with conn:
-                cursor.execute("INSERT INTO users (username) VALUES (%s)", (username,))
-            cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+                cursor.execute("INSERT INTO users (username) VALUES (?)", (username,))
+            cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
             user = cursor.fetchone()
         
         user_id = user['id']
 
-        cursor.execute("SELECT id, domain, metric_type, target_value, is_completed FROM training_goals WHERE user_id = %s", (user_id,))
+        cursor.execute("SELECT id, domain, metric_type, target_value, is_completed FROM training_goals WHERE user_id = ?", (user_id,))
         goals_rows = cursor.fetchall()
 
         # Query all domain averages for this user in a single database roundtrip
@@ -3250,7 +3411,7 @@ def get_training_goals(username):
                 MAX(pm.difficulty_level) AS max_diff
             FROM performance_metrics pm
             JOIN game_sessions gs ON pm.session_id = gs.id
-            WHERE gs.user_id = %s
+            WHERE gs.user_id = ?
             GROUP BY pm.cognitive_domain
             """,
             (user_id,)
@@ -3296,7 +3457,7 @@ def get_training_goals(username):
             just_completed = False
             if achieved and is_completed_db == 0:
                 with conn:
-                    cursor.execute("UPDATE training_goals SET is_completed = 1 WHERE id = %s", (gid,))
+                    cursor.execute("UPDATE training_goals SET is_completed = 1 WHERE id = ?", (gid,))
                 just_completed = True
                 is_completed_db = 1
 
@@ -3355,11 +3516,11 @@ def create_training_goal():
             with conn:
                 cursor = conn.cursor()
 
-                cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+                cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
                 user = cursor.fetchone()
                 if not user:
-                    cursor.execute("INSERT INTO users (username) VALUES (%s)", (username,))
-                    cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+                    cursor.execute("INSERT INTO users (username) VALUES (?)", (username,))
+                    cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
                     user = cursor.fetchone()
 
                 user_id = user['id']
@@ -3367,7 +3528,7 @@ def create_training_goal():
                 cursor.execute(
                     """
                     INSERT INTO training_goals (user_id, domain, metric_type, target_value, is_completed)
-                    VALUES (%s, %s, %s, %s, 0)
+                    VALUES (?, ?, ?, ?, 0)
                     """,
                     (user_id, domain, metric_type, val)
                 )
@@ -3387,7 +3548,7 @@ def delete_training_goal(goal_id):
     try:
         cursor = conn.cursor()
         with conn:
-            cursor.execute("DELETE FROM training_goals WHERE id = %s", (goal_id,))
+            cursor.execute("DELETE FROM training_goals WHERE id = ?", (goal_id,))
             if cursor.rowcount == 0:
                 return jsonify({"status": "error", "message": f"Training goal with ID {goal_id} not found."}), 404
         return jsonify({"status": "success", "message": "Goal deleted successfully"}), 200

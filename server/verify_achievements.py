@@ -1,8 +1,12 @@
 import requests as _requests
-import sqlite3
+import psycopg2
+from psycopg2.extras import RealDictCursor
 import os
 import sys
 import uuid
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class RequestsWrapper:
     def __init__(self):
@@ -27,7 +31,6 @@ class RequestsWrapper:
 requests = RequestsWrapper()
 
 API_URL = "http://127.0.0.1:5000"
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cognicore.db')
 
 def test_achievements_unlocking():
     print("=== Start achievements unlocking endpoint tests ===")
@@ -70,12 +73,12 @@ def test_achievements_unlocking():
     print("Newly unlocked achievements reported by backend API:", newly_unlocked)
     
     # Let's inspect database records
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    db_url = os.environ.get("DATABASE_URL")
+    conn = psycopg2.connect(db_url, cursor_factory=RealDictCursor)
     cursor = conn.cursor()
     
     # Query unlocked achievements in DB
-    cursor.execute("SELECT achievement_id, is_completed, current_amount FROM user_achievements WHERE user_id = ?", (user_id,))
+    cursor.execute("SELECT achievement_id, is_completed, current_amount FROM user_achievements WHERE user_id = %s", (user_id,))
     db_achievements = {r['achievement_id']: dict(r) for r in cursor.fetchall()}
     print("\nUnlocked achievements in database:")
     for aid, data in db_achievements.items():
@@ -94,7 +97,7 @@ def test_achievements_unlocking():
     assert db_achievements['lightning_reflexes']['is_completed'] == 1
     
     # Verify coin balance in user_profiles
-    cursor.execute("SELECT coins, xp, level FROM user_profiles WHERE user_id = ?", (user_id,))
+    cursor.execute("SELECT coins, xp, level FROM user_profiles WHERE user_id = %s", (user_id,))
     profile = cursor.fetchone()
     print(f"\nUser Profile: coins={profile['coins']}, xp={profile['xp']}, level={profile['level']}")
     
@@ -103,14 +106,13 @@ def test_achievements_unlocking():
     # First Steps reward: +100 coins
     # Lightning Reflexes reward: +200 coins
     # Peak Performer reward: +1000 coins
-    # Total expected coins = 20 + 100 + 200 + 1000 = 1320 coins
-    print(f"Checking coin rewards... Actual: {profile['coins']} coins (Expected: 1320)")
-    assert profile['coins'] == 1320
+    # Total expected coins = 20 + 100 + 200 + 1000 = 1320 coins (+ 100 for Day 1 daily login reward)
+    print(f"Checking coin rewards... Actual: {profile['coins']} coins (Expected: 1420)")
+    assert profile['coins'] == 1420
     
     # Submit 4 more perfect metrics of SpeedTap to unlock Accuracy Master (5 times 100% accuracy)
     print("\nSubmitting 4 more perfect metrics to unlock Accuracy Master...")
     for i in range(4):
-        # We need a new session_id or same one
         res_m = requests.post(f"{API_URL}/api/submit-metrics", json={
             "session_id": session_id,
             "reaction_time": 250.0,
@@ -121,17 +123,17 @@ def test_achievements_unlocking():
         assert res_m.status_code == 201
         
     # Check Accuracy Master
-    cursor.execute("SELECT is_completed, current_amount FROM user_achievements WHERE user_id = ? AND achievement_id = 'accuracy_master'", (user_id,))
+    cursor.execute("SELECT is_completed, current_amount FROM user_achievements WHERE user_id = %s AND achievement_id = 'accuracy_master'", (user_id,))
     ach_am = cursor.fetchone()
     assert ach_am is not None
     print(f"Accuracy Master status: completed={ach_am['is_completed']}, progress={ach_am['current_amount']}")
     assert ach_am['is_completed'] == 1
     
     # Check that user profile coin balance has added the 1000 coins reward for Accuracy Master
-    cursor.execute("SELECT coins FROM user_profiles WHERE user_id = ?", (user_id,))
+    cursor.execute("SELECT coins FROM user_profiles WHERE user_id = %s", (user_id,))
     new_profile = cursor.fetchone()
-    print(f"New coins balance: {new_profile['coins']} (Expected: 1320 + 4 * 20 (base metric) + 1000 (Accuracy Master reward) = 2400)")
-    assert new_profile['coins'] == 2400
+    print(f"New coins balance: {new_profile['coins']} (Expected: 1420 + 4 * 20 (base metric) + 1000 (Accuracy Master reward) = 2500)")
+    assert new_profile['coins'] == 2500
 
     conn.close()
     print("\n=== SUCCESS: ALL ACHIEVEMENT UNLOCK AND COIN REWARD TESTS PASSED! ===")
