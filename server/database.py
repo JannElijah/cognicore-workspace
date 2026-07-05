@@ -11,7 +11,9 @@ def init_pool():
         db_url = os.environ.get("DATABASE_URL")
         if not db_url:
             raise ValueError("No DATABASE_URL found in .env")
-        db_pool = ThreadedConnectionPool(1, 20, dsn=db_url, cursor_factory=RealDictCursor)
+        min_conn = int(os.environ.get("DB_POOL_MIN", 1))
+        max_conn = int(os.environ.get("DB_POOL_MAX", 20))
+        db_pool = ThreadedConnectionPool(min_conn, max_conn, dsn=db_url, cursor_factory=RealDictCursor)
 
 class PooledConnectionWrapper:
     def __init__(self, pool, conn):

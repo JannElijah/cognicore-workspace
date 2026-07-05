@@ -1,6 +1,8 @@
 class AcousticDdaEngine {
   constructor() {
     this.ctx = null;
+    this.masterGain = null;
+    this.compressorNode = null;
     this.ambientOsc = null;
     this.ambientGain = null;
     this.filterNode = null;
@@ -24,6 +26,20 @@ class AcousticDdaEngine {
       
       this.ctx = new AudioContextClass();
       
+      // Setup Master Gain and Compressor for mixing
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+      
+      this.compressorNode = this.ctx.createDynamicsCompressor();
+      this.compressorNode.threshold.setValueAtTime(-24, this.ctx.currentTime);
+      this.compressorNode.knee.setValueAtTime(30, this.ctx.currentTime);
+      this.compressorNode.ratio.setValueAtTime(12, this.ctx.currentTime);
+      this.compressorNode.attack.setValueAtTime(0.003, this.ctx.currentTime);
+      this.compressorNode.release.setValueAtTime(0.25, this.ctx.currentTime);
+      
+      this.masterGain.connect(this.compressorNode);
+      this.compressorNode.connect(this.ctx.destination);
+      
       // Create filter node for calming low-pass effect
       this.filterNode = this.ctx.createBiquadFilter();
       this.filterNode.type = 'lowpass';
@@ -34,9 +50,9 @@ class AcousticDdaEngine {
       this.ambientGain = this.ctx.createGain();
       this.ambientGain.gain.setValueAtTime(0.08, this.ctx.currentTime); // keep it soft in background
       
-      // Route ambient loop through filter to destination
+      // Route ambient loop through filter to master mixing node
       this.filterNode.connect(this.ambientGain);
-      this.ambientGain.connect(this.ctx.destination);
+      this.ambientGain.connect(this.masterGain);
       
       this.isPlaying = true;
       this.startAmbientPulse();
@@ -159,7 +175,7 @@ class AcousticDdaEngine {
       gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.5);
       
       osc.connect(gain);
-      gain.connect(this.ctx.destination);
+      gain.connect(this.masterGain);
       
       osc.start(t);
       osc.stop(t + 1.6);
@@ -202,8 +218,8 @@ class AcousticDdaEngine {
 
         osc1.connect(gain1);
         osc2.connect(gain2);
-        gain1.connect(this.ctx.destination);
-        gain2.connect(this.ctx.destination);
+        gain1.connect(this.masterGain);
+        gain2.connect(this.masterGain);
 
         osc1.start(t);
         osc1.stop(t + 0.15);
@@ -233,7 +249,7 @@ class AcousticDdaEngine {
 
         osc.connect(filter);
         filter.connect(gain);
-        gain.connect(this.ctx.destination);
+        gain.connect(this.masterGain);
 
         osc.start(t);
         osc.stop(t + 0.4);

@@ -531,6 +531,28 @@ export default function App() {
   const [researchMode, setResearchMode] = useState('individual'); // 'individual' | 'aggregate'
   const [cohortAnalytics, setCohortAnalytics] = useState(null);
   const [cohortLoading, setCohortLoading] = useState(false);
+  const [retrainLoading, setRetrainLoading] = useState(false);
+
+  const handleRetrain = async () => {
+    setRetrainLoading(true);
+    try {
+      const token = useCogniStore.getState().token || '';
+      const res = await fetch(`${API_BASE}/api/admin/retrain`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(`Model retrained successfully! Cross-validation Accuracy: ${(data.test_accuracy * 100).toFixed(2)}%`);
+      } else {
+        alert(`Error during retrain: ${data.message}`);
+      }
+    } catch (err) {
+      alert(`Failed to retrain models: ${err.message}`);
+    } finally {
+      setRetrainLoading(false);
+    }
+  };
 
   const fetchCohortAnalytics = async () => {
     setCohortLoading(true);
@@ -605,6 +627,8 @@ export default function App() {
                   useCogniStore.getState().fetchInventory();
               }
           }
+      } else {
+          throw new Error("Failed to securely synchronize user with backend. Please try again.");
       }
 
       const res = await fetch(`${API_BASE}/api/assessment-status/${trimmedName}`);
@@ -831,7 +855,6 @@ export default function App() {
   const [activeResearcherTab, setActiveResearcherTab] = useState('cohort-stats'); // 'cohort-stats' | 'ai-sandbox'
   const [modelStatus, setModelStatus] = useState(null);
   const [retrainMetrics, setRetrainMetrics] = useState(null);
-  const [retrainLoading, setRetrainLoading] = useState(false);
   const [clusterDataPoints, setClusterDataPoints] = useState([]);
   const [clusterLoading, setClusterLoading] = useState(false);
   const [clusterError, setClusterError] = useState(null);
@@ -4915,6 +4938,32 @@ export default function App() {
                             </div>
                           </div>
                         )}
+
+                        {/* Force ML Retrain Button */}
+                        <div style={{ marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem', display: 'flex', justifyContent: 'center' }}>
+                          <button
+                            onClick={handleRetrain}
+                            disabled={retrainLoading}
+                            style={{
+                              background: 'linear-gradient(to right, #f59e0b, #ef4444)',
+                              color: '#ffffff',
+                              border: 'none',
+                              padding: '0.75rem 1.5rem',
+                              borderRadius: '8px',
+                              fontWeight: 'bold',
+                              fontSize: '0.9rem',
+                              cursor: retrainLoading ? 'not-allowed' : 'pointer',
+                              boxShadow: '0 4px 15px rgba(239, 68, 68, 0.25)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.5rem',
+                              transition: 'all 0.2s',
+                              opacity: retrainLoading ? 0.7 : 1
+                            }}
+                          >
+                            {retrainLoading ? '⚙️ Retraining Live Models...' : '🧠 Trigger Live ML Retraining Loop'}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ) : (

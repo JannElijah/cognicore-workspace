@@ -10,3 +10,5 @@ python-dotenv==1.0.1
 pydantic==2.5.3
 pytest
 pytest-flask
+bcrypt==4.1.2
+redis==5.0.3

@@ -22,6 +22,7 @@ from psycopg2.extras import RealDictCursor
 from psycopg2.pool import ThreadedConnectionPool
 import os
 import time
+import bcrypt
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -41,11 +42,12 @@ app = Flask(__name__)
 CORS(app, origins=["http://localhost:5173", "http://127.0.0.1:5173"])
 
 # Rate limiter to prevent brute-force and spam
+redis_url = os.environ.get("REDIS_URL", "memory://")
 limiter = Limiter(
     get_remote_address,
     app=app,
     default_limits=[],
-    storage_uri="memory://"
+    storage_uri=redis_url
 )
 
 from routes.leaderboard import leaderboard_bp
@@ -60,6 +62,49 @@ import hashlib
 from schemas import validate_json, StartSessionRequest, SubmitMetricsRequest, DDARequest, SubmitAssessmentRequest, SyncOfflineTelemetryRequest
 
 from auth import token_required
+
+@app.route('/api/auth/set-pin', methods=['POST'])
+@token_required
+def set_pin(current_user_id, current_username):
+    data = request.get_json()
+    pin = data.get("pin")
+    if not pin or len(str(pin)) < 4:
+        return jsonify({"status": "error", "message": "Valid PIN of at least 4 digits required"}), 400
+        
+    # Hash PIN securely using bcrypt
+    salt = bcrypt.gensalt()
+    pin_hash = bcrypt.hashpw(str(pin).encode('utf-8'), salt).decode('utf-8')
+    
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("UPDATE users SET pin_hash = %s WHERE id = %s", (pin_hash, current_user_id))
+        
+    return jsonify({"status": "success", "message": "PIN set successfully"})
+
+@app.route('/api/auth/verify-pin', methods=['POST'])
+@limiter.limit("5 per minute")
+@token_required
+def verify_pin(current_user_id, current_username):
+    data = request.get_json()
+    pin = data.get("pin")
+    if not pin:
+        return jsonify({"status": "error", "message": "PIN required"}), 400
+        
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT pin_hash FROM users WHERE id = %s", (current_user_id,))
+        row = cursor.fetchone()
+        
+        if not row or not row['pin_hash']:
+            return jsonify({"status": "error", "message": "No PIN set for user"}), 400
+            
+        stored_hash = row['pin_hash']
+        
+        # Verify hash
+        if bcrypt.checkpw(str(pin).encode('utf-8'), stored_hash.encode('utf-8')):
+            return jsonify({"status": "success", "message": "PIN verified"})
+        else:
+            return jsonify({"status": "error", "message": "Invalid PIN"}), 401
 
 def safe_float(val, default=None):
     try:
@@ -1534,8 +1579,8 @@ def adjust_difficulty(current_user_id, current_username):
                 current_difficulty = metrics[0]['difficulty_level']
                 
                 # Retrieve smoothing alpha coefficient (Option C Volatility Damping filter)
-                # Default: 1.0 (no smoothing, backwards compatible)
-                alpha = safe_float(data.get('smoothing_alpha'), 1.0)
+                # Default: 0.3 (Moving average smoothing to prevent difficulty yo-yo effects)
+                alpha = safe_float(data.get('smoothing_alpha'), 0.3)
                 alpha = max(0.1, min(1.0, alpha))
                 
                 # Fetch current smooth difficulty from session
@@ -3671,6 +3716,31 @@ def get_metrics():
 
 
 
+
+
+@app.route('/api/admin/retrain', methods=['POST'])
+@token_required
+def admin_retrain(current_user_id, current_username):
+    """
+    Dynamically rebuilds the RandomForest, KMeans, and IsolationForest models
+    using live database telemetry.
+    """
+    try:
+        from train_model import train_retargeted_classifier
+        
+        metrics = train_retargeted_classifier()
+        if not metrics:
+            return jsonify({"status": "error", "message": "Failed to retrain models. Check database size or logs."}), 500
+            
+        # Dynamically reload the models in the app memory
+        from model import archetype_classifier
+        archetype_classifier.__init__()  # Re-init will pick up new .pkls
+        
+        return jsonify(metrics), 200
+        
+    except Exception as e:
+        app.logger.error(f"Error in admin_retrain: {e}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
 
 
 if __name__ == '__main__':

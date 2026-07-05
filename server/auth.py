@@ -28,6 +28,8 @@ def token_required(f):
                 token = parts[1]
         
         if not token:
+            print("Auth error: Token is missing!")
+            print("Headers:", dict(request.headers))
             return jsonify({'status': 'error', 'message': 'Token is missing!'}), 401
             
         try:
@@ -50,12 +52,24 @@ def token_required(f):
                 if row:
                     current_user_id = row['id']
                 else:
-                    # User authenticated but not in our internal DB yet, create them!
-                    cursor.execute(
-                        "INSERT INTO users (username, supabase_uid) VALUES (%s, %s) RETURNING id",
-                        (current_username, supabase_uid)
-                    )
-                    current_user_id = cursor.fetchone()['id']
+                    # Check if username already exists without a supabase_uid
+                    cursor.execute("SELECT id FROM users WHERE username = %s", (current_username,))
+                    existing_user = cursor.fetchone()
+                    
+                    if existing_user:
+                        # Update the existing user with the new supabase_uid
+                        cursor.execute(
+                            "UPDATE users SET supabase_uid = %s WHERE id = %s RETURNING id",
+                            (supabase_uid, existing_user['id'])
+                        )
+                        current_user_id = cursor.fetchone()['id']
+                    else:
+                        # User authenticated but not in our internal DB yet, create them!
+                        cursor.execute(
+                            "INSERT INTO users (username, supabase_uid) VALUES (%s, %s) RETURNING id",
+                            (current_username, supabase_uid)
+                        )
+                        current_user_id = cursor.fetchone()['id']
                     
         except Exception as e:
             print(f"Auth error: {e}")

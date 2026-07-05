@@ -1,8 +1,8 @@
 import { API_BASE } from '../utils/apiClient.js';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, memo } from 'react';
 import { supabase } from '../utils/supabaseClient.js';
 
-const LeaderboardModal = ({ onClose }) => {
+const LeaderboardModal = memo(({ onClose }) => {
   const [leaders, setLeaders] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,7 +26,7 @@ const LeaderboardModal = ({ onClose }) => {
     };
   }, []);
 
-  const fetchLeaderboard = async () => {
+  const fetchLeaderboard = useCallback(async () => {
     try {
       const res = await fetch(API_BASE + '/api/leaderboard');
       if (res.ok) {
@@ -40,7 +40,7 @@ const LeaderboardModal = ({ onClose }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const getRankColor = (index) => {
     if (index === 0) return 'linear-gradient(to right, #fbbf24, #f59e0b)'; // Gold
@@ -80,6 +80,8 @@ const LeaderboardModal = ({ onClose }) => {
           </h2>
           <button 
             onClick={onClose}
+            aria-label="Close leaderboard"
+            tabIndex={0}
             style={{
               background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '1.5rem', cursor: 'pointer', transition: 'color 0.2s'
             }}
@@ -140,6 +142,6 @@ const LeaderboardModal = ({ onClose }) => {
       </div>
     </div>
   );
-};
+});
 
 export default LeaderboardModal;

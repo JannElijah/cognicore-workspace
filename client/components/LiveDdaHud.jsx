@@ -135,6 +135,8 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>GAME: {gameType.toUpperCase()}</span>
                         <button 
                             onClick={handleToggleMute}
+                            aria-label={isMuted ? "Unmute Synthesizer" : "Mute Synthesizer"}
+                            tabIndex={0}
                             title={isMuted ? "Unmute Synthesizer" : "Mute Synthesizer"}
                             style={{
                                 background: 'transparent',

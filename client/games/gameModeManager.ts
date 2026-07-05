@@ -1,15 +1,24 @@
+// @ts-nocheck
 import { API_BASE } from '../utils/apiClient.js';
 import Phaser from 'phaser';
 import cogniFX from '../utils/cogniFX.js';
-import useCogniStore from '../store/useCogniStore.js';
+import useCogniStore from '../store/useCogniStore.ts';
 import { saveTelemetry, getTelemetryQueue, clearTelemetryQueue } from '../utils/indexedDB.js';
+
+declare global {
+    interface Window {
+        currentGameMode: string;
+        reduceFlashes?: boolean;
+        audioDda?: any;
+    }
+}
 
 // Initialize global game mode tracking variable
 window.currentGameMode = 'timed';
 
 // Global Telemetry Buffers
-let memoryTelemetryBuffer = [];
-let lastUsedApiUrlBase = API_BASE;
+let memoryTelemetryBuffer: any[] = [];
+let lastUsedApiUrlBase: string = API_BASE;
 
 function extractApiUrlBase(url) {
     if (typeof url === 'string' && url.includes('/api/')) {

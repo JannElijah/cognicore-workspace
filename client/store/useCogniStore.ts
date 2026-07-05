@@ -1,7 +1,37 @@
 import { API_BASE } from '../utils/apiClient.js';
 import { create } from 'zustand';
 
-const useCogniStore = create((set) => ({
+export interface CognitiveProfile {
+  archetype: string | null;
+  confidence_score: number;
+}
+
+export interface User {
+  id?: string;
+  username: string;
+}
+
+export interface InventoryItem {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface CogniStore {
+  user: User | null;
+  token: string | null;
+  coins: number;
+  totalXp: number;
+  inventory: InventoryItem[];
+  reduceFlashes: boolean;
+  cognitiveProfile: CognitiveProfile;
+  login: (userData: User, token: string) => void;
+  logout: () => void;
+  setCognitiveProfile: (profileData: CognitiveProfile) => void;
+  fetchInventory: () => Promise<void>;
+}
+
+const useCogniStore = create<CogniStore>((set, get) => ({
   user: null,
   token: null,
   coins: 0,
@@ -15,12 +45,20 @@ const useCogniStore = create((set) => ({
   
   login: (userData, token) => set({ user: userData, token }),
   
-  logout: () => set({ user: null, token: null, coins: 0, totalXp: 0, inventory: [], reduceFlashes: false, cognitiveProfile: { archetype: null, confidence_score: 0.0 } }),
+  logout: () => set({ 
+    user: null, 
+    token: null, 
+    coins: 0, 
+    totalXp: 0, 
+    inventory: [], 
+    reduceFlashes: false, 
+    cognitiveProfile: { archetype: null, confidence_score: 0.0 } 
+  }),
   
   setCognitiveProfile: (profileData) => set({ cognitiveProfile: profileData }),
 
   fetchInventory: async () => {
-    const state = useCogniStore.getState();
+    const state = get();
     if (!state.user || !state.token) return;
     try {
       const username = typeof state.user === 'string' ? state.user : state.user.username;

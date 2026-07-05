@@ -1,3 +1,5 @@
+import useCogniStore from '../store/useCogniStore';
+
 export const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000';
 
 export class ApiError extends Error {
@@ -41,7 +43,7 @@ export async function apiClient(endpoint, options = {}) {
     ...(options.headers || {})
   };
 
-  const token = localStorage.getItem('auth_token');
+  const token = useCogniStore.getState().token;
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
