@@ -3210,8 +3210,8 @@ def get_learning_curves(username):
             FROM game_sessions gs
             JOIN users u ON gs.user_id = u.id
             LEFT JOIN performance_metrics pm ON pm.session_id = gs.id
-            WHERE u.username = %s OR u.username LIKE 'clinical_subject_%'
-            GROUP BY gs.id
+            WHERE u.username = %s OR u.username LIKE 'clinical_subject_%%'
+            GROUP BY gs.id, gs.user_id, u.username, gs.start_time
             ORDER BY gs.user_id, gs.start_time ASC
         """, (username,))
         rows = cursor.fetchall()
@@ -3490,7 +3490,7 @@ def get_model_status():
         try:
             cursor = conn.cursor()
             cursor.execute("SELECT COUNT(DISTINCT session_id) FROM performance_metrics")
-            dataset_size = cursor.fetchone()[0]
+            dataset_size = cursor.fetchone()["count"]
         finally:
             conn.close()
 
@@ -3569,7 +3569,7 @@ def get_model_clusters():
                 FROM game_sessions gs
                 JOIN users u ON gs.user_id = u.id
                 JOIN performance_metrics pm ON gs.id = pm.session_id
-                GROUP BY gs.id
+                GROUP BY gs.id, u.username, gs.game_type
                 ORDER BY gs.id ASC
             """
             cursor.execute(query)

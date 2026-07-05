@@ -68,13 +68,13 @@ def claim_quest(current_user_id, current_username, quest_id):
         if not quest:
             return jsonify({"status": "error", "message": "Quest not found"}), 404
             
-        if quest['is_completed'] == 1:
+        if quest['is_completed']:
             return jsonify({"status": "error", "message": "Quest already claimed"}), 400
             
         if quest['current_amount'] < quest['target_amount']:
             return jsonify({"status": "error", "message": "Quest not finished"}), 400
             
-        cursor.execute("UPDATE daily_tasks SET is_completed = 1 WHERE id = %s", (quest_id,))
+        cursor.execute("UPDATE daily_tasks SET is_completed = TRUE WHERE id = %s", (quest_id,))
         cursor.execute("UPDATE user_profiles SET coins = coins + %s WHERE user_id = %s", (quest['reward_coins'], current_user_id))
         conn.commit()
         
