@@ -16,6 +16,8 @@ def get_db_connection():
 
 analytics_bp = Blueprint('analytics_bp', __name__)
 
+@analytics_bp.route('/api/user-analytics/<username>', methods=['GET'])
+@token_required
 def get_user_analytics(current_user_id, current_username, username):
     # Ownership check: users can only view their own analytics
     if current_username != username:
@@ -78,6 +80,7 @@ def get_user_analytics(current_user_id, current_username, username):
     finally:
         conn.close()
 
+@analytics_bp.route('/api/cohort-analytics', methods=['GET'])
 def get_cohort_analytics():
     conn = get_db_connection()
     try:
@@ -263,11 +266,12 @@ def get_cohort_analytics():
         return jsonify(response_data), 200
         
     except Exception as e:
-        app.logger.error(f"Error in get_cohort_analytics: {e}")
+        logger.error(f"Error in get_cohort_analytics: {e}")
         return jsonify({"status": "error", "message": f"Cohort evaluation error: {str(e)}"}), 500
     finally:
         conn.close()
 
+@analytics_bp.route('/api/user-session-history/<username>', methods=['GET'])
 def get_user_session_history(username):
     conn = get_db_connection()
     try:
@@ -318,11 +322,12 @@ def get_user_session_history(username):
         return jsonify({"status": "success", "sessions": sessions}), 200
         
     except Exception as e:
-        app.logger.error(f"Error in get_user_session_history: {e}")
+        logger.error(f"Error in get_user_session_history: {e}")
         return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
     finally:
         conn.close()
 
+@analytics_bp.route('/api/session-metrics/<int:session_id>', methods=['GET'])
 def get_session_metrics(session_id):
     conn = get_db_connection()
     try:
@@ -361,11 +366,12 @@ def get_session_metrics(session_id):
         return jsonify({"status": "success", "session_id": session_id, "metrics": metrics}), 200
         
     except Exception as e:
-        app.logger.error(f"Error in get_session_metrics: {e}")
+        logger.error(f"Error in get_session_metrics: {e}")
         return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
     finally:
         conn.close()
 
+@analytics_bp.route('/api/cohort-comparison/<username>', methods=['GET'])
 def get_cohort_comparison(username):
     conn = get_db_connection()
     try:
@@ -420,11 +426,12 @@ def get_cohort_comparison(username):
         }), 200
         
     except Exception as e:
-        app.logger.error(f"Error in get_cohort_comparison: {e}")
+        logger.error(f"Error in get_cohort_comparison: {e}")
         return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
     finally:
         conn.close()
 
+@analytics_bp.route('/api/archetype-progression/<username>', methods=['GET'])
 def get_archetype_progression(username):
     conn = get_db_connection()
     try:
@@ -464,11 +471,12 @@ def get_archetype_progression(username):
         return jsonify({"status": "success", "history": history}), 200
         
     except Exception as e:
-        app.logger.error(f"Error in get_archetype_progression: {e}")
+        logger.error(f"Error in get_archetype_progression: {e}")
         return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
     finally:
         conn.close()
 
+@analytics_bp.route('/api/training-goals/<username>', methods=['GET'])
 def get_training_goals(username):
     conn = get_db_connection()
     try:
@@ -560,11 +568,12 @@ def get_training_goals(username):
         return jsonify({"status": "success", "goals": goals}), 200
 
     except Exception as e:
-        app.logger.error(f"Error in get_training_goals: {e}")
+        logger.error(f"Error in get_training_goals: {e}")
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
     finally:
         conn.close()
 
+@analytics_bp.route('/api/training-goals/<int:goal_id>', methods=['DELETE'])
 def delete_training_goal(goal_id):
     conn = get_db_connection()
     try:
@@ -575,7 +584,39 @@ def delete_training_goal(goal_id):
                 return jsonify({"status": "error", "message": f"Training goal with ID {goal_id} not found."}), 404
         return jsonify({"status": "success", "message": "Goal deleted successfully"}), 200
     except Exception as e:
-        app.logger.error(f"Error in delete_training_goal: {e}")
+        logger.error(f"Error in delete_training_goal: {e}")
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+    finally:
+        conn.close()
+
+@analytics_bp.route('/api/training-goals', methods=['POST'])
+def add_training_goal():
+    data = request.json
+    username = data.get('username')
+    domain = data.get('domain')
+    metric_type = data.get('metric_type')
+    target_value = data.get('target_value')
+
+    if not all([username, domain, metric_type, target_value]):
+        return jsonify({"status": "error", "message": "Missing required fields"}), 400
+
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+        user = cursor.fetchone()
+        if not user:
+            return jsonify({"status": "error", "message": "User not found"}), 404
+            
+        with conn:
+            cursor.execute(
+                "INSERT INTO training_goals (user_id, domain, metric_type, target_value) VALUES (%s, %s, %s, %s)",
+                (user['id'], domain, metric_type, float(target_value))
+            )
+        return jsonify({"status": "success", "message": "Goal created"}), 201
+    except Exception as e:
+        import logging
+        logging.error(f"Error in add_training_goal: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
     finally:
         conn.close()

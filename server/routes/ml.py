@@ -26,6 +26,11 @@ def get_db_connection():
 
 ml_bp = Blueprint('ml_bp', __name__)
 
+@ml_bp.route('/api/model/status', methods=['GET'])
+def model_status():
+    return jsonify(model_training_state), 200
+
+@ml_bp.route('/api/model/retrain', methods=['POST'])
 def retrain_model():
     if model_training_state["status"] == "training":
         return jsonify({"status": "error", "message": "Model retraining is already in progress."}), 400
@@ -52,6 +57,7 @@ def retrain_model():
     threading.Thread(target=run_training).start()
     return jsonify({"status": "success", "message": "Model retraining started in background."}), 202
 
+@ml_bp.route('/api/model/clusters', methods=['GET'])
 def get_model_clusters():
     try:
         import numpy as np
@@ -166,9 +172,11 @@ def get_model_clusters():
             "data_points": data_points
         }), 200
     except Exception as e:
-        app.logger.error(f"Error in get_model_clusters: {e}")
+        logger.error(f"Error in get_model_clusters: {e}")
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
 
+@ml_bp.route('/api/admin/retrain', methods=['POST'])
+@token_required
 def admin_retrain(current_user_id, current_username):
     """
     Dynamically rebuilds the RandomForest, KMeans, and IsolationForest models
@@ -188,5 +196,5 @@ def admin_retrain(current_user_id, current_username):
         return jsonify(metrics), 200
         
     except Exception as e:
-        app.logger.error(f"Error in admin_retrain: {e}")
+        logger.error(f"Error in admin_retrain: {e}")
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500

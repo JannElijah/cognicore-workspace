@@ -18,6 +18,7 @@ def get_db_connection():
 
 research_bp = Blueprint('research_bp', __name__)
 
+@research_bp.route('/api/iso-evaluations', methods=['GET'])
 def get_iso_evaluations():
     conn = get_db_connection()
     try:
@@ -45,11 +46,12 @@ def get_iso_evaluations():
         }), 200
         
     except Exception as e:
-        app.logger.error(f"Error in get_iso_evaluations: {e}")
+        logger.error(f"Error in get_iso_evaluations: {e}")
         return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
     finally:
         conn.close()
 
+@research_bp.route('/api/cohort-db-scores', methods=['GET'])
 def get_cohort_db_scores():
     conn = get_db_connection()
     try:
@@ -99,11 +101,12 @@ def get_cohort_db_scores():
         }), 200
         
     except Exception as e:
-        app.logger.error(f"Error in get_cohort_db_scores: {e}")
+        logger.error(f"Error in get_cohort_db_scores: {e}")
         return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
     finally:
         conn.close()
 
+@research_bp.route('/api/export-csv', methods=['GET'])
 def export_csv():
     conn = get_db_connection()
     try:
@@ -166,11 +169,12 @@ def export_csv():
             headers={"Content-disposition": "attachment; filename=cohort_telemetry_report.csv"}
         )
     except Exception as e:
-        app.logger.error(f"Error in export_csv: {e}")
+        logger.error(f"Error in export_csv: {e}")
         return jsonify({"status": "error", "message": f"Export failed: {str(e)}"}), 500
     finally:
         conn.close()
 
+@research_bp.route('/api/research/correlations', methods=['GET'])
 def get_research_correlations():
     try:
         var1 = request.args.get('var1', 'rule_shift_latency_ms')
@@ -269,9 +273,10 @@ def get_research_correlations():
             "data_points": data_points
         }), 200
     except Exception as e:
-        app.logger.error(f"Error in get_research_correlations: {e}")
+        logger.error(f"Error in get_research_correlations: {e}")
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
 
+@research_bp.route('/api/research/learning-curves/<username>', methods=['GET'])
 def get_learning_curves(username):
     conn = get_db_connection()
     try:
@@ -361,7 +366,7 @@ def get_learning_curves(username):
         }), 200
 
     except Exception as e:
-        app.logger.error(f"Error in get_learning_curves: {e}")
+        logger.error(f"Error in get_learning_curves: {e}")
         return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
     finally:
         conn.close()
