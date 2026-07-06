@@ -3,7 +3,8 @@ from flask import request, jsonify
 from functools import wraps
 from supabase import create_client, Client
 from dotenv import load_dotenv
-from database import get_db_connection
+from database import db
+from models import User
 
 load_dotenv()
 
@@ -44,32 +45,20 @@ def token_required(f):
                 current_username = f"user_{supabase_uid[:8]}"
             
             # Map Supabase UUID to internal Integer ID
-            with get_db_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute("SELECT id FROM users WHERE supabase_uid = %s", (supabase_uid,))
-                row = cursor.fetchone()
-                
-                if row:
-                    current_user_id = row['id']
+            user_record = User.query.filter_by(supabase_uid=supabase_uid).first()
+            if user_record:
+                current_user_id = user_record.id
+            else:
+                existing_user = User.query.filter_by(username=current_username).first()
+                if existing_user:
+                    existing_user.supabase_uid = supabase_uid
+                    db.session.commit()
+                    current_user_id = existing_user.id
                 else:
-                    # Check if username already exists without a supabase_uid
-                    cursor.execute("SELECT id FROM users WHERE username = %s", (current_username,))
-                    existing_user = cursor.fetchone()
-                    
-                    if existing_user:
-                        # Update the existing user with the new supabase_uid
-                        cursor.execute(
-                            "UPDATE users SET supabase_uid = %s WHERE id = %s RETURNING id",
-                            (supabase_uid, existing_user['id'])
-                        )
-                        current_user_id = cursor.fetchone()['id']
-                    else:
-                        # User authenticated but not in our internal DB yet, create them!
-                        cursor.execute(
-                            "INSERT INTO users (username, supabase_uid) VALUES (%s, %s) RETURNING id",
-                            (current_username, supabase_uid)
-                        )
-                        current_user_id = cursor.fetchone()['id']
+                    new_user = User(username=current_username, supabase_uid=supabase_uid)
+                    db.session.add(new_user)
+                    db.session.commit()
+                    current_user_id = new_user.id
                     
         except Exception as e:
             print(f"Auth error: {e}")

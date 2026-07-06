@@ -12,3 +12,5 @@ pytest
 pytest-flask
 bcrypt==4.1.2
 redis==5.0.3
+Flask-SQLAlchemy==3.1.1
+SQLAlchemy==2.0.46

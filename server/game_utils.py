@@ -1,414 +1,71 @@
-"""
-================================================================================
-Chapter 2 Methodology Compliance: Software Engineering Architecture Patterns
-- Pattern: Model-View-Controller (MVC) / Layered Architecture
-- Component: Controller (API / Routing Layer) and SQLite Model interaction
-- Data Integrity: Directly interacts with game_sessions, users, performance_metrics,
-  and cognitive_profiles tables using parameterized SQL queries to prevent SQL injection.
-- Dynamic Difficulty Adjustment (DDA): Provides /api/dda and /api/start-session hooks 
-  to adjust game variables (spawn_delay, target_lifespan, target_scale, etc.) based on
-  player performance telemetry, implementing a closed-loop feedback design pattern.
-- Error Handling: Implements strict try-except blocks, returns appropriate HTTP status codes,
-  and logs internal issues for debugging.
-================================================================================
-"""
+GAME_TO_DOMAIN = {'MemoryMatch': 'spatial_visual_memory', 'memory_match': 'spatial_visual_memory', 'LogicLink': 'logical_mathematical', 'logic_link': 'logical_mathematical', 'EquationBalance': 'logical_mathematical', 'equation_balance': 'logical_mathematical', 'SequenceDecoder': 'logical_mathematical', 'sequence_decoder': 'logical_mathematical', 'RouteOptimizer': 'logical_mathematical', 'route_optimizer': 'logical_mathematical', 'SpeedTap': 'reflexes_and_focus', 'speed_tap': 'reflexes_and_focus', 'FocusFinder': 'reflexes_and_focus', 'focus_finder': 'reflexes_and_focus', 'MazeEscape': 'executive_strategy', 'maze_escape': 'executive_strategy', 'PriorityQueue': 'executive_strategy', 'priority_queue': 'executive_strategy', 'NeuroMaze': 'executive_strategy', 'neuro_maze': 'executive_strategy', 'MatrixRecall': 'spatial_visual_memory', 'matrix_recall': 'spatial_visual_memory', 'StroopShift': 'reflexes_and_focus', 'stroop_shift': 'reflexes_and_focus', 'MentalFlex': 'executive_strategy', 'mental_flex': 'executive_strategy', 'NeuralNBack': 'spatial_visual_memory', 'neural_n_back': 'spatial_visual_memory', 'SynapseSpin': 'spatial_visual_memory', 'synapse_spin': 'spatial_visual_memory', 'NexusMapper': 'spatial_visual_memory', 'nexus_mapper': 'spatial_visual_memory'}
 
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
-import psycopg2
-from psycopg2.extras import RealDictCursor
-from psycopg2.pool import ThreadedConnectionPool
-import os
-import time
-import bcrypt
-from dotenv import load_dotenv
-
-load_dotenv()
-
-# Import Machine Learning Classifier Strategy
-from model import archetype_classifier
-
-# Try importing scipy.stats for Paired t-test
-try:
-    from scipy import stats
-    SCIPY_AVAILABLE = True
-except ImportError:
-    SCIPY_AVAILABLE = False
-
-app = Flask(__name__)
-# CORS restricts your React/Phaser frontend to authorized origins
-CORS(app, origins=["http://localhost:5173", "http://127.0.0.1:5173"])
-
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL").replace("postgres://", "postgresql://")
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-from database import db
-db.init_app(app)
-
-# Rate limiter to prevent brute-force and spam
-redis_url = os.environ.get("REDIS_URL", "memory://")
-limiter = Limiter(
-    get_remote_address,
-    app=app,
-    default_limits=[],
-    storage_uri=redis_url
-)
-
-from routes.leaderboard import leaderboard_bp
-from routes.gamification import gamification_bp
-from routes.auth import auth_bp
-from routes.game import game_bp
-from routes.analytics import analytics_bp
-from routes.research import research_bp
-from routes.ml import ml_bp
-
-app.register_blueprint(leaderboard_bp)
-app.register_blueprint(gamification_bp)
-app.register_blueprint(auth_bp)
-app.register_blueprint(game_bp)
-app.register_blueprint(analytics_bp)
-app.register_blueprint(research_bp)
-app.register_blueprint(ml_bp)
-
-@app.route('/api/health', methods=['GET'])
-def health_check():
-    """Lightweight health probe for frontend polling."""
-    return jsonify({"status": "ok"}), 200
-
-import jwt
-from functools import wraps
-import datetime
-import hashlib
-from schemas import validate_json, StartSessionRequest, SubmitMetricsRequest, DDARequest, SubmitAssessmentRequest, SyncOfflineTelemetryRequest
-
-from auth import token_required
-
-# Auth routes moved to server/routes/auth.py
-
-def safe_float(val, default=None):
-    try:
-        return float(val) if val is not None else default
-    except (ValueError, TypeError):
-        return default
-
-def safe_int(val, default=None):
-    try:
-        return int(val) if val is not None else default
-    except (ValueError, TypeError):
-        return default
-
-def db_execute_with_retry(cursor, sql, params=(), max_retries=5):
+def calculate_ols_slope(y_vals):
     """
-    Executes a database statement with exponential backoff retry logic.
-    Catches psycopg2.OperationalError and retries
-    up to max_retries times with delays: 50ms, 100ms, 200ms, 400ms, 800ms.
+    Computes the slope of the OLS linear regression for sequence y_vals,
+    where x_vals is index list [0, 1, ..., len(y_vals)-1].
     """
-    backoff_ms = 50
-    for attempt in range(max_retries):
-        try:
-            cursor.execute(sql, params)
-            return  # success
-        except psycopg2.OperationalError as e:
-            if attempt < max_retries - 1:
-                time.sleep(backoff_ms / 1000.0)
-                backoff_ms *= 2  # exponential backoff
-            else:
-                raise  # re-raise on final attempt or non-lock errors
+    n = len(y_vals)
+    if n < 2:
+        return 0.0
+    x_vals = list(range(n))
+    sum_x = sum(x_vals)
+    sum_y = sum(y_vals)
+    sum_xx = sum(x ** 2 for x in x_vals)
+    sum_xy = sum(x_vals[i] * y_vals[i] for i in range(n))
+    
+    denominator = n * sum_xx - sum_x ** 2
+    if denominator == 0:
+        return 0.0
+    slope = (n * sum_xy - sum_x * sum_y) / denominator
+    return slope
 
-def calculate_approx_t_p_value(t_stat, df):
-    """
-    Computes a highly accurate mathematical approximation of the two-sided p-value
-    for a Student's t-distribution with given degrees of freedom, without external libraries.
-    """
-    import math
-    if df < 1:
-        return 1.0
+
+def generate_pros_cons(scores_map):
+    # Map technical jargon to plain English
+    human_map = {
+        "spatial_visual_memory": "Visual Memory & Spatial Awareness",
+        "logical_mathematical": "Logic & Problem Solving",
+        "reflexes_and_focus": "Quick Thinking & Attention",
+        "executive_strategy": "Planning & Adaptability"
+    }
+    
+    sorted_domains = sorted(scores_map.items(), key=lambda x: x[1], reverse=True)
+    top_domain = sorted_domains[0]
+    weakest_domain = sorted_domains[-1]
+    
+    top_name = human_map[top_domain[0]]
+    weakest_name = human_map[weakest_domain[0]]
+    
+    pros = []
+    if top_domain[0] == "spatial_visual_memory":
+        pros.append(f"Your {top_name} is excellent! You excel at remembering visual details and navigating complex spaces.")
+    elif top_domain[0] == "logical_mathematical":
+        pros.append(f"Your {top_name} is outstanding! You have a strong ability to recognize patterns and solve problems logically.")
+    elif top_domain[0] == "reflexes_and_focus":
+        pros.append(f"Your {top_name} is sharp! You react quickly and maintain focus even when distractions are present.")
+    else:
+        pros.append(f"Your {top_name} is great! You are highly adaptable and excel at shifting strategies on the fly.")
         
-    t_abs = abs(t_stat)
-    
-    # Exact calculation for df = 1 (Cauchy distribution)
-    if df == 1:
-        return 1.0 - (2.0 / math.pi) * math.atan(t_abs)
-    # Exact calculation for df = 2
-    if df == 2:
-        return 1.0 - t_abs / math.sqrt(2.0 + t_abs * t_abs)
-    # Exact calculation for df = 3
-    if df == 3:
-        term1 = t_abs / (math.pi * math.sqrt(3.0) * (1.0 + t_abs * t_abs / 3.0))
-        term2 = math.atan(t_abs / math.sqrt(3.0)) / math.pi
-        return max(0.0, min(1.0, 2.0 * (0.5 - term1 - term2)))
-    # Exact calculation for df = 4
-    if df == 4:
-        term = (t_abs / (2.0 * math.sqrt(4.0 + t_abs * t_abs))) * (1.0 + 2.0 / (4.0 + t_abs * t_abs))
-        return max(0.0, min(1.0, 2.0 * (0.5 - term)))
+    weaknesses = []
+    if weakest_domain[0] == "spatial_visual_memory":
+        weaknesses.append(f"You might occasionally struggle with {weakest_name}. Remembering exact locations or visual sequences can be challenging.")
+    elif weakest_domain[0] == "logical_mathematical":
+        weaknesses.append(f"Your {weakest_name} could use a boost. Complex math or multi-step logic puzzles might take you longer to process.")
+    elif weakest_domain[0] == "reflexes_and_focus":
+        weaknesses.append(f"Your {weakest_name} is your weak point. You might find your attention drifting or reactions slowing when overwhelmed.")
+    else:
+        weaknesses.append(f"Your {weakest_name} needs training. Adapting to sudden rule changes or juggling multiple tasks can feel stressful.")
         
-    # Peizer-Pratt adjusted normal approximation for df >= 5
-    # Highly accurate transformation from t-statistic to standard normal z-score
-    z = t_abs * (1.0 - 1.0 / (4.0 * df)) / math.sqrt(1.0 + t_abs * t_abs / (2.0 * df))
-    
-    # Standard normal CDF approximation (Abramowitz & Stegun formula 26.2.17, error < 7.5e-8)
-    p = 0.2316419
-    b1 = 0.319381530
-    b2 = -0.356563782
-    b3 = 1.781477937
-    b4 = -1.821255978
-    b5 = 1.330274429
-    
-    t = 1.0 / (1.0 + p * z)
-    exponential = math.exp(-0.5 * z * z)
-    prob = 1.0 - (1.0 / math.sqrt(2.0 * math.pi)) * exponential * (
-        b1 * t + b2 * (t ** 2) + b3 * (t ** 3) + b4 * (t ** 4) + b5 * (t ** 5)
-    )
-    
-    # Return two-sided p-value
-    two_sided_p = 2.0 * (1.0 - prob)
-    return max(0.0, min(1.0, two_sided_p))
+    return {
+        "top_skill": top_name,
+        "weakest_skill": weakest_name,
+        "pros": pros,
+        "weaknesses": weaknesses,
+        "summary_message": f"Overall, you show great potential in {top_name}, but your {weakest_name} needs targeted training. We recommend playing the prescribed games daily."
+    }
 
 
-# 4-Tier Cognitive Domain Categorization Framework Configuration Mapping
-ml_history_cache = {}
-GAME_TO_DOMAIN = {
-    "MemoryMatch": "spatial_visual_memory",
-    "memory_match": "spatial_visual_memory",
-    "LogicLink": "logical_mathematical",
-    "logic_link": "logical_mathematical",
-    "EquationBalance": "logical_mathematical",
-    "equation_balance": "logical_mathematical",
-    "SequenceDecoder": "logical_mathematical",
-    "sequence_decoder": "logical_mathematical",
-    "RouteOptimizer": "logical_mathematical",
-    "route_optimizer": "logical_mathematical",
-    "SpeedTap": "reflexes_and_focus",
-    "speed_tap": "reflexes_and_focus",
-    "FocusFinder": "reflexes_and_focus",
-    "focus_finder": "reflexes_and_focus",
-    "MazeEscape": "executive_strategy",
-    "maze_escape": "executive_strategy",
-    "PriorityQueue": "executive_strategy",
-    "priority_queue": "executive_strategy",
-    "NeuroMaze": "executive_strategy",
-    "neuro_maze": "executive_strategy",
-    "MatrixRecall": "spatial_visual_memory",
-    "matrix_recall": "spatial_visual_memory",
-    "StroopShift": "reflexes_and_focus",
-    "stroop_shift": "reflexes_and_focus",
-    "MentalFlex": "executive_strategy",
-    "mental_flex": "executive_strategy",
-    "NeuralNBack": "spatial_visual_memory",
-    "neural_n_back": "spatial_visual_memory",
-    "SynapseSpin": "spatial_visual_memory",
-    "synapse_spin": "spatial_visual_memory",
-    "NexusMapper": "spatial_visual_memory",
-    "nexus_mapper": "spatial_visual_memory"
-}
-
-from database import get_db_connection, init_pool
-
-# Programmatic Schema Migration / Initialization
-def init_db():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    # Ensure core tables exist before running migrations
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id SERIAL PRIMARY KEY,
-            username VARCHAR(255) NOT NULL UNIQUE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS game_sessions (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-            game_type VARCHAR(255) NOT NULL,
-            start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS performance_metrics (
-            id SERIAL PRIMARY KEY,
-            session_id INTEGER REFERENCES game_sessions(id) ON DELETE CASCADE,
-            reaction_time REAL,
-            accuracy_rate REAL,
-            difficulty_level INTEGER,
-            recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS cognitive_profiles (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-            archetype_name VARCHAR(255),
-            confidence_score REAL,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    
-    # Get existing columns in performance_metrics using PostgreSQL catalog
-    cursor.execute("""
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name = 'performance_metrics'
-    """)
-    columns = [row['column_name'] for row in cursor.fetchall()]
-    
-    # Re-fetch or run programmatic column migrations if needed
-    if "reaction_time_ms" in columns and "reaction_time" not in columns:
-        cursor.execute("ALTER TABLE performance_metrics RENAME COLUMN reaction_time_ms TO reaction_time")
-        print("[DB Migration] Renamed reaction_time_ms to reaction_time")
-    if "timestamp" in columns and "recorded_at" not in columns:
-        cursor.execute("ALTER TABLE performance_metrics RENAME COLUMN timestamp TO recorded_at")
-        print("[DB Migration] Renamed timestamp to recorded_at")
-        
-    # Re-fetch columns
-    cursor.execute("""
-        SELECT column_name 
-        FROM information_schema.columns 
-        WHERE table_name = 'performance_metrics'
-    """)
-    columns = [row['column_name'] for row in cursor.fetchall()]
-
-    if "cognitive_domain" not in columns:
-        cursor.execute("ALTER TABLE performance_metrics ADD COLUMN cognitive_domain VARCHAR(255)")
-    if "game_type" not in columns:
-        cursor.execute("ALTER TABLE performance_metrics ADD COLUMN game_type VARCHAR(255)")
-    if "error_count" not in columns:
-        cursor.execute("ALTER TABLE performance_metrics ADD COLUMN error_count INTEGER DEFAULT 0")
-    if "hesitation_ms" not in columns:
-        cursor.execute("ALTER TABLE performance_metrics ADD COLUMN hesitation_ms REAL DEFAULT 0.0")
-    if "spam_click_count" not in columns:
-        cursor.execute("ALTER TABLE performance_metrics ADD COLUMN spam_click_count INTEGER DEFAULT 0")
-    if "rule_shift_latency_ms" not in columns:
-        cursor.execute("ALTER TABLE performance_metrics ADD COLUMN rule_shift_latency_ms REAL")
-    if "path_efficiency" not in columns:
-        cursor.execute("ALTER TABLE performance_metrics ADD COLUMN path_efficiency REAL")
-    
-    # Create iso_evaluations table if it doesn't exist
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS iso_evaluations (
-            id SERIAL PRIMARY KEY,
-            functionality_score INTEGER NOT NULL,
-            usability_score INTEGER NOT NULL,
-            reliability_score INTEGER NOT NULL,
-            efficiency_score INTEGER NOT NULL,
-            ux_score INTEGER NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    
-    # Create cognitive_assessments table if it doesn't exist
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS cognitive_assessments (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            assessment_type VARCHAR(50) CHECK(assessment_type IN ('pre-test', 'post-test')),
-            spatial_visual_score REAL NOT NULL,
-            logical_math_score REAL NOT NULL,
-            attention_score REAL NOT NULL,
-            executive_score REAL NOT NULL,
-            completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    
-    # Create archetype_history table if it doesn't exist
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS archetype_history (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            session_id INTEGER REFERENCES game_sessions(id) ON DELETE CASCADE,
-            archetype_name VARCHAR(255) NOT NULL,
-            confidence_score REAL NOT NULL,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-
-    # Create training_goals table if it doesn't exist
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS training_goals (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            domain VARCHAR(255) NOT NULL,
-            metric_type VARCHAR(255) NOT NULL,
-            target_value REAL NOT NULL,
-            is_completed INTEGER DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS daily_tasks (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            task_description TEXT NOT NULL,
-            target_amount INTEGER NOT NULL,
-            current_amount INTEGER DEFAULT 0,
-            is_completed INTEGER DEFAULT 0,
-            reward_coins INTEGER DEFAULT 200,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS user_achievements (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            achievement_id VARCHAR(255) NOT NULL,
-            current_amount INTEGER DEFAULT 0,
-            is_completed INTEGER DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE(user_id, achievement_id)
-        )
-    """)
-    
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS user_streaks (
-            user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
-            last_login_date DATE,
-            current_streak INTEGER DEFAULT 1,
-            longest_streak INTEGER DEFAULT 1
-        )
-    """)
-    
-    # Programmatic column migrations:
-    try:
-        cursor.execute("ALTER TABLE game_sessions ADD COLUMN current_smooth_difficulty REAL DEFAULT 1.0")
-        print("[DB Migration] Added current_smooth_difficulty column to game_sessions")
-    except psycopg2.Error:
-        pass
-
-    try:
-        cursor.execute("ALTER TABLE game_sessions ADD COLUMN game_mode VARCHAR(50) DEFAULT 'timed'")
-        print("[DB Migration] Added game_mode column to game_sessions")
-    except psycopg2.Error:
-        pass
-    
-    # Add pin_hash column to users table (for optional PIN authentication)
-    try:
-        cursor.execute("ALTER TABLE users ADD COLUMN pin_hash VARCHAR(64) DEFAULT NULL")
-        print("[DB Migration] Added pin_hash column to users")
-    except psycopg2.Error:
-        pass
-
-    # Create indexes for query optimizations
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_performance_metrics_session ON performance_metrics (session_id)")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_game_sessions_user ON game_sessions (user_id)")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_cognitive_assessments_user ON cognitive_assessments (user_id)")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_performance_metrics_domain ON performance_metrics (cognitive_domain)")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_performance_metrics_recorded ON performance_metrics (recorded_at)")
-
-    conn.commit()
-    conn.close()
-
-# Run database schema migration on startup
-init_db()
-
-# Helper function to map difficulty levels to gameplay parameters
 def calculate_dda_parameters(difficulty_level, game_type='SpeedTap', user_avg_rt=None):
     # Bound difficulty level between 1 and 5
     level = max(1, min(5, int(difficulty_level)))
@@ -953,70 +610,61 @@ def calculate_dda_parameters(difficulty_level, game_type='SpeedTap', user_avg_rt
         }
     return configs[level]
 
-@app.route('/', methods=['GET'])
-def index():
-    return jsonify({
-        "status": "online",
-        "message": "CogniCore Telemetry & DDA API is running successfully.",
-        "endpoints": {
-            "/api/start-session": "POST - Initialize session & fetch initial difficulty parameters",
-            "/api/submit-assessment": "POST - Submit pre/post test questionnaire answers",
-            "/api/submit-metrics": "POST - Record player performance metrics",
-            "/api/dda": "POST - Query active feedback loop DDA updates & cognitive profile classifications"
-        }
-    }), 200
 
+from model import archetype_classifier
 
+ml_history_cache = {}
 
-
-
-@app.route('/metrics', methods=['GET'])
-def get_metrics():
-    conn = get_db_connection()
+def calculate_pearson_r(x, y):
+    n = len(x)
+    if n <= 1:
+        return 0.0, 1.0
+    
+    sum_x = sum(x)
+    sum_y = sum(y)
+    sum_x2 = sum(xi * xi for xi in x)
+    sum_y2 = sum(yi * yi for yi in y)
+    sum_xy = sum(xi * yi for xi, yi in zip(x, y))
+    
+    numerator = n * sum_xy - sum_x * sum_y
+    denominator = ((n * sum_x2 - sum_x * sum_x) * (n * sum_y2 - sum_y * sum_y)) ** 0.5
+    
+    if denominator == 0:
+        return 0.0, 1.0
+        
+    r = numerator / denominator
+    
+    # Try scipy if available (it was imported in app.py originally)
     try:
-        cursor = conn.cursor()
-        
-        # Total sessions
-        cursor.execute("SELECT COUNT(*) FROM game_sessions")
-        total_sessions = cursor.fetchone()[0]
-        
-        # Average score (based on accuracy rate * 100)
-        cursor.execute("SELECT AVG(accuracy_rate) FROM performance_metrics")
-        avg_acc = cursor.fetchone()[0]
-        average_score = round(avg_acc * 100, 2) if avg_acc is not None else 0.0
-        
-        # Domain breakdown (average score per domain)
-        cursor.execute("""
-            SELECT cognitive_domain, AVG(accuracy_rate) as avg_acc, COUNT(*) as cnt
-            FROM performance_metrics 
-            WHERE cognitive_domain IS NOT NULL
-            GROUP BY cognitive_domain
-        """)
-        domain_rows = cursor.fetchall()
-        
-        domain_breakdown = {}
-        for row in domain_rows:
-            domain = row['cognitive_domain']
-            acc = row['avg_acc']
-            cnt = row['cnt']
-            domain_breakdown[domain] = {
-                "average_accuracy": round(acc * 100, 2) if acc is not None else 0.0,
-                "total_records": cnt
-            }
+        from scipy import stats
+        r_exact, p_val = stats.pearsonr(x, y)
+        return float(r_exact), float(p_val)
+    except ImportError:
+        pass
             
-        return jsonify({
-            "status": "success",
-            "total_sessions": total_sessions,
-            "average_score": average_score,
-            "domain_breakdown": domain_breakdown
-        }), 200
+    try:
+        df = n - 2
+        if df > 0 and abs(r) < 1.0:
+            t = r * ((df / (1 - r * r)) ** 0.5)
+            z = abs(t)
+            t_approx = 1 / (1 + 0.2316419 * z)
+            d = 0.3989423 * (2.7182818 ** (-z * z / 2))
+            prob = d * t_approx * (0.3193815 + t_approx * (-0.3565638 + t_approx * (1.7814779 + t_approx * (-1.821256 + t_approx * 1.330274))))
+            p_val = 2.0 * prob
+            p_val = max(0.0, min(1.0, p_val))
+    except Exception:
+        p_val = 0.05 if abs(r) > 0.3 else 0.5
         
-    except Exception as e:
-        app.logger.error(f"Error in get_metrics: {e}")
-        return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
-    finally:
-        conn.close()
+    return float(r), float(p_val)
 
+def safe_float(val, default=None):
+    try:
+        return float(val) if val is not None else default
+    except (ValueError, TypeError):
+        return default
 
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+def safe_int(val, default=None):
+    try:
+        return int(val) if val is not None else default
+    except (ValueError, TypeError):
+        return default

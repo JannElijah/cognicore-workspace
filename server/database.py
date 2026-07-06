@@ -1,5 +1,8 @@
 import os
 import psycopg2
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()
 from psycopg2.extras import RealDictCursor
 from psycopg2.pool import ThreadedConnectionPool
 
