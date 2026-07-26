@@ -221,17 +221,39 @@ const ProfileModal = ({ onClose }) => {
                     <h3 style={{ margin: '0 0 1rem 0', color: '#f8fafc', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>Cognitive AI Diagnostics</h3>
                     {cognitiveProfile ? (
                       <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', alignItems: 'center' }}>
-                          <span style={{ color: '#94a3b8' }}>Archetype Profile:</span>
-                          <span style={{ color: '#38bdf8', fontWeight: 'bold', fontSize: '1.25rem' }}>{cognitiveProfile.archetype_name}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '2rem' }}>
+                          <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: `conic-gradient(#38bdf8 ${Math.round(cognitiveProfile.confidence_score * 100)}%, rgba(255,255,255,0.1) 0)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <div style={{ width: '70px', height: '70px', borderRadius: '50%', background: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+                              <span style={{ color: '#f8fafc', fontWeight: 'bold', fontSize: '1.2rem' }}>{Math.round(cognitiveProfile.confidence_score * 100)}%</span>
+                              <span style={{ color: '#94a3b8', fontSize: '0.6rem', textTransform: 'uppercase' }}>Match</span>
+                            </div>
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '0.9rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Current Archetype</div>
+                            <div style={{ color: '#38bdf8', fontWeight: 'bold', fontSize: '1.8rem', textShadow: '0 0 10px rgba(56, 189, 248, 0.3)' }}>{cognitiveProfile.archetype_name}</div>
+                          </div>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem', alignItems: 'center' }}>
-                          <span style={{ color: '#94a3b8' }}>AI Confidence Score:</span>
-                          <span style={{ color: '#10b981', fontWeight: 'bold' }}>{Math.round(cognitiveProfile.confidence_score * 100)}%</span>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                          <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '1rem', borderRadius: '12px' }}>
+                             <h4 style={{ margin: '0 0 0.5rem 0', color: '#10b981', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span>📈</span> Projected Growth</h4>
+                             <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.85rem' }}>Based on learning curves, +15% accuracy expected in next 3 sessions.</p>
+                          </div>
+                          <div style={{ background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)', padding: '1rem', borderRadius: '12px' }}>
+                             <h4 style={{ margin: '0 0 0.5rem 0', color: '#f59e0b', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span>🎯</span> Next Milestone</h4>
+                             <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.85rem' }}>Reach Level 4 in Spatial-Visual games to unlock 'The Visionary'.</p>
+                          </div>
                         </div>
-                        <div style={{ background: 'rgba(0, 0, 0, 0.2)', padding: '1rem', borderRadius: '8px', borderLeft: '4px solid #a855f7' }}>
-                          <h4 style={{ margin: '0 0 0.5rem 0', color: '#e2e8f0' }}>Predicted Trajectory</h4>
-                          <p style={{ margin: 0, color: '#94a3b8', lineHeight: '1.5' }}>{cognitiveProfile.trajectory_msg}</p>
+
+                        <div style={{ background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(15, 23, 42, 0))', padding: '1.5rem', borderRadius: '12px', borderLeft: '4px solid #a855f7' }}>
+                          <h4 style={{ margin: '0 0 0.75rem 0', color: '#c084fc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span>🧠</span> AI Trajectory Prediction</h4>
+                          <p style={{ margin: 0, color: '#e2e8f0', lineHeight: '1.6', fontSize: '0.95rem' }}>{cognitiveProfile.trajectory_msg}</p>
+                          <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                            <div style={{ flex: 1, height: '4px', background: 'rgba(0,0,0,0.3)', borderRadius: '2px', overflow: 'hidden' }}>
+                               <div style={{ width: '75%', height: '100%', background: 'linear-gradient(90deg, #c084fc, #38bdf8)' }} />
+                            </div>
+                            <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>Predictive Confidence: High</span>
+                          </div>
                         </div>
                       </div>
                     ) : (

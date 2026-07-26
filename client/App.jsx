@@ -144,6 +144,13 @@ export default function App() {
     } else {
       document.body.removeAttribute('data-theme');
     }
+
+    const activeBanner = inventory.find(i => i.item_type === 'banner' && i.is_equipped);
+    if (activeBanner) {
+      document.body.setAttribute('data-banner', activeBanner.item_id);
+    } else {
+      document.body.removeAttribute('data-banner');
+    }
   }, [inventory]);
 
   useEffect(() => {

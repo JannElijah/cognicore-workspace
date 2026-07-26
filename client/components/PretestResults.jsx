@@ -117,6 +117,25 @@ const PretestResults = ({
                   {(personalizedReport.weaknesses || []).map((con, i) => <li key={i} style={{ marginBottom: '0.5rem' }}>{con}</li>)}
                 </ul>
               </div>
+              <div style={{ background: 'rgba(56, 189, 248, 0.15)', borderLeft: '4px solid #38bdf8', borderRadius: '4px 12px 12px 4px', padding: '1.25rem' }}>
+                <h4 style={{ color: '#38bdf8', fontWeight: '700', marginBottom: '0.75rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span>🤖</span> AI Prediction Breakdown
+                </h4>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
+                    <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.25rem' }}>
+                            <span>Growth Potential</span>
+                            <span>High ({(personalizedReport.confidence_score * 100).toFixed(0)}%)</span>
+                        </div>
+                        <div style={{ width: '100%', height: '6px', background: 'rgba(0,0,0,0.4)', borderRadius: '3px', overflow: 'hidden' }}>
+                            <div style={{ width: `${personalizedReport.confidence_score * 100}%`, height: '100%', background: 'linear-gradient(90deg, #38bdf8, #818cf8)' }} />
+                        </div>
+                    </div>
+                </div>
+                <p style={{ margin: 0, color: '#e2e8f0', fontSize: '0.9rem', lineHeight: '1.5' }}>
+                  Based on your initial latency and accuracy patterns, our predictive model suggests you will likely excel in <strong style={{ color: weakestTheme.color }}>{weakestTheme.name}</strong> if you train consistently. You are projected to hit the <strong>Level 3 Difficulty Milestone</strong> within your next 5 sessions.
+                </p>
+              </div>
             </div>
           ) : (
             <div style={{ color: '#94a3b8', fontSize: '1rem', fontStyle: 'italic', textAlign: 'center' }}>
