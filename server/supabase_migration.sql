@@ -116,3 +116,22 @@ CREATE INDEX IF NOT EXISTS idx_game_sessions_user ON game_sessions (user_id);
 CREATE INDEX IF NOT EXISTS idx_cognitive_assessments_user ON cognitive_assessments (user_id);
 CREATE INDEX IF NOT EXISTS idx_performance_metrics_domain ON performance_metrics (cognitive_domain);
 CREATE INDEX IF NOT EXISTS idx_performance_metrics_recorded ON performance_metrics (recorded_at);
+
+-- Phase 3: Security & RLS
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE game_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE performance_metrics ENABLE ROW LEVEL SECURITY;
+ALTER TABLE cognitive_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE iso_evaluations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE cognitive_assessments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE archetype_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE training_goals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_inventory ENABLE ROW LEVEL SECURITY;
+ALTER TABLE daily_tasks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_achievements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_streaks ENABLE ROW LEVEL SECURITY;
+
+-- Allow read-only public access to user_profiles so Leaderboard Realtime works
+DROP POLICY IF EXISTS "Allow public read-only access to user_profiles" ON user_profiles;
+CREATE POLICY "Allow public read-only access to user_profiles" ON user_profiles FOR SELECT USING (true);
