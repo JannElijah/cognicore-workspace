@@ -1,6 +1,5 @@
 // @ts-nocheck
 import { API_BASE } from '../utils/apiClient.js';
-import Phaser from 'phaser';
 import cogniFX from '../utils/cogniFX.js';
 import useCogniStore from '../store/useCogniStore.ts';
 import { saveTelemetry, getTelemetryQueue, clearTelemetryQueue } from '../utils/indexedDB.js';
@@ -247,9 +246,15 @@ window.fetch = async function (url, options) {
 };
 
 // Global Phaser.Game class wrap to intercept and decorate scene classes
-const OriginalGame = Phaser.Game;
-Phaser.Game = class extends OriginalGame {
-    constructor(config) {
+let localPhaser = null;
+
+export function applyPhaserOverrides(PhaserInstance) {
+    if (localPhaser) return;
+    localPhaser = PhaserInstance;
+
+    const OriginalGame = localPhaser.Game;
+    localPhaser.Game = class extends OriginalGame {
+        constructor(config) {
         if (config) {
             // Apply High-Performance configuration overrides
             
@@ -292,7 +297,8 @@ Phaser.Game = class extends OriginalGame {
         }
         super(config);
     }
-};
+    };
+}
 
 function decorateSceneClass(SceneClass) {
     // Avoid double decoration
@@ -428,7 +434,7 @@ function decorateSceneClass(SceneClass) {
         const { width, height } = this.scale;
         this.ddaVignette = this.add.rectangle(width/2, height/2, width, height, 0xff0000, 0);
         this.ddaVignette.setDepth(9998); // just under UI
-        this.ddaVignette.setBlendMode(Phaser.BlendModes.MULTIPLY);
+        this.ddaVignette.setBlendMode(localPhaser.BlendModes.MULTIPLY);
 
         // --- Particle Emitter Bootstrap ---
         // Use Phaser 3.60+ particle API (particles manager with emitter config)

@@ -1,17 +1,19 @@
 import sys
 import os
+os.environ["FLASK_ENV"] = "testing"  # Prevent init_db() in app.py from running
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import pytest
-from app import app as flask_app
+from app import create_app
 from database import db as _db
 from unittest.mock import patch, MagicMock
 
 @pytest.fixture(scope="session")
 def app():
     """Create and configure a new app instance for each test session."""
-    flask_app.config.update({
+    flask_app = create_app({
         "TESTING": True,
+        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:"
     })
     
     with flask_app.app_context():

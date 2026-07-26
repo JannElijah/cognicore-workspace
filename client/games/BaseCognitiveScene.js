@@ -1,5 +1,9 @@
 import Phaser from 'phaser';
 import { CogniTheme } from '../utils/theme';
+import { applyPhaserOverrides } from './gameModeManager';
+
+// Inject high-performance optimizations and DDA decorators when Phaser is actually loaded
+applyPhaserOverrides(Phaser);
 
 export default class BaseCognitiveScene extends Phaser.Scene {
     createStandardBackground() {

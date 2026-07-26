@@ -5,6 +5,13 @@ export const DOMAIN_INFO = {
   executive_strategy: { title: 'Executive Strategy', color: '#a855f7', icon: '🧭' }
 };
 
+export const DOMAIN_LABELS = {
+  reflexes_and_focus: 'Reflexes & Focus',
+  spatial_visual_memory: 'Memory & Recall',
+  logical_mathematical: 'Logical Reasoning',
+  executive_strategy: 'Strategy & Planning'
+};
+
 export const DOMAIN_THEMES = {
   reflex: {
     color: '#38bdf8',

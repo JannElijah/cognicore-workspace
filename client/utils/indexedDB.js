@@ -36,10 +36,22 @@ export async function saveTelemetry(telemetryData) {
         console.error("IndexedDB Save Error:", e);
         // Fallback to localStorage if IndexedDB fails
         try {
-            const queue = JSON.parse(localStorage.getItem('offline_telemetry_fallback') || '[]');
+            const currentFallbackStr = localStorage.getItem('offline_telemetry_fallback') || '[]';
+            
+            // Circuit breaker: 4MB limit (approx 4 * 1024 * 1024 chars) to prevent UI stalling
+            if (currentFallbackStr.length > 4 * 1024 * 1024) {
+                console.warn("CIRCUIT BREAKER TRIPPED: localStorage offline telemetry cache exceeded 4MB. Data dropped.");
+                window.dispatchEvent(new CustomEvent('offline-cache-full'));
+                return false;
+            }
+
+            const queue = JSON.parse(currentFallbackStr);
             queue.push(telemetryData);
             localStorage.setItem('offline_telemetry_fallback', JSON.stringify(queue));
-        } catch (err) {}
+        } catch (err) {
+            console.warn("CIRCUIT BREAKER TRIPPED (Quota Exceeded): Failed to save offline telemetry.", err);
+            window.dispatchEvent(new CustomEvent('offline-cache-full'));
+        }
         return false;
     }
 }

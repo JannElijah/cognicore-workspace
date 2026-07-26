@@ -443,9 +443,9 @@ def calculate_dda_parameters(difficulty_level, game_type='SpeedTap', user_avg_rt
         # Apply dynamic AI scaling for time_limit based on user performance
         if user_avg_rt is not None and user_avg_rt > 0:
             for lvl in configs:
-                # Base formula: User's average RT + (6 - difficulty) * 1000ms grace period
-                dynamic_limit = user_avg_rt + ((6 - lvl) * 1000)
-                min_floor = 1500 if lvl == 5 else 2000
+                # Base formula: 120% of User's average RT + (6 - difficulty) * 1500ms grace period
+                dynamic_limit = (user_avg_rt * 1.2) + ((6 - lvl) * 1500)
+                min_floor = 2000 if lvl == 5 else 2500
                 configs[lvl]["time_limit"] = int(max(min_floor, min(10000, dynamic_limit)))
     elif game_type in ['EquationBalance', 'equation_balance']:
         # Map levels to game-specific variables for the Equation Balance game
