@@ -10,9 +10,9 @@ export default function LoginFlow({
   return (
     <div style={{ maxWidth: '480px', margin: '4rem auto', padding: '2.5rem', background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(20px)', border: '1px solid rgba(168, 85, 247, 0.3)', borderRadius: '16px', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', animation: 'fadeIn 0.3s ease-out' }}>
       <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-        <span style={{ fontSize: '3rem' }}>🧠</span>
+        <img src="/logo.png" alt="CogniCore" style={{ maxWidth: '380px', width: '100%', height: 'auto', margin: '0 auto', display: 'block', filter: 'drop-shadow(0 6px 24px rgba(168, 85, 247, 0.5))' }} />
       </div>
-      <h2 style={{ color: '#ffffff', margin: '0 0 0.5rem 0', textAlign: 'center', fontSize: '1.6rem', letterSpacing: '0.05em', fontWeight: 'bold' }}>COGNICORE TRAINING PORTAL</h2>
+      <h2 style={{ color: '#ffffff', margin: '0.5rem 0 0.5rem 0', textAlign: 'center', fontSize: '1.4rem', letterSpacing: '0.05em', fontWeight: 'bold' }}>TRAINING PORTAL</h2>
       <p style={{ color: '#94a3b8', fontSize: '0.875rem', margin: '0 0 2rem 0', textAlign: 'center', lineHeight: '1.5' }}>
         Enter your researcher-assigned username to synchronize session telemetry, check pre-test status, or launch training loops.
       </p>

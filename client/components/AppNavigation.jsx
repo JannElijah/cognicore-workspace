@@ -10,8 +10,8 @@ export default function AppNavigation({
   return (
       <header className="portal-header">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <div className="logo-glow" onClick={() => { setActiveGame(null); setShowDashboard(false); setPortalView('participant'); }} style={{ cursor: 'pointer', alignSelf: 'flex-start' }}>
-            🧠 COGNICORE
+          <div className="logo-glow" onClick={() => { setActiveGame(null); setShowDashboard(false); setPortalView('participant'); }} style={{ cursor: 'pointer', alignSelf: 'flex-start', display: 'flex', alignItems: 'center' }}>
+            <img src="/logo.png" alt="CogniCore" style={{ height: '42px', width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 2px 12px rgba(168, 85, 247, 0.45))' }} />
           </div>
           {currentUser !== '' && portalView === 'participant' && (
             <button 
