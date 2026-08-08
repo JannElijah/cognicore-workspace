@@ -1,5 +1,20 @@
 import React from 'react';
 import { Line, Scatter } from 'react-chartjs-2';
+const SvgAdminIcon = ({ name, color = "#38bdf8", size = 24 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ filter: `drop-shadow(0 0 5px ${color}80)`, verticalAlign: 'middle', marginRight: '8px' }}>
+    {name === 'Microscope' && <path d="M12 2a2 2 0 00-2 2v2a2 2 0 00-2 2v2a2 2 0 00-2 2v2a2 2 0 00-2 2v4a2 2 0 002 2h12a2 2 0 002-2v-4a2 2 0 00-2-2v-2a2 2 0 00-2-2v-2a2 2 0 00-2-2V4a2 2 0 00-2-2zm0 2h.01M9 6v2m6-2v2m-8 2v2m10-2v2" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+    {name === 'Inbox' && <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+    {name === 'ChartBar' && <path d="M18 20V10M12 20V4M6 20v-4" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+    {name === 'Robot' && <path d="M12 2v2M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9zm-4 2h2m10 0h2" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+    {name === 'ChartLine' && <path d="M3 3v18h18M3 16l6-6 4 4 8-8" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+    {name === 'Lightbulb' && <path d="M9.663 17h4.673M12 3v1m-6.364 1.636l.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+    {name === 'Check' && <path d="M5 13l4 4L19 7" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+    {name === 'Cross' && <path d="M6 18L18 6M6 6l12 12" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+    {name === 'Gear' && <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065zM15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+    {name === 'Target' && <path d="M12 22a10 10 0 100-20 10 10 0 000 20zm0-4a6 6 0 100-12 6 6 0 000 12zm0-4a2 2 0 100-4 2 2 0 000 4z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+    {name === 'Lightning' && <path d="M13 10V3L4 14h7v7l9-11h-7z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+  </svg>
+);
 
 export default function AdminPanel(props) {
   const { 
@@ -20,7 +35,7 @@ export default function AdminPanel(props) {
           // ==========================================
           <div className="dashboard-content" style={{ animation: 'fadeIn 0.4s ease-out' }}>
             <div className="intro-card" style={{ padding: '2rem', marginBottom: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-              <h1 style={{ fontSize: '2.25rem' }}>🔬 Clinical Research Portal</h1>
+              <h1 style={{ fontSize: '2.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><SvgAdminIcon name="Microscope" color="#ffffff" size={36} /> Clinical Research Portal</h1>
               <p style={{ maxWidth: '800px', margin: '0 auto' }}>Execute Scipy-backed paired t-test cohort verifications and review statistical significance reports for experimental serious game evaluations.</p>
               <a 
                 href="http://127.0.0.1:5000/api/export-csv" 
@@ -43,7 +58,7 @@ export default function AdminPanel(props) {
                 onMouseOver={(e) => e.target.style.filter = "brightness(1.1)"}
                 onMouseOut={(e) => e.target.style.filter = "brightness(1.0)"}
               >
-                📥 Download Cohort Telemetry Report (.CSV)
+                <SvgAdminIcon name="Inbox" color="#ffffff" /> Download Cohort Telemetry Report (.CSV)
               </a>
             </div>
 
@@ -73,7 +88,7 @@ export default function AdminPanel(props) {
                   gap: '0.5rem'
                 }}
               >
-                📊 Cohort Statistics & ISO 25010
+                <SvgAdminIcon name="ChartBar" color={activeResearcherTab === 'cohort-stats' ? '#38bdf8' : '#94a3b8'} /> Cohort Statistics & ISO 25010
               </button>
               <button
                 onClick={() => setActiveResearcherTab('ai-sandbox')}
@@ -92,7 +107,7 @@ export default function AdminPanel(props) {
                   gap: '0.5rem'
                 }}
               >
-                🤖 AI Sandbox & Clustering
+                <SvgAdminIcon name="Robot" color={activeResearcherTab === 'ai-sandbox' ? '#38bdf8' : '#94a3b8'} /> AI Sandbox & Clustering
               </button>
             </div>
 
@@ -200,7 +215,7 @@ export default function AdminPanel(props) {
               {/* Statistical Output Results Table */}
               {evalResult && (
                 <div style={{ background: '#09090b', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', animation: 'fadeIn 0.3s ease-out' }}>
-                  <h4 style={{ color: '#38bdf8', marginBottom: '1rem', fontWeight: 'bold' }}>🔬 Paired t-test Evaluation Report</h4>
+                  <h4 style={{ color: '#38bdf8', marginBottom: '1rem', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}><SvgAdminIcon name="Microscope" color="#38bdf8" /> Paired t-test Evaluation Report</h4>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
                     <div style={{ borderRight: '1px solid rgba(255,255,255,0.05)', paddingRight: '1rem' }}>
                       <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Cohort Sample Size (n)</div>
@@ -257,13 +272,13 @@ export default function AdminPanel(props) {
                     fontSize: '0.9rem',
                     textAlign: 'center'
                   }}>
-                    {evalResult.statistically_significant ? '✅ ' : '❌ '} {evalResult.hypothesis_result} (p &lt; 0.05)
+                    {evalResult.statistically_significant ? <SvgAdminIcon name="Check" color="#4ade80" size={16} /> : <SvgAdminIcon name="Cross" color="#ef4444" size={16} />} {evalResult.hypothesis_result} (p &lt; 0.05)
                   </div>
                 </div>
               )}
             </div>
 
-            <h2 className="section-title" style={{ marginTop: '2.5rem' }}>🔬 Interactive Statistical Sandbox & Correlation Tool</h2>
+            <h2 className="section-title" style={{ marginTop: '2.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><SvgAdminIcon name="Microscope" color="#ffffff" size={28} /> Interactive Statistical Sandbox & Correlation Tool</h2>
             <div className="game-card" style={{ width: '100%', alignItems: 'stretch', padding: '2rem', marginBottom: '2rem', boxSizing: 'border-box' }}>
               <div style={{ background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.2)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
                 <span style={{ fontWeight: 'bold', color: '#38bdf8', fontSize: '0.9rem' }}>Pillar 1 Dynamic Correlation Analysis & Cohort Comparison</span>
@@ -331,7 +346,7 @@ export default function AdminPanel(props) {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', alignItems: 'stretch' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', textAlign: 'left' }}>
                     <div style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '1.5rem' }}>
-                      <h4 style={{ color: '#38bdf8', fontSize: '1.05rem', margin: '0 0 1rem 0', fontWeight: 'bold' }}>📉 Pearson Correlation Coefficient</h4>
+                      <h4 style={{ color: '#38bdf8', fontSize: '1.05rem', margin: '0 0 1rem 0', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}><SvgAdminIcon name="ChartLine" color="#38bdf8" /> Pearson Correlation Coefficient</h4>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
                         <div style={{ borderRight: '1px solid rgba(255,255,255,0.05)', paddingRight: '0.5rem' }}>
                           <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Pearson r Coefficient</span>
@@ -355,13 +370,13 @@ export default function AdminPanel(props) {
                         </div>
                       </div>
                       <div style={{ marginTop: '1.5rem', padding: '0.85rem', borderRadius: '8px', fontSize: '0.85rem', lineHeight: '1.45', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: '#e2e8f0' }}>
-                        <strong>💡 Interpretation:</strong> {correlationResult.interpretation}
+                        <strong><SvgAdminIcon name="Lightbulb" color="#f59e0b" size={16} /> Interpretation:</strong> {correlationResult.interpretation}
                       </div>
                     </div>
 
                     {learningCurves && (
                       <div style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '1.5rem' }}>
-                        <h4 style={{ color: '#4ade80', fontSize: '1.05rem', margin: '0 0 0.75rem 0', fontWeight: 'bold' }}>📈 Learning Curves Analysis</h4>
+                        <h4 style={{ color: '#4ade80', fontSize: '1.05rem', margin: '0 0 0.75rem 0', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}><SvgAdminIcon name="ChartLine" color="#4ade80" /> Learning Curves Analysis</h4>
                         <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: '0 0 1.25rem 0' }}>
                           Compare training progression rates side-by-side. View longitudinal improvement over sessions.
                         </p>
@@ -433,7 +448,7 @@ export default function AdminPanel(props) {
               {/* Active Model Status Card */}
               <div className="game-card" style={{ flex: '1', alignItems: 'stretch', padding: '2rem', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '16px', backdropFilter: 'blur(20px)', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
                 <h3 style={{ color: '#38bdf8', marginBottom: '1.25rem', fontWeight: 'bold', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  🤖 Active Model Status
+                  <SvgAdminIcon name="Robot" color="#38bdf8" size={28} /> Active Model Status
                 </h3>
                 
                 {modelStatus ? (
@@ -491,7 +506,7 @@ export default function AdminPanel(props) {
               {/* Retrain Control Panel */}
               <div className="game-card" style={{ flex: '1', alignItems: 'stretch', padding: '2rem', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '16px', backdropFilter: 'blur(20px)', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
                 <h3 style={{ color: '#38bdf8', marginBottom: '1.25rem', fontWeight: 'bold', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  ⚙️ Retrain & Optimize Engine
+                  <SvgAdminIcon name="Gear" color="#38bdf8" size={28} /> Retrain & Optimize Engine
                 </h3>
                 <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: '0 0 1.5rem 0', lineHeight: '1.4' }}>
                   Trigger online retraining of the supervised DDA classifier. The engine runs unsupervised K-Means clustering ($k=3$) over 7 telemetry dimensions to form fresh player archetypes, then retrains a Random Forest Classifier via Grid Search to predict these labels.
@@ -525,7 +540,7 @@ export default function AdminPanel(props) {
                       Executing Grid Search Retraining...
                     </>
                   ) : (
-                    '⚡ Retrain & Tune Classifier'
+                    <><SvgAdminIcon name="Lightning" color="#ffffff" /> Retrain & Tune Classifier</>
                   )}
                 </button>
 
@@ -558,8 +573,8 @@ export default function AdminPanel(props) {
               
               {/* Centroids Table */}
               <div className="game-card" style={{ flex: '1', alignItems: 'stretch', padding: '2rem', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '16px' }}>
-                <h3 style={{ color: '#38bdf8', marginBottom: '1.25rem', fontWeight: 'bold', fontSize: '1.25rem' }}>
-                  📊 Dynamic Archetype Centroids
+                <h3 style={{ color: '#38bdf8', marginBottom: '1.25rem', fontWeight: 'bold', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <SvgAdminIcon name="ChartBar" color="#38bdf8" size={28} /> Dynamic Archetype Centroids
                 </h3>
                 <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '1.25rem' }}>
                   The average performance values for each discovered archetype, computed dynamically across the database cohort:
@@ -606,8 +621,8 @@ export default function AdminPanel(props) {
 
               {/* Classification Report Card */}
               <div className="game-card" style={{ flex: '1', alignItems: 'stretch', padding: '2rem', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '16px' }}>
-                <h3 style={{ color: '#38bdf8', marginBottom: '1.25rem', fontWeight: 'bold', fontSize: '1.25rem' }}>
-                  📈 Classification Performance Report
+                <h3 style={{ color: '#38bdf8', marginBottom: '1.25rem', fontWeight: 'bold', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <SvgAdminIcon name="ChartLine" color="#38bdf8" size={28} /> Classification Performance Report
                 </h3>
                 {retrainMetrics && retrainMetrics.classification_report ? (
                   <div style={{ overflowX: 'auto' }}>
@@ -647,7 +662,7 @@ export default function AdminPanel(props) {
                   </div>
                 ) : (
                   <div style={{ border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '10px', padding: '3rem 1rem', textAlign: 'center', fontSize: '0.85rem', color: '#64748b' }}>
-                    💡 Run model retraining to retrieve classification metrics (precision, recall, f1-score).
+                    <SvgAdminIcon name="Lightbulb" color="#f59e0b" size={16} /> Run model retraining to retrieve classification metrics (precision, recall, f1-score).
                   </div>
                 )}
               </div>
@@ -655,8 +670,8 @@ export default function AdminPanel(props) {
 
             {/* 2D SCATTER PLOT VIEW */}
             <div className="game-card" style={{ width: '100%', alignItems: 'stretch', padding: '2rem', boxSizing: 'border-box', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '16px' }}>
-              <h3 style={{ color: '#38bdf8', marginBottom: '0.5rem', fontWeight: 'bold', fontSize: '1.25rem' }}>
-                🎯 Interactive 2D Archetype Space
+              <h3 style={{ color: '#38bdf8', marginBottom: '0.5rem', fontWeight: 'bold', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <SvgAdminIcon name="Target" color="#38bdf8" size={28} /> Interactive 2D Archetype Space
               </h3>
               <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: '0 0 1.5rem 0' }}>
                 Plot sessions in a 2-dimensional scatter space colored by cluster archetype. Select metrics for X and Y axes to observe feature boundaries.
