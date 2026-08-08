@@ -140,7 +140,7 @@ const OfflineCacheWarningBanner = ({ isVisible, onClose }) => {
   );
 };
 
-import { DOMAIN_INFO, DOMAIN_THEMES, DOMAINS_LIST, COGNITIVE_QUESTIONS, DOMAIN_LABELS } from './utils/constants.js';
+import { DOMAIN_INFO, DOMAIN_THEMES, DOMAINS_LIST, COGNITIVE_QUESTIONS, DOMAIN_LABELS } from './utils/constants.jsx';
 
 export default function App() {
   const { coins, totalXp, inventory, fetchInventory } = useCogniStore();
