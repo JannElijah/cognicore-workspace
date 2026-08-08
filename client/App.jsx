@@ -115,6 +115,27 @@ const ProgressRing = ({ radius, stroke, progress, color }) => {
   );
 };
 
+const SvgLauncherIcon = ({ name, style }) => {
+  const defaultStyle = { filter: 'drop-shadow(0 0 5px rgba(255,255,255,0.5))', flexShrink: 0, ...style };
+  
+  if (name === 'timed') {
+    return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={defaultStyle}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+  } else if (name === 'zen') {
+    return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={defaultStyle}><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>;
+  } else if (name === 'survival') {
+    return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={defaultStyle}><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>;
+  } else if (name === 'target') {
+    return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={defaultStyle}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>;
+  } else if (name === 'time_attack') {
+    return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={defaultStyle}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>;
+  } else if (name === 'endurance') {
+    return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={defaultStyle}><rect x="1" y="6" width="18" height="12" rx="2" ry="2"/><line x1="23" y1="13" x2="23" y2="11"/><line x1="6" y1="10" x2="6" y2="14"/><line x1="10" y1="10" x2="10" y2="14"/><line x1="14" y1="10" x2="14" y2="14"/></svg>;
+  } else if (name === 'start') {
+    return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={defaultStyle}><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>;
+  }
+  return null;
+};
+
 const OfflineCacheWarningBanner = ({ isVisible, onClose }) => {
   if (!isVisible) return null;
   return (
@@ -3202,12 +3223,12 @@ export default function App() {
                   
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                     {[
-                      { id: 'timed', label: '⏱️ Standard Timed', desc: 'Standard 2-minute timed session.' },
-                      { id: 'zen', label: '🌸 Zen Mode', desc: 'Unlimited time, counts up, no pressure.' },
-                      { id: 'survival', label: '❤️ Survival Mode', desc: 'Start with 3 lives. Errors deduct lives.' },
-                      { id: 'target', label: '🎯 Objective Target', desc: 'Ends after exactly 10 trials.' },
-                      { id: 'time_attack', label: '⚡ Time Attack', desc: 'Race to get 10 correct hits.' },
-                      { id: 'endurance', label: '🔋 Fatigue Endurance', desc: 'Start with 20s. Hit adds +2s, miss subtracts -5s.' }
+                      { id: 'timed', label: 'Standard Timed', desc: 'Standard 2-minute timed session.' },
+                      { id: 'zen', label: 'Zen Mode', desc: 'Unlimited time, counts up, no pressure.' },
+                      { id: 'survival', label: 'Survival Mode', desc: 'Start with 3 lives. Errors deduct lives.' },
+                      { id: 'target', label: 'Objective Target', desc: 'Ends after exactly 10 trials.' },
+                      { id: 'time_attack', label: 'Time Attack', desc: 'Race to get 10 correct hits.' },
+                      { id: 'endurance', label: 'Fatigue Endurance', desc: 'Start with 20s. Hit adds +2s, miss subtracts -5s.' }
                     ].map(mode => {
                       const isSelected = selectedGameMode === mode.id;
                       const isHovered = hoveredMode === mode.id;
@@ -3236,7 +3257,10 @@ export default function App() {
                             boxShadow: isSelected ? `0 0 10px ${DOMAIN_THEMES[pendingGameToLaunch.themeClass]?.glow}` : 'none'
                           }}
                         >
-                          <span style={{ fontWeight: 'bold', fontSize: '0.95rem' }}>{mode.label}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <SvgLauncherIcon name={mode.id} style={{ color: isSelected ? themeColor : '#cbd5e1' }} />
+                            <span style={{ fontWeight: 'bold', fontSize: '0.95rem' }}>{mode.label}</span>
+                          </div>
                           <span style={{ fontSize: '0.75rem', color: isSelected ? '#ffffff' : '#94a3b8' }}>{mode.desc}</span>
                         </button>
                       );
@@ -3259,32 +3283,32 @@ export default function App() {
                     const activeModeId = hoveredMode || selectedGameMode || 'timed';
                     const modeDetails = {
                       timed: {
-                        title: '⏱️ Standard Timed Rules',
+                        title: 'Standard Timed Rules',
                         explanation: 'Traditional cognitive evaluation mode.',
                         rules: 'You have exactly 2 minutes (120 seconds) to complete as many correct trials as possible. Speed and accuracy are balanced in real-time by the DDA engine to calculate difficulty adjustments.'
                       },
                       zen: {
-                        title: '🌸 Zen Mode Rules',
+                        title: 'Zen Mode Rules',
                         explanation: 'Low-stress cognitive training & warmup practice.',
                         rules: 'Play at your own pace with no ticking timers or life counters. Perfect for warm-ups, learning the game mechanics, or relaxing without speed-accuracy time pressure.'
                       },
                       survival: {
-                        title: '❤️ Survival Mode Rules',
+                        title: 'Survival Mode Rules',
                         explanation: 'High-stakes precision focus training.',
                         rules: 'You start the session with exactly 3 lives. Every incorrect input or element timeout subtracts 1 life. The session continues indefinitely until all lives are depleted. Focus on high accuracy!'
                       },
                       target: {
-                        title: '🎯 Objective Target Rules',
+                        title: 'Objective Target Rules',
                         explanation: 'Fixed-length cognitive efficiency benchmark.',
                         rules: 'The game concludes after exactly 10 trials. Your goal is to maximize accuracy rate and minimize average reaction time. Highly effective for clean pre/post benchmark scoring.'
                       },
                       time_attack: {
-                        title: '⚡ Time Attack Rules',
+                        title: 'Time Attack Rules',
                         explanation: 'Rapid motor execution challenge.',
                         rules: 'Race against the clock to complete exactly 10 correct matches as fast as possible. Any mistakes will delay your timer progress. Speed is key!'
                       },
                       endurance: {
-                        title: '🔋 Fatigue Endurance Rules',
+                        title: 'Fatigue Endurance Rules',
                         explanation: 'Adaptive threshold capacity training.',
                         rules: 'Start the session with a 20-second timer. Every correct trial adds +2 seconds of bonus time, while each incorrect trial subtracts -5 seconds. Survive and score as long as you can!'
                       }
@@ -3293,7 +3317,8 @@ export default function App() {
                     return (
                       <>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <strong style={{ fontSize: '0.95rem', color: DOMAIN_THEMES[pendingGameToLaunch.themeClass]?.color || '#ffffff' }}>
+                          <strong style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.95rem', color: DOMAIN_THEMES[pendingGameToLaunch.themeClass]?.color || '#ffffff' }}>
+                            <SvgLauncherIcon name={activeModeId} />
                             {modeDetails.title} {hoveredMode && <span style={{ fontSize: '0.7rem', background: 'rgba(255,255,255,0.08)', padding: '0.1rem 0.4rem', borderRadius: '4px', color: '#94a3b8', marginLeft: '0.5rem' }}>Previewing</span>}
                           </strong>
                           <span style={{ fontSize: '0.75rem', fontStyle: 'italic', color: '#94a3b8' }}>
@@ -3346,7 +3371,10 @@ export default function App() {
                       transition: 'filter 0.2s'
                     }}
                   >
-                    Start Training Session 🚀
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                      <span>Start Training Session</span>
+                      <SvgLauncherIcon name="start" />
+                    </div>
                   </button>
                 </div>
               </div>
