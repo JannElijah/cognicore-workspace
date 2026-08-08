@@ -431,7 +431,7 @@ const handleRestart = () => {
 
                     <div style={{ marginBottom: '2rem', textAlign: 'left' }}>
                         <div className='stat-row'>
-                            <span>🏆 Final Score</span>
+                            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'4px',filter:'drop-shadow(0 0 4px rgba(251,191,36,0.8))'}} xmlns="http://www.w3.org/2000/svg"><path d="M6 2h12v10a6 6 0 01-12 0V2z" fill="#fbbf24"/><path d="M5 7H2a4 4 0 004 4M19 7h3a4 4 0 01-4 4" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round"/><line x1="12" y1="18" x2="12" y2="21" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round"/><line x1="8" y1="21" x2="16" y2="21" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round"/></svg> Final Score</span>
                             <span className="stat-val" style={{ color: '#4ade80'  }}>{finalStats?.score}</span>
                         </div>
                         <div className='stat-row'>
@@ -443,15 +443,15 @@ const handleRestart = () => {
                             <span className="stat-val" style={{ color: '#ef4444'  }}>{finalStats?.misses}</span>
                         </div>
                         <div className='stat-row'>
-                            <span>🎯 Induction Accuracy</span>
+                            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'4px',filter:'drop-shadow(0 0 4px rgba(56,189,248,0.7))'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="#38bdf8" strokeWidth="1.5"/><circle cx="12" cy="12" r="5" stroke="#38bdf8" strokeWidth="1.5"/><circle cx="12" cy="12" r="2" fill="#38bdf8"/></svg> Induction Accuracy</span>
                             <span className="stat-val" style={{ color: grade  }}>{accuracy}%</span>
                         </div>
                         <div className='stat-row'>
-                            <span>📈 Max Difficulty Achieved</span>
+                            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'4px',filter:'drop-shadow(0 0 4px rgba(74,222,128,0.7))'}} xmlns="http://www.w3.org/2000/svg"><polyline points="2,17 8,11 13,16 22,7" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><polyline points="17,7 22,7 22,12" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> Max Difficulty Achieved</span>
                             <span className="stat-val" style={{ color: '#a78bfa'  }}>Level {finalStats?.difficultyLevel}</span>
                         </div>
                         <div style={{ ...styles.statRow, border: 'none' }}>
-                            <span>⚡ First Response Latency</span>
+                            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'4px',filter:'drop-shadow(0 0 4px rgba(250,204,21,0.9))'}} xmlns="http://www.w3.org/2000/svg"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#facc15"/></svg> First Response Latency</span>
                             <span className="stat-val" style={{ color: '#38bdf8'  }}>
                                 {finalStats?.hesitation_ms ? `${Math.round(finalStats.hesitation_ms)}ms` : 'N/A'}
                             </span>

@@ -221,7 +221,7 @@ export default function PriorityQueueGame({
                     <div style={S.featureItem}><span style={S.featureIcon}>🏃</span>Animated conveyor belt</div>
                     <div style={S.featureItem}><span style={S.featureIcon}>✋</span>Drag &amp; drop sorting</div>
                     <div style={S.featureItem}><span style={S.featureIcon}>🎯</span>Eisenhower matrix logic</div>
-                    <div style={S.featureItem}><span style={S.featureIcon}>⚡</span>Speed-bonus scoring</div>
+                    <div style={S.featureItem}><span style={S.featureIcon}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(250,204,21,0.9))'}} xmlns="http://www.w3.org/2000/svg"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#facc15"/></svg></span>Speed-bonus scoring</div>
                 </div>
 
                 {error && <div style={S.errorMsg}>{error}</div>}

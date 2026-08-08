@@ -22,9 +22,10 @@ export default function AppNavigation({
               onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
             >
               <div style={{ width: '42px', height: '42px', background: 'rgba(56, 189, 248, 0.15)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '2px solid #38bdf8' }}>
-                {inventory.find(i => i.item_type === 'avatar' && i.is_equipped)?.item_id === 'avatar-robot' ? '🤖' :
-                 inventory.find(i => i.item_type === 'avatar' && i.is_equipped)?.item_id === 'avatar-brain' ? '🧠' :
-                 inventory.find(i => i.item_type === 'avatar' && i.is_equipped)?.item_id === 'avatar-hacker' ? '👨‍💻' : '👤'}
+                 {inventory.find(i => i.item_type === 'avatar' && i.is_equipped)?.item_id === 'avatar-robot' ? '🤖' :
+                  inventory.find(i => i.item_type === 'avatar' && i.is_equipped)?.item_id === 'avatar-brain' ? '🧠' :
+                  inventory.find(i => i.item_type === 'avatar' && i.is_equipped)?.item_id === 'avatar-hacker' ? '👨‍💻' :
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 0 4px rgba(56,189,248,0.5))' }}><circle cx="12" cy="8" r="4" fill="#38bdf8"/><path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round"/></svg>}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: '120px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -32,9 +33,22 @@ export default function AppNavigation({
                   <span style={{ fontSize: '0.75rem', color: '#a855f7', fontWeight: 'bold' }}>Lv. {currentLevel}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
-                  <span style={{ fontSize: '0.75rem', color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '0.2rem', fontWeight: '600' }}>🪙 {coins}</span>
+                  <span style={{ fontSize: '0.75rem', color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '0.2rem', fontWeight: '600' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#fbbf24" style={{ filter: 'drop-shadow(0 0 4px rgba(251,191,36,0.7))', flexShrink: 0 }} xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="12" cy="12" r="11" fill="#fbbf24"/>
+                      <circle cx="12" cy="12" r="8" fill="#f59e0b"/>
+                      <text x="12" y="16.5" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#78350f" fontFamily="Arial">C</text>
+                    </svg>
+                    {coins}
+                  </span>
                   {dailyRewardData && dailyRewardData.streak > 0 && (
-                    <span style={{ fontSize: '0.75rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.1rem', fontWeight: 'bold' }}>🔥 {dailyRewardData.streak}</span>
+                    <span style={{ fontSize: '0.75rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.25rem', fontWeight: 'bold' }}>
+                      <svg width="13" height="14" viewBox="0 0 13 16" fill="none" style={{ filter: 'drop-shadow(0 0 5px rgba(239,68,68,0.85))', flexShrink: 0 }} xmlns="http://www.w3.org/2000/svg">
+                        <path d="M6.5 0C6.5 0 2 5 2 9C2 11.761 4.015 14 6.5 14C8.985 14 11 11.761 11 9C11 6.8 9.8 5 8.5 3.8C8.5 5.3 7.5 6.3 6.5 6.3C5.5 6.3 4.5 5.3 4.5 4.2C4.5 3.1 5.5 1.5 6.5 0Z" fill="#ef4444"/>
+                        <circle cx="6.5" cy="10.5" r="2" fill="#fbbf24"/>
+                      </svg>
+                      {dailyRewardData.streak}
+                    </span>
                   )}
                   <div style={{ flex: 1, height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
                     <div style={{ width: `${xpPercent}%`, height: '100%', background: 'linear-gradient(to right, #38bdf8, #a855f7)' }}></div>
@@ -61,7 +75,7 @@ export default function AppNavigation({
                   transition: 'all 0.2s'
                 }}
               >
-                🎮 Participant Portal
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="#ffffff" style={{ display: 'inline', verticalAlign: 'middle', marginRight: '5px', filter: 'drop-shadow(0 0 3px rgba(255,255,255,0.4))' }} xmlns="http://www.w3.org/2000/svg"><rect x="2" y="3" width="20" height="14" rx="2" fill="none" stroke="currentColor" strokeWidth="2"/><path d="M8 21h8M12 17v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><rect x="5" y="7" width="3" height="3" rx="0.5" fill="currentColor"/><rect x="11" y="7" width="3" height="3" rx="0.5" fill="currentColor"/><rect x="5" y="12" width="3" height="3" rx="0.5" fill="currentColor"/><rect x="11" y="12" width="3" height="3" rx="0.5" fill="currentColor"/></svg> Participant Portal
               </button>
               <button 
                 onClick={() => { setPortalView('researcher'); }}
@@ -77,7 +91,7 @@ export default function AppNavigation({
                   transition: 'all 0.2s'
                 }}
               >
-                🔬 Researcher Portal
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ display: 'inline', verticalAlign: 'middle', marginRight: '5px', filter: 'drop-shadow(0 0 3px rgba(255,255,255,0.4))' }} xmlns="http://www.w3.org/2000/svg"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="currentColor"/></svg> Researcher Portal
               </button>
             </div>
           )}
@@ -104,7 +118,11 @@ export default function AppNavigation({
                   height: '38px'
                 }}
               >
-                <span>🛒</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 0 5px rgba(251,191,36,0.7))' }} xmlns="http://www.w3.org/2000/svg">
+                  <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" fill="#fbbf24" fillOpacity="0.15" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M3 6h18" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round"/>
+                  <path d="M16 10a4 4 0 01-8 0" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </button>
 
 
@@ -130,7 +148,16 @@ export default function AppNavigation({
                   height: '38px'
                 }}
               >
-                {showDashboard ? '🔙' : '📊'}
+                {showDashboard
+                  ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.5))' }} xmlns="http://www.w3.org/2000/svg">
+                      <path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 0 5px rgba(56,189,248,0.7))' }} xmlns="http://www.w3.org/2000/svg">
+                      <rect x="3" y="12" width="4" height="9" rx="1" fill="#38bdf8"/>
+                      <rect x="10" y="6" width="4" height="15" rx="1" fill="#38bdf8"/>
+                      <rect x="17" y="3" width="4" height="18" rx="1" fill="#38bdf8" fillOpacity="0.7"/>
+                    </svg>
+                }
               </button>
             </div>
           )}
@@ -160,7 +187,18 @@ export default function AppNavigation({
             onMouseOver={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.1)'}
             onMouseOut={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.05)'}
           >
-            {globalMuted ? '🔇' : '🔊'}
+            {globalMuted
+              ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M11 5L6 9H2v6h4l5 4V5z" fill="currentColor"/>
+                  <line x1="23" y1="9" x2="17" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  <line x1="17" y1="9" x2="23" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 0 4px rgba(56,189,248,0.6))' }} xmlns="http://www.w3.org/2000/svg">
+                  <path d="M11 5L6 9H2v6h4l5 4V5z" fill="currentColor"/>
+                  <path d="M19.07 4.93a10 10 0 010 14.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  <path d="M15.54 8.46a5 5 0 010 7.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+            }
           </button>
 
           <button 
@@ -185,7 +223,14 @@ export default function AppNavigation({
             onMouseOver={(e) => { if (!showSoundTuner) e.target.style.background = 'rgba(255, 255, 255, 0.1)' }}
             onMouseOut={(e) => { if (!showSoundTuner) e.target.style.background = 'rgba(255, 255, 255, 0.05)' }}
           >
-            🎛️
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 0 4px rgba(168,85,247,0.7))' }}>
+              <line x1="4" y1="6" x2="20" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <circle cx="8" cy="6" r="2.5" fill="currentColor"/>
+              <line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <circle cx="16" cy="12" r="2.5" fill="currentColor"/>
+              <line x1="4" y1="18" x2="20" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <circle cx="10" cy="18" r="2.5" fill="currentColor"/>
+            </svg>
           </button>
 
           <div className="portal-status" style={{ marginLeft: '1rem' }}>

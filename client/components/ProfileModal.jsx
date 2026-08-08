@@ -125,7 +125,7 @@ const ProfileModal = ({ onClose }) => {
   const lineOptions = { scales: { x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } }, y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' }, min: 0, max: 100 } }, plugins: { legend: { display: false } }, maintainAspectRatio: false };
 
   const equippedAvatar = (inventory || []).find(i => i.item_type === 'avatar' && i.is_equipped)?.item_id;
-  const avatarIcon = equippedAvatar === 'avatar-robot' ? '🤖' : equippedAvatar === 'avatar-brain' ? '🧠' : equippedAvatar === 'avatar-hacker' ? '👨‍💻' : '👤';
+  const avatarIcon = equippedAvatar === 'avatar-robot' ? '🤖' : equippedAvatar === 'avatar-brain' ? '🧠' : equippedAvatar === 'avatar-hacker' ? '👨‍💻' : <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 0 5px rgba(56,189,248,0.5))' }}><circle cx="12" cy="8" r="4" fill="#38bdf8"/><path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round"/></svg>;
 
   const equippedBanner = (inventory || []).find(i => i.item_type === 'banner' && i.is_equipped)?.item_id;
   const bannerBackgrounds = {
@@ -156,8 +156,13 @@ const ProfileModal = ({ onClose }) => {
               <div>
                 <h2 style={{ color: '#f8fafc', margin: '0 0 0.25rem 0', fontSize: '1.5rem' }}>{username}</h2>
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                  <span style={{ color: '#fbbf24', fontWeight: 'bold' }}>🪙 {coins} Coins</span>
-                  <span style={{ color: '#a855f7', fontWeight: 'bold' }}>⭐ Level {level}</span>
+                  <span style={{ color: '#fbbf24', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><svg width="16" height="16" viewBox="0 0 24 24" style={{ filter: 'drop-shadow(0 0 4px rgba(251,191,36,0.7))', flexShrink: 0 }} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="11" fill="#fbbf24"/><circle cx="12" cy="12" r="8" fill="#f59e0b"/><text x="12" y="16.5" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#78350f" fontFamily="Arial">C</text></svg> {coins} Coins</span>
+                  <span style={{ color: '#a855f7', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#a855f7" style={{ filter: 'drop-shadow(0 0 4px rgba(168,85,247,0.8))', flexShrink: 0 }} xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#a855f7"/>
+                    </svg>
+                    Level {level}
+                  </span>
                 </div>
               </div>
             </div>
@@ -246,7 +251,7 @@ const ProfileModal = ({ onClose }) => {
                         </div>
 
                         <div style={{ background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(15, 23, 42, 0))', padding: '1.5rem', borderRadius: '12px', borderLeft: '4px solid #a855f7' }}>
-                          <h4 style={{ margin: '0 0 0.75rem 0', color: '#c084fc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span>🧠</span> AI Trajectory Prediction</h4>
+                          <h4 style={{ margin: '0 0 0.75rem 0', color: '#c084fc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(192,132,252,0.7))',verticalAlign:'middle'}} xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="7" rx="7" ry="5" stroke="#c084fc" strokeWidth="1.8"/><path d="M5 10c0 3 3 6 7 6s7-3 7-6" stroke="#c084fc" strokeWidth="1.8" strokeLinecap="round"/><line x1="9" y1="13" x2="9" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/><line x1="15" y1="13" x2="15" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/><line x1="7" y1="19" x2="17" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/></svg></span> AI Trajectory Prediction</h4>
                           <p style={{ margin: 0, color: '#e2e8f0', lineHeight: '1.6', fontSize: '0.95rem' }}>{cognitiveProfile.trajectory_msg}</p>
                           <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
                             <div style={{ flex: 1, height: '4px', background: 'rgba(0,0,0,0.3)', borderRadius: '2px', overflow: 'hidden' }}>
