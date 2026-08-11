@@ -4,7 +4,7 @@ import { Radar, Line } from 'react-chartjs-2';
 export default function Dashboard({
   activeDashboardUser, setActiveDashboardUser, fetchDashboardData, chartsLoading, chartsError,
   cohortComparison, latestSessionMetrics, getRadarChartData, radarOptions, getPerformanceTrendData,
-  performanceTrendOptions, getConsistencyTrendData, sessionHistory, archetypeHistory
+  performanceTrendOptions, getConsistencyTrendData, sessionHistory, archetypeHistory, setActiveGame, prescribedGame
 }) {
   return (
           // ==========================================
@@ -60,7 +60,7 @@ export default function Dashboard({
             </div>
 
             {/* Cognitive Skills Score Row */}
-            <h2 className="section-title">Cognitive Domain Profiling</h2>
+            <h2 className="section-title">Cognitive Domain Profiling <span title="Scoring system based on standard clinical normative baselines for reaction time and accuracy." style={{fontSize: '1rem', cursor: 'help'}}>ⓘ</span></h2>
             <div className="game-grid" style={{ marginBottom: '3rem' }}>
               
               {/* Spatial-Visual Memory Card */}
@@ -242,7 +242,11 @@ export default function Dashboard({
               
               {/* Difficulty Adaptation Plot */}
               <div className="game-card" style={{ width: '100%', alignItems: 'stretch', boxSizing: 'border-box' }}>
-                <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>📈 Difficulty Adaptation History</h3>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>📈 Difficulty Adaptation History
+                  <span title="Features Adaptive Task Staircasing: Difficulty scales based on real-time performance." style={{ fontSize: '0.9rem', color: '#94a3b8', display: 'block', marginTop: '0.4rem', cursor: 'help' }}>
+                    [Adaptive Task Staircasing Active]
+                  </span>
+                </h3>
                 <div style={{ position: 'relative', height: '240px', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px', padding: '10px' }}>
                   {chartsLoading ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem', height: '100%' }}>
@@ -405,9 +409,9 @@ export default function Dashboard({
               {/* Cognitive Profile Card & Behavioral Insights */}
               <div className="game-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxSizing: 'border-box' }}>
                 <div>
-                  <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>👤 Classifier Profile & Behavioral Insights</h3>
+                  <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>👤 Your Cognitive Playstyle & Insights</h3>
                   <div style={{ textAlign: 'center', padding: '1rem 0 1.5rem 0', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                    <div style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Classified Cognitive Profile Archetype</div>
+                    <div style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Your Cognitive Playstyle</div>
                     <div style={{
                       display: 'inline-block',
                       padding: '0.5rem 1.5rem',
@@ -422,7 +426,7 @@ export default function Dashboard({
                       {cognitiveProfile.archetype}
                     </div>
                     <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.4rem', fontWeight: '500' }}>
-                      Random Forest Model Confidence: {Math.round(cognitiveProfile.confidence_score * 100)}%
+                      AI Prediction Confidence: {Math.round(cognitiveProfile.confidence_score * 100)}%
                     </div>
                   </div>
 
@@ -440,7 +444,7 @@ export default function Dashboard({
                         boxShadow: '0 0 10px rgba(6, 182, 212, 0.15)',
                         lineHeight: '1.4'
                       }}>
-                        <strong>⚡ Methodical Assessment:</strong> Deliberate Processor: Exhibits methodical stimulus assessment patterns, prioritizing low-error execution over speed.
+                        <strong>⚡ Methodical Assessment:</strong> Exhibits careful & accurate planning, prioritizing low-error execution over speed.
                       </div>
                     )}
                     {lastGameStats && lastGameStats.spam_click_count >= 3 && (
@@ -455,12 +459,12 @@ export default function Dashboard({
                         boxShadow: '0 0 10px rgba(249, 115, 22, 0.15)',
                         lineHeight: '1.4'
                       }}>
-                        <strong>⚠️ Frustration Alert:</strong> Impulsive Task Friction Identified: Real-time kinetic feedback indicates panic-driven or non-target execution behaviors during accelerated DDA challenge thresholds.
+                        <strong>⚠️ Frustration Alert:</strong> Rapid clicking detected: Try to remain calm and focused during high-difficulty challenges.
                       </div>
                     )}
                     {(!lastGameStats || (lastGameStats.hesitation_ms < 800 && lastGameStats.spam_click_count < 3)) && (
                       <div style={{ fontSize: '0.825rem', color: '#64748b', textAlign: 'center', padding: '1rem 0' }}>
-                        No acute behavioral anomalies or kinetic friction registered in current session. Play modules to stream live telemetry.
+                        No acute behavioral anomalies registered in current session. Play modules to stream live telemetry.
                       </div>
                     )}
                   </div>
@@ -490,9 +494,11 @@ export default function Dashboard({
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem', marginTop: '1rem' }}>
                   <div style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>💡 Personalized Adviser Recommendation</div>
                   <div style={{ fontWeight: '700', color: '#c084fc', marginTop: '0.25rem', fontSize: '0.95rem' }}>
-                    Train with <span style={{ textDecoration: 'underline' }}>{rec.game}</span>:
+                    <button onClick={() => setActiveGame && setActiveGame(prescribedGame)} style={{ width: '100%', padding: '0.75rem', marginTop: '0.5rem', background: 'linear-gradient(90deg, #a855f7, #ec4899)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
+                      ▶ Start Recommended Training: {rec.game}
+                    </button>
                   </div>
-                  <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
+                  <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
                     {rec.reason}. Launch module to {rec.action}.
                   </p>
                 </div>

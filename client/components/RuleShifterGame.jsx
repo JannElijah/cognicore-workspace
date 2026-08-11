@@ -1,3 +1,4 @@
+import useCogniStore from '../store/useCogniStore';
 import { API_BASE } from '../utils/apiClient.js';
 import React, { useState, useEffect, useRef } from 'react';
 import Phaser from 'phaser';
@@ -27,7 +28,8 @@ export default function RuleShifterGame({
         try {
             const response = await fetch(`${apiUrl}/api/start-session`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${useCogniStore.getState().token}`},
                 body: JSON.stringify({ username: inputUsername, game_type: 'RuleShifter' })
             });
             if (!response.ok) throw new Error(`Server status: ${response.status}`);
@@ -76,7 +78,8 @@ export default function RuleShifterGame({
                 try {
                     const pr = await fetch(`${apiUrl}/api/dda`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${useCogniStore.getState().token}`},
                         body: JSON.stringify({ session_id: sessionId })
                     });
                     if (pr.ok) {

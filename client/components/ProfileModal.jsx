@@ -1,6 +1,7 @@
 import { API_BASE } from '../utils/apiClient.js';
 import React, { useState, useEffect } from 'react';
 import useCogniStore from '../store/useCogniStore';
+import cogniFX from '../utils/cogniFX';
 import { Radar, Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS, RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend, CategoryScale, LinearScale
@@ -23,6 +24,20 @@ const ProfileModal = ({ onClose }) => {
   // Settings State
   const [isSaving, setIsSaving] = useState(false);
   const [localReduceFlashes, setLocalReduceFlashes] = useState(reduceFlashes);
+  const [localVolume, setLocalVolume] = useState(cogniFX._masterVolume || 0.18);
+  const [localDistractors, setLocalDistractors] = useState(cogniFX._distractorsEnabled !== false);
+
+  const handleVolumeChange = (e) => {
+    const vol = parseFloat(e.target.value);
+    setLocalVolume(vol);
+    cogniFX.setMasterVolume(vol);
+  };
+
+  const handleDistractorsToggle = () => {
+    const val = !localDistractors;
+    setLocalDistractors(val);
+    cogniFX.setDistractorsEnabled(val);
+  };
 
   const username = typeof user === 'object' && user !== null ? user.username : user;
 
@@ -324,14 +339,42 @@ const ProfileModal = ({ onClose }) => {
               )}
 
               {activeTab === 'settings' && (
-                <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '1.5rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <h3 style={{ color: '#f8fafc', margin: '0 0 0.25rem 0' }}>Reduce Flashing Effects</h3>
-                    <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.85rem' }}>Disables intense visual strobing and animations.</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '1.5rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <h3 style={{ color: '#f8fafc', margin: '0 0 0.25rem 0' }}>Reduce Flashing Effects</h3>
+                      <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.85rem' }}>Disables intense visual strobing and animations.</p>
+                    </div>
+                    <button onClick={handleToggleFlashes} disabled={isSaving} style={{ width: '50px', height: '26px', borderRadius: '13px', background: localReduceFlashes ? '#10b981' : '#334155', border: 'none', position: 'relative', cursor: 'pointer' }}>
+                      <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: '#ffffff', position: 'absolute', top: '2px', left: localReduceFlashes ? '26px' : '2px', transition: 'left 0.3s' }} />
+                    </button>
                   </div>
-                  <button onClick={handleToggleFlashes} disabled={isSaving} style={{ width: '50px', height: '26px', borderRadius: '13px', background: localReduceFlashes ? '#10b981' : '#334155', border: 'none', position: 'relative', cursor: 'pointer' }}>
-                    <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: '#ffffff', position: 'absolute', top: '2px', left: localReduceFlashes ? '26px' : '2px', transition: 'left 0.3s' }} />
-                  </button>
+                  
+                  <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '1.5rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ flex: 1, paddingRight: '1rem' }}>
+                      <h3 style={{ color: '#f8fafc', margin: '0 0 0.25rem 0' }}>Master Audio Volume</h3>
+                      <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.85rem' }}>Adjust overall sound effects level.</p>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="0" 
+                      max="1" 
+                      step="0.05" 
+                      value={localVolume} 
+                      onChange={handleVolumeChange} 
+                      style={{ width: '120px', accentColor: '#a855f7' }}
+                    />
+                  </div>
+                  
+                  <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '1.5rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <h3 style={{ color: '#f8fafc', margin: '0 0 0.25rem 0' }}>Adaptive Distractors</h3>
+                      <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.85rem' }}>Enable auditory/visual noise during high-difficulty challenges.</p>
+                    </div>
+                    <button onClick={handleDistractorsToggle} style={{ width: '50px', height: '26px', borderRadius: '13px', background: localDistractors ? '#a855f7' : '#334155', border: 'none', position: 'relative', cursor: 'pointer' }}>
+                      <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: '#ffffff', position: 'absolute', top: '2px', left: localDistractors ? '26px' : '2px', transition: 'left 0.3s' }} />
+                    </button>
+                  </div>
                 </div>
               )}
             </>

@@ -17,6 +17,7 @@ def app():
     })
     
     with flask_app.app_context():
+        _db.create_all()
         yield flask_app
 
 @pytest.fixture(scope="function")

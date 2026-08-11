@@ -38,14 +38,15 @@ export async function saveTelemetry(telemetryData) {
         try {
             const currentFallbackStr = localStorage.getItem('offline_telemetry_fallback') || '[]';
             
-            // Circuit breaker: 4MB limit (approx 4 * 1024 * 1024 chars) to prevent UI stalling
-            if (currentFallbackStr.length > 4 * 1024 * 1024) {
-                console.warn("CIRCUIT BREAKER TRIPPED: localStorage offline telemetry cache exceeded 4MB. Data dropped.");
+            let queue = JSON.parse(currentFallbackStr);
+            
+            // Circuit breaker: Keep queue under 1000 items to prevent UI stalling and quota errors
+            if (queue.length >= 1000) {
+                console.warn("CIRCUIT BREAKER: localStorage offline telemetry cache reached 1000 items. Dropping oldest event.");
+                queue.shift(); // Remove the oldest item
                 window.dispatchEvent(new CustomEvent('offline-cache-full'));
-                return false;
             }
 
-            const queue = JSON.parse(currentFallbackStr);
             queue.push(telemetryData);
             localStorage.setItem('offline_telemetry_fallback', JSON.stringify(queue));
         } catch (err) {

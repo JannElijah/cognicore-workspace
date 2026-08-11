@@ -68,7 +68,7 @@ def execute_gamification(uid, reaction_time, accuracy, difficulty, game_type):
             
         ach.current_amount = current_amount
         if ach.current_amount >= target_amount:
-            ach.is_completed = True
+            ach.is_completed = 1
             if reward_coins:
                 prof.coins += reward_coins
                 coins_gained += reward_coins

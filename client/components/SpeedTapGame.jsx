@@ -1,3 +1,4 @@
+import useCogniStore from '../store/useCogniStore';
 import { API_BASE } from '../utils/apiClient.js';
 /**
  * ================================================================================
@@ -42,8 +43,8 @@ export default function SpeedTapGame({ username = 'default_player', apiUrl = API
             const response = await fetch(`${apiUrl}/api/start-session`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
-                },
+                    'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${useCogniStore.getState().token}`},
                 body: JSON.stringify({
                     username: inputUsername,
                     game_type: 'SpeedTap'
@@ -117,8 +118,8 @@ export default function SpeedTapGame({ username = 'default_player', apiUrl = API
                     const profileRes = await fetch(`${apiUrl}/api/dda`, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
-                        },
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${useCogniStore.getState().token}`},
                         body: JSON.stringify({ session_id: sessionId })
                     });
                     if (profileRes.ok) {

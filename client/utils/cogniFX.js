@@ -19,6 +19,11 @@ class CogniFXEngine {
         this._ctx = null;
         this._masterGain = null;
         this._enabled = true;
+        this._masterVolume = 0.18;
+        this._distractorsEnabled = true;
+        this._noiseOsc = null;
+        this._noiseGain = null;
+        this._noiseLfo = null;
 
         // Pentatonic scale frequencies (A minor pentatonic — A, C, D, E, G across 3 octaves)
         // Indexed [difficulty 1-5][streak modifier 0-4]
@@ -54,7 +59,7 @@ class CogniFXEngine {
         try {
             this._ctx = new (window.AudioContext || window.webkitAudioContext)();
             this._masterGain = this._ctx.createGain();
-            this._masterGain.gain.setValueAtTime(0.18, this._ctx.currentTime);
+            this._masterGain.gain.setValueAtTime(this._enabled ? this._masterVolume : 0.0, this._ctx.currentTime);
             this._masterGain.connect(this._ctx.destination);
         } catch (e) {
             console.warn('[CogniFX] Web Audio API unavailable:', e);
@@ -193,7 +198,87 @@ class CogniFXEngine {
     setEnabled(enabled) {
         this._enabled = enabled;
         if (this._masterGain) {
-            this._masterGain.gain.setValueAtTime(enabled ? 0.18 : 0.0, this._ctx.currentTime);
+            this._masterGain.gain.setValueAtTime(enabled ? this._masterVolume : 0.0, this._ctx.currentTime);
+        }
+    }
+
+    /** Set Master Volume */
+    setMasterVolume(volume) {
+        this._masterVolume = Math.max(0, Math.min(1, volume));
+        if (this._masterGain && this._enabled) {
+            this._masterGain.gain.setValueAtTime(this._masterVolume, this._ctx.currentTime);
+        }
+    }
+
+    /** Toggle Distractors */
+    setDistractorsEnabled(enabled) {
+        this._distractorsEnabled = enabled;
+        if (!enabled) this.stopNoise();
+    }
+
+    /** Start continuous background auditory distractor noise */
+    startNoise(difficultyLevel = 1) {
+        this._initCtx();
+        if (!this._enabled || !this._distractorsEnabled || difficultyLevel < 4) {
+            this.stopNoise();
+            return;
+        }
+
+        if (this._noiseOsc) return; // already playing
+
+        const now = this._ctx.currentTime;
+        this._noiseOsc = this._ctx.createOscillator();
+        this._noiseGain = this._ctx.createGain();
+
+        // Low frequency square wave hum
+        this._noiseOsc.type = 'square';
+        this._noiseOsc.frequency.setValueAtTime(40 + (difficultyLevel * 10), now); 
+
+        // Modulate frequency to create "cafeteria hum" / interference
+        const lfo = this._ctx.createOscillator();
+        lfo.type = 'sine';
+        lfo.frequency.setValueAtTime(2 + difficultyLevel, now); 
+        const lfoGain = this._ctx.createGain();
+        lfoGain.gain.setValueAtTime(10 + difficultyLevel * 2, now); 
+        
+        lfo.connect(lfoGain);
+        lfoGain.connect(this._noiseOsc.frequency);
+        lfo.start(now);
+        this._noiseLfo = lfo;
+
+        const volume = difficultyLevel === 5 ? 0.08 : 0.04;
+        this._noiseGain.gain.setValueAtTime(0.001, now);
+        this._noiseGain.gain.linearRampToValueAtTime(volume, now + 1.0); // fade in
+
+        this._noiseOsc.connect(this._noiseGain);
+        this._noiseGain.connect(this._masterGain);
+
+        this._noiseOsc.start(now);
+    }
+
+    /** Stop background noise */
+    stopNoise() {
+        if (this._noiseOsc && this._ctx) {
+            const now = this._ctx.currentTime;
+            this._noiseGain.gain.linearRampToValueAtTime(0.001, now + 0.5); 
+            this._noiseOsc.stop(now + 0.5);
+            if (this._noiseLfo) this._noiseLfo.stop(now + 0.5);
+            
+            // Clean up
+            const oscToClean = this._noiseOsc;
+            const gainToClean = this._noiseGain;
+            const lfoToClean = this._noiseLfo;
+            setTimeout(() => {
+                try {
+                    if (oscToClean) oscToClean.disconnect();
+                    if (gainToClean) gainToClean.disconnect();
+                    if (lfoToClean) lfoToClean.disconnect();
+                } catch(e) {}
+            }, 600);
+
+            this._noiseOsc = null;
+            this._noiseGain = null;
+            this._noiseLfo = null;
         }
     }
 }

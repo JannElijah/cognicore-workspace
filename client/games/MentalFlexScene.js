@@ -1,3 +1,4 @@
+import useCogniStore from '../store/useCogniStore';
 import { API_BASE } from '../utils/apiClient.js';
 /**
  * ================================================================================
@@ -14,6 +15,7 @@ import Phaser from 'phaser';
 import { CogniTheme } from '../utils/theme';
 import BaseCognitiveScene from './BaseCognitiveScene';
 import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
+import cogniFX from '../utils/cogniFX';
 
 export default class MentalFlexScene extends BaseCognitiveScene {
     constructor() {
@@ -178,6 +180,8 @@ export default class MentalFlexScene extends BaseCognitiveScene {
     }
 
     startGameplay() {
+        this.sessionStartTime = this.time.now;
+        this.isGameOver = false;
         this.isTutorialActive = false;
         this.countdownTimer = this.time.addEvent({
             delay: 1000,
@@ -192,6 +196,9 @@ export default class MentalFlexScene extends BaseCognitiveScene {
             loop: true
         });
         this.spawnCards();
+        if (this.difficultyLevel >= 4) {
+            cogniFX.startNoise(this.difficultyLevel);
+        }
     }
 
     updateCountdown() {
@@ -317,6 +324,10 @@ export default class MentalFlexScene extends BaseCognitiveScene {
 
     spawnCards() {
         if (this.timeLeft <= 0) return;
+
+        if (this.difficultyLevel >= 4) {
+            this.spawnVisualNoise();
+        }
 
         // Clear existing cards
         this.clearCards();
@@ -676,7 +687,8 @@ export default class MentalFlexScene extends BaseCognitiveScene {
             console.log('[Telemetry MentalFlex] Dispatching metrics...', payload);
             await fetch(`${this.apiUrl}/api/submit-metrics`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${useCogniStore.getState().token}`},
                 body: JSON.stringify(payload)
             });
         } catch (e) {
@@ -691,7 +703,8 @@ export default class MentalFlexScene extends BaseCognitiveScene {
             console.log('[DDA MentalFlex] Syncing difficulty with backend...');
             const response = await fetch(`${this.apiUrl}/api/dda`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${useCogniStore.getState().token}`},
                 body: JSON.stringify({ session_id: this.sessionId })
             });
 
@@ -718,6 +731,12 @@ export default class MentalFlexScene extends BaseCognitiveScene {
                     if (diffChanged) {
                         const direction = params.difficulty_level > oldDifficulty ? 'SCALED UP' : 'DE-ESCALATED';
                         this.showFeedbackText(this.scale.width / 2, this.scale.height / 2 - 30, `DIFFICULTY ${direction}!`, '#c084fc');
+                        
+                        if (this.difficultyLevel >= 4) {
+                            cogniFX.startNoise(this.difficultyLevel);
+                        } else {
+                            cogniFX.stopNoise();
+                        }
                     }
                     console.log('[DDA MentalFlex] Synced Parameters successfully:', params);
                 }
@@ -727,9 +746,29 @@ export default class MentalFlexScene extends BaseCognitiveScene {
         }
     }
 
+    spawnVisualNoise() {
+        const width = this.scale.width;
+        const height = this.scale.height;
+        const noiseCount = this.difficultyLevel === 5 ? 12 : 6;
+        for (let i = 0; i < noiseCount; i++) {
+            const x = Phaser.Math.Between(0, width);
+            const y = Phaser.Math.Between(0, height);
+            const rect = this.add.rectangle(x, y, Phaser.Math.Between(20, 150), Phaser.Math.Between(2, 8), 0xffffff, 0.1);
+            rect.setAngle(Phaser.Math.Between(0, 360));
+            this.tweens.add({
+                targets: rect,
+                alpha: 0,
+                x: x + Phaser.Math.Between(-80, 80),
+                duration: Phaser.Math.Between(200, 600),
+                onComplete: () => rect.destroy()
+            });
+        }
+    }
+
     endGame() {
         if (this.countdownTimer) this.countdownTimer.remove();
         if (this.roundTicker) this.roundTicker.remove();
+        cogniFX.stopNoise();
         
         this.clearCards();
         this.timerBar.clear();

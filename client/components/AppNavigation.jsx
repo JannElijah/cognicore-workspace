@@ -79,6 +79,22 @@ export default function AppNavigation({
               >
                 🔬 Researcher Portal
               </button>
+              <button 
+                onClick={() => { setPortalView('knowledge'); setActiveGame(null); setShowDashboard(false); }}
+                style={{
+                  background: portalView === 'knowledge' ? 'linear-gradient(to right, #38bdf8, #a855f7)' : 'transparent',
+                  border: 'none',
+                  color: '#ffffff',
+                  padding: '0.4rem 0.8rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  fontSize: '0.85rem',
+                  transition: 'all 0.2s'
+                }}
+              >
+                🧠 Knowledge Base
+              </button>
             </div>
           )}
           

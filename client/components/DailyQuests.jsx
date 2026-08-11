@@ -62,8 +62,9 @@ const DailyQuests = () => {
           quests.map(quest => {
             const progress = Math.min(quest.current_amount, quest.target_amount);
             const percent = Math.floor((progress / quest.target_amount) * 100);
-            const canClaim = progress >= quest.target_amount && quest.is_completed === 0;
-            const isClaimed = quest.is_completed === 1;
+            const isCompleted = quest.is_completed === true || quest.is_completed === 1;
+            const canClaim = progress >= quest.target_amount && !isCompleted;
+            const isClaimed = isCompleted;
 
             return (
               <div key={quest.id} style={{

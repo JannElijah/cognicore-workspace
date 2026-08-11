@@ -34,6 +34,7 @@ import LoginFlow from './components/LoginFlow';
 import AssessmentFlow from './components/AssessmentFlow';
 import AdminPanel from './components/AdminPanel';
 import Dashboard from './components/Dashboard';
+import KnowledgeBase from './components/KnowledgeBase';
 import AppNavigation from './components/AppNavigation';
 
 const SpeedTapGame = lazy(() => import('./components/SpeedTapGame'));
@@ -2356,7 +2357,11 @@ export default function App() {
             getConsistencyTrendData={getConsistencyTrendData}
             sessionHistory={sessionHistory}
             archetypeHistory={archetypeHistory}
+            setActiveGame={setActiveGame}
+            prescribedGame={prescribedGame}
           />
+        ) : portalView === 'knowledge' ? (
+          <KnowledgeBase />
         ) : (
           // ==========================================
           // ORIGINAL GAME LOBBY

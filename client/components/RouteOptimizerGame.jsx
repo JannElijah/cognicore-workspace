@@ -1,3 +1,4 @@
+import useCogniStore from '../store/useCogniStore';
 import { API_BASE } from '../utils/apiClient.js';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Phaser from 'phaser';
@@ -29,7 +30,8 @@ export default function RouteOptimizerGame({
         try {
             const response = await fetch(`${apiUrl}/api/start-session`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${useCogniStore.getState().token}`},
                 body: JSON.stringify({ username: inputUsername, game_type: 'RouteOptimizer' })
             });
             if (!response.ok) throw new Error(`Server status: ${response.status}`);
@@ -78,7 +80,8 @@ export default function RouteOptimizerGame({
                 try {
                     const pr = await fetch(`${apiUrl}/api/dda`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${useCogniStore.getState().token}`},
                         body: JSON.stringify({ session_id: sessionId })
                     });
                     if (pr.ok) {

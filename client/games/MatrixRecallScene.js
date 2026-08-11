@@ -1,3 +1,4 @@
+import useCogniStore from '../store/useCogniStore';
 import { API_BASE } from '../utils/apiClient.js';
 /**
  * ================================================================================
@@ -242,12 +243,19 @@ export default class MatrixRecallScene extends BaseCognitiveScene {
         }
     }
 
-    updateTimer() {
-        this.timeLeft -= 1000;
+updateTimer() {
+        if (!this.sessionStartTime || this.timeLeft <= 0) return;
+        
+        const elapsed = this.time.now - this.sessionStartTime;
+        this.timeLeft = Math.max(0, this.gameDuration - elapsed);
         const seconds = Math.ceil(this.timeLeft / 1000);
-        this.timerText.setText(`00:${seconds < 10 ? '0' : ''}${seconds}`);
+        
+        if (this.timerText && this.timerText.active) {
+            this.timerText.setText(`00:${seconds < 10 ? '0' : ''}${seconds}`);
+        }
 
-        if (this.timeLeft <= 0) {
+        if (this.timeLeft <= 0 && !this.isGameOver) {
+            this.isGameOver = true;
             this.endGame();
         }
     }
@@ -518,7 +526,8 @@ export default class MatrixRecallScene extends BaseCognitiveScene {
             console.log('[Telemetry Dispatch] Sending Matrix Recall metrics...', payload);
             await fetch(`${this.apiUrl}/api/submit-metrics`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${useCogniStore.getState().token}`},
                 body: JSON.stringify(payload)
             });
         } catch (e) {
@@ -535,7 +544,8 @@ export default class MatrixRecallScene extends BaseCognitiveScene {
             console.log('[DDA Bridge] Checking Matrix Recall scaling profiles...');
             const response = await fetch(`${this.apiUrl}/api/dda`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${useCogniStore.getState().token}`},
                 body: JSON.stringify({ session_id: this.sessionId })
             });
 
@@ -618,6 +628,8 @@ export default class MatrixRecallScene extends BaseCognitiveScene {
     }
 
     startGameplay() {
+        this.sessionStartTime = this.time.now;
+        this.isGameOver = false;
         this.countdownTimer = this.time.addEvent({
             delay: 1000,
             callback: this.updateTimer,

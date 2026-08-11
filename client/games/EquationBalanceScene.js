@@ -1,3 +1,4 @@
+import useCogniStore from '../store/useCogniStore';
 import { API_BASE } from '../utils/apiClient.js';
 import Phaser from 'phaser';
 import { CogniTheme } from '../utils/theme';
@@ -172,6 +173,8 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
     }
 
     startGameplay() {
+        this.sessionStartTime = this.time.now;
+        this.isGameOver = false;
         this.isTutorialActive = false;
         this.countdownTimer = this.time.addEvent({
             delay: 1000,
@@ -611,7 +614,8 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
             console.log('[Telemetry Dispatch] Sending equation balance metrics...', payload);
             await fetch(`${this.apiUrl}/api/submit-metrics`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${useCogniStore.getState().token}`},
                 body: JSON.stringify(payload)
             });
         } catch (e) {
@@ -628,7 +632,8 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
             console.log('[DDA Bridge] Fetching Equation Balance difficulty configurations...');
             const response = await fetch(`${this.apiUrl}/api/dda`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${useCogniStore.getState().token}`},
                 body: JSON.stringify({ session_id: this.sessionId })
             });
 

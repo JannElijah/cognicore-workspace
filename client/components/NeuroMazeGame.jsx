@@ -1,3 +1,4 @@
+import useCogniStore from '../store/useCogniStore';
 import { API_BASE } from '../utils/apiClient.js';
 import React, { useState, useEffect, useRef } from 'react';
 import Phaser from 'phaser';
@@ -27,8 +28,8 @@ export default function NeuroMazeGame({ username = 'default_player', apiUrl = AP
             const response = await fetch(`${apiUrl}/api/start-session`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
-                },
+                    'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${useCogniStore.getState().token}`},
                 body: JSON.stringify({
                     username: inputUsername,
                     game_type: 'NeuroMaze'
@@ -96,8 +97,8 @@ export default function NeuroMazeGame({ username = 'default_player', apiUrl = AP
                     const profileRes = await fetch(`${apiUrl}/api/dda`, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json'
-                        },
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${useCogniStore.getState().token}`},
                         body: JSON.stringify({ session_id: sessionId })
                     });
                     if (profileRes.ok) {

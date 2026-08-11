@@ -1,3 +1,4 @@
+import useCogniStore from '../store/useCogniStore';
 import { API_BASE } from '../utils/apiClient.js';
 import Phaser from 'phaser';
 import { CogniTheme } from '../utils/theme';
@@ -674,7 +675,8 @@ export default class RuleShifterScene extends BaseCognitiveScene {
         try {
             await fetch(`${this.apiUrl}/api/submit-metrics`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${useCogniStore.getState().token}`},
                 body: JSON.stringify(payload)
             });
         } catch (e) {
@@ -688,7 +690,8 @@ export default class RuleShifterScene extends BaseCognitiveScene {
         try {
             const resp = await fetch(`${this.apiUrl}/api/dda`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${useCogniStore.getState().token}`},
                 body: JSON.stringify({ session_id: this.sessionId })
             });
             if (resp.ok) {

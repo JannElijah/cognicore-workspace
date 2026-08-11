@@ -1,3 +1,4 @@
+import useCogniStore from '../store/useCogniStore';
 import { API_BASE } from '../utils/apiClient.js';
 /**
  * ================================================================================
@@ -13,6 +14,7 @@ import Phaser from 'phaser';
 import { CogniTheme } from '../utils/theme';
 import BaseCognitiveScene from './BaseCognitiveScene';
 import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOverlay';
+import cogniFX from '../utils/cogniFX';
 
 export default class FocusFinderScene extends BaseCognitiveScene {
     constructor() {
@@ -270,6 +272,8 @@ export default class FocusFinderScene extends BaseCognitiveScene {
     }
 
     startGameplay() {
+        this.sessionStartTime = this.time.now;
+        this.isGameOver = false;
         this.isTutorialActive = false;
         this.countdownTimer = this.time.addEvent({
             delay: 1000,
@@ -278,19 +282,34 @@ export default class FocusFinderScene extends BaseCognitiveScene {
             loop: true
         });
         this.generateWave();
+        if (this.difficultyLevel >= 4) {
+            cogniFX.startNoise(this.difficultyLevel);
+        }
     }
 
-    updateTimer() {
-        this.timeLeft -= 1000;
+updateTimer() {
+        if (!this.sessionStartTime || this.timeLeft <= 0) return;
+        
+        const elapsed = this.time.now - this.sessionStartTime;
+        this.timeLeft = Math.max(0, this.gameDuration - elapsed);
         const seconds = Math.ceil(this.timeLeft / 1000);
-        this.timerText.setText(`00:${seconds < 10 ? '0' : ''}${seconds}`);
+        
+        if (this.timerText && this.timerText.active) {
+            this.timerText.setText(`00:${seconds < 10 ? '0' : ''}${seconds}`);
+        }
 
-        if (this.timeLeft <= 0) {
+        if (this.timeLeft <= 0 && !this.isGameOver) {
+            this.isGameOver = true;
             this.endGame();
         }
     }
 
     generateWave() {
+        // Handle visual noise at high difficulties
+        if (this.difficultyLevel >= 4) {
+            this.spawnVisualNoise();
+        }
+
         // Clear existing wave items
         this.spawnedObjects.forEach(obj => obj.destroy());
         this.spawnedObjects = [];
@@ -379,6 +398,28 @@ export default class FocusFinderScene extends BaseCognitiveScene {
 
         container.setData('isTarget', true);
         this.spawnedObjects.push(container);
+    }
+
+    spawnVisualNoise() {
+        const width = this.scale.width;
+        const height = this.scale.height;
+        const noiseCount = this.difficultyLevel === 5 ? 15 : 8;
+
+        for (let i = 0; i < noiseCount; i++) {
+            const x = Phaser.Math.Between(0, width);
+            const y = Phaser.Math.Between(0, height);
+            
+            const rect = this.add.rectangle(x, y, Phaser.Math.Between(10, 100), Phaser.Math.Between(2, 5), 0xffffff, 0.15);
+            rect.setAngle(Phaser.Math.Between(0, 360));
+            
+            this.tweens.add({
+                targets: rect,
+                alpha: 0,
+                x: x + Phaser.Math.Between(-50, 50),
+                duration: Phaser.Math.Between(300, 800),
+                onComplete: () => rect.destroy()
+            });
+        }
     }
 
     spawnDistractorObject() {
@@ -701,7 +742,8 @@ export default class FocusFinderScene extends BaseCognitiveScene {
             console.log('[Telemetry Dispatch] Sending batched metrics...', payloadBatch);
             await fetch(`${this.apiUrl}/api/submit-metrics/batch`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${useCogniStore.getState().token}`},
                 body: JSON.stringify(payloadBatch)
             });
         } catch (e) {
@@ -719,7 +761,8 @@ export default class FocusFinderScene extends BaseCognitiveScene {
             console.log('[DDA Bridge] Checking focus scaling profiles...');
             const response = await fetch(`${this.apiUrl}/api/dda`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${useCogniStore.getState().token}`},
                 body: JSON.stringify({ session_id: this.sessionId })
             });
 
@@ -744,6 +787,12 @@ export default class FocusFinderScene extends BaseCognitiveScene {
                     if (difficultyChanged) {
                         const direction = params.difficulty_level > this.difficultyLevel ? 'INCREASED' : 'ADJUSTED';
                         this.showFloatingText(this.scale.width / 2, this.scale.height / 2, `DIFFICULTY ${direction}! LEVEL ${this.difficultyLevel}`, '#a855f7');
+                        
+                        if (this.difficultyLevel >= 4) {
+                            cogniFX.startNoise(this.difficultyLevel);
+                        } else {
+                            cogniFX.stopNoise();
+                        }
                     }
                 }
             }
@@ -757,6 +806,7 @@ export default class FocusFinderScene extends BaseCognitiveScene {
 
     async endGame() {
         if (this.countdownTimer) this.countdownTimer.remove();
+        cogniFX.stopNoise();
 
         // Flush remaining telemetry before closing session
         await this.flushTelemetry();

@@ -1,3 +1,4 @@
+import useCogniStore from '../store/useCogniStore';
 import { API_BASE } from '../utils/apiClient.js';
 import Phaser from 'phaser';
 import { CogniTheme } from '../utils/theme';
@@ -227,6 +228,8 @@ export default class NeuralNBackScene extends BaseCognitiveScene {
     }
 
     startGameplay() {
+        this.sessionStartTime = this.time.now;
+        this.isGameOver = false;
         this.isTutorialActive = false;
         this.countdownTimer = this.time.addEvent({
             delay: 1000,
@@ -243,12 +246,19 @@ export default class NeuralNBackScene extends BaseCognitiveScene {
         this.showNextStimulus();
     }
 
-    updateTimer() {
-        this.timeLeft -= 1000;
+updateTimer() {
+        if (!this.sessionStartTime || this.timeLeft <= 0) return;
+        
+        const elapsed = this.time.now - this.sessionStartTime;
+        this.timeLeft = Math.max(0, this.gameDuration - elapsed);
         const seconds = Math.ceil(this.timeLeft / 1000);
-        this.timerText.setText(`00:${seconds < 10 ? '0' : ''}${seconds}`);
+        
+        if (this.timerText && this.timerText.active) {
+            this.timerText.setText(`00:${seconds < 10 ? '0' : ''}${seconds}`);
+        }
 
-        if (this.timeLeft <= 0) {
+        if (this.timeLeft <= 0 && !this.isGameOver) {
+            this.isGameOver = true;
             this.endGame();
         }
     }
@@ -406,7 +416,8 @@ export default class NeuralNBackScene extends BaseCognitiveScene {
         try {
             await fetch(`${this.apiUrl}/api/submit-metrics`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${useCogniStore.getState().token}`},
                 body: JSON.stringify(payload)
             });
         } catch (e) {
@@ -422,7 +433,8 @@ export default class NeuralNBackScene extends BaseCognitiveScene {
         try {
             const response = await fetch(`${this.apiUrl}/api/dda`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${useCogniStore.getState().token}`},
                 body: JSON.stringify({ session_id: this.sessionId })
             });
 

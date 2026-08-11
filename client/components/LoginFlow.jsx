@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 export default function LoginFlow({
   usernameInput,
@@ -7,6 +7,8 @@ export default function LoginFlow({
   assessmentLoading,
   handleCheckUserStatus
 }) {
+  const [agreed, setAgreed] = useState(false);
+
   return (
     <div style={{ maxWidth: '480px', margin: '4rem auto', padding: '2.5rem', background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(20px)', border: '1px solid rgba(168, 85, 247, 0.3)', borderRadius: '16px', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', animation: 'fadeIn 0.3s ease-out' }}>
       <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
@@ -26,19 +28,33 @@ export default function LoginFlow({
             placeholder="e.g. subject_01" 
             style={{ background: '#09090b', border: '1.5px solid rgba(168, 85, 247, 0.4)', borderRadius: '8px', color: '#ffffff', padding: '0.75rem', fontSize: '1rem', outline: 'none', width: '100%', boxSizing: 'border-box' }}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !assessmentLoading) {
+              if (e.key === 'Enter' && !assessmentLoading && agreed) {
                 handleCheckUserStatus(usernameInput);
               }
             }}
           />
         </div>
+
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', marginTop: '0.5rem' }}>
+          <input 
+            type="checkbox" 
+            id="disclaimerAgree" 
+            checked={agreed} 
+            onChange={(e) => setAgreed(e.target.checked)} 
+            style={{ marginTop: '0.25rem', transform: 'scale(1.2)', accentColor: '#a855f7', cursor: 'pointer' }}
+          />
+          <label htmlFor="disclaimerAgree" style={{ fontSize: '0.8rem', color: '#cbd5e1', lineHeight: '1.4', cursor: 'pointer' }}>
+            I acknowledge the Cognitive Training Medical Disclaimer and consent to performance telemetry collection.
+          </label>
+        </div>
+
         {assessmentError && <div style={{ color: '#f87171', fontSize: '0.85rem', fontWeight: 'bold' }}>⚠️ {assessmentError}</div>}
         <button
-          onClick={() => handleCheckUserStatus(usernameInput)}
-          disabled={assessmentLoading}
-          style={{ background: 'linear-gradient(to right, #38bdf8, #a855f7)', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '0.75rem', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', width: '100%', boxShadow: '0 4px 12px rgba(168, 85, 247, 0.3)' }}
-          onMouseOver={(e) => e.target.style.filter = 'brightness(1.15)'}
-          onMouseOut={(e) => e.target.style.filter = 'brightness(1.0)'}
+          onClick={() => { if(agreed) handleCheckUserStatus(usernameInput); }}
+          disabled={assessmentLoading || !agreed}
+          style={{ background: agreed ? 'linear-gradient(to right, #38bdf8, #a855f7)' : '#334155', color: agreed ? '#ffffff' : '#94a3b8', border: 'none', borderRadius: '8px', padding: '0.75rem', fontSize: '1rem', fontWeight: 'bold', cursor: agreed ? 'pointer' : 'not-allowed', transition: 'all 0.2s', width: '100%', boxShadow: agreed ? '0 4px 12px rgba(168, 85, 247, 0.3)' : 'none' }}
+          onMouseOver={(e) => { if(agreed) e.target.style.filter = 'brightness(1.15)' }}
+          onMouseOut={(e) => { if(agreed) e.target.style.filter = 'brightness(1.0)' }}
         >
           {assessmentLoading ? 'Verifying Profile...' : 'Begin Cognitive Evaluation'}
         </button>
