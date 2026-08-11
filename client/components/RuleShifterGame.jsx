@@ -264,7 +264,7 @@ export default function RuleShifterGame({
                             Confidence-Weighted Risk
                         </div>
                         <div style={S.featureItem}>
-                            <span style={S.featureIcon}>🧠</span>
+                            <span style={S.featureIcon}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(192,132,252,0.7))'}} xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="7" rx="7" ry="5" stroke="#c084fc" strokeWidth="1.8"/><path d="M5 10c0 3 3 6 7 6s7-3 7-6" stroke="#c084fc" strokeWidth="1.8" strokeLinecap="round"/><line x1="9" y1="13" x2="9" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/><line x1="15" y1="13" x2="15" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/><line x1="7" y1="19" x2="17" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/></svg></span>
                             Implicit Rule Discovery
                         </div>
                         <div style={S.featureItem}>
@@ -338,7 +338,7 @@ export default function RuleShifterGame({
 
                     <div style={{ marginBottom: '2rem', textAlign: 'left' }}>
                         <div style={S.statRow}>
-                            <span>🏆 Final Score</span>
+                            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'4px',filter:'drop-shadow(0 0 4px rgba(251,191,36,0.8))'}} xmlns="http://www.w3.org/2000/svg"><path d="M6 2h12v10a6 6 0 01-12 0V2z" fill="#fbbf24"/><path d="M5 7H2a4 4 0 004 4M19 7h3a4 4 0 01-4 4" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round"/><line x1="12" y1="18" x2="12" y2="21" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round"/><line x1="8" y1="21" x2="16" y2="21" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round"/></svg> Final Score</span>
                             <span style={{ ...S.statVal, color: '#c084fc' }}>{finalStats?.score}</span>
                         </div>
                         <div style={S.statRow}>
@@ -350,7 +350,7 @@ export default function RuleShifterGame({
                             <span style={{ ...S.statVal, color: '#ef4444' }}>{finalStats?.misses}</span>
                         </div>
                         <div style={S.statRow}>
-                            <span>🎯 Shifting Match Accuracy</span>
+                            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'4px',filter:'drop-shadow(0 0 4px rgba(56,189,248,0.7))'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="#38bdf8" strokeWidth="1.5"/><circle cx="12" cy="12" r="5" stroke="#38bdf8" strokeWidth="1.5"/><circle cx="12" cy="12" r="2" fill="#38bdf8"/></svg> Shifting Match Accuracy</span>
                             <span style={{ ...S.statVal, color: grade }}>{acc}%</span>
                         </div>
                         <div style={S.statRow}>
@@ -358,7 +358,7 @@ export default function RuleShifterGame({
                             <span style={{ ...S.statVal, color: '#38bdf8' }}>{conf}%</span>
                         </div>
                         <div style={S.statRow}>
-                            <span>📈 Highest DDA Level Reached</span>
+                            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'4px',filter:'drop-shadow(0 0 4px rgba(74,222,128,0.7))'}} xmlns="http://www.w3.org/2000/svg"><polyline points="2,17 8,11 13,16 22,7" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><polyline points="17,7 22,7 22,12" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> Highest DDA Level Reached</span>
                             <span style={{ ...S.statVal, color: '#a855f7' }}>Level {finalStats?.difficultyLevel}</span>
                         </div>
                     </div>

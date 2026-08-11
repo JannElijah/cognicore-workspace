@@ -37,7 +37,7 @@ export default function DailyRewardModal({ rewardData, onClose }) {
           marginBottom: '1rem',
           animation: 'pulseGlow 2s infinite'
         }}>
-          🔥
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 10px rgba(249,115,22,0.9))',marginBottom:'0.5rem'}} xmlns="http://www.w3.org/2000/svg"><path d="M12 2c0 0-1 4-3.5 6.5C6 11 5 13.5 5 16a7 7 0 0014 0c0-2.5-1-5-3.5-7.5C14 6 12 2 12 2z" fill="#f97316"/><path d="M12 8c0 0-.5 2-1.5 3.5C9.5 13 9 14.5 9 16a3 3 0 006 0c0-1.5-.5-3-1.5-4.5C12.5 10 12 8 12 8z" fill="#facc15"/></svg>
         </div>
         <h2 style={{
           fontSize: '2rem',
@@ -67,7 +67,7 @@ export default function DailyRewardModal({ rewardData, onClose }) {
           <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Daily Reward</div>
           <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--color-warning)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
             <span>+{rewardData.coins}</span>
-            <span style={{ fontSize: '1.5rem' }}>🪙</span>
+            <svg width="36" height="36" viewBox="0 0 24 24" style={{ filter: 'drop-shadow(0 0 8px rgba(251,191,36,0.9))', flexShrink: 0 }} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="11" fill="#fbbf24"/><circle cx="12" cy="12" r="8" fill="#f59e0b"/><text x="12" y="16.5" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#78350f" fontFamily="Arial">C</text></svg>
           </div>
         </div>
 

@@ -1,10 +1,51 @@
 import React from 'react';
-import { Radar, Line } from 'react-chartjs-2';
+import { Radar, Line, Bar, Scatter } from 'react-chartjs-2';
+
+const ProgressRing = ({ radius, stroke, progress, color }) => {
+  const normalizedRadius = radius - stroke * 2;
+  const circumference = normalizedRadius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (Math.min(1, Math.max(0, progress)) * circumference);
+
+  return (
+    <svg
+      height={radius * 2}
+      width={radius * 2}
+      style={{ transform: 'rotate(-90deg)', display: 'block' }}
+    >
+      <circle
+        stroke="rgba(255, 255, 255, 0.05)"
+        fill="transparent"
+        strokeWidth={stroke}
+        r={normalizedRadius}
+        cx={radius}
+        cy={radius}
+      />
+      <circle
+        stroke={color}
+        fill="transparent"
+        strokeWidth={stroke}
+        strokeDasharray={circumference + ' ' + circumference}
+        style={{ strokeDashoffset, transition: 'stroke-dashoffset 0.5s ease-in-out' }}
+        r={normalizedRadius}
+        cx={radius}
+        cy={radius}
+      />
+    </svg>
+  );
+};
 
 export default function Dashboard({
   activeDashboardUser, setActiveDashboardUser, fetchDashboardData, chartsLoading, chartsError,
   cohortComparison, latestSessionMetrics, getRadarChartData, radarOptions, getPerformanceTrendData,
-  performanceTrendOptions, getConsistencyTrendData, sessionHistory, archetypeHistory, setActiveGame, prescribedGame
+  performanceTrendOptions, getConsistencyTrendData, sessionHistory, archetypeHistory, setActiveGame, prescribedGame,
+  radarDataEnhanced,
+  lineChartData, lineChartOptions,
+  barChartData, barChartOptions,
+  sessionTrendData, sessionTrendOptions,
+  domainAccData, domainAccOptions,
+  perGameScoreData, perGameScoreOptions,
+  scatterData, scatterOptions,
+  skills, domainDeltas, rec
 }) {
   return (
           // ==========================================
@@ -54,7 +95,7 @@ export default function Dashboard({
                   onMouseOver={(e) => e.target.style.filter = 'brightness(1.1)'}
                   onMouseOut={(e) => e.target.style.filter = 'brightness(1.0)'}
                 >
-                  {chartsLoading ? 'Loading...' : '🔄 Load Metrics'}
+                  {chartsLoading ? 'Loading...' : <><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 3px rgba(255,255,255,0.8))', marginRight:'6px', verticalAlign:'middle'}} xmlns="http://www.w3.org/2000/svg"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>Load Metrics</>}
                 </button>
               </div>
             </div>
@@ -102,7 +143,7 @@ export default function Dashboard({
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', flexShrink: 0 }}>
                   <ProgressRing radius={30} stroke={3.5} progress={skills.spatial_visual_memory / 100} color="#38bdf8" />
-                  <span style={{ position: 'absolute', fontSize: '1.1rem' }}>🧠</span>
+                   <span style={{ position: 'absolute', fontSize: '1.1rem' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(56,189,248,0.7))'}} xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="7" rx="7" ry="5" stroke="#38bdf8" strokeWidth="1.8"/><path d="M5 10c0 3 3 6 7 6s7-3 7-6" stroke="#38bdf8" strokeWidth="1.8" strokeLinecap="round"/><line x1="9" y1="13" x2="9" y2="19" stroke="#38bdf8" strokeWidth="1.5" strokeLinecap="round"/><line x1="15" y1="13" x2="15" y2="19" stroke="#38bdf8" strokeWidth="1.5" strokeLinecap="round"/><line x1="7" y1="19" x2="17" y2="19" stroke="#38bdf8" strokeWidth="1.5" strokeLinecap="round"/></svg></span>
                 </div>
               </div>
 
@@ -145,7 +186,7 @@ export default function Dashboard({
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', flexShrink: 0 }}>
                   <ProgressRing radius={30} stroke={3.5} progress={skills.logical_mathematical / 100} color="#f59e0b" />
-                  <span style={{ position: 'absolute', fontSize: '1.1rem' }}>🔢</span>
+                   <span style={{ position: 'absolute', fontSize: '1.1rem' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(245,158,11,0.7))'}} xmlns="http://www.w3.org/2000/svg"><text x="3" y="17" fontSize="14" fontWeight="bold" fill="#f59e0b" fontFamily="monospace">12</text></svg></span>
                 </div>
               </div>
 
@@ -188,7 +229,7 @@ export default function Dashboard({
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', flexShrink: 0 }}>
                   <ProgressRing radius={30} stroke={3.5} progress={skills.reflexes_and_focus / 100} color="#a855f7" />
-                  <span style={{ position: 'absolute', fontSize: '1.1rem' }}>⚡</span>
+                   <span style={{ position: 'absolute', fontSize: '1.1rem' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(250,204,21,0.9))'}} xmlns="http://www.w3.org/2000/svg"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#facc15"/></svg></span>
                 </div>
               </div>
 
@@ -231,7 +272,7 @@ export default function Dashboard({
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', flexShrink: 0 }}>
                   <ProgressRing radius={30} stroke={3.5} progress={skills.executive_strategy / 100} color="#10b981" />
-                  <span style={{ position: 'absolute', fontSize: '1.1rem' }}>🧭</span>
+                   <span style={{ position: 'absolute', fontSize: '1.1rem' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(16,185,129,0.7))'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="#10b981" strokeWidth="1.5"/><polygon points="16,8 10,10 8,16 14,14" fill="#10b981"/><circle cx="12" cy="12" r="1.5" fill="#0f172a"/></svg></span>
                 </div>
               </div>
 
@@ -242,11 +283,7 @@ export default function Dashboard({
               
               {/* Difficulty Adaptation Plot */}
               <div className="game-card" style={{ width: '100%', alignItems: 'stretch', boxSizing: 'border-box' }}>
-                <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>📈 Difficulty Adaptation History
-                  <span title="Features Adaptive Task Staircasing: Difficulty scales based on real-time performance." style={{ fontSize: '0.9rem', color: '#94a3b8', display: 'block', marginTop: '0.4rem', cursor: 'help' }}>
-                    [Adaptive Task Staircasing Active]
-                  </span>
-                </h3>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(74,222,128,0.7))',flexShrink:0}} xmlns="http://www.w3.org/2000/svg"><polyline points="2,17 8,11 13,16 22,7" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><polyline points="17,7 22,7 22,12" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> Difficulty Adaptation History</h3>
                 <div style={{ position: 'relative', height: '240px', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px', padding: '10px' }}>
                   {chartsLoading ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem', height: '100%' }}>
@@ -266,7 +303,7 @@ export default function Dashboard({
 
               {/* Cohort Comparison Plot */}
               <div className="game-card" style={{ width: '100%', alignItems: 'stretch', boxSizing: 'border-box' }}>
-                <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>📊 Cohort Comparison (vs Clinical)</h3>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(56,189,248,0.7))',flexShrink:0}} xmlns="http://www.w3.org/2000/svg"><rect x="3" y="12" width="4" height="9" rx="1" fill="#38bdf8"/><rect x="10" y="6" width="4" height="15" rx="1" fill="#38bdf8"/><rect x="17" y="3" width="4" height="18" rx="1" fill="#38bdf8" fillOpacity="0.7"/></svg> Cohort Comparison (vs Clinical)</h3>
                 <div style={{ position: 'relative', height: '240px', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px', padding: '10px' }}>
                   {chartsLoading ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem', height: '100%' }}>
@@ -289,7 +326,7 @@ export default function Dashboard({
 
               {/* Cognitive Radar Chart */}
               <div className="game-card" style={{ width: '100%', alignItems: 'stretch', boxSizing: 'border-box' }}>
-                <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>🕸️ Cognitive Domain Radar Chart</h3>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(168,85,247,0.7))',flexShrink:0}} xmlns="http://www.w3.org/2000/svg"><polygon points="12,2 20,8 17,19 7,19 4,8" stroke="#a855f7" strokeWidth="1.5" fill="rgba(168,85,247,0.1)"/><polygon points="12,6 17,10 15,16 9,16 7,10" stroke="#a855f7" strokeWidth="1" fill="rgba(168,85,247,0.15)"/></svg> Cognitive Domain Radar Chart</h3>
                 <div style={{ position: 'relative', height: '240px' }}>
                   <Radar data={radarDataEnhanced} options={radarOptions} />
                 </div>
@@ -303,7 +340,7 @@ export default function Dashboard({
               {/* Multi-Session Reaction Time Trend */}
               <div className="game-card" style={{ width: '100%', alignItems: 'stretch', boxSizing: 'border-box' }}>
                 <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span>📈</span> Multi-Session RT Trend
+                  <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(74,222,128,0.7))',verticalAlign:'middle'}} xmlns="http://www.w3.org/2000/svg"><polyline points="2,17 8,11 13,16 22,7" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><polyline points="17,7 22,7 22,12" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></span> Multi-Session RT Trend
                 </h3>
                 <p style={{ color: '#94a3b8', fontSize: '0.8rem', margin: '0 0 1.25rem 0', lineHeight: '1.3' }}>
                   Progression of speed and EMA trend over previous active game sessions.
@@ -328,7 +365,7 @@ export default function Dashboard({
               {/* Per-Domain Accuracy Breakdown */}
               <div className="game-card" style={{ width: '100%', alignItems: 'stretch', boxSizing: 'border-box' }}>
                 <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span>🎯</span> Per-Domain Accuracy
+                   <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(56,189,248,0.7))',verticalAlign:'middle'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="#38bdf8" strokeWidth="1.5"/><circle cx="12" cy="12" r="5" stroke="#38bdf8" strokeWidth="1.5"/><circle cx="12" cy="12" r="2" fill="#38bdf8"/></svg></span> Per-Domain Accuracy
                 </h3>
                 <p style={{ color: '#94a3b8', fontSize: '0.8rem', margin: '0 0 1.25rem 0', lineHeight: '1.3' }}>
                   Average task precision and success rate percentages across cognitive domains.
@@ -354,7 +391,7 @@ export default function Dashboard({
               {/* Per-Game Score Breakdown */}
               <div className="game-card" style={{ width: '100%', alignItems: 'stretch', boxSizing: 'border-box' }}>
                 <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span>🏆</span> Per-Game Best Scores
+                   <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(251,191,36,0.8))',verticalAlign:'middle'}} xmlns="http://www.w3.org/2000/svg"><path d="M6 2h12v10a6 6 0 01-12 0V2z" fill="#fbbf24"/><path d="M5 7H2a4 4 0 004 4M19 7h3a4 4 0 01-4 4" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round"/><line x1="12" y1="18" x2="12" y2="21" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round"/><line x1="8" y1="21" x2="16" y2="21" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round"/></svg></span> Per-Game Best Scores
                 </h3>
                 <p style={{ color: '#94a3b8', fontSize: '0.8rem', margin: '0 0 1.25rem 0', lineHeight: '1.3' }}>
                   Highest performance index achieved across specific game modules.
@@ -380,7 +417,7 @@ export default function Dashboard({
               {/* Accuracy vs RT Scatter Plot */}
               <div className="game-card" style={{ width: '100%', alignItems: 'stretch', boxSizing: 'border-box' }}>
                 <h3 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span>✨</span> Reaction Time vs Accuracy
+                  <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(251,191,36,0.8))',verticalAlign:'middle'}} xmlns="http://www.w3.org/2000/svg"><polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9" fill="#fbbf24"/></svg></span> Reaction Time vs Accuracy
                 </h3>
                 <p style={{ color: '#94a3b8', fontSize: '0.8rem', margin: '0 0 1.25rem 0', lineHeight: '1.3' }}>
                   Execution speed mapped against success rate for the current session.
@@ -409,7 +446,7 @@ export default function Dashboard({
               {/* Cognitive Profile Card & Behavioral Insights */}
               <div className="game-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxSizing: 'border-box' }}>
                 <div>
-                  <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>👤 Your Cognitive Playstyle & Insights</h3>
+                  <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(56,189,248,0.6))',flexShrink:0}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#38bdf8"/><path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round"/></svg> Classifier Profile &amp; Behavioral Insights</h3>
                   <div style={{ textAlign: 'center', padding: '1rem 0 1.5rem 0', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
                     <div style={{ fontSize: '0.85rem', color: '#94a3b8' }}>Your Cognitive Playstyle</div>
                     <div style={{
@@ -459,7 +496,7 @@ export default function Dashboard({
                         boxShadow: '0 0 10px rgba(249, 115, 22, 0.15)',
                         lineHeight: '1.4'
                       }}>
-                        <strong>⚠️ Frustration Alert:</strong> Rapid clicking detected: Try to remain calm and focused during high-difficulty challenges.
+                        <strong><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 5px rgba(249,115,22,0.8))', verticalAlign:'text-bottom', marginRight:'4px'}} xmlns="http://www.w3.org/2000/svg"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke="#fb923c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> Frustration Alert:</strong> Impulsive Task Friction Identified: Real-time kinetic feedback indicates panic-driven or non-target execution behaviors during accelerated DDA challenge thresholds.
                       </div>
                     )}
                     {(!lastGameStats || (lastGameStats.hesitation_ms < 800 && lastGameStats.spam_click_count < 3)) && (
@@ -483,7 +520,7 @@ export default function Dashboard({
                       </p>
                     </div>
                     <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '0.75rem', borderRadius: '8px' }}>
-                      <span style={{ fontWeight: 'bold', color: '#ef4444', fontSize: '0.85rem' }}>⚠️ SKILL WEAKNESS:</span>
+                      <span style={{ fontWeight: 'bold', color: '#ef4444', fontSize: '0.85rem' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 5px rgba(239,68,68,0.8))', verticalAlign:'text-bottom', marginRight:'4px'}} xmlns="http://www.w3.org/2000/svg"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> SKILL WEAKNESS:</span>
                       <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#e2e8f0' }}>
                         {skills.spatial_visual_memory < 70 ? 'Short-Term Spatial sequence recall vigilance can be optimized under distractor noise.' : 'Working Memory retention logic is currently your secondary optimization track.'}
                       </p>

@@ -116,6 +116,27 @@ const ProgressRing = ({ radius, stroke, progress, color }) => {
   );
 };
 
+const SvgLauncherIcon = ({ name, style }) => {
+  const defaultStyle = { filter: 'drop-shadow(0 0 5px rgba(255,255,255,0.5))', flexShrink: 0, ...style };
+  
+  if (name === 'timed') {
+    return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={defaultStyle}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+  } else if (name === 'zen') {
+    return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={defaultStyle}><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>;
+  } else if (name === 'survival') {
+    return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={defaultStyle}><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>;
+  } else if (name === 'target') {
+    return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={defaultStyle}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>;
+  } else if (name === 'time_attack') {
+    return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={defaultStyle}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>;
+  } else if (name === 'endurance') {
+    return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={defaultStyle}><rect x="1" y="6" width="18" height="12" rx="2" ry="2"/><line x1="23" y1="13" x2="23" y2="11"/><line x1="6" y1="10" x2="6" y2="14"/><line x1="10" y1="10" x2="10" y2="14"/><line x1="14" y1="10" x2="14" y2="14"/></svg>;
+  } else if (name === 'start') {
+    return <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={defaultStyle}><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>;
+  }
+  return null;
+};
+
 const OfflineCacheWarningBanner = ({ isVisible, onClose }) => {
   if (!isVisible) return null;
   return (
@@ -141,7 +162,7 @@ const OfflineCacheWarningBanner = ({ isVisible, onClose }) => {
   );
 };
 
-import { DOMAIN_INFO, DOMAIN_THEMES, DOMAINS_LIST, COGNITIVE_QUESTIONS, DOMAIN_LABELS } from './utils/constants.js';
+import { DOMAIN_INFO, DOMAIN_THEMES, DOMAINS_LIST, COGNITIVE_QUESTIONS, DOMAIN_LABELS } from './utils/constants.jsx';
 
 export default function App() {
   const { coins, totalXp, inventory, fetchInventory } = useCogniStore();
@@ -2350,15 +2371,27 @@ export default function App() {
             chartsError={chartsError}
             cohortComparison={cohortComparison}
             latestSessionMetrics={latestSessionMetrics}
-            getRadarChartData={getRadarChartData}
+            radarDataEnhanced={radarDataEnhanced}
             radarOptions={radarOptions}
-            getPerformanceTrendData={getPerformanceTrendData}
-            performanceTrendOptions={performanceTrendOptions}
-            getConsistencyTrendData={getConsistencyTrendData}
+            lineChartData={lineChartData}
+            lineChartOptions={lineChartOptions}
+            barChartData={barChartData}
+            barChartOptions={barChartOptions}
+            sessionTrendData={sessionTrendData}
+            sessionTrendOptions={sessionTrendOptions}
+            domainAccData={domainAccData}
+            domainAccOptions={domainAccOptions}
+            perGameScoreData={perGameScoreData}
+            perGameScoreOptions={perGameScoreOptions}
+            scatterData={scatterData}
+            scatterOptions={scatterOptions}
             sessionHistory={sessionHistory}
             archetypeHistory={archetypeHistory}
             setActiveGame={setActiveGame}
             prescribedGame={prescribedGame}
+            skills={skills}
+            domainDeltas={domainDeltas}
+            rec={rec}
           />
         ) : portalView === 'knowledge' ? (
           <KnowledgeBase />
@@ -2394,7 +2427,7 @@ export default function App() {
             {weakestDomain && DOMAINS_LIST.find(d => d.id === weakestDomain) && (
               <div style={{ marginBottom: '3.5rem' }}>
                 <h2 className="section-title" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  🧠 Daily Personalized Workout <span style={{ fontSize: '1rem', color: '#a855f7', fontWeight: 'normal', marginLeft: '0.5rem' }}>— Target: {DOMAINS_LIST.find(d => d.id === weakestDomain).title}</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 5px rgba(192,132,252,0.7))',verticalAlign:'middle',marginRight:'6px',flexShrink:0}} xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="7" rx="7" ry="5" stroke="#c084fc" strokeWidth="2"/><path d="M5 10c0 3 3 6 7 6s7-3 7-6" stroke="#c084fc" strokeWidth="2" strokeLinecap="round"/><line x1="9" y1="13" x2="9" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/><line x1="15" y1="13" x2="15" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/><line x1="7" y1="19" x2="17" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/></svg> Daily Personalized Workout <span style={{ fontSize: '1rem', color: '#a855f7', fontWeight: 'normal', marginLeft: '0.5rem' }}>— Target: {DOMAINS_LIST.find(d => d.id === weakestDomain).title}</span>
                 </h2>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
                   {DOMAINS_LIST.find(d => d.id === weakestDomain).games.slice(0, 3).map((game) => (
@@ -2421,7 +2454,7 @@ export default function App() {
             {/* Cognitive Targets & Milestones (Option C) */}
             <div className="goals-section-container" style={{ marginBottom: '3.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <h2 className="section-title" style={{ margin: 0 }}>🎯 Cognitive Targets & Milestones</h2>
+                <h2 className="section-title" style={{ margin: 0 }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(56,189,248,0.7))',verticalAlign:'middle',marginRight:'6px'}} xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> Cognitive Targets & Milestones</h2>
                 <button
                   onClick={() => setShowGoalForm(!showGoalForm)}
                   style={{
@@ -2565,7 +2598,7 @@ export default function App() {
                 
                 {/* Active Goals Section */}
                 <div className="game-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <h3 style={{ fontSize: '1.1rem', margin: 0, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>🎯 Active Targets</h3>
+                  <h3 style={{ fontSize: '1.1rem', margin: 0, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(56,189,248,0.7))',verticalAlign:'middle',marginRight:'5px'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="#38bdf8" strokeWidth="1.5"/><circle cx="12" cy="12" r="5" stroke="#38bdf8" strokeWidth="1.5"/><circle cx="12" cy="12" r="2" fill="#38bdf8"/></svg> Active Targets</h3>
                   
                   {goalsLoading ? (
                     <div style={{ color: '#94a3b8', fontSize: '0.875rem', textAlign: 'center', padding: '2rem 0' }}>
@@ -2658,7 +2691,7 @@ export default function App() {
 
                 {/* Milestone Badges Section */}
                 <div className="game-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <h3 style={{ fontSize: '1.1rem', margin: 0, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>🏆 Completed Milestones</h3>
+                  <h3 style={{ fontSize: '1.1rem', margin: 0, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(251,191,36,0.8))',verticalAlign:'middle',marginRight:'5px'}} xmlns="http://www.w3.org/2000/svg"><path d="M6 2h12v10a6 6 0 01-12 0V2z" fill="#fbbf24"/><path d="M5 7H2a4 4 0 004 4M19 7h3a4 4 0 01-4 4" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round"/><line x1="12" y1="18" x2="12" y2="21" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round"/><line x1="8" y1="21" x2="16" y2="21" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round"/></svg> Completed Milestones</h3>
                   
                   {goalsLoading ? (
                     <div style={{ color: '#94a3b8', fontSize: '0.875rem', textAlign: 'center', padding: '2rem 0' }}>
@@ -2756,7 +2789,7 @@ export default function App() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '1rem', gap: '1rem' }}>
                   <div>
                     <h3 style={{ fontSize: '1.25rem', margin: 0, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span>🧭</span> Quasi-Experimental Research Track
+                      <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',filter:'drop-shadow(0 0 4px rgba(168,85,247,0.7))'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="#a855f7" strokeWidth="1.5"/><polygon points="16,8 10,10 8,16 14,14" fill="#a855f7"/><circle cx="12" cy="12" r="1.5" fill="#1e1b4b"/></svg></span> Quasi-Experimental Research Track
                     </h3>
                     <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
                       Subject ID: <strong>{currentUser}</strong> | Mapped Weakest Domain: <strong style={{ color: '#38bdf8' }}>{weakestDomain?.replace(/_/g, ' ').toUpperCase()}</strong>
@@ -2789,11 +2822,11 @@ export default function App() {
                           boxShadow: '0 4px 10px rgba(74, 222, 128, 0.2)'
                         }}
                       >
-                        ✍ Take Post-Test Questionnaire
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'5px'}} xmlns="http://www.w3.org/2000/svg"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> Take Post-Test Questionnaire
                       </button>
                     ) : (
                       <span style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: '1px solid #f59e0b', padding: '0.35rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold' }}>
-                        ⌛ Play Prescribed Game to Unlock Post-Test
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'5px',filter:'drop-shadow(0 0 3px rgba(245,158,11,0.7))'}} xmlns="http://www.w3.org/2000/svg"><path d="M12 2v4M12 18v4M6 6l2 2M16 16l2 2M2 12h4M18 12h4M6 18l2-2M16 8l2-2" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round"/><circle cx="12" cy="12" r="4" stroke="#f59e0b" strokeWidth="1.5"/></svg> Play Prescribed Game to Unlock Post-Test
                       </span>
                     )}
                   </div>
@@ -2815,7 +2848,7 @@ export default function App() {
                       transition: 'all 0.2s'
                     }}
                   >
-                    👤 Individual Participant View
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'5px',filter:'drop-shadow(0 0 3px rgba(255,255,255,0.5))'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#ffffff"/><path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="#ffffff" strokeWidth="2" strokeLinecap="round"/></svg> Individual Participant View
                   </button>
                   <button
                     onClick={() => setResearchMode('aggregate')}
@@ -2831,7 +2864,7 @@ export default function App() {
                       transition: 'all 0.2s'
                     }}
                   >
-                    📊 Aggregate Cohort Study View
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'5px',filter:'drop-shadow(0 0 3px rgba(56,189,248,0.6))'}} xmlns="http://www.w3.org/2000/svg"><rect x="3" y="12" width="4" height="9" rx="1" fill="#38bdf8"/><rect x="10" y="6" width="4" height="15" rx="1" fill="#38bdf8"/><rect x="17" y="3" width="4" height="18" rx="1" fill="#38bdf8" fillOpacity="0.7"/></svg> Aggregate Cohort Study View
                   </button>
                 </div>
 
@@ -3195,12 +3228,12 @@ export default function App() {
                   
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                     {[
-                      { id: 'timed', label: '⏱️ Standard Timed', desc: 'Standard 2-minute timed session.' },
-                      { id: 'zen', label: '🌸 Zen Mode', desc: 'Unlimited time, counts up, no pressure.' },
-                      { id: 'survival', label: '❤️ Survival Mode', desc: 'Start with 3 lives. Errors deduct lives.' },
-                      { id: 'target', label: '🎯 Objective Target', desc: 'Ends after exactly 10 trials.' },
-                      { id: 'time_attack', label: '⚡ Time Attack', desc: 'Race to get 10 correct hits.' },
-                      { id: 'endurance', label: '🔋 Fatigue Endurance', desc: 'Start with 20s. Hit adds +2s, miss subtracts -5s.' }
+                      { id: 'timed', label: 'Standard Timed', desc: 'Standard 2-minute timed session.' },
+                      { id: 'zen', label: 'Zen Mode', desc: 'Unlimited time, counts up, no pressure.' },
+                      { id: 'survival', label: 'Survival Mode', desc: 'Start with 3 lives. Errors deduct lives.' },
+                      { id: 'target', label: 'Objective Target', desc: 'Ends after exactly 10 trials.' },
+                      { id: 'time_attack', label: 'Time Attack', desc: 'Race to get 10 correct hits.' },
+                      { id: 'endurance', label: 'Fatigue Endurance', desc: 'Start with 20s. Hit adds +2s, miss subtracts -5s.' }
                     ].map(mode => {
                       const isSelected = selectedGameMode === mode.id;
                       const isHovered = hoveredMode === mode.id;
@@ -3229,7 +3262,10 @@ export default function App() {
                             boxShadow: isSelected ? `0 0 10px ${DOMAIN_THEMES[pendingGameToLaunch.themeClass]?.glow}` : 'none'
                           }}
                         >
-                          <span style={{ fontWeight: 'bold', fontSize: '0.95rem' }}>{mode.label}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                            <SvgLauncherIcon name={mode.id} style={{ color: isSelected ? themeColor : '#cbd5e1' }} />
+                            <span style={{ fontWeight: 'bold', fontSize: '0.95rem' }}>{mode.label}</span>
+                          </div>
                           <span style={{ fontSize: '0.75rem', color: isSelected ? '#ffffff' : '#94a3b8' }}>{mode.desc}</span>
                         </button>
                       );
@@ -3252,32 +3288,32 @@ export default function App() {
                     const activeModeId = hoveredMode || selectedGameMode || 'timed';
                     const modeDetails = {
                       timed: {
-                        title: '⏱️ Standard Timed Rules',
+                        title: 'Standard Timed Rules',
                         explanation: 'Traditional cognitive evaluation mode.',
                         rules: 'You have exactly 2 minutes (120 seconds) to complete as many correct trials as possible. Speed and accuracy are balanced in real-time by the DDA engine to calculate difficulty adjustments.'
                       },
                       zen: {
-                        title: '🌸 Zen Mode Rules',
+                        title: 'Zen Mode Rules',
                         explanation: 'Low-stress cognitive training & warmup practice.',
                         rules: 'Play at your own pace with no ticking timers or life counters. Perfect for warm-ups, learning the game mechanics, or relaxing without speed-accuracy time pressure.'
                       },
                       survival: {
-                        title: '❤️ Survival Mode Rules',
+                        title: 'Survival Mode Rules',
                         explanation: 'High-stakes precision focus training.',
                         rules: 'You start the session with exactly 3 lives. Every incorrect input or element timeout subtracts 1 life. The session continues indefinitely until all lives are depleted. Focus on high accuracy!'
                       },
                       target: {
-                        title: '🎯 Objective Target Rules',
+                        title: 'Objective Target Rules',
                         explanation: 'Fixed-length cognitive efficiency benchmark.',
                         rules: 'The game concludes after exactly 10 trials. Your goal is to maximize accuracy rate and minimize average reaction time. Highly effective for clean pre/post benchmark scoring.'
                       },
                       time_attack: {
-                        title: '⚡ Time Attack Rules',
+                        title: 'Time Attack Rules',
                         explanation: 'Rapid motor execution challenge.',
                         rules: 'Race against the clock to complete exactly 10 correct matches as fast as possible. Any mistakes will delay your timer progress. Speed is key!'
                       },
                       endurance: {
-                        title: '🔋 Fatigue Endurance Rules',
+                        title: 'Fatigue Endurance Rules',
                         explanation: 'Adaptive threshold capacity training.',
                         rules: 'Start the session with a 20-second timer. Every correct trial adds +2 seconds of bonus time, while each incorrect trial subtracts -5 seconds. Survive and score as long as you can!'
                       }
@@ -3286,7 +3322,8 @@ export default function App() {
                     return (
                       <>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <strong style={{ fontSize: '0.95rem', color: DOMAIN_THEMES[pendingGameToLaunch.themeClass]?.color || '#ffffff' }}>
+                          <strong style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.95rem', color: DOMAIN_THEMES[pendingGameToLaunch.themeClass]?.color || '#ffffff' }}>
+                            <SvgLauncherIcon name={activeModeId} />
                             {modeDetails.title} {hoveredMode && <span style={{ fontSize: '0.7rem', background: 'rgba(255,255,255,0.08)', padding: '0.1rem 0.4rem', borderRadius: '4px', color: '#94a3b8', marginLeft: '0.5rem' }}>Previewing</span>}
                           </strong>
                           <span style={{ fontSize: '0.75rem', fontStyle: 'italic', color: '#94a3b8' }}>
@@ -3339,7 +3376,10 @@ export default function App() {
                       transition: 'filter 0.2s'
                     }}
                   >
-                    Start Training Session 🚀
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                      <span>Start Training Session</span>
+                      <SvgLauncherIcon name="start" />
+                    </div>
                   </button>
                 </div>
               </div>
@@ -3366,3 +3406,4 @@ export default function App() {
     </div>
   );
 }
+

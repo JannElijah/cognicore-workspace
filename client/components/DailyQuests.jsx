@@ -51,7 +51,7 @@ const DailyQuests = () => {
   return (
     <div style={{ marginTop: '1.5rem' }}>
       <h3 style={{ color: '#f8fafc', fontSize: '1.25rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <span>📋</span> Daily Quests
+        <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(56,189,248,0.7))',verticalAlign:'middle'}} xmlns="http://www.w3.org/2000/svg"><rect x="8" y="2" width="8" height="4" rx="1" fill="#38bdf8" fillOpacity="0.2" stroke="#38bdf8" strokeWidth="1.5"/><rect x="4" y="4" width="16" height="18" rx="2" stroke="#38bdf8" strokeWidth="1.5"/><line x1="8" y1="10" x2="16" y2="10" stroke="#38bdf8" strokeWidth="1.5" strokeLinecap="round"/><line x1="8" y1="14" x2="16" y2="14" stroke="#38bdf8" strokeWidth="1.5" strokeLinecap="round"/><line x1="8" y1="18" x2="13" y2="18" stroke="#38bdf8" strokeWidth="1.5" strokeLinecap="round"/></svg></span> Daily Quests
       </h3>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
         {loading ? (
@@ -76,7 +76,7 @@ const DailyQuests = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                   <h4 style={{ color: '#e2e8f0', margin: 0, fontSize: '0.95rem' }}>{quest.task_description}</h4>
                   <div style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                    {quest.reward_coins} <span>🪙</span>
+                    {quest.reward_coins} <svg width="15" height="15" viewBox="0 0 24 24" style={{ filter: 'drop-shadow(0 0 4px rgba(251,191,36,0.7))', flexShrink: 0, verticalAlign: 'middle' }} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="11" fill="#fbbf24"/><circle cx="12" cy="12" r="8" fill="#f59e0b"/><text x="12" y="16.5" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#78350f" fontFamily="Arial">C</text></svg>
                   </div>
                 </div>
                 

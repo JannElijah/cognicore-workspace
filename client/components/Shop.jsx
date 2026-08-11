@@ -149,7 +149,11 @@ const Shop = ({ onClose }) => {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
             <div style={{ background: '#1e293b', padding: '0.5rem 1rem', borderRadius: '9999px', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid #334155' }}>
-              <span style={{ color: '#fbbf24' }}>🪙</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" style={{ filter: 'drop-shadow(0 0 4px rgba(251,191,36,0.7))', flexShrink: 0 }} xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="11" fill="#fbbf24"/>
+                <circle cx="12" cy="12" r="8" fill="#f59e0b"/>
+                <text x="12" y="16.5" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#78350f" fontFamily="Arial">C</text>
+              </svg>
               <span style={{ fontWeight: 'bold', color: '#f8fafc' }}>{loading ? '...' : coins}</span>
             </div>
             <button
@@ -208,7 +212,11 @@ const Shop = ({ onClose }) => {
                       <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         {!isOwned ? (
                           <div style={{ color: '#fbbf24', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                            <span>🪙</span> {item.price}
+                            <svg width="16" height="16" viewBox="0 0 24 24" style={{ filter: 'drop-shadow(0 0 4px rgba(251,191,36,0.7))', flexShrink: 0 }} xmlns="http://www.w3.org/2000/svg">
+                              <circle cx="12" cy="12" r="11" fill="#fbbf24"/>
+                              <circle cx="12" cy="12" r="8" fill="#f59e0b"/>
+                              <text x="12" y="16.5" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#78350f" fontFamily="Arial">C</text>
+                            </svg> {item.price}
                           </div>
                         ) : (
                           <div style={{ color: '#4ade80', fontWeight: 'bold', fontSize: '0.875rem', textTransform: 'uppercase' }}>

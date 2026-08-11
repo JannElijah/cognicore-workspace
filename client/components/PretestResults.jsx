@@ -1,5 +1,32 @@
 import React from 'react';
 
+
+const SvgArchetype = ({ icon, color }) => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ filter: `drop-shadow(0 0 5px ${color}80)`, display: 'inline-block', verticalAlign: 'middle', marginLeft: '8px' }} xmlns="http://www.w3.org/2000/svg">
+    {icon === '🏛️' && <path d="M4 10h16M4 14h16M12 3l9 5H3l9-5zM6 14v6m4-6v6m4-6v6m4-6v6" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+    {icon === '♟️' && <path d="M12 4a2 2 0 100 4 2 2 0 000-4zM8 20h8M10 12l-2 8h8l-2-8-2-4-2 4z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+    {icon === '⚡' && <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+    {icon === '📊' && <path d="M4 20h16M8 16v-6M12 16V6M16 16v-3" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+    {icon === '🛡️' && <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+    {icon === '🌌' && <circle cx="12" cy="12" r="9" stroke={color} strokeWidth="2" strokeDasharray="3 3"/>}
+    {icon === '🎼' && <path d="M9 18V5l12-2v13M9 9l12-2M9 18a3 3 0 11-6 0 3 3 0 016 0zm12-1a3 3 0 11-6 0 3 3 0 016 0z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+    {icon === '🚀' && <path d="M13.5 6.5l4 4M12 22l-2.5-2.5-4-1 2.5-3.5L4 11l-2-2c6-3 12-4 18-6-2 6-3 12-6 18l-2-2-4 2.5z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+    {icon === '💡' && <path d="M9 18h6M10 22h4M12 2a6 6 0 00-6 6c0 2.2 1.8 4 3 5.5V15h6v-1.5c1.2-1.5 3-3.3 3-5.5a6 6 0 00-6-6z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+  </svg>
+);
+
+const SvgIcon = ({ name, color }) => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ filter: `drop-shadow(0 0 4px ${color}80)`, display: 'inline-block', verticalAlign: 'middle' }} xmlns="http://www.w3.org/2000/svg">
+    {name === '🧠' && <path d="M9.5 3a4.5 4.5 0 100 9h5a4.5 4.5 0 100-9h-5zm0 9a4.5 4.5 0 100 9h5a4.5 4.5 0 100-9h-5z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+    {name === '🧩' && <path d="M19 12h-2a3 3 0 010-6h2M5 12h2a3 3 0 000-6H5M12 19v-2a3 3 0 00-6 0v2M12 5v2a3 3 0 01-6 0V5" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+    {name === '⚡' && <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+    {name === '🔄' && <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+    {name === '🌟' && <path d="M12 2l3 6.5L22 9l-5 5 1.5 7.5L12 18l-6.5 3.5L7 14 2 9l7-1.5L12 2z" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+    {name === '📈' && <path d="M3 3v18h18M7 14l4-4 4 4 6-6" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+    {name === '🤖' && <path d="M12 2v4M8 6h8a2 2 0 012 2v8a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2zm-3 5v4m14-4v4m-9-3v2m4-2v2" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+    {name === '📊' && <path d="M4 20h16M8 16v-6M12 16V6M16 16v-3" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
+  </svg>
+);
 const PretestResults = ({ 
   preTestScores, 
   weakestDomain, 
@@ -11,10 +38,10 @@ const PretestResults = ({
 
   // De-jargonized domains
   const domainMapping = {
-    spatial_visual_memory: { color: '#4ade80', name: 'Spatial Visual Memory', icon: '🧠', description: 'How well you remember patterns and locations.' },
-    logical_mathematical: { color: '#f59e0b', name: 'Logical Mathematical', icon: '🧩', description: 'Your ability to figure out patterns and rules.' },
-    reflexes_and_focus: { color: '#38bdf8', name: 'Reflexes and Focus', icon: '⚡', description: 'How fast you react and maintain attention.' },
-    executive_strategy: { color: '#a855f7', name: 'Executive Strategy', icon: '🔄', description: 'How quickly you adjust to changing situations.' }
+    spatial_visual_memory: { color: '#4ade80', name: 'Spatial Visual Memory', icon: <SvgIcon name='🧠' color='#4ade80' />, description: 'How well you remember patterns and locations.' },
+    logical_mathematical: { color: '#f59e0b', name: 'Logical Mathematical', icon: <SvgIcon name='🧩' color='#f59e0b' />, description: 'Your ability to figure out patterns and rules.' },
+    reflexes_and_focus: { color: '#38bdf8', name: 'Reflexes and Focus', icon: <SvgIcon name='⚡' color='#38bdf8' />, description: 'How fast you react and maintain attention.' },
+    executive_strategy: { color: '#a855f7', name: 'Executive Strategy', icon: <SvgIcon name='🔄' color='#a855f7' />, description: 'How quickly you adjust to changing situations.' }
   };
 
   const getDomainInfo = (domain) => domainMapping[domain] || domainMapping.reflexes_and_focus;
@@ -22,19 +49,19 @@ const PretestResults = ({
 
   // Mapping archetypes to engaging personalities
   const archetypeNames = {
-    "The Architect": "The Architect 🏛️",
-    "The Strategist": "The Strategist ♟️",
-    "The Catalyst": "The Catalyst ⚡",
-    "The Analyst": "The Analyst 📊",
-    "The Guardian": "The Guardian 🛡️",
-    "The Visionary": "The Visionary 🌌",
-    "The Maestro": "The Maestro 🎼",
-    "The Vanguard": "The Vanguard 🚀"
+    "The Architect": <><span style={{color: '#f8fafc'}}>The Architect</span><SvgArchetype icon='🏛️' color='#e2e8f0'/></>,
+    "The Strategist": <><span style={{color: '#f8fafc'}}>The Strategist</span><SvgArchetype icon='♟️' color='#e2e8f0'/></>,
+    "The Catalyst": <><span style={{color: '#f8fafc'}}>The Catalyst</span><SvgArchetype icon='⚡' color='#e2e8f0'/></>,
+    "The Analyst": <><span style={{color: '#f8fafc'}}>The Analyst</span><SvgArchetype icon='📊' color='#e2e8f0'/></>,
+    "The Guardian": <><span style={{color: '#f8fafc'}}>The Guardian</span><SvgArchetype icon='🛡️' color='#e2e8f0'/></>,
+    "The Visionary": <><span style={{color: '#f8fafc'}}>The Visionary</span><SvgArchetype icon='🌌' color='#e2e8f0'/></>,
+    "The Maestro": <><span style={{color: '#f8fafc'}}>The Maestro</span><SvgArchetype icon='🎼' color='#e2e8f0'/></>,
+    "The Vanguard": <><span style={{color: '#f8fafc'}}>The Vanguard</span><SvgArchetype icon='🚀' color='#e2e8f0'/></>
   };
 
   const archetypeTitle = personalizedReport?.archetype 
     ? (archetypeNames[personalizedReport.archetype] || personalizedReport.archetype) 
-    : "The Learner 💡";
+    : <><span style={{color: '#f8fafc'}}>The Learner</span><SvgArchetype icon='💡' color='#e2e8f0'/></>;
 
   return (
     <div style={{
@@ -103,7 +130,7 @@ const PretestResults = ({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div style={{ background: 'rgba(20, 83, 45, 0.15)', borderLeft: '4px solid #22c55e', borderRadius: '4px 12px 12px 4px', padding: '1.25rem' }}>
                 <h4 style={{ color: '#4ade80', fontWeight: '700', marginBottom: '0.75rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span>🌟</span> Your Strengths
+                  <SvgIcon name='🌟' color='#4ade80' /> Your Strengths
                 </h4>
                 <ul style={{ margin: 0, paddingLeft: '1.5rem', color: '#e2e8f0', fontSize: '0.95rem', lineHeight: '1.6' }}>
                   {(personalizedReport.pros || []).map((pro, i) => <li key={i} style={{ marginBottom: '0.5rem' }}>{pro}</li>)}
@@ -111,7 +138,7 @@ const PretestResults = ({
               </div>
               <div style={{ background: 'rgba(127, 29, 29, 0.15)', borderLeft: '4px solid #ef4444', borderRadius: '4px 12px 12px 4px', padding: '1.25rem' }}>
                 <h4 style={{ color: '#f87171', fontWeight: '700', marginBottom: '0.75rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span>📈</span> Growth Areas
+                  <SvgIcon name='📈' color='#f87171' /> Growth Areas
                 </h4>
                 <ul style={{ margin: 0, paddingLeft: '1.5rem', color: '#e2e8f0', fontSize: '0.95rem', lineHeight: '1.6' }}>
                   {(personalizedReport.weaknesses || []).map((con, i) => <li key={i} style={{ marginBottom: '0.5rem' }}>{con}</li>)}
@@ -119,7 +146,7 @@ const PretestResults = ({
               </div>
               <div style={{ background: 'rgba(56, 189, 248, 0.15)', borderLeft: '4px solid #38bdf8', borderRadius: '4px 12px 12px 4px', padding: '1.25rem' }}>
                 <h4 style={{ color: '#38bdf8', fontWeight: '700', marginBottom: '0.75rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span>🤖</span> AI Prediction Breakdown
+                  <SvgIcon name='🤖' color='#38bdf8' /> AI Prediction Breakdown
                 </h4>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
                     <div style={{ flex: 1 }}>
@@ -147,7 +174,7 @@ const PretestResults = ({
         {/* Baseline Metrics (Right side) */}
         <div style={{ background: 'rgba(15, 23, 42, 0.6)', borderRadius: '16px', padding: '2rem', border: '1px solid rgba(51, 65, 85, 0.4)', display: 'flex', flexDirection: 'column' }}>
           <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#f8fafc', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span>📊</span> Your Skill Breakdown
+            <SvgIcon name='📊' color='#e2e8f0' /> Your Skill Breakdown
           </h3>
           <p style={{ fontSize: '0.9rem', color: '#94a3b8', marginBottom: '2rem' }}>
             Here's a simplified look at your cognitive performance across 4 key areas. Higher is better!

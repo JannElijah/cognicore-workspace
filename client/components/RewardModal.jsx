@@ -43,7 +43,7 @@ const RewardModal = ({ rewards, onClose }) => {
           <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '1rem', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ color: '#e2e8f0', fontWeight: 'bold' }}>Coins Earned</span>
             <span style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: '1.25rem' }}>
-              +{rewards.coins} <span>🪙</span>
+              +{rewards.coins} <svg width="20" height="20" viewBox="0 0 24 24" style={{ filter: 'drop-shadow(0 0 5px rgba(251,191,36,0.8))', flexShrink: 0, verticalAlign: 'middle' }} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="11" fill="#fbbf24"/><circle cx="12" cy="12" r="8" fill="#f59e0b"/><text x="12" y="16.5" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#78350f" fontFamily="Arial">C</text></svg>
             </span>
           </div>
         </div>
