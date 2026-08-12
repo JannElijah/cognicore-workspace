@@ -64,45 +64,65 @@ export async function getTelemetryQueue() {
             const transaction = db.transaction([STORE_NAME], 'readonly');
             const store = transaction.objectStore(STORE_NAME);
             const request = store.getAll();
+            const keysRequest = store.getAllKeys();
             
-            request.onsuccess = () => {
+            transaction.oncomplete = () => {
                 const results = request.result || [];
+                const keys = keysRequest.result || [];
+                // Attach _id for deletion later
+                const dataWithKeys = results.map((item, index) => ({ ...item, _id: keys[index] }));
+                
                 // Check fallback
                 try {
                     const fallback = JSON.parse(localStorage.getItem('offline_telemetry_fallback') || '[]');
-                    resolve([...results, ...fallback]);
+                    const fallbackWithKeys = fallback.map((item, index) => ({ ...item, _id: 'fallback_' + index }));
+                    resolve([...dataWithKeys, ...fallbackWithKeys]);
                 } catch (e) {
-                    resolve(results);
+                    resolve(dataWithKeys);
                 }
             };
-            request.onerror = () => reject(request.error);
+            transaction.onerror = () => reject(transaction.error);
         });
     } catch (e) {
         console.error("IndexedDB Get Error:", e);
         try {
-            return JSON.parse(localStorage.getItem('offline_telemetry_fallback') || '[]');
+            const fallback = JSON.parse(localStorage.getItem('offline_telemetry_fallback') || '[]');
+            return fallback.map((item, index) => ({ ...item, _id: 'fallback_' + index }));
         } catch (err) {
             return [];
         }
     }
 }
 
-export async function clearTelemetryQueue() {
+export async function deleteTelemetryItems(keys) {
+    if (!keys || keys.length === 0) return true;
+    
     try {
         const db = await getDB();
         return new Promise((resolve, reject) => {
             const transaction = db.transaction([STORE_NAME], 'readwrite');
             const store = transaction.objectStore(STORE_NAME);
-            const request = store.clear();
             
-            request.onsuccess = () => {
-                localStorage.removeItem('offline_telemetry_fallback');
+            let hasFallback = false;
+            keys.forEach(key => {
+                if (typeof key === 'string' && key.startsWith('fallback_')) {
+                    hasFallback = true;
+                } else {
+                    store.delete(key);
+                }
+            });
+            
+            transaction.oncomplete = () => {
+                if (hasFallback) {
+                    // For simplicity, wipe fallback completely since we only use it if DB fails entirely
+                    localStorage.removeItem('offline_telemetry_fallback');
+                }
                 resolve(true);
             };
-            request.onerror = () => reject(request.error);
+            transaction.onerror = () => reject(transaction.error);
         });
     } catch (e) {
-        console.error("IndexedDB Clear Error:", e);
+        console.error("IndexedDB Delete Error:", e);
         localStorage.removeItem('offline_telemetry_fallback');
         return false;
     }

@@ -53,11 +53,11 @@ def sync_user(current_user_id, current_username):
     user_id = current_user_id
     today = date.today()
     
-    streak = UserStreak.query.get(user_id)
+    streak = UserStreak.query.filter_by(user_id=user_id).first()
     daily_reward = {"granted": False, "streak": 1, "coins": 0}
     
     def add_coins(amount):
-        profile = UserProfile.query.get(user_id)
+        profile = UserProfile.query.filter_by(user_id=user_id).first()
         if not profile:
             profile = UserProfile(user_id=user_id, coins=amount)
             db.session.add(profile)

@@ -123,7 +123,7 @@ export default class MatrixRecallScene extends BaseCognitiveScene {
             if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gameObjects.length === 0) {
-                const now = this.time.now;
+                const now = this.getTime();
                 if (now - this.lastMissTime < 200) {
                     this.spamClickCount++;
                 }
@@ -246,7 +246,7 @@ export default class MatrixRecallScene extends BaseCognitiveScene {
 updateTimer() {
         if (!this.sessionStartTime || this.timeLeft <= 0) return;
         
-        const elapsed = this.time.now - this.sessionStartTime;
+        const elapsed = this.getTime() - this.sessionStartTime;
         this.timeLeft = Math.max(0, this.gameDuration - elapsed);
         const seconds = Math.ceil(this.timeLeft / 1000);
         
@@ -315,8 +315,8 @@ updateTimer() {
             });
 
             this.gamePhase = 'RECALL';
-            this.flashStartTime = this.time.now;
-            this.stimulusSpawnTime = this.time.now;
+            this.flashStartTime = this.getTime();
+            this.stimulusSpawnTime = this.getTime();
             this.firstInteractionRegistered = false;
             this.firstInteractionLatency = 0;
             this.statusText.setText('RECALL PATTERN!').setFill('#38bdf8'); // neon blue
@@ -358,7 +358,7 @@ updateTimer() {
 
         // Capture rule-shift latency (time since flash ended to first click)
         if (this.playerSelections.length === 0) {
-            this.ruleShiftLatency = this.time.now - this.flashStartTime;
+            this.ruleShiftLatency = this.getTime() - this.flashStartTime;
         }
 
         this.playerSelections.push(index);
@@ -406,7 +406,7 @@ updateTimer() {
         this.hits++;
         this.totalAttempts++;
 
-        const recallTime = this.time.now - this.flashStartTime;
+        const recallTime = this.getTime() - this.flashStartTime;
         
         // Calculate dynamic reward score
         const baseReward = 100 * this.targetCount;
@@ -431,7 +431,7 @@ updateTimer() {
         this.gamePhase = 'FEEDBACK';
         this.totalAttempts++;
 
-        const recallTime = this.time.now - this.flashStartTime;
+        const recallTime = this.getTime() - this.flashStartTime;
 
         // Highlight wrong tile in red
         const cell = this.gridCells.find(c => c.index === wrongIndex);
@@ -628,7 +628,7 @@ updateTimer() {
     }
 
     startGameplay() {
-        this.sessionStartTime = this.time.now;
+        this.sessionStartTime = this.getTime();
         this.isGameOver = false;
         this.countdownTimer = this.time.addEvent({
             delay: 1000,

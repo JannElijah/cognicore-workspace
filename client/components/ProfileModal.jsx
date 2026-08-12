@@ -10,7 +10,7 @@ import {
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend, CategoryScale, LinearScale);
 
 const ProfileModal = ({ onClose }) => {
-  const { user, token, coins, inventory, reduceFlashes, fetchInventory } = useCogniStore();
+  const { user, token, coins, inventory, totalXp, reduceFlashes, fetchInventory } = useCogniStore();
   const [activeTab, setActiveTab] = useState('overview');
   
   // Data States
@@ -151,8 +151,8 @@ const ProfileModal = ({ onClose }) => {
   const headerBg = equippedBanner && bannerBackgrounds[equippedBanner] ? bannerBackgrounds[equippedBanner] : 'transparent';
 
   // XP Calculations
-  const xp = profileData ? profileData.xp : 0;
-  const level = profileData ? profileData.level : 1;
+  const xp = profileData ? profileData.xp : (totalXp || 0);
+  const level = profileData ? profileData.level : (Math.floor((totalXp || 0) / 500) + 1);
   const xpForNextLevel = level * 500;
   const currentLevelXp = xp - ((level - 1) * 500);
   const xpPercent = Math.min(100, Math.floor((currentLevelXp / 500) * 100));

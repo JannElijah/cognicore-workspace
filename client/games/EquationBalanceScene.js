@@ -133,7 +133,7 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
             if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gameObjects.length === 0) {
-                const now = this.time.now;
+                const now = this.getTime();
                 if (now - this.lastMissTime < 200) {
                     this.spamClickCount++;
                 }
@@ -149,7 +149,7 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
 
     update() {
         if (!this.isTutorialActive && this.gamePhase === 'PLAYING') {
-            const elapsed = this.time.now - this.roundStartTime;
+            const elapsed = this.getTime() - this.roundStartTime;
             this.roundTimeRemaining = Math.max(0, this.roundTimeLimit - elapsed);
 
             // Draw round timer progress bar
@@ -173,7 +173,7 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
     }
 
     startGameplay() {
-        this.sessionStartTime = this.time.now;
+        this.sessionStartTime = this.getTime();
         this.isGameOver = false;
         this.isTutorialActive = false;
         this.countdownTimer = this.time.addEvent({
@@ -456,7 +456,7 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
             this.optionButtons.push({ bg, txt, val, btnWidth, btnHeight });
         });
 
-        this.roundStartTime = this.time.now;
+        this.roundStartTime = this.getTime();
         this.roundTimeRemaining = this.roundTimeLimit;
     }
 
@@ -465,7 +465,7 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
         this.gamePhase = 'FEEDBACK';
 
         const isCorrect = (selectedVal === this.activePuzzle.correctAnswer);
-        const solveTime = this.time.now - this.roundStartTime;
+        const solveTime = this.getTime() - this.roundStartTime;
         const btnWidth = bg.geom ? bg.geom.width : 110;
         const btnHeight = bg.geom ? bg.geom.height : 65;
 

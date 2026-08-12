@@ -99,7 +99,7 @@ class ArchetypeModel:
                 y.append("High Fatigue")
 
             X_cluster = np.array(X_cluster)
-            X_classifier = X_cluster[:, :4]
+            X_classifier = X_cluster
             y = np.array(y)
 
             # Fit Scaler
@@ -141,7 +141,7 @@ class ArchetypeModel:
             self.clustering_model = None
             self.scaler = None
 
-    def predict(self, avg_accuracy, avg_rt_ms, acc_slope, rt_slope):
+    def predict(self, avg_accuracy, avg_rt_ms, acc_slope, rt_slope, avg_hesitation=0.0, avg_spam=0.0, avg_path_eff=1.0):
         """
         Predicts player longitudinal archetype based on session averages and slopes.
         Returns a dict: {"archetype": str, "confidence_score": float}
@@ -149,7 +149,7 @@ class ArchetypeModel:
         # If the ML model is successfully trained
         if SKLEARN_AVAILABLE and self.model is not None:
             try:
-                features = [[avg_accuracy, avg_rt_ms, acc_slope, rt_slope]]
+                features = [[avg_accuracy, avg_rt_ms, acc_slope, rt_slope, avg_hesitation, avg_spam, avg_path_eff]]
                 prediction = self.model.predict(features)[0]
                 probabilities = self.model.predict_proba(features)[0]
                 class_index = list(self.model.classes_).index(prediction)
@@ -178,14 +178,14 @@ class ArchetypeModel:
         else:
             return {"archetype": "Plateauing", "confidence_score": 0.75}
 
-    def detect_fatigue(self, avg_accuracy, avg_rt_ms, acc_slope, rt_slope):
+    def detect_fatigue(self, avg_accuracy, avg_rt_ms, acc_slope, rt_slope, avg_hesitation=0.0, avg_spam=0.0, avg_path_eff=1.0):
         """
         Uses IsolationForest to detect if current session metrics are anomalous (e.g. erratic fatigue).
         Returns True if anomalous, False otherwise.
         """
         if SKLEARN_AVAILABLE and self.fatigue_model is not None:
             try:
-                features = [[avg_accuracy, avg_rt_ms, acc_slope, rt_slope]]
+                features = [[avg_accuracy, avg_rt_ms, acc_slope, rt_slope, avg_hesitation, avg_spam, avg_path_eff]]
                 prediction = self.fatigue_model.predict(features)[0]
                 # IsolationForest returns -1 for outliers/anomalies, 1 for inliers
                 is_anomaly = prediction == -1

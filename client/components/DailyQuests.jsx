@@ -1,5 +1,5 @@
 import { API_BASE } from '../utils/apiClient.js';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import useCogniStore from '../store/useCogniStore';
 
 const DailyQuests = () => {
@@ -122,5 +122,4 @@ const DailyQuests = () => {
     </div>
   );
 };
-
-export default DailyQuests;
+export default memo(DailyQuests);

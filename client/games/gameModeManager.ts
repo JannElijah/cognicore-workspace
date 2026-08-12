@@ -2,7 +2,7 @@
 import { API_BASE } from '../utils/apiClient.js';
 import cogniFX from '../utils/cogniFX.js';
 import useCogniStore from '../store/useCogniStore.ts';
-import { saveTelemetry, getTelemetryQueue, clearTelemetryQueue } from '../utils/indexedDB.js';
+import { saveTelemetry, getTelemetryQueue, deleteTelemetryItems } from '../utils/indexedDB.js';
 
 declare global {
     interface Window {
@@ -15,8 +15,6 @@ declare global {
 // Initialize global game mode tracking variable
 window.currentGameMode = 'timed';
 
-// Global Telemetry Buffers
-let memoryTelemetryBuffer: any[] = [];
 let lastUsedApiUrlBase: string = API_BASE;
 
 function extractApiUrlBase(url) {
@@ -49,47 +47,6 @@ async function queueOfflineTelemetry(url, options) {
     }
 }
 
-// Flush memory buffer of metrics to the batch API endpoint
-async function flushMemoryBuffer() {
-    if (memoryTelemetryBuffer.length === 0) return;
-    const metricsToFlush = [...memoryTelemetryBuffer];
-    memoryTelemetryBuffer = [];
-    
-    const base = lastUsedApiUrlBase;
-    console.log(`[gameModeManager] Flushing ${metricsToFlush.length} buffered metrics to server...`);
-    
-    const token = useCogniStore.getState().token;
-    const headers = { 'Content-Type': 'application/json' };
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-    }
-    
-    try {
-        const response = await originalFetch(`${base}/api/submit-metrics/batch`, {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({ telemetry: metricsToFlush })
-        });
-        if (response.ok) {
-            try {
-                const data = await response.json();
-                if (data && data.rewards && data.rewards.newly_unlocked && data.rewards.newly_unlocked.length > 0) {
-                    const event = new CustomEvent('achievements-unlocked', { detail: data.rewards.newly_unlocked });
-                    window.dispatchEvent(event);
-                }
-            } catch (e) {
-                console.error('[gameModeManager] Error parsing batch rewards:', e);
-            }
-        } else {
-            console.warn('[gameModeManager] Batch flush failed on server, queueing to offline storage.');
-            queueOfflineTelemetry(`${base}/api/submit-metrics/batch`, { body: JSON.stringify({ telemetry: metricsToFlush }) });
-        }
-    } catch (err) {
-        console.warn('[gameModeManager] Batch flush connection exception, queueing to offline storage.', err);
-        queueOfflineTelemetry(`${base}/api/submit-metrics/batch`, { body: JSON.stringify({ telemetry: metricsToFlush }) });
-    }
-}
-
 // Flush offline IndexedDB queue metrics to batch endpoint
 async function flushOfflineTelemetry() {
     if (!navigator.onLine) return;
@@ -99,6 +56,13 @@ async function flushOfflineTelemetry() {
     const base = lastUsedApiUrlBase;
     console.log(`[gameModeManager] Connection restored. Flushing ${existing.length} offline metrics...`);
     
+    // Extract keys and strip _id before sending to server
+    const keys = existing.map(item => item._id);
+    const payloads = existing.map(item => {
+        const { _id, ...rest } = item;
+        return rest;
+    });
+    
     const token = useCogniStore.getState().token;
     const headers = { 'Content-Type': 'application/json' };
     if (token) {
@@ -109,11 +73,11 @@ async function flushOfflineTelemetry() {
         const response = await originalFetch(`${base}/api/submit-metrics/batch`, {
             method: 'POST',
             headers: headers,
-            body: JSON.stringify({ telemetry: existing })
+            body: JSON.stringify({ telemetry: payloads })
         });
         
         if (response.ok) {
-            await clearTelemetryQueue();
+            await deleteTelemetryItems(keys);
             console.log('[gameModeManager] Offline telemetry successfully synced to server.');
             window.dispatchEvent(new CustomEvent('telemetry-sync-success'));
         } else {
@@ -124,9 +88,8 @@ async function flushOfflineTelemetry() {
     }
 }
 
-// Periodically flush buffered and offline telemetry
-setInterval(flushMemoryBuffer, 5000);
-setInterval(flushOfflineTelemetry, 8000);
+// Periodically flush offline telemetry
+setInterval(flushOfflineTelemetry, 5000);
 window.addEventListener('online', flushOfflineTelemetry);
 
 // Global Fetch Interceptor
@@ -139,9 +102,9 @@ window.fetch = async function (url, options) {
     // Track base API URL dynamically
     extractApiUrlBase(url);
 
-    // Flush memory buffer on session start, evaluate, or compliance logging to guarantee completion writes
+    // Flush offline buffer on session start, evaluate, or compliance logging to guarantee completion writes
     if (url.includes('/api/start-session') || url.includes('/api/evaluate') || url.includes('/api/iso-evaluations')) {
-        await flushMemoryBuffer();
+        await flushOfflineTelemetry();
     }
 
     // 1. Intercept Session Startup
@@ -160,8 +123,8 @@ window.fetch = async function (url, options) {
     if (url.includes('/api/submit-metrics') && !url.includes('/batch') && options && options.method === 'POST') {
         try {
             const metric = JSON.parse(options.body);
-            memoryTelemetryBuffer.push(metric);
-            console.log('[gameModeManager] Buffered metric. Current buffer size:', memoryTelemetryBuffer.length);
+            await saveTelemetry(metric);
+            console.log('[gameModeManager] Metric saved to IndexedDB pipeline directly.');
             
             // Return immediate mock success to Phaser scene
             return new Response(JSON.stringify({ status: "success", message: "Metric buffered locally" }), {
@@ -214,8 +177,8 @@ window.fetch = async function (url, options) {
 
     // 4. Intercept DDA Adaptation requests (Flush buffer first, handle offline fallbacks)
     if (url.includes('/api/dda') && options && options.method === 'POST') {
-        // Flush any buffered metrics first so the server has the latest trials for difficulty adjustment
-        await flushMemoryBuffer();
+        // Flush offline telemetry first so the server has the latest trials for difficulty adjustment
+        await flushOfflineTelemetry();
         
         try {
             if (!navigator.onLine) {
@@ -370,6 +333,8 @@ function decorateSceneClass(SceneClass) {
         }
     };
 
+
+
     // Helper function to create floating texts for time alterations (+2s / -5s)
     const showFloatingTimeText = (scene, text, color) => {
         const x = scene.scale.width / 2;
@@ -430,6 +395,10 @@ function decorateSceneClass(SceneClass) {
             originalCreate.call(this);
         }
         
+        if (typeof this.setupPauseHandling === 'function') {
+            this.setupPauseHandling();
+        }
+
         // --- SCREEN JUICE: DDA Vignette ---
         const { width, height } = this.scale;
         this.ddaVignette = this.add.rectangle(width/2, height/2, width, height, 0xff0000, 0);

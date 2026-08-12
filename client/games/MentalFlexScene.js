@@ -165,7 +165,7 @@ export default class MentalFlexScene extends BaseCognitiveScene {
             if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gameObjects.length === 0) {
-                const now = this.time.now;
+                const now = this.getTime();
                 if (now - this.lastMissTime < 200) {
                     this.spamClickCount++;
                 }
@@ -180,7 +180,7 @@ export default class MentalFlexScene extends BaseCognitiveScene {
     }
 
     startGameplay() {
-        this.sessionStartTime = this.time.now;
+        this.sessionStartTime = this.getTime();
         this.isGameOver = false;
         this.isTutorialActive = false;
         this.countdownTimer = this.time.addEvent({
@@ -420,7 +420,7 @@ export default class MentalFlexScene extends BaseCognitiveScene {
         });
 
         // Track timer values
-        this.stimulusSpawnTime = this.time.now;
+        this.stimulusSpawnTime = this.getTime();
         this.timeLeftInRound = this.timeLimit;
         this.firstInteractionRegistered = false;
         this.firstInteractionLatency = 0;
@@ -455,7 +455,7 @@ export default class MentalFlexScene extends BaseCognitiveScene {
         const isCorrect = this.isCorrectMatch(this.queryCard.cardData, choiceCard.cardData);
         this.totalAttempts++;
 
-        const reactionTime = this.time.now - this.stimulusSpawnTime;
+        const reactionTime = this.getTime() - this.stimulusSpawnTime;
         let ruleShiftLatency = null;
         if (this.ruleShiftOccurred) {
             ruleShiftLatency = reactionTime;

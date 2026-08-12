@@ -105,7 +105,7 @@ export default class NexusMapperScene extends BaseCognitiveScene {
             if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gameObjects.length === 0) {
-                const now = this.time.now;
+                const now = this.getTime();
                 if (now - this.lastMissTime < 200) {
                     this.spamClickCount++;
                 }
@@ -129,7 +129,7 @@ export default class NexusMapperScene extends BaseCognitiveScene {
     }
 
     startGameplay() {
-        this.sessionStartTime = this.time.now;
+        this.sessionStartTime = this.getTime();
         this.isGameOver = false;
         this.isTutorialActive = false;
         this.countdownTimer = this.time.addEvent({
@@ -144,7 +144,7 @@ export default class NexusMapperScene extends BaseCognitiveScene {
 updateTimer() {
         if (!this.sessionStartTime || this.timeLeft <= 0) return;
         
-        const elapsed = this.time.now - this.sessionStartTime;
+        const elapsed = this.getTime() - this.sessionStartTime;
         this.timeLeft = Math.max(0, this.gameDuration - elapsed);
         const seconds = Math.ceil(this.timeLeft / 1000);
         
@@ -250,7 +250,7 @@ updateTimer() {
         });
 
         // Set stimulus spawn timestamps for hesitation checks
-        this.stimulusSpawnTime = this.time.now;
+        this.stimulusSpawnTime = this.getTime();
         this.firstInteractionRegistered = false;
         this.firstInteractionLatency = 0;
 
@@ -278,13 +278,13 @@ updateTimer() {
 
         this.currentRecallTarget = this.recallTargets.pop();
         this.statusText.setText(`FIND THE EXACT LOCATION FOR: '${this.currentRecallTarget.glyph}'`).setFill('#0ea5e9');
-        this.puzzleStartTime = this.time.now;
+        this.puzzleStartTime = this.getTime();
     }
 
     handleCellClick(c, r) {
         if (this.gamePhase !== 'RECALL' || !this.currentRecallTarget) return;
 
-        const solveTime = this.time.now - this.puzzleStartTime;
+        const solveTime = this.getTime() - this.puzzleStartTime;
         const cell = this.gridCells[r][c];
 
         if (cell.glyph === this.currentRecallTarget.glyph) {

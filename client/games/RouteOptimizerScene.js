@@ -221,7 +221,7 @@ export default class RouteOptimizerScene extends BaseCognitiveScene {
             if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gos.length === 0) {
-                const now = this.time.now;
+                const now = this.getTime();
                 if (now - this.lastMissTime < 200) this.spamClickCount++;
                 this.lastMissTime = now;
             }
@@ -241,7 +241,7 @@ export default class RouteOptimizerScene extends BaseCognitiveScene {
     update() {
         if (this.isTutorialActive || this.gamePhase !== 'PLAYING') return;
 
-        const elapsed = this.time.now - this.roundStartTime;
+        const elapsed = this.getTime() - this.roundStartTime;
         this.roundTimeRemaining = Math.max(0, this.roundTimeLimit - elapsed);
 
         const W = this.scale.width;
@@ -256,7 +256,7 @@ export default class RouteOptimizerScene extends BaseCognitiveScene {
     }
 
     startGameplay() {
-        this.sessionStartTime = this.time.now;
+        this.sessionStartTime = this.getTime();
         this.isGameOver = false;
         this.isTutorialActive = false;
         this.countdownTimer = this.time.addEvent({
@@ -368,7 +368,7 @@ export default class RouteOptimizerScene extends BaseCognitiveScene {
         this._updatePathVisual();
         this._updateCostDisplay();
 
-        this.roundStartTime     = this.time.now;
+        this.roundStartTime     = this.getTime();
         this.roundTimeRemaining = this.roundTimeLimit;
     }
 
@@ -602,7 +602,7 @@ export default class RouteOptimizerScene extends BaseCognitiveScene {
 
         const pCost = this.playerCost;
         const oCost = this.graph.optimalCost;
-        const solveTime = this.time.now - this.roundStartTime;
+        const solveTime = this.getTime() - this.roundStartTime;
         const ratio = pCost / oCost;
 
         let isHit = false, scorePoints = 0;

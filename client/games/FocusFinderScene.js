@@ -257,7 +257,7 @@ export default class FocusFinderScene extends BaseCognitiveScene {
             if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gameObjects.length === 0) {
-                const now = this.time.now;
+                const now = this.getTime();
                 if (now - this.lastMissTime < 200) {
                     this.spamClickCount++;
                 }
@@ -272,7 +272,7 @@ export default class FocusFinderScene extends BaseCognitiveScene {
     }
 
     startGameplay() {
-        this.sessionStartTime = this.time.now;
+        this.sessionStartTime = this.getTime();
         this.isGameOver = false;
         this.isTutorialActive = false;
         this.countdownTimer = this.time.addEvent({
@@ -290,7 +290,7 @@ export default class FocusFinderScene extends BaseCognitiveScene {
 updateTimer() {
         if (!this.sessionStartTime || this.timeLeft <= 0) return;
         
-        const elapsed = this.time.now - this.sessionStartTime;
+        const elapsed = this.getTime() - this.sessionStartTime;
         this.timeLeft = Math.max(0, this.gameDuration - elapsed);
         const seconds = Math.ceil(this.timeLeft / 1000);
         
@@ -314,7 +314,7 @@ updateTimer() {
         this.spawnedObjects.forEach(obj => obj.destroy());
         this.spawnedObjects = [];
 
-        this.stimulusSpawnTime = this.time.now;
+        this.stimulusSpawnTime = this.getTime();
         this.firstInteractionRegistered = false;
         this.firstInteractionLatency = 0;
 
@@ -342,7 +342,7 @@ updateTimer() {
         }
 
         // Mark target spawn time for search metrics calculations
-        this.targetSpawnTime = this.time.now;
+        this.targetSpawnTime = this.getTime();
     }
 
     spawnTargetObject() {
@@ -529,7 +529,7 @@ updateTimer() {
         }
         this.hits++;
 
-        const searchTime = this.time.now - this.targetSpawnTime;
+        const searchTime = this.getTime() - this.targetSpawnTime;
         const waveScore = Math.max(100, Math.round(1500 - searchTime / 2));
         this.score += waveScore;
 
@@ -554,7 +554,7 @@ updateTimer() {
         this.totalClicks++;
         this.misses++;
 
-        const searchTime = this.time.now - this.targetSpawnTime;
+        const searchTime = this.getTime() - this.targetSpawnTime;
         this.score = Math.max(0, this.score - 50); // score penalty
 
         this.showFloatingText(container.x, container.y, 'FALSE ALARM!', '#ef4444');

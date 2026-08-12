@@ -134,7 +134,7 @@ export default class RuleShifterScene extends BaseCognitiveScene {
             if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gos.length === 0) {
-                const now = this.time.now;
+                const now = this.getTime();
                 if (now - this.lastMissTime < 200) this.spamClickCount++;
                 this.lastMissTime = now;
             }
@@ -155,7 +155,7 @@ export default class RuleShifterScene extends BaseCognitiveScene {
     update() {
         if (this.isTutorialActive || this.gamePhase !== 'PLAYING') return;
 
-        const elapsed = this.time.now - this.roundStartTime;
+        const elapsed = this.getTime() - this.roundStartTime;
         this.timeLeft = Math.max(0, this.gameDuration - elapsed);
 
         const s = Math.ceil(this.timeLeft / 1000);
@@ -168,8 +168,8 @@ export default class RuleShifterScene extends BaseCognitiveScene {
     startGameplay() {
         this.isTutorialActive = false;
         this.gamePhase = 'PLAYING';
-        this.roundStartTime = this.time.now;
-        this.lastSwitchTime = this.time.now;
+        this.roundStartTime = this.getTime();
+        this.lastSwitchTime = this.getTime();
         this.spawnCards();
     }
 
@@ -255,7 +255,7 @@ export default class RuleShifterScene extends BaseCognitiveScene {
         });
 
         // Set stimulus timestamp
-        this.stimulusSpawnTime = this.time.now;
+        this.stimulusSpawnTime = this.getTime();
         this.firstInteractionRegistered = false;
         this.firstInteractionLatency = 0;
     }
@@ -354,8 +354,8 @@ export default class RuleShifterScene extends BaseCognitiveScene {
     handleCardSelection(choiceCard) {
         this.registerFirstInteraction();
         this.selectedChoiceCard = choiceCard;
-        this.currentReactionTime = this.time.now - this.stimulusSpawnTime;
-        this.confidenceModalStartTime = this.time.now;
+        this.currentReactionTime = this.getTime() - this.stimulusSpawnTime;
+        this.confidenceModalStartTime = this.getTime();
 
         // Visual feedback selection outline
         choiceCard.cardBg.clear();
@@ -380,7 +380,7 @@ export default class RuleShifterScene extends BaseCognitiveScene {
         this.confidenceModal.setActive(false);
         this.totalAttempts++;
 
-        const modalDuration = this.time.now - this.confidenceModalStartTime;
+        const modalDuration = this.getTime() - this.confidenceModalStartTime;
         this.roundStartTime += modalDuration;
 
         const isCorrect = this._isMatch(
@@ -471,7 +471,7 @@ export default class RuleShifterScene extends BaseCognitiveScene {
         // Pick a different rule
         const candidates = this.rulesList.filter(r => r !== oldRule);
         this.currentRule = Phaser.Utils.Array.GetRandom(candidates);
-        this.lastSwitchTime = this.time.now;
+        this.lastSwitchTime = this.getTime();
 
         // Visual flash message
         const W = this.scale.width;

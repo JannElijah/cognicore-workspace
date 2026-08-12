@@ -157,7 +157,7 @@ export default class PriorityQueueScene extends BaseCognitiveScene {
             if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gos.length === 0) {
-                const now = this.time.now;
+                const now = this.getTime();
                 if (now - this.lastMissTime < 200) this.spamClickCount++;
                 this.lastMissTime = now;
             }
@@ -269,8 +269,8 @@ export default class PriorityQueueScene extends BaseCognitiveScene {
     startGameplay() {
         this.isTutorialActive  = false;
         this.gamePhase         = 'PLAYING';
-        this.roundStartTime    = this.time.now;
-        this.stimulusSpawnTime = this.time.now;
+        this.roundStartTime    = this.getTime();
+        this.stimulusSpawnTime = this.getTime();
 
         // Belt spawn timer
         this._spawnTimer = this.time.addEvent({
@@ -288,7 +288,7 @@ export default class PriorityQueueScene extends BaseCognitiveScene {
     update() {
         if (this.isTutorialActive || this.gamePhase !== 'PLAYING') return;
 
-        const elapsed  = this.time.now - this.roundStartTime;
+        const elapsed  = this.getTime() - this.roundStartTime;
         this.timeLeft  = Math.max(0, this.gameDuration - elapsed);
 
         // Update timer display
@@ -307,7 +307,7 @@ export default class PriorityQueueScene extends BaseCognitiveScene {
             card.container.x -= pxPerMs * dt;
 
             // Timer indicator on card shrinks
-            const elapsed2 = this.time.now - card.spawnTime;
+            const elapsed2 = this.getTime() - card.spawnTime;
             const travelTime = (this.scale.width + 120) / pxPerMs;
             const frac = Math.max(0, 1 - elapsed2 / travelTime);
             card.timerBar?.scaleX !== undefined && (card.timerBar.scaleX = frac);
@@ -437,13 +437,13 @@ export default class PriorityQueueScene extends BaseCognitiveScene {
             correctBin,
             bg,
             timerBar: tbG,
-            spawnTime: this.time.now,
+            spawnTime: this.getTime(),
             cardW,
             cardH,
             cfg
         };
         this.beltCards.push(cardObj);
-        this.stimulusSpawnTime = this.time.now;
+        this.stimulusSpawnTime = this.getTime();
         this.firstInteractionRegistered = false;
     }
 
@@ -528,7 +528,7 @@ export default class PriorityQueueScene extends BaseCognitiveScene {
 
     // ── Drop evaluation ─────────────────────────────────────
     _evaluateDrop(card, droppedBin) {
-        const reactionTime = this.time.now - card.spawnTime;
+        const reactionTime = this.getTime() - card.spawnTime;
         const isCorrect    = droppedBin === card.correctBin;
         this.totalDrops++;
 

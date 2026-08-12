@@ -64,7 +64,7 @@ def get_user_analytics(current_user_id, current_username, username):
         
         # Fetch latest archetype
         cursor.execute("""
-            SELECT archetype_name, confidence_score, trajectory_msg
+            SELECT archetype_name, confidence_score
             FROM archetype_history 
             WHERE user_id = %s 
             ORDER BY timestamp DESC, id DESC LIMIT 1

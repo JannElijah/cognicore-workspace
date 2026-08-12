@@ -125,8 +125,8 @@ def train_retargeted_classifier():
                     avg_path_eff
                 ]
                 
-                # Features for classifier (4 dimensions - backward compatible)
-                classifier_features = [avg_acc, avg_rt, acc_slope, rt_slope]
+                # Features for classifier (7 dimensions - upgraded)
+                classifier_features = [avg_acc, avg_rt, acc_slope, rt_slope, avg_hesitation, avg_spam, avg_path_eff]
                 
                 raw_sessions.append({
                     "cluster_features": cluster_features,

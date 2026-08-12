@@ -209,7 +209,7 @@ export default class NeuralNBackScene extends BaseCognitiveScene {
             if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gameObjects.length === 0) {
-                const now = this.time.now;
+                const now = this.getTime();
                 if (now - this.lastMissTime < 200) {
                     this.spamClickCount++;
                 }
@@ -228,7 +228,7 @@ export default class NeuralNBackScene extends BaseCognitiveScene {
     }
 
     startGameplay() {
-        this.sessionStartTime = this.time.now;
+        this.sessionStartTime = this.getTime();
         this.isGameOver = false;
         this.isTutorialActive = false;
         this.countdownTimer = this.time.addEvent({
@@ -249,7 +249,7 @@ export default class NeuralNBackScene extends BaseCognitiveScene {
 updateTimer() {
         if (!this.sessionStartTime || this.timeLeft <= 0) return;
         
-        const elapsed = this.time.now - this.sessionStartTime;
+        const elapsed = this.getTime() - this.sessionStartTime;
         this.timeLeft = Math.max(0, this.gameDuration - elapsed);
         const seconds = Math.ceil(this.timeLeft / 1000);
         
@@ -315,7 +315,7 @@ updateTimer() {
         this.historyTrackerText.setText(`SEQUENCE: ${visibleHistory.join(' ➔ ')}`);
 
         // Set stimulus spawn timestamps
-        this.stimulusSpawnTime = this.time.now;
+        this.stimulusSpawnTime = this.getTime();
         this.firstInteractionRegistered = false;
         this.firstInteractionLatency = 0;
 
@@ -339,7 +339,7 @@ updateTimer() {
         if (this.hasRespondedThisStep || this.gamePhase !== 'PLAYING') return;
         this.hasRespondedThisStep = true;
 
-        const solveTime = this.time.now - this.stimulusSpawnTime;
+        const solveTime = this.getTime() - this.stimulusSpawnTime;
         const isMatch = this.checkMatchCondition();
 
         if (isMatch) {

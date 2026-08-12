@@ -121,7 +121,7 @@ export default class LogicLinkScene extends BaseCognitiveScene {
             if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gameObjects.length === 0) {
-                const now = this.time.now;
+                const now = this.getTime();
                 if (now - this.lastMissTime < 200) {
                     this.spamClickCount++;
                 }
@@ -148,7 +148,7 @@ export default class LogicLinkScene extends BaseCognitiveScene {
 updateTimer() {
         if (!this.sessionStartTime || this.timeLeft <= 0) return;
         
-        const elapsed = this.time.now - this.sessionStartTime;
+        const elapsed = this.getTime() - this.sessionStartTime;
         this.timeLeft = Math.max(0, this.gameDuration - elapsed);
         const seconds = Math.ceil(this.timeLeft / 1000);
         
@@ -169,7 +169,7 @@ updateTimer() {
         this.clickedSequence = [];
         this.lineGraphics.clear();
 
-        this.stimulusSpawnTime = this.time.now;
+        this.stimulusSpawnTime = this.getTime();
         this.firstInteractionRegistered = false;
         this.firstInteractionLatency = 0;
         this.puzzleClicksCount = 0;
@@ -309,7 +309,7 @@ updateTimer() {
             }
         }
 
-        this.puzzleStartTime = this.time.now;
+        this.puzzleStartTime = this.getTime();
     }
 
     handleNodeClick(index, value, x, y, bg, txt, cellSize) {
@@ -320,7 +320,7 @@ updateTimer() {
 
         // Track latency from puzzle start to first node interaction
         if (this.puzzleClicksCount === 1) {
-            this.ruleShiftLatency = this.time.now - this.puzzleStartTime;
+            this.ruleShiftLatency = this.getTime() - this.puzzleStartTime;
         }
 
         const correctNextVal = this.clickedSequence.length + 1;
@@ -381,7 +381,7 @@ updateTimer() {
         this.hits++;
         this.totalAttempts++;
 
-        const solveTime = this.time.now - this.puzzleStartTime;
+        const solveTime = this.getTime() - this.puzzleStartTime;
 
         // Calculate dynamic reward
         const baseReward = 150 * this.sequenceLength;
@@ -407,7 +407,7 @@ updateTimer() {
         this.misses++;
         this.totalAttempts++;
 
-        const solveTime = this.time.now - this.puzzleStartTime;
+        const solveTime = this.getTime() - this.puzzleStartTime;
 
         // Turn line connections red
         this.redrawLines(0xef4444);
@@ -577,7 +577,7 @@ updateTimer() {
     }
 
     startGameplay() {
-        this.sessionStartTime = this.time.now;
+        this.sessionStartTime = this.getTime();
         this.isGameOver = false;
         this.countdownTimer = this.time.addEvent({
             delay: 1000,

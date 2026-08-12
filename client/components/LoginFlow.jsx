@@ -58,6 +58,26 @@ export default function LoginFlow({
         >
           {assessmentLoading ? 'Verifying Profile...' : 'Begin Cognitive Evaluation'}
         </button>
+        
+        <div style={{ display: 'flex', alignItems: 'center', margin: '0.5rem 0' }}>
+          <div style={{ flex: 1, height: '1px', background: 'rgba(148, 163, 184, 0.2)' }}></div>
+          <span style={{ color: '#94a3b8', fontSize: '0.75rem', padding: '0 1rem', textTransform: 'uppercase', fontWeight: 'bold' }}>OR</span>
+          <div style={{ flex: 1, height: '1px', background: 'rgba(148, 163, 184, 0.2)' }}></div>
+        </div>
+
+        <button
+          onClick={() => {
+            const guestId = 'guest_' + Math.random().toString(36).substring(2, 10);
+            setUsernameInput(guestId);
+            handleCheckUserStatus(guestId);
+          }}
+          disabled={assessmentLoading}
+          style={{ background: 'rgba(255, 255, 255, 0.05)', color: '#e2e8f0', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '8px', padding: '0.75rem', fontSize: '0.95rem', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s', width: '100%' }}
+          onMouseOver={(e) => { e.target.style.background = 'rgba(255, 255, 255, 0.1)'; }}
+          onMouseOut={(e) => { e.target.style.background = 'rgba(255, 255, 255, 0.05)'; }}
+        >
+          🎮 Play as Guest instantly
+        </button>
       </div>
     </div>
   );

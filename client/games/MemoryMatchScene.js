@@ -126,7 +126,7 @@ export default class MemoryMatchScene extends BaseCognitiveScene {
             if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gameObjects.length === 0) {
-                const now = this.time.now;
+                const now = this.getTime();
                 if (now - this.lastMissTime < 200) {
                     this.spamClickCount++;
                 }
@@ -237,7 +237,7 @@ export default class MemoryMatchScene extends BaseCognitiveScene {
     }
 
     startGameplay() {
-        this.sessionStartTime = this.time.now;
+        this.sessionStartTime = this.getTime();
         this.isGameOver = false;
         this.isTutorialActive = false;
         this.countdownTimer = this.time.addEvent({
@@ -252,7 +252,7 @@ export default class MemoryMatchScene extends BaseCognitiveScene {
 updateTimer() {
         if (!this.sessionStartTime || this.timeLeft <= 0) return;
         
-        const elapsed = this.time.now - this.sessionStartTime;
+        const elapsed = this.getTime() - this.sessionStartTime;
         this.timeLeft = Math.max(0, this.gameDuration - elapsed);
         const seconds = Math.ceil(this.timeLeft / 1000);
         
@@ -303,8 +303,8 @@ updateTimer() {
         this.time.delayedCall(delayOffset - 100, () => {
             if (this.gamePhase !== 'FLASHING') return;
             this.gamePhase = 'RECALL';
-            this.sequenceEndTime = this.time.now;
-            this.stimulusSpawnTime = this.time.now;
+            this.sequenceEndTime = this.getTime();
+            this.stimulusSpawnTime = this.getTime();
             this.firstInteractionRegistered = false;
             this.firstInteractionLatency = 0;
             this.statusText.setText('REPEAT SEQUENCE!').setFill('#38bdf8');
@@ -384,7 +384,7 @@ updateTimer() {
         this.correctSequences++;
         this.totalAttempts++;
 
-        const recallTime = this.time.now - this.sequenceEndTime;
+        const recallTime = this.getTime() - this.sequenceEndTime;
         
         // Calculate dynamic reward score
         const baseReward = 100 * this.sequenceLength;
@@ -408,7 +408,7 @@ updateTimer() {
         this.gamePhase = 'FEEDBACK';
         this.totalAttempts++;
 
-        const recallTime = this.time.now - this.sequenceEndTime;
+        const recallTime = this.getTime() - this.sequenceEndTime;
         
         // Highlight wrong tile in red
         this.highlightCell(wrongIndex, 0xef4444, 500);

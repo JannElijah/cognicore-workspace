@@ -28,6 +28,14 @@ export default class BaseCognitiveScene extends Phaser.Scene {
     constructor(key) {
         super(key);
         this.pauseStartTime = 0;
+        this.totalPauseDuration = 0;
+    }
+
+    getTime() {
+        if (this.pauseStartTime > 0) {
+            return this.pauseStartTime - this.totalPauseDuration;
+        }
+        return this.time.now - this.totalPauseDuration;
     }
 
     setupPauseHandling() {
@@ -47,23 +55,15 @@ export default class BaseCognitiveScene extends Phaser.Scene {
     }
 
     handlePause() {
-        this.pauseStartTime = this.sys.game.loop.time;
+        this.pauseStartTime = this.time.now;
     }
 
     handleResume() {
         if (this.pauseStartTime > 0) {
-            const pauseDuration = this.sys.game.loop.time - this.pauseStartTime;
-            this.shiftTimers(pauseDuration);
+            const pauseDuration = this.time.now - this.pauseStartTime;
+            this.totalPauseDuration += pauseDuration;
             this.pauseStartTime = 0;
         }
-    }
-
-    shiftTimers(duration) {
-        if (this.stimulusSpawnTime) this.stimulusSpawnTime += duration;
-        if (this.puzzleStartTime) this.puzzleStartTime += duration;
-        if (this.roundStartTime) this.roundStartTime += duration;
-        if (this.lastSwitchTime) this.lastSwitchTime += duration;
-        if (this.lastMissTime) this.lastMissTime += duration;
     }
 
     showFloatingFeedback(text, color) {
@@ -86,7 +86,7 @@ export default class BaseCognitiveScene extends Phaser.Scene {
 
     registerFirstInteraction() {
         if (!this.firstInteractionRegistered && this.stimulusSpawnTime > 0) {
-            this.firstInteractionLatency = this.time.now - this.stimulusSpawnTime;
+            this.firstInteractionLatency = this.getTime() - this.stimulusSpawnTime;
             this.firstInteractionRegistered = true;
         }
     }

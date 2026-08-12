@@ -231,6 +231,17 @@ export default function App() {
   const [showDashboard, setShowDashboard] = useState(false);
   const [showShop, setShowShop] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const handleToggleMute = useCallback(() => {
+    setGlobalMuted(prev => {
+      const nextMute = !prev;
+      audioDda.setMuted(nextMute);
+      return nextMute;
+    });
+  }, []);
+
+  const handleCloseLeaderboard = useCallback(() => {
+    setShowLeaderboard(false);
+  }, []);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [gameRewardsModal, setGameRewardsModal] = useState(null);
   const sessionRewardsRef = useRef({ xp: 0, coins: 0, leveled_up: false });
@@ -2306,11 +2317,7 @@ export default function App() {
                   liveMetrics={liveMetrics}
                   advisorLogs={ddaAdvisorLogs}
                   isMuted={globalMuted}
-                  onToggleMute={() => {
-                    const nextMute = !globalMuted;
-                    audioDda.setMuted(nextMute);
-                    setGlobalMuted(nextMute);
-                  }}
+                  onToggleMute={handleToggleMute}
                 />
               )}
             </div>
@@ -3397,7 +3404,7 @@ export default function App() {
       {showShop && <Shop onClose={() => setShowShop(false)} />}
       {showProfileModal && <ProfileModal onClose={() => setShowProfileModal(false)} />}
       {dailyRewardData && dailyRewardData.granted && <DailyRewardModal rewardData={dailyRewardData} onClose={() => { setDailyRewardData({...dailyRewardData, granted: false}); fetchInventory(); }} />}
-      {showLeaderboard && <LeaderboardModal onClose={() => setShowLeaderboard(false)} />}
+      {showLeaderboard && <LeaderboardModal onClose={handleCloseLeaderboard} />}
       {gameRewardsModal && <RewardModal rewards={gameRewardsModal} onClose={() => { setGameRewardsModal(null); fetchInventory(); }} />}
       {/* Offline Storage Warning Banner */}
       <OfflineCacheWarningBanner isVisible={offlineCacheFullWarning} onClose={() => setOfflineCacheFullWarning(false)} />

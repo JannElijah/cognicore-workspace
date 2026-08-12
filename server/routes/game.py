@@ -30,7 +30,7 @@ def execute_gamification(uid, reaction_time, accuracy, difficulty, game_type):
     leveled_up = False
     newly_unlocked = []
 
-    prof = UserProfile.query.get(uid)
+    prof = UserProfile.query.filter_by(user_id=uid).first()
     if not prof:
         prof = UserProfile(user_id=uid, xp=xp_gained, coins=coins_gained, level=1)
         db.session.add(prof)
@@ -117,6 +117,114 @@ def execute_gamification(uid, reaction_time, accuracy, difficulty, game_type):
         unlock_achievement('on_fire', streak.current_streak, 7, 750)
 
     return xp_gained, coins_gained, leveled_up, newly_unlocked
+
+
+def execute_gamification_batch(uid, metrics_data):
+    total_xp = 0
+    total_coins = 0
+    leveled_up = False
+    newly_unlocked = set()
+
+    for item in metrics_data:
+        total_xp += item['difficulty'] * 15
+        total_coins += int(item['accuracy'] * 10) + (item['difficulty'] * 2)
+
+    prof = UserProfile.query.filter_by(user_id=uid).first()
+    if not prof:
+        prof = UserProfile(user_id=uid, xp=total_xp, coins=total_coins, level=1)
+        db.session.add(prof)
+    else:
+        prof.xp = (prof.xp or 0) + total_xp
+        prof.coins = (prof.coins or 0) + total_coins
+        new_level = (prof.xp // 500) + 1
+        if new_level > (prof.level or 1):
+            leveled_up = True
+            prof.coins += 500
+            prof.level = new_level
+
+    from datetime import date
+    today = date.today()
+    tasks = DailyTask.query.filter(DailyTask.user_id == uid, db.cast(DailyTask.created_at, db.Date) == today).all()
+    for task in tasks:
+        if task.task_description == 'Play 3 Training Games':
+            task.current_amount += len(metrics_data)
+        elif task.task_description == 'Achieve 80% accuracy in any game':
+            meets = sum(1 for m in metrics_data if m['accuracy'] >= 0.8)
+            task.current_amount += meets
+        elif task.task_description == 'Achieve reaction time under 800ms':
+            meets = sum(1 for m in metrics_data if m['reaction_time'] < 800)
+            task.current_amount += meets
+
+    user_achievements = {a.achievement_id: a for a in UserAchievement.query.filter_by(user_id=uid).all()}
+    user_inventory = {inv.item_id: inv for inv in UserInventory.query.filter_by(user_id=uid).all()}
+    
+    def unlock_achievement(ach_id, current_amount, target_amount, reward_coins, reward_item=None, reward_item_type=None):
+        nonlocal total_coins
+        ach = user_achievements.get(ach_id)
+        if not ach:
+            ach = UserAchievement(user_id=uid, achievement_id=ach_id, current_amount=0)
+            db.session.add(ach)
+            user_achievements[ach_id] = ach
+        
+        if ach.is_completed:
+            return
+            
+        ach.current_amount = current_amount
+        if ach.current_amount >= target_amount:
+            ach.is_completed = 1
+            if reward_coins:
+                prof.coins += reward_coins
+                total_coins += reward_coins
+            if reward_item and reward_item not in user_inventory:
+                inv = UserInventory(user_id=uid, item_id=reward_item, item_type=reward_item_type)
+                db.session.add(inv)
+                user_inventory[reward_item] = inv
+            newly_unlocked.add(ach_id)
+
+    min_rt = min((m['reaction_time'] for m in metrics_data), default=9999)
+    max_acc = max((m['accuracy'] for m in metrics_data), default=0.0)
+    max_diff = max((m['difficulty'] for m in metrics_data), default=1)
+
+    if min_rt < 400:
+        ach = user_achievements.get('speed_demon')
+        amt = ach.current_amount + sum(1 for m in metrics_data if m['reaction_time'] < 400) if ach else sum(1 for m in metrics_data if m['reaction_time'] < 400)
+        unlock_achievement('speed_demon', amt, 10, 0, 'avatar-speed-demon', 'avatar')
+        
+    if prof.level >= 10:
+        unlock_achievement('scholar', 1, 1, 0, 'banner-scholar', 'banner')
+
+    unlock_achievement('first_steps', 1, 1, 100)
+
+    ach_con = user_achievements.get('consistency')
+    unlock_achievement('consistency', (ach_con.current_amount + len(metrics_data) if ach_con else len(metrics_data)), 50, 500)
+
+    if max_acc >= 1.0:
+        ach_am = user_achievements.get('accuracy_master')
+        amt = ach_am.current_amount + sum(1 for m in metrics_data if m['accuracy'] >= 1.0) if ach_am else sum(1 for m in metrics_data if m['accuracy'] >= 1.0)
+        unlock_achievement('accuracy_master', amt, 5, 1000)
+
+    if max_acc >= 0.9:
+        ach_ss = user_achievements.get('sharpshooter')
+        amt = ach_ss.current_amount + sum(1 for m in metrics_data if m['accuracy'] >= 0.9) if ach_ss else sum(1 for m in metrics_data if m['accuracy'] >= 0.9)
+        unlock_achievement('sharpshooter', amt, 20, 500)
+
+    if min_rt < 300:
+        unlock_achievement('lightning_reflexes', 1, 1, 200, 'banner-lightning', 'banner')
+
+    if max_diff >= 5:
+        unlock_achievement('peak_performer', 1, 1, 1000)
+
+    sess_types = db.session.query(GameSession.game_type).filter(GameSession.user_id == uid, GameSession.game_type.isnot(None)).distinct().count()
+    unlock_achievement('versatile_mind', sess_types, 5, 400)
+
+    games_today = GameSession.query.filter(GameSession.user_id == uid, db.cast(GameSession.start_time, db.Date) == today).count()
+    unlock_achievement('brain_marathon', games_today, 10, 300)
+
+    streak = UserStreak.query.filter_by(user_id=uid).first()
+    if streak:
+        unlock_achievement('on_fire', streak.current_streak, 7, 750)
+
+    return total_xp, total_coins, leveled_up, list(newly_unlocked)
 
 @game_bp.route('/api/start-session', methods=['POST'])
 @token_required
@@ -212,6 +320,9 @@ def dda(current_user_id, current_username):
             
         avg_rt = sum(m.reaction_time for m in metrics) / len(metrics)
         avg_accuracy = sum(m.accuracy_rate for m in metrics) / len(metrics)
+        avg_hesitation = sum((m.hesitation_ms or 0.0) for m in metrics) / len(metrics)
+        avg_spam = sum((m.spam_click_count or 0) for m in metrics) / len(metrics)
+        avg_path_eff = sum((m.path_efficiency or 1.0) for m in metrics) / len(metrics)
         current_difficulty = metrics[0].difficulty_level
         
         alpha = max(0.1, min(1.0, safe_float(data.get('smoothing_alpha'), 0.3)))
@@ -263,7 +374,7 @@ def dda(current_user_id, current_username):
         acc_slope = calculate_ols_slope(history_acc)
         rt_slope = calculate_ols_slope(history_rt)
         
-        pred_res = archetype_classifier.predict(avg_accuracy, avg_rt, acc_slope, rt_slope)
+        pred_res = archetype_classifier.predict(avg_accuracy, avg_rt, acc_slope, rt_slope, avg_hesitation, avg_spam, avg_path_eff)
         archetype = pred_res["archetype"]
         confidence = pred_res["confidence_score"]
         trajectory_msg = archetype_classifier.predict_trajectory(new_difficulty, acc_slope, rt_slope)
@@ -429,6 +540,12 @@ def submit_metrics_batch(current_user_id, current_username):
         leveled_up_flag = False
         newly_unlocked_set = set()
         
+        session_ids = list(set(safe_int(item.get('session_id')) for item in metrics_list if safe_int(item.get('session_id'))))
+        sessions_map = {s.id: s for s in GameSession.query.filter(GameSession.id.in_(session_ids)).all()}
+        
+        valid_metrics_data = []
+        metrics_to_add = []
+        
         for item in metrics_list:
             session_id = safe_int(item.get('session_id'))
             reaction_time = safe_float(item.get('reaction_time') if item.get('reaction_time') is not None else item.get('reaction_time_ms'))
@@ -438,7 +555,7 @@ def submit_metrics_batch(current_user_id, current_username):
             if not session_id or reaction_time is None or accuracy is None or not difficulty:
                 continue
                 
-            session_obj = GameSession.query.get(session_id)
+            session_obj = sessions_map.get(session_id)
             if not session_obj:
                 continue
                 
@@ -458,17 +575,23 @@ def submit_metrics_batch(current_user_id, current_username):
                 rule_shift_latency_ms=safe_float(item.get('rule_shift_latency_ms')),
                 path_efficiency=safe_float(item.get('path_efficiency'))
             )
-            db.session.add(pm)
+            metrics_to_add.append(pm)
             
-            xp_gained, coins_gained, leveled_up, newly_unlocked = execute_gamification(current_user_id, reaction_time, accuracy, difficulty, game_type)
-            total_xp += xp_gained
-            total_coins += coins_gained
-            if leveled_up:
-                leveled_up_flag = True
-            for ul in newly_unlocked:
-                newly_unlocked_set.add(ul)
-                
+            valid_metrics_data.append({
+                'reaction_time': reaction_time,
+                'accuracy': accuracy,
+                'difficulty': difficulty,
+                'game_type': game_type
+            })
+            
             recorded_count += 1
+            
+        if metrics_to_add:
+            db.session.add_all(metrics_to_add)
+            
+        if valid_metrics_data:
+            total_xp, total_coins, leveled_up_flag, newly_unlocked_list = execute_gamification_batch(current_user_id, valid_metrics_data)
+            newly_unlocked_set.update(newly_unlocked_list)
             
         db.session.commit()
         return jsonify({

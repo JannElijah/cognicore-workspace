@@ -158,7 +158,7 @@ export default class NeuroMazeScene extends BaseCognitiveScene {
             if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gameObjects.length === 0) {
-                const now = this.time.now;
+                const now = this.getTime();
                 if (now - this.lastMissTime < 200) {
                     this.spamClickCount++;
                 }
@@ -173,7 +173,7 @@ export default class NeuroMazeScene extends BaseCognitiveScene {
     }
 
     startGameplay() {
-        this.sessionStartTime = this.time.now;
+        this.sessionStartTime = this.getTime();
         this.isGameOver = false;
         this.isTutorialActive = false;
         this.countdownTimer = this.time.addEvent({
@@ -188,7 +188,7 @@ export default class NeuroMazeScene extends BaseCognitiveScene {
 updateTimer() {
         if (!this.sessionStartTime || this.timeLeft <= 0) return;
         
-        const elapsed = this.time.now - this.sessionStartTime;
+        const elapsed = this.getTime() - this.sessionStartTime;
         this.timeLeft = Math.max(0, this.gameDuration - elapsed);
         const seconds = Math.ceil(this.timeLeft / 1000);
         
@@ -213,7 +213,7 @@ updateTimer() {
         this.statusText.setText('NAVIGATE THE NEURAL NETWORK!').setFill('#e2e8f0');
         this.updateHUD();
 
-        this.stimulusSpawnTime = this.time.now;
+        this.stimulusSpawnTime = this.getTime();
         this.firstInteractionRegistered = false;
         this.firstInteractionLatency = 0;
 
@@ -370,7 +370,7 @@ updateTimer() {
         this.playerSprite.lineStyle(3, 0x10b981, 0.85); // Emerald border
         this.playerSprite.strokeCircle(0, 0, cellSize * 0.29);
 
-        this.puzzleStartTime = this.time.now;
+        this.puzzleStartTime = this.getTime();
     }
 
     handleCellClick(tx, ty) {
@@ -495,7 +495,7 @@ updateTimer() {
         this.hits++;
         this.totalAttempts++;
 
-        const solveTime = this.time.now - this.puzzleStartTime;
+        const solveTime = this.getTime() - this.puzzleStartTime;
         
         // Dynamic reward score
         const baseReward = 200 * this.difficultyLevel;
@@ -522,7 +522,7 @@ updateTimer() {
         this.misses++;
         this.totalAttempts++;
 
-        const solveTime = this.time.now - this.puzzleStartTime;
+        const solveTime = this.getTime() - this.puzzleStartTime;
 
         // Turn player core red
         this.playerSprite.clear();

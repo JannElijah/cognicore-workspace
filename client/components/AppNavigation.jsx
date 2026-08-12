@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { memo } from 'react';
 
-export default function AppNavigation({
+const AppNavigation = memo(function AppNavigation({
   currentUser, portalView, setPortalView, setShowProfileModal, activeGame,
   showDashboard, setShowDashboard, coins, totalXp, level, inventory,
   setActiveGame, currentLevel, dailyRewardData, xpPercent,
@@ -256,4 +256,6 @@ export default function AppNavigation({
       </header>
 
   );
-}
+});
+
+export default AppNavigation;

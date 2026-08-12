@@ -98,7 +98,7 @@ export default class SynapseSpinScene extends BaseCognitiveScene {
             if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gameObjects.length === 0) {
-                const now = this.time.now;
+                const now = this.getTime();
                 if (now - this.lastMissTime < 200) {
                     this.spamClickCount++;
                 }
@@ -122,7 +122,7 @@ export default class SynapseSpinScene extends BaseCognitiveScene {
     }
 
     startGameplay() {
-        this.sessionStartTime = this.time.now;
+        this.sessionStartTime = this.getTime();
         this.isGameOver = false;
         this.isTutorialActive = false;
         this.countdownTimer = this.time.addEvent({
@@ -137,7 +137,7 @@ export default class SynapseSpinScene extends BaseCognitiveScene {
 updateTimer() {
         if (!this.sessionStartTime || this.timeLeft <= 0) return;
         
-        const elapsed = this.time.now - this.sessionStartTime;
+        const elapsed = this.getTime() - this.sessionStartTime;
         this.timeLeft = Math.max(0, this.gameDuration - elapsed);
         const seconds = Math.ceil(this.timeLeft / 1000);
         
@@ -176,10 +176,10 @@ updateTimer() {
     startNewPuzzle() {
         if (this.timeLeft <= 0 || this.gamePhase !== 'PLAYING') return;
 
-        this.stimulusSpawnTime = this.time.now;
+        this.stimulusSpawnTime = this.getTime();
         this.firstInteractionRegistered = false;
         this.firstInteractionLatency = 0;
-        this.puzzleStartTime = this.time.now;
+        this.puzzleStartTime = this.getTime();
 
         // Cleanup previous shapes
         if (this.referenceGraphic) this.referenceGraphic.destroy();
@@ -311,7 +311,7 @@ updateTimer() {
         this.gamePhase = 'FEEDBACK';
         this.totalAttempts++;
 
-        const solveTime = this.time.now - this.puzzleStartTime;
+        const solveTime = this.getTime() - this.puzzleStartTime;
         const isCorrect = selectedIndex === this.correctOptionIndex;
 
         if (isCorrect) {

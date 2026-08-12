@@ -613,7 +613,25 @@ def calculate_dda_parameters(difficulty_level, game_type='SpeedTap', user_avg_rt
 
 from model import archetype_classifier
 
-ml_history_cache = {}
+import collections
+
+class LRUCache(collections.OrderedDict):
+    def __init__(self, maxsize=1000, *args, **kwds):
+        self.maxsize = maxsize
+        super().__init__(*args, **kwds)
+
+    def __getitem__(self, key):
+        value = super().__getitem__(key)
+        self.move_to_end(key)
+        return value
+
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+        if len(self) > self.maxsize:
+            oldest = next(iter(self))
+            del self[oldest]
+
+ml_history_cache = LRUCache(maxsize=1000)
 
 def calculate_pearson_r(x, y):
     n = len(x)

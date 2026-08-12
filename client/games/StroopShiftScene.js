@@ -194,7 +194,7 @@ export default class StroopShiftScene extends BaseCognitiveScene {
             if (this.isTutorialActive) return;
             this.registerFirstInteraction();
             if (gameObjects.length === 0) {
-                const now = this.time.now;
+                const now = this.getTime();
                 if (now - this.lastMissTime < 200) {
                     this.spamClickCount++;
                 }
@@ -218,7 +218,7 @@ export default class StroopShiftScene extends BaseCognitiveScene {
     }
 
     startGameplay() {
-        this.sessionStartTime = this.time.now;
+        this.sessionStartTime = this.getTime();
         this.isGameOver = false;
         this.isTutorialActive = false;
         this.countdownTimer = this.time.addEvent({
@@ -317,7 +317,7 @@ export default class StroopShiftScene extends BaseCognitiveScene {
         }
 
         // Reset first interaction metric tracking
-        this.stimulusSpawnTime = this.time.now;
+        this.stimulusSpawnTime = this.getTime();
         this.firstInteractionRegistered = false;
         this.firstInteractionLatency = 0;
 
@@ -355,7 +355,7 @@ export default class StroopShiftScene extends BaseCognitiveScene {
         const isCorrect = (selectedColorName === this.currentInkColor.name);
         this.totalClicks++;
 
-        const reactionTime = this.time.now - this.stimulusSpawnTime;
+        const reactionTime = this.getTime() - this.stimulusSpawnTime;
         this.recentReactionTimes.push(reactionTime);
 
         if (isCorrect) {

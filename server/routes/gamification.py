@@ -74,7 +74,7 @@ def claim_quest(current_user_id, current_username, quest_id):
         
     quest.is_completed = True
     
-    prof = UserProfile.query.get(current_user_id)
+    prof = UserProfile.query.filter_by(user_id=current_user_id).first()
     if not prof:
         prof = UserProfile(user_id=current_user_id, coins=quest.reward_coins)
         db.session.add(prof)
@@ -91,7 +91,7 @@ def get_user_inventory(current_user_id, current_username, username):
     if current_username != username:
         return jsonify({"status": "error", "message": "Unauthorized"}), 403
     
-    prof = UserProfile.query.get(current_user_id)
+    prof = UserProfile.query.filter_by(user_id=current_user_id).first()
     if not prof:
         prof = UserProfile(user_id=current_user_id, coins=0, xp=0)
         db.session.add(prof)
@@ -129,7 +129,7 @@ def update_accessibility(current_user_id, current_username):
     data = request.json
     reduce_flashes = data.get('reduce_flashes', False)
     
-    prof = UserProfile.query.get(current_user_id)
+    prof = UserProfile.query.filter_by(user_id=current_user_id).first()
     if not prof:
         prof = UserProfile(user_id=current_user_id, reduce_flashes=reduce_flashes)
         db.session.add(prof)
@@ -169,7 +169,7 @@ def api_purchase(current_user_id, current_username):
     price = item_info['price']
     item_type = item_info['type']
     
-    prof = UserProfile.query.get(current_user_id)
+    prof = UserProfile.query.filter_by(user_id=current_user_id).first()
     if not prof:
         prof = UserProfile(user_id=current_user_id, coins=0)
         db.session.add(prof)
@@ -216,7 +216,7 @@ def api_equip(current_user_id, current_username):
         return jsonify({"status": "error", "message": "Item not owned."}), 400
         
     item_type = item_row.item_type
-    prof = UserProfile.query.get(current_user_id)
+    prof = UserProfile.query.filter_by(user_id=current_user_id).first()
     if not prof:
         prof = UserProfile(user_id=current_user_id)
         db.session.add(prof)

@@ -155,7 +155,7 @@ export default class SpeedTapScene extends BaseCognitiveScene {
             this.registerFirstInteraction();
             if (gameObjects.length === 0) {
                 this.registerMiss();
-                const now = this.time.now;
+                const now = this.getTime();
                 if (now - this.lastMissTime < 200) {
                     this.spamClickCount++;
                 }
@@ -182,7 +182,7 @@ export default class SpeedTapScene extends BaseCognitiveScene {
     updateTimer() {
         if (!this.sessionStartTime || this.timeLeft <= 0) return;
         
-        const elapsed = this.time.now - this.sessionStartTime;
+        const elapsed = this.getTime() - this.sessionStartTime;
         this.timeLeft = Math.max(0, this.gameDuration - elapsed);
         const seconds = Math.ceil(this.timeLeft / 1000);
         
@@ -202,7 +202,7 @@ export default class SpeedTapScene extends BaseCognitiveScene {
             return;
         }
 
-        this.stimulusSpawnTime = this.time.now;
+        this.stimulusSpawnTime = this.getTime();
         this.firstInteractionRegistered = false;
         this.firstInteractionLatency = 0;
 
@@ -260,7 +260,7 @@ export default class SpeedTapScene extends BaseCognitiveScene {
         });
 
         // Set spawn metadata
-        sprite.setData('spawnTime', this.time.now);
+        sprite.setData('spawnTime', this.getTime());
         sprite.setData('active', true);
 
         // Click interaction
@@ -324,7 +324,7 @@ export default class SpeedTapScene extends BaseCognitiveScene {
         this.hits++;
             this.consecutiveHits++;
             
-            const reactionTime = this.time.now - container.getData('spawnTime');
+            const reactionTime = this.getTime() - container.getData('spawnTime');
             this.recentReactionTimes.push(reactionTime);
             this.score += Math.max(10, Math.round(1000 - reactionTime / 2)); // Dynamic score based on speed
 
@@ -503,9 +503,9 @@ export default class SpeedTapScene extends BaseCognitiveScene {
     }
 
     startGameplay() {
-        this.sessionStartTime = this.time.now;
+        this.sessionStartTime = this.getTime();
         this.isGameOver = false;
-        this.stimulusSpawnTime = this.time.now;
+        this.stimulusSpawnTime = this.getTime();
         
         this.spawnTimerEvent = this.time.addEvent({
             delay: this.spawnDelay,
