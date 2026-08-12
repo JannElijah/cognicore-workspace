@@ -4,6 +4,60 @@ from database import db
 import logging
 from sqlalchemy import text
 from game_utils import safe_float, safe_int
+import math
+
+try:
+    from scipy import stats
+    SCIPY_AVAILABLE = True
+except ImportError:
+    SCIPY_AVAILABLE = False
+
+def calculate_approx_t_p_value(t_stat, df):
+    """
+    Computes a highly accurate mathematical approximation of the two-sided p-value
+    for a Student's t-distribution with given degrees of freedom, without external libraries.
+    """
+    if df < 1:
+        return 1.0
+        
+    t_abs = abs(t_stat)
+    
+    # Exact calculation for df = 1 (Cauchy distribution)
+    if df == 1:
+        return 1.0 - (2.0 / math.pi) * math.atan(t_abs)
+    # Exact calculation for df = 2
+    if df == 2:
+        return 1.0 - t_abs / math.sqrt(2.0 + t_abs * t_abs)
+    # Exact calculation for df = 3
+    if df == 3:
+        term1 = t_abs / (math.pi * math.sqrt(3.0) * (1.0 + t_abs * t_abs / 3.0))
+        term2 = math.atan(t_abs / math.sqrt(3.0)) / math.pi
+        return max(0.0, min(1.0, 2.0 * (0.5 - term1 - term2)))
+    # Exact calculation for df = 4
+    if df == 4:
+        term = (t_abs / (2.0 * math.sqrt(4.0 + t_abs * t_abs))) * (1.0 + 2.0 / (4.0 + t_abs * t_abs))
+        return max(0.0, min(1.0, 2.0 * (0.5 - term)))
+        
+    # Peizer-Pratt adjusted normal approximation for df >= 5
+    z = t_abs * (1.0 - 1.0 / (4.0 * df)) / math.sqrt(1.0 + t_abs * t_abs / (2.0 * df))
+    
+    # Standard normal CDF approximation (Abramowitz & Stegun formula 26.2.17)
+    p = 0.2316419
+    b1 = 0.319381530
+    b2 = -0.356563782
+    b3 = 1.781477937
+    b4 = -1.821255978
+    b5 = 1.330274429
+    
+    t = 1.0 / (1.0 + p * z)
+    exponential = math.exp(-0.5 * z * z)
+    prob = 1.0 - (1.0 / math.sqrt(2.0 * math.pi)) * exponential * (
+        b1 * t + b2 * (t ** 2) + b3 * (t ** 3) + b4 * (t ** 4) + b5 * (t ** 5)
+    )
+    
+    # Return two-sided p-value
+    two_sided_p = 2.0 * (1.0 - prob)
+    return max(0.0, min(1.0, two_sided_p))
 
 logger = logging.getLogger(__name__)
 
