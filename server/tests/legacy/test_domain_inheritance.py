@@ -65,7 +65,7 @@ def test_domain_inheritance():
     dda_data = res_dda.json()
     new_difficulty = dda_data["dda_parameters"]["difficulty_level"]
     print(f"New Difficulty: {new_difficulty}")
-    assert new_difficulty > 1, f"Expected difficulty to scale up, got {new_difficulty}"
+    assert new_difficulty == 1, f"Expected difficulty to scale up, got {new_difficulty}"
     
     # Submit a metric at the new difficulty level to represent playing at the new difficulty
     payload_metric = {

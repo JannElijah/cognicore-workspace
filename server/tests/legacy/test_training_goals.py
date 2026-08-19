@@ -20,6 +20,11 @@ class RequestsWrapper:
         if self.token:
             kwargs.setdefault('headers', {})['Authorization'] = f'Bearer {self.token}'
         return _requests.get(url, *args, **kwargs)
+        
+    def delete(self, url, *args, **kwargs):
+        if self.token:
+            kwargs.setdefault('headers', {})['Authorization'] = f'Bearer {self.token}'
+        return _requests.delete(url, *args, **kwargs)
 
 requests = RequestsWrapper()
 

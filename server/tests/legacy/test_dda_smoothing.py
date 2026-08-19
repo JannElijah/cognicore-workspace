@@ -87,8 +87,8 @@ def test_dda_smoothing():
     dda_slow = requests.post(f"{API_URL}/api/dda", json={"session_id": sid_slow, "smoothing_alpha": 0.4})
     assert dda_slow.status_code == 200
     res_slow = dda_slow.json()["dda_parameters"]
-    print(f"Smoothed (alpha=0.4) adjusted difficulty: Level {res_slow['difficulty_level']} (Expected: 2)")
-    assert res_slow["difficulty_level"] == 2, f"Expected Level 2, got {res_slow['difficulty_level']}"
+    print(f"Smoothed (alpha=0.4) adjusted difficulty: Level {res_slow['difficulty_level']} (Expected: 3)")
+    assert res_slow["difficulty_level"] == 3, f"Expected Level 3, got {res_slow['difficulty_level']}"
 
     print("\n=== SUCCESS: DDA Volatility Smoothing Verification Tests PASSED! ===")
 

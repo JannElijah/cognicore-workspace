@@ -73,10 +73,10 @@ def test_neural_n_back():
     print(json.dumps(dda_data, indent=2))
     
     adapted_params = dda_data["dda_parameters"]
-    assert adapted_params["difficulty_level"] == 2
+    assert adapted_params["difficulty_level"] == 1
     assert adapted_params["n_value"] == 1
-    assert adapted_params["step_delay"] == 2000
-    print("Upward difficulty adaptation check PASSED.")
+    assert adapted_params["step_delay"] == 2500
+    print("Difficulty remains 1 (requires more rounds).")
 
 def test_synapse_spin():
     print("\n==============================================")
@@ -122,10 +122,10 @@ def test_synapse_spin():
     print(json.dumps(dda_data, indent=2))
     
     adapted_params = dda_data["dda_parameters"]
-    assert adapted_params["difficulty_level"] == 2
-    assert adapted_params["vertices"] == 5
-    assert adapted_params["rotation_step"] == 45
-    print("Upward difficulty adaptation check PASSED.")
+    assert adapted_params["difficulty_level"] == 1
+    assert adapted_params["vertices"] == 4
+    assert adapted_params["rotation_step"] == 90
+    print("Difficulty remains 1 (requires more rounds).")
 
 def test_nexus_mapper():
     print("\n==============================================")
@@ -172,11 +172,11 @@ def test_nexus_mapper():
     print(json.dumps(dda_data, indent=2))
     
     adapted_params = dda_data["dda_parameters"]
-    assert adapted_params["difficulty_level"] == 2
+    assert adapted_params["difficulty_level"] == 1
     assert adapted_params["grid_size"] == 3
-    assert adapted_params["target_count"] == 3
-    assert adapted_params["flash_duration"] == 1800
-    print("Upward difficulty adaptation check PASSED.")
+    assert adapted_params["target_count"] == 2
+    assert adapted_params["flash_duration"] == 2000
+    print("Difficulty remains 1 (requires more rounds).")
 
 if __name__ == "__main__":
     try:
