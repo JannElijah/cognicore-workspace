@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import useCogniStore from '../store/useCogniStore';
 import cogniFX from '../utils/cogniFX';
 import { Radar, Line, Scatter } from 'react-chartjs-2';
+import HoverTooltip from './HoverTooltip';
 import {
   Chart as ChartJS, RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend, CategoryScale, LinearScale
 } from 'chart.js';
@@ -453,18 +454,24 @@ const ProfileModal = ({ onClose }) => {
                   
                   {/* KPI Cards Row */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
+                    <HoverTooltip text="Total number of valid neuro-training sessions recorded." delay={200}>
                     <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', textAlign: 'center', border: '1px solid rgba(56, 189, 248, 0.1)' }}>
                       <div style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Total Games Played</div>
                       <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#f8fafc' }}>{kpis.total_games}</div>
                     </div>
+                    </HoverTooltip>
+                    <HoverTooltip text="The maximum difficulty tier you have achieved across all games." delay={200}>
                     <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', textAlign: 'center', border: '1px solid rgba(168, 85, 247, 0.1)' }}>
                       <div style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Highest Level Reached</div>
                       <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#f8fafc' }}>{kpis.highest_level}</div>
                     </div>
+                    </HoverTooltip>
+                    <HoverTooltip text="Average precision rate across all cognitive domains." delay={200}>
                     <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', textAlign: 'center', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
                       <div style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Overall Accuracy</div>
                       <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#f8fafc' }}>{(kpis.overall_accuracy * 100).toFixed(1)}%</div>
                     </div>
+                    </HoverTooltip>
                   </div>
 
                   {/* Charts Row */}
@@ -538,18 +545,23 @@ const ProfileModal = ({ onClose }) => {
                           <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: `${theme.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.5rem', boxShadow: `0 0 20px ${theme.color}40` }}>
                             {theme.icon}
                           </div>
+                          <HoverTooltip text="Your cognitive archetype based on clustering analysis of your neuro-metrics." delay={200}>
                           <div>
                             <div style={{ fontSize: '0.9rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Current Archetype</div>
                             <div style={{ color: theme.color, fontWeight: 'bold', fontSize: '2rem', textShadow: `0 0 10px ${theme.color}60` }}>
                               {cognitiveProfile.archetype_name}
                             </div>
+                            <HoverTooltip text="Confidence probability that you match this archetype cluster." delay={200}>
                             <div style={{ color: '#cbd5e1', fontSize: '0.95rem', marginTop: '0.5rem' }}>
                               Predictive Match: <strong style={{ color: '#f8fafc' }}>{Math.round(cognitiveProfile.confidence_score * 100)}%</strong>
                             </div>
+                            </HoverTooltip>
                           </div>
+                          </HoverTooltip>
                         </div>
 
                         {/* AI Insights Bubble */}
+                        <HoverTooltip text="Personalized coaching tips generated dynamically using AI based on your gameplay data." delay={200}>
                         <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', borderLeft: '4px solid #38bdf8', position: 'relative' }}>
                           <h4 style={{ margin: '0 0 0.5rem 0', color: '#38bdf8', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <span>🤖</span> AI Coaching Insight
@@ -558,6 +570,7 @@ const ProfileModal = ({ onClose }) => {
                             "{cognitiveProfile.insight_text}"
                           </p>
                         </div>
+                        </HoverTooltip>
 
                         {/* Strengths & Bottlenecks */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>

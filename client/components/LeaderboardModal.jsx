@@ -1,6 +1,7 @@
 import { API_BASE } from '../utils/apiClient.js';
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import { supabase } from '../utils/supabaseClient.js';
+import HoverTooltip from './HoverTooltip';
 
 const LeaderboardModal = memo(({ onClose }) => {
   const [leaders, setLeaders] = useState([]);
@@ -99,7 +100,8 @@ const LeaderboardModal = memo(({ onClose }) => {
             <div style={{ color: '#94a3b8', textAlign: 'center', padding: '2rem 0' }}>No players found.</div>
           ) : (
             leaders.map((player, idx) => (
-              <div key={idx} style={{
+              <HoverTooltip key={idx} text={`Rank: #${idx + 1} | Level ${player.level} | ${player.xp} XP`} delay={200}>
+              <div style={{
                 background: getRankColor(idx),
                 padding: '1rem',
                 borderRadius: '12px',
@@ -136,6 +138,7 @@ const LeaderboardModal = memo(({ onClose }) => {
                   {player.xp} XP
                 </div>
               </div>
+              </HoverTooltip>
             ))
           )}
         </div>

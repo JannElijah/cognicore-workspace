@@ -36,6 +36,7 @@ import AdminPanel from './components/AdminPanel';
 import Dashboard from './components/Dashboard';
 import KnowledgeBase from './components/KnowledgeBase';
 import AppNavigation from './components/AppNavigation';
+import HoverTooltip from './components/HoverTooltip';
 
 const SpeedTapGame = lazy(() => import('./components/SpeedTapGame'));
 const MemoryMatchGame = lazy(() => import('./components/MemoryMatchGame'));
@@ -2438,7 +2439,8 @@ export default function App() {
                 </h2>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
                   {DOMAINS_LIST.find(d => d.id === weakestDomain).games.slice(0, 3).map((game) => (
-                    <div key={game.id} className="game-card glass-panel" style={{ cursor: 'pointer', position: 'relative', overflow: 'hidden' }} onClick={() => { audioEngine.playClick(); launchGame(game.id); }} onMouseEnter={() => audioEngine.playHover()}>
+                    <HoverTooltip key={game.id} text="This game targets your weakest domain" content="This game targets your weakest domain" delay={200}>
+                    <div className="game-card glass-panel" style={{ cursor: 'pointer', position: 'relative', overflow: 'hidden' }} onClick={() => { audioEngine.playClick(); launchGame(game.id); }} onMouseEnter={() => audioEngine.playHover()}>
                       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '4px', background: 'linear-gradient(90deg, #a855f7, #38bdf8)' }}></div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
                         <div style={{ fontSize: '2.5rem', width: '60px', height: '60px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -2453,6 +2455,7 @@ export default function App() {
                         {game.objective}
                       </p>
                     </div>
+                    </HoverTooltip>
                   ))}
                 </div>
               </div>
@@ -3097,8 +3100,8 @@ export default function App() {
                       const theme = DOMAIN_THEMES[dom.themeClass] || DOMAIN_THEMES.reflex;
                       
                       return (
+                        <HoverTooltip key={game.id} text={isPrescribed ? "Recommended to improve your weakest domain" : "Free play mode - Train this specific cognitive skill"} content={isPrescribed ? "Recommended to improve your weakest domain" : "Free play mode - Train this specific cognitive skill"} delay={200}>
                         <div 
-                          key={game.id} 
                           className={`game-card theme-${dom.themeClass} active`}
                           onMouseEnter={() => !game.inProgress && audioEngine.playHover()}
                           onClick={() => { 
@@ -3164,6 +3167,7 @@ export default function App() {
                             {game.inProgress ? 'In Progress 🚧' : isPrescribed ? 'Launch Active Game' : 'Launch Game'}
                           </button>
                         </div>
+                        </HoverTooltip>
                       );
                     })}
                   </div>

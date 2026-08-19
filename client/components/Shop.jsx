@@ -2,6 +2,7 @@ import { API_BASE } from '../utils/apiClient.js';
 import React, { useState, useEffect } from 'react';
 import useCogniStore from '../store/useCogniStore';
 import audioEngine from '../utils/audioEngine';
+import HoverTooltip from './HoverTooltip';
 
 const SHOP_ITEMS = [
   { id: 'theme-red', type: 'theme', name: 'Crimson Synapse', description: 'Deep red energetic UI theme.', price: 200, category: 'Themes' },
@@ -148,6 +149,7 @@ const Shop = ({ onClose }) => {
             <p style={{ color: '#94a3b8', margin: '0.25rem 0 0 0', fontSize: '0.875rem' }}>Spend NeuroCoins on cosmetics</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            <HoverTooltip text="Your current balance. Earn coins by completing quests and playing games." delay={200}>
             <div style={{ background: '#1e293b', padding: '0.5rem 1rem', borderRadius: '9999px', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid #334155' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" style={{ filter: 'drop-shadow(0 0 4px rgba(251,191,36,0.7))', flexShrink: 0 }} xmlns="http://www.w3.org/2000/svg">
                 <circle cx="12" cy="12" r="11" fill="#fbbf24"/>
@@ -156,6 +158,7 @@ const Shop = ({ onClose }) => {
               </svg>
               <span style={{ fontWeight: 'bold', color: '#f8fafc' }}>{loading ? '...' : coins}</span>
             </div>
+            </HoverTooltip>
             <button
               onClick={onClose}
               style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '1.5rem', cursor: 'pointer' }}
@@ -225,6 +228,7 @@ const Shop = ({ onClose }) => {
                         )}
 
                         {!isOwned ? (
+                          <HoverTooltip text="Buy this item using coins" delay={200}>
                           <button
                             onClick={() => handlePurchase(item.id)}
                             disabled={coins < item.price}
@@ -241,7 +245,9 @@ const Shop = ({ onClose }) => {
                           >
                             Buy
                           </button>
+                          </HoverTooltip>
                         ) : (
+                          <HoverTooltip text={isEquipped ? "Currently active" : "Set as active"} delay={200}>
                           <button
                             onClick={() => handleEquip(item.id)}
                             style={{
@@ -254,9 +260,11 @@ const Shop = ({ onClose }) => {
                               cursor: isEquipped ? 'default' : 'pointer',
                               transition: 'all 0.2s'
                             }}
+                            disabled={isEquipped}
                           >
                             {isEquipped ? 'Equipped' : 'Equip'}
                           </button>
+                          </HoverTooltip>
                         )}
                       </div>
                     </div>

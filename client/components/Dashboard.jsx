@@ -1,5 +1,6 @@
 import React from 'react';
 import { Radar, Line, Bar, Scatter } from 'react-chartjs-2';
+import HoverTooltip from './HoverTooltip';
 
 const ProgressRing = ({ radius, stroke, progress, color }) => {
   const normalizedRadius = radius - stroke * 2;
@@ -105,6 +106,7 @@ export default function Dashboard({
             <div className="game-grid" style={{ marginBottom: '3rem' }}>
               
               {/* Spatial-Visual Memory Card */}
+              <HoverTooltip text="Scored based on your highest performance in memory-based games" content="Scored based on your highest performance in memory-based games" delay={200}>
               <div className="game-card" style={{ 
                 padding: '1.25rem 1.5rem', 
                 borderLeft: '4px solid #38bdf8', 
@@ -146,8 +148,10 @@ export default function Dashboard({
                    <span style={{ position: 'absolute', fontSize: '1.1rem' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(56,189,248,0.7))'}} xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="7" rx="7" ry="5" stroke="#38bdf8" strokeWidth="1.8"/><path d="M5 10c0 3 3 6 7 6s7-3 7-6" stroke="#38bdf8" strokeWidth="1.8" strokeLinecap="round"/><line x1="9" y1="13" x2="9" y2="19" stroke="#38bdf8" strokeWidth="1.5" strokeLinecap="round"/><line x1="15" y1="13" x2="15" y2="19" stroke="#38bdf8" strokeWidth="1.5" strokeLinecap="round"/><line x1="7" y1="19" x2="17" y2="19" stroke="#38bdf8" strokeWidth="1.5" strokeLinecap="round"/></svg></span>
                 </div>
               </div>
+              </HoverTooltip>
 
               {/* Logical Reasoning Card */}
+              <HoverTooltip text="Scored based on your highest performance in logic-based games" content="Scored based on your highest performance in logic-based games" delay={200}>
               <div className="game-card" style={{ 
                 padding: '1.25rem 1.5rem', 
                 borderLeft: '4px solid #f59e0b', 
@@ -189,8 +193,10 @@ export default function Dashboard({
                    <span style={{ position: 'absolute', fontSize: '1.1rem' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(245,158,11,0.7))'}} xmlns="http://www.w3.org/2000/svg"><text x="3" y="17" fontSize="14" fontWeight="bold" fill="#f59e0b" fontFamily="monospace">12</text></svg></span>
                 </div>
               </div>
+              </HoverTooltip>
 
               {/* Reflexes & Focus Card */}
+              <HoverTooltip text="Scored based on your highest performance in reflex-based games" content="Scored based on your highest performance in reflex-based games" delay={200}>
               <div className="game-card" style={{ 
                 padding: '1.25rem 1.5rem', 
                 borderLeft: '4px solid #a855f7', 
@@ -232,8 +238,10 @@ export default function Dashboard({
                    <span style={{ position: 'absolute', fontSize: '1.1rem' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(250,204,21,0.9))'}} xmlns="http://www.w3.org/2000/svg"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#facc15"/></svg></span>
                 </div>
               </div>
+              </HoverTooltip>
 
               {/* Executive Strategy Card */}
+              <HoverTooltip text="Scored based on your highest performance in strategy-based games" content="Scored based on your highest performance in strategy-based games" delay={200}>
               <div className="game-card" style={{ 
                 padding: '1.25rem 1.5rem', 
                 borderLeft: '4px solid #10b981', 
@@ -267,14 +275,15 @@ export default function Dashboard({
                     {skills.executive_strategy}<span style={{ fontSize: '0.9rem', color: '#64748b' }}>/100</span>
                   </h3>
                   <p style={{ margin: '0', fontSize: '0.8rem', color: '#94a3b8', lineHeight: '1.35' }}>
-                    Multi-step pathfinding and spatial maze escape navigation planning.
+                    Planning, cognitive flexibility, rule shifting, and multi-step execution.
                   </p>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', flexShrink: 0 }}>
                   <ProgressRing radius={30} stroke={3.5} progress={skills.executive_strategy / 100} color="#10b981" />
-                   <span style={{ position: 'absolute', fontSize: '1.1rem' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(16,185,129,0.7))'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="#10b981" strokeWidth="1.5"/><polygon points="16,8 10,10 8,16 14,14" fill="#10b981"/><circle cx="12" cy="12" r="1.5" fill="#0f172a"/></svg></span>
+                   <span style={{ position: 'absolute', fontSize: '1.1rem' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(16,185,129,0.7))'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="5" stroke="#10b981" strokeWidth="1.8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1l2.1-2.1M17 7l2.1-2.1" stroke="#10b981" strokeWidth="1.8" strokeLinecap="round"/></svg></span>
                 </div>
               </div>
+              </HoverTooltip>
 
             </div>
 

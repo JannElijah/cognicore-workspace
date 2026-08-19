@@ -1,6 +1,7 @@
 import { API_BASE } from '../utils/apiClient.js';
 import React, { useState, useEffect, memo } from 'react';
 import useCogniStore from '../store/useCogniStore';
+import HoverTooltip from './HoverTooltip';
 
 const DailyQuests = () => {
   const { token, fetchInventory } = useCogniStore();
@@ -74,10 +75,14 @@ const DailyQuests = () => {
                 borderRadius: '12px'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                  <h4 style={{ color: '#e2e8f0', margin: 0, fontSize: '0.95rem' }}>{quest.task_description}</h4>
-                  <div style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                    {quest.reward_coins} <svg width="15" height="15" viewBox="0 0 24 24" style={{ filter: 'drop-shadow(0 0 4px rgba(251,191,36,0.7))', flexShrink: 0, verticalAlign: 'middle' }} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="11" fill="#fbbf24"/><circle cx="12" cy="12" r="8" fill="#f59e0b"/><text x="12" y="16.5" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#78350f" fontFamily="Arial">C</text></svg>
-                  </div>
+                  <HoverTooltip text={isCompleted ? "Quest completed!" : "Complete this task to earn coins"} delay={200}>
+                    <h4 style={{ color: '#e2e8f0', margin: 0, fontSize: '0.95rem' }}>{quest.task_description}</h4>
+                  </HoverTooltip>
+                  <HoverTooltip text="Reward for completing this quest" delay={200}>
+                    <div style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      {quest.reward_coins} <svg width="15" height="15" viewBox="0 0 24 24" style={{ filter: 'drop-shadow(0 0 4px rgba(251,191,36,0.7))', flexShrink: 0, verticalAlign: 'middle' }} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="11" fill="#fbbf24"/><circle cx="12" cy="12" r="8" fill="#f59e0b"/><text x="12" y="16.5" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#78350f" fontFamily="Arial">C</text></svg>
+                    </div>
+                  </HoverTooltip>
                 </div>
                 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem' }}>
