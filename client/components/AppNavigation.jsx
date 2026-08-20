@@ -11,7 +11,7 @@ const AppNavigation = memo(function AppNavigation({
       <header className="portal-header">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <div className="logo-glow" onClick={() => { setActiveGame(null); setShowDashboard(false); setPortalView('participant'); }} style={{ cursor: 'pointer', alignSelf: 'flex-start', display: 'flex', alignItems: 'center' }}>
-            <img src="/logo.png" alt="CogniCore" style={{ height: '42px', width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 2px 12px rgba(168, 85, 247, 0.45))' }} />
+            <img src="/logo.png" alt="CogniCore" style={{ height: '42px', width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 2px 12px rgba(var(--rgb-secondary), 0.45))' }} />
           </div>
           {currentUser !== '' && portalView === 'participant' && (
             <button 
@@ -21,16 +21,16 @@ const AppNavigation = memo(function AppNavigation({
               onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
               onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
             >
-              <div style={{ width: '42px', height: '42px', background: 'rgba(56, 189, 248, 0.15)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '2px solid #38bdf8' }}>
+              <div style={{ width: '42px', height: '42px', background: 'rgba(var(--rgb-primary), 0.15)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '2px solid var(--color-primary)' }}>
                  {inventory.find(i => i.item_type === 'avatar' && i.is_equipped)?.item_id === 'avatar-robot' ? '🤖' :
                   inventory.find(i => i.item_type === 'avatar' && i.is_equipped)?.item_id === 'avatar-brain' ? '🧠' :
                   inventory.find(i => i.item_type === 'avatar' && i.is_equipped)?.item_id === 'avatar-hacker' ? '👨‍💻' :
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 0 4px rgba(56,189,248,0.5))' }}><circle cx="12" cy="8" r="4" fill="#38bdf8"/><path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round"/></svg>}
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 0 4px rgba(var(--rgb-primary),0.5))' }}><circle cx="12" cy="8" r="4" fill="var(--color-primary)"/><path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round"/></svg>}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: '120px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontWeight: 'bold', fontSize: '0.95rem', color: '#f8fafc' }}>{currentUser}</span>
-                  <span style={{ fontSize: '0.75rem', color: '#a855f7', fontWeight: 'bold' }}>Lv. {currentLevel}</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--color-secondary)', fontWeight: 'bold' }}>Lv. {currentLevel}</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
                   <span style={{ fontSize: '0.75rem', color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '0.2rem', fontWeight: '600' }}>
@@ -51,7 +51,7 @@ const AppNavigation = memo(function AppNavigation({
                     </span>
                   )}
                   <div style={{ flex: 1, height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
-                    <div style={{ width: `${xpPercent}%`, height: '100%', background: 'linear-gradient(to right, #38bdf8, #a855f7)' }}></div>
+                    <div style={{ width: `${xpPercent}%`, height: '100%', background: 'linear-gradient(to right, var(--color-primary), var(--color-secondary))' }}></div>
                   </div>
                 </div>
               </div>
@@ -64,7 +64,7 @@ const AppNavigation = memo(function AppNavigation({
               <button 
                 onClick={() => { setPortalView('participant'); }}
                 style={{
-                  background: portalView === 'participant' ? 'linear-gradient(to right, #38bdf8, #a855f7)' : 'transparent',
+                  background: portalView === 'participant' ? 'linear-gradient(to right, var(--color-primary), var(--color-secondary))' : 'transparent',
                   border: 'none',
                   color: '#ffffff',
                   padding: '0.4rem 0.8rem',
@@ -80,7 +80,7 @@ const AppNavigation = memo(function AppNavigation({
               <button 
                 onClick={() => { setPortalView('researcher'); }}
                 style={{
-                  background: portalView === 'researcher' ? 'linear-gradient(to right, #38bdf8, #a855f7)' : 'transparent',
+                  background: portalView === 'researcher' ? 'linear-gradient(to right, var(--color-primary), var(--color-secondary))' : 'transparent',
                   border: 'none',
                   color: '#ffffff',
                   padding: '0.4rem 0.8rem',
@@ -96,7 +96,7 @@ const AppNavigation = memo(function AppNavigation({
               <button 
                 onClick={() => { setPortalView('knowledge'); setActiveGame(null); setShowDashboard(false); }}
                 style={{
-                  background: portalView === 'knowledge' ? 'linear-gradient(to right, #38bdf8, #a855f7)' : 'transparent',
+                  background: portalView === 'knowledge' ? 'linear-gradient(to right, var(--color-primary), var(--color-secondary))' : 'transparent',
                   border: 'none',
                   color: '#ffffff',
                   padding: '0.4rem 0.8rem',
@@ -148,7 +148,7 @@ const AppNavigation = memo(function AppNavigation({
                 title="Detailed History"
                 onClick={() => setShowDashboard(!showDashboard)}
                 style={{
-                  background: showDashboard ? 'rgba(255, 255, 255, 0.05)' : 'linear-gradient(to right, #38bdf8, #a855f7)',
+                  background: showDashboard ? 'rgba(255, 255, 255, 0.05)' : 'linear-gradient(to right, var(--color-primary), var(--color-secondary))',
                   color: '#ffffff',
                   border: '1px solid ' + (showDashboard ? 'rgba(255, 255, 255, 0.2)' : 'transparent'),
                   padding: '0.5rem',
@@ -168,10 +168,10 @@ const AppNavigation = memo(function AppNavigation({
                   ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.5))' }} xmlns="http://www.w3.org/2000/svg">
                       <path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
-                  : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 0 5px rgba(56,189,248,0.7))' }} xmlns="http://www.w3.org/2000/svg">
-                      <rect x="3" y="12" width="4" height="9" rx="1" fill="#38bdf8"/>
-                      <rect x="10" y="6" width="4" height="15" rx="1" fill="#38bdf8"/>
-                      <rect x="17" y="3" width="4" height="18" rx="1" fill="#38bdf8" fillOpacity="0.7"/>
+                  : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 0 5px rgba(var(--rgb-primary),0.7))' }} xmlns="http://www.w3.org/2000/svg">
+                      <rect x="3" y="12" width="4" height="9" rx="1" fill="var(--color-primary)"/>
+                      <rect x="10" y="6" width="4" height="15" rx="1" fill="var(--color-primary)"/>
+                      <rect x="17" y="3" width="4" height="18" rx="1" fill="var(--color-primary)" fillOpacity="0.7"/>
                     </svg>
                 }
               </button>
@@ -189,7 +189,7 @@ const AppNavigation = memo(function AppNavigation({
               background: 'rgba(255, 255, 255, 0.05)',
               border: '1px solid rgba(255, 255, 255, 0.1)',
               borderRadius: '8px',
-              color: globalMuted ? '#94a3b8' : '#38bdf8',
+              color: globalMuted ? '#94a3b8' : 'var(--color-primary)',
               padding: '0.4rem',
               fontSize: '1rem',
               cursor: 'pointer',
@@ -209,7 +209,7 @@ const AppNavigation = memo(function AppNavigation({
                   <line x1="23" y1="9" x2="17" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                   <line x1="17" y1="9" x2="23" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                 </svg>
-              : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 0 4px rgba(56,189,248,0.6))' }} xmlns="http://www.w3.org/2000/svg">
+              : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 0 4px rgba(var(--rgb-primary),0.6))' }} xmlns="http://www.w3.org/2000/svg">
                   <path d="M11 5L6 9H2v6h4l5 4V5z" fill="currentColor"/>
                   <path d="M19.07 4.93a10 10 0 010 14.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
                   <path d="M15.54 8.46a5 5 0 010 7.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -221,10 +221,10 @@ const AppNavigation = memo(function AppNavigation({
             onClick={() => setShowSoundTuner(!showSoundTuner)}
             title="Ambient Soundscape Tuner"
             style={{
-              background: showSoundTuner ? 'rgba(168, 85, 247, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-              border: showSoundTuner ? '1px solid #a855f7' : '1px solid rgba(255, 255, 255, 0.1)',
+              background: showSoundTuner ? 'rgba(var(--rgb-secondary), 0.15)' : 'rgba(255, 255, 255, 0.05)',
+              border: showSoundTuner ? '1px solid var(--color-secondary)' : '1px solid rgba(255, 255, 255, 0.1)',
               borderRadius: '8px',
-              color: showSoundTuner ? '#c084fc' : '#38bdf8',
+              color: showSoundTuner ? '#c084fc' : 'var(--color-primary)',
               padding: '0.4rem',
               fontSize: '1rem',
               cursor: 'pointer',
@@ -239,7 +239,7 @@ const AppNavigation = memo(function AppNavigation({
             onMouseOver={(e) => { if (!showSoundTuner) e.target.style.background = 'rgba(255, 255, 255, 0.1)' }}
             onMouseOut={(e) => { if (!showSoundTuner) e.target.style.background = 'rgba(255, 255, 255, 0.05)' }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 0 4px rgba(168,85,247,0.7))' }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 0 4px rgba(var(--rgb-secondary),0.7))' }}>
               <line x1="4" y1="6" x2="20" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
               <circle cx="8" cy="6" r="2.5" fill="currentColor"/>
               <line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>

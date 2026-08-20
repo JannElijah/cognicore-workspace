@@ -363,7 +363,7 @@ export default function RouteOptimizerGame({
                             <span style={{ ...S.statVal, color: '#ef4444' }}>{finalStats?.misses}</span>
                         </div>
                         <div style={S.statRow}>
-                            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'4px',filter:'drop-shadow(0 0 4px rgba(56,189,248,0.7))'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="#38bdf8" strokeWidth="1.5"/><circle cx="12" cy="12" r="5" stroke="#38bdf8" strokeWidth="1.5"/><circle cx="12" cy="12" r="2" fill="#38bdf8"/></svg> Optimization Accuracy</span>
+                            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'4px',filter:'drop-shadow(0 0 4px rgba(var(--rgb-primary),0.7))'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="var(--color-primary)" strokeWidth="1.5"/><circle cx="12" cy="12" r="5" stroke="var(--color-primary)" strokeWidth="1.5"/><circle cx="12" cy="12" r="2" fill="var(--color-primary)"/></svg> Optimization Accuracy</span>
                             <span style={{ ...S.statVal, color: grade }}>{acc}%</span>
                         </div>
                         <div style={S.statRow}>
@@ -372,7 +372,7 @@ export default function RouteOptimizerGame({
                         </div>
                         <div style={S.statRow}>
                             <span>Path Resets Used</span>
-                            <span style={{ ...S.statVal, color: '#38bdf8' }}>{finalStats?.backtrack_count ?? 0}</span>
+                            <span style={{ ...S.statVal, color: 'var(--color-primary)' }}>{finalStats?.backtrack_count ?? 0}</span>
                         </div>
                         <div style={{ ...S.statRow, border: 'none' }}>
                             <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'4px',filter:'drop-shadow(0 0 4px rgba(250,204,21,0.9))'}} xmlns="http://www.w3.org/2000/svg"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#facc15"/></svg> First Move Latency</span>

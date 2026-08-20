@@ -23,11 +23,11 @@ export default function DailyRewardModal({ rewardData, onClose }) {
     }}>
       <div style={{
         background: 'linear-gradient(145deg, rgba(30,41,59,0.9), rgba(15,23,42,0.95))',
-        border: '1px solid rgba(168, 85, 247, 0.4)',
+        border: '1px solid rgba(var(--rgb-secondary), 0.4)',
         borderRadius: '24px',
         padding: '3rem',
         textAlign: 'center',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(168, 85, 247, 0.2)',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px rgba(var(--rgb-secondary), 0.2)',
         animation: 'slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
         maxWidth: '400px',
         width: '90%'
@@ -82,18 +82,18 @@ export default function DailyRewardModal({ rewardData, onClose }) {
             fontWeight: 'bold',
             borderRadius: '9999px',
             cursor: 'pointer',
-            boxShadow: '0 4px 15px rgba(168, 85, 247, 0.4)',
+            boxShadow: '0 4px 15px rgba(var(--rgb-secondary), 0.4)',
             transition: 'transform 0.2s, box-shadow 0.2s',
             width: '100%'
           }}
           onMouseOver={(e) => {
             e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 6px 20px rgba(168, 85, 247, 0.6)';
+            e.currentTarget.style.boxShadow = '0 6px 20px rgba(var(--rgb-secondary), 0.6)';
             audioEngine.playHover();
           }}
           onMouseOut={(e) => {
             e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 4px 15px rgba(168, 85, 247, 0.4)';
+            e.currentTarget.style.boxShadow = '0 4px 15px rgba(var(--rgb-secondary), 0.4)';
           }}
         >
           Claim Reward

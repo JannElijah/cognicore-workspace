@@ -2,8 +2,10 @@
   --bg-dark: #0f172a;
   --bg-card: rgba(30, 41, 59, 0.5);
   --border-glass: rgba(255, 255, 255, 0.1);
-  --color-primary: #3b82f6;
-  --color-secondary: #8b5cf6;
+  --color-primary: #38bdf8;
+  --rgb-primary: 56, 189, 248;
+  --color-secondary: #a855f7;
+  --rgb-secondary: 168, 85, 247;
   --color-success: #10b981;
   --color-danger: #ef4444;
   --text-main: #f8fafc;
@@ -14,22 +16,58 @@
 
 [data-theme="theme-blue"] {
   --color-primary: #3b82f6;
+  --rgb-primary: 59, 130, 246;
   --color-secondary: #8b5cf6;
+  --rgb-secondary: 139, 92, 246;
 }
 
 [data-theme="theme-red"] {
   --color-primary: #ef4444;
+  --rgb-primary: 239, 68, 68;
   --color-secondary: #f97316;
+  --rgb-secondary: 249, 115, 22;
 }
 
 [data-theme="theme-purple"] {
   --color-primary: #a855f7;
+  --rgb-primary: 168, 85, 247;
   --color-secondary: #ec4899;
+  --rgb-secondary: 236, 72, 153;
 }
 
 [data-theme="theme-yellow"] {
   --color-primary: #eab308;
+  --rgb-primary: 234, 179, 8;
   --color-secondary: #f59e0b;
+  --rgb-secondary: 245, 158, 11;
+}
+
+[data-theme="theme-green"] {
+  --color-primary: #10b981;
+  --rgb-primary: 16, 185, 129;
+  --color-secondary: #14b8a6;
+  --rgb-secondary: 20, 184, 166;
+}
+
+[data-theme="theme-pink"] {
+  --color-primary: #f43f5e;
+  --rgb-primary: 244, 63, 94;
+  --color-secondary: #d946ef;
+  --rgb-secondary: 217, 70, 239;
+}
+
+[data-theme="theme-cyan"] {
+  --color-primary: #06b6d4;
+  --rgb-primary: 6, 182, 212;
+  --color-secondary: #60a5fa;
+  --rgb-secondary: 96, 165, 250;
+}
+
+[data-theme="theme-monochrome"] {
+  --color-primary: #94a3b8;
+  --rgb-primary: 148, 163, 184;
+  --color-secondary: #475569;
+  --rgb-secondary: 71, 85, 105;
 }
 
 [data-banner="banner-neon"] {

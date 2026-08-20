@@ -46,16 +46,49 @@ def token_required(f):
             
             # Map Supabase UUID to internal Integer ID
             user_record = User.query.filter_by(supabase_uid=supabase_uid).first()
+            
+            meta = user.user_metadata or {}
+            course = meta.get('course')
+            age = meta.get('age')
+            if age is not None:
+                try:
+                    age = int(age)
+                except:
+                    age = None
+            gender = meta.get('gender')
+            
             if user_record:
+                # Update existing user demographics if they are empty
+                updated = False
+                if course and not user_record.course:
+                    user_record.course = course
+                    updated = True
+                if age and not user_record.age:
+                    user_record.age = age
+                    updated = True
+                if gender and not user_record.gender:
+                    user_record.gender = gender
+                    updated = True
+                if updated:
+                    db.session.commit()
                 current_user_id = user_record.id
             else:
                 existing_user = User.query.filter_by(username=current_username).first()
                 if existing_user:
                     existing_user.supabase_uid = supabase_uid
+                    if course and not existing_user.course: existing_user.course = course
+                    if age and not existing_user.age: existing_user.age = age
+                    if gender and not existing_user.gender: existing_user.gender = gender
                     db.session.commit()
                     current_user_id = existing_user.id
                 else:
-                    new_user = User(username=current_username, supabase_uid=supabase_uid)
+                    new_user = User(
+                        username=current_username, 
+                        supabase_uid=supabase_uid,
+                        course=course,
+                        age=age,
+                        gender=gender
+                    )
                     db.session.add(new_user)
                     db.session.commit()
                     current_user_id = new_user.id

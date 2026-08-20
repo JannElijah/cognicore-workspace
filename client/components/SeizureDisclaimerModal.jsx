@@ -59,7 +59,7 @@ const SeizureDisclaimerModal = () => {
           <button
             onClick={() => handleAccept(false)}
             style={{
-              background: 'linear-gradient(to right, #38bdf8, #60a5fa)',
+              background: 'linear-gradient(to right, var(--color-primary), #60a5fa)',
               color: '#0f172a',
               border: 'none',
               padding: '1rem',

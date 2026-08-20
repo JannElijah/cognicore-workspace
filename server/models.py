@@ -8,6 +8,9 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     pin_hash = db.Column(db.String(255))
     supabase_uid = db.Column(db.String(36))
+    course = db.Column(db.String(255))
+    age = db.Column(db.Integer)
+    gender = db.Column(db.String(50))
 
     # Relationships
     profile = db.relationship('UserProfile', backref='user', uselist=False, cascade='all, delete')

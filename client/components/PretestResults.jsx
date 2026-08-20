@@ -40,8 +40,8 @@ const PretestResults = ({
   const domainMapping = {
     spatial_visual_memory: { color: '#4ade80', name: 'Spatial Visual Memory', icon: <SvgIcon name='🧠' color='#4ade80' />, description: 'How well you remember patterns and locations.' },
     logical_mathematical: { color: '#f59e0b', name: 'Logical Mathematical', icon: <SvgIcon name='🧩' color='#f59e0b' />, description: 'Your ability to figure out patterns and rules.' },
-    reflexes_and_focus: { color: '#38bdf8', name: 'Reflexes and Focus', icon: <SvgIcon name='⚡' color='#38bdf8' />, description: 'How fast you react and maintain attention.' },
-    executive_strategy: { color: '#a855f7', name: 'Executive Strategy', icon: <SvgIcon name='🔄' color='#a855f7' />, description: 'How quickly you adjust to changing situations.' }
+    reflexes_and_focus: { color: 'var(--color-primary)', name: 'Reflexes and Focus', icon: <SvgIcon name='⚡' color='var(--color-primary)' />, description: 'How fast you react and maintain attention.' },
+    executive_strategy: { color: 'var(--color-secondary)', name: 'Executive Strategy', icon: <SvgIcon name='🔄' color='var(--color-secondary)' />, description: 'How quickly you adjust to changing situations.' }
   };
 
   const getDomainInfo = (domain) => domainMapping[domain] || domainMapping.reflexes_and_focus;
@@ -144,9 +144,9 @@ const PretestResults = ({
                   {(personalizedReport.weaknesses || []).map((con, i) => <li key={i} style={{ marginBottom: '0.5rem' }}>{con}</li>)}
                 </ul>
               </div>
-              <div style={{ background: 'rgba(56, 189, 248, 0.15)', borderLeft: '4px solid #38bdf8', borderRadius: '4px 12px 12px 4px', padding: '1.25rem' }}>
-                <h4 style={{ color: '#38bdf8', fontWeight: '700', marginBottom: '0.75rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <SvgIcon name='🤖' color='#38bdf8' /> AI Prediction Breakdown
+              <div style={{ background: 'rgba(var(--rgb-primary), 0.15)', borderLeft: '4px solid var(--color-primary)', borderRadius: '4px 12px 12px 4px', padding: '1.25rem' }}>
+                <h4 style={{ color: 'var(--color-primary)', fontWeight: '700', marginBottom: '0.75rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <SvgIcon name='🤖' color='var(--color-primary)' /> AI Prediction Breakdown
                 </h4>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
                     <div style={{ flex: 1 }}>
@@ -155,7 +155,7 @@ const PretestResults = ({
                             <span>High ({(personalizedReport.confidence_score * 100).toFixed(0)}%)</span>
                         </div>
                         <div style={{ width: '100%', height: '6px', background: 'rgba(0,0,0,0.4)', borderRadius: '3px', overflow: 'hidden' }}>
-                            <div style={{ width: `${personalizedReport.confidence_score * 100}%`, height: '100%', background: 'linear-gradient(90deg, #38bdf8, #818cf8)' }} />
+                            <div style={{ width: `${personalizedReport.confidence_score * 100}%`, height: '100%', background: 'linear-gradient(90deg, var(--color-primary), #818cf8)' }} />
                         </div>
                     </div>
                 </div>

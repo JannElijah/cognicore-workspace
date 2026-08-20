@@ -23,10 +23,10 @@ export const SvgGameIcon = ({ name, color }) => (
 );
 
 export const DOMAIN_INFO = {
-  reflexes_and_focus: { title: 'Reflexes & Focus', color: '#38bdf8', icon: <SvgGameIcon name="Lightning" color="#38bdf8" /> },
+  reflexes_and_focus: { title: 'Reflexes & Focus', color: 'var(--color-primary)', icon: <SvgGameIcon name="Lightning" color="var(--color-primary)" /> },
   spatial_visual_memory: { title: 'Memory & Recall', color: '#4ade80', icon: <SvgGameIcon name="Brain" color="#4ade80" /> },
   logical_mathematical: { title: 'Logical Reasoning', color: '#f59e0b', icon: <SvgGameIcon name="Numbers" color="#f59e0b" /> },
-  executive_strategy: { title: 'Executive Strategy', color: '#a855f7', icon: <SvgGameIcon name="Compass" color="#a855f7" /> }
+  executive_strategy: { title: 'Executive Strategy', color: 'var(--color-secondary)', icon: <SvgGameIcon name="Compass" color="var(--color-secondary)" /> }
 };
 
 export const DOMAIN_LABELS = {
@@ -38,11 +38,11 @@ export const DOMAIN_LABELS = {
 
 export const DOMAIN_THEMES = {
   reflex: {
-    color: '#38bdf8',
-    glow: 'rgba(56, 189, 248, 0.25)',
-    btnGlow: 'rgba(56, 189, 248, 0.4)',
-    bg: 'rgba(56, 189, 248, 0.03)',
-    btnGradient: 'linear-gradient(to right, #38bdf8, #60a5fa)'
+    color: 'var(--color-primary)',
+    glow: 'rgba(var(--rgb-primary), 0.25)',
+    btnGlow: 'rgba(var(--rgb-primary), 0.4)',
+    bg: 'rgba(var(--rgb-primary), 0.03)',
+    btnGradient: 'linear-gradient(to right, var(--color-primary), #60a5fa)'
   },
   memory: {
     color: '#4ade80',
@@ -59,11 +59,11 @@ export const DOMAIN_THEMES = {
     btnGradient: 'linear-gradient(to right, #f59e0b, #fbbf24)'
   },
   executive: {
-    color: '#a855f7',
-    glow: 'rgba(168, 85, 247, 0.25)',
-    btnGlow: 'rgba(168, 85, 247, 0.4)',
-    bg: 'rgba(168, 85, 247, 0.03)',
-    btnGradient: 'linear-gradient(to right, #a855f7, #c084fc)'
+    color: 'var(--color-secondary)',
+    glow: 'rgba(var(--rgb-secondary), 0.25)',
+    btnGlow: 'rgba(var(--rgb-secondary), 0.4)',
+    bg: 'rgba(var(--rgb-secondary), 0.03)',
+    btnGradient: 'linear-gradient(to right, var(--color-secondary), #c084fc)'
   }
 };
 
@@ -72,27 +72,27 @@ export const DOMAINS_LIST = [
     id: 'reflexes_and_focus',
     themeClass: 'reflex',
     title: 'Reflex & Attentional Focus',
-    icon: <SvgGameIcon name="Lightning" color="#38bdf8" />,
+    icon: <SvgGameIcon name="Lightning" color="var(--color-primary)" />,
     description: 'Improve your reaction time, focus, and ability to ignore distractions under pressure.',
     games: [
       {
         id: 'SpeedTap',
         title: 'Speed Tap',
-        icon: <SvgGameIcon name="Lightning" color="#38bdf8" />,
+        icon: <SvgGameIcon name="Lightning" color="var(--color-primary)" />,
         objective: 'Quickly tap the highlighted targets before time runs out, while ignoring the wrong ones.',
         benefit: 'Helps you make faster decisions and react quicker in fast-paced situations.'
       },
       {
         id: 'FocusFinder',
         title: 'Focus Finder',
-        icon: <SvgGameIcon name="Target" color="#38bdf8" />,
+        icon: <SvgGameIcon name="Target" color="var(--color-primary)" />,
         objective: 'Find the hidden targets moving around in a crowded, messy space.',
         benefit: 'Improves your ability to focus on what matters in a busy environment.'
       },
       {
         id: 'StroopShift',
         title: 'Stroop Shift',
-        icon: <SvgGameIcon name="Palette" color="#38bdf8" />,
+        icon: <SvgGameIcon name="Palette" color="var(--color-primary)" />,
         objective: 'Pick the correct color while ignoring tricky mismatched words (like the word "RED" painted in blue).',
         benefit: 'Trains your brain to overcome confusion and switch tasks easily.'
       }
@@ -184,27 +184,27 @@ export const DOMAINS_LIST = [
     id: 'executive_strategy',
     themeClass: 'executive',
     title: 'Executive Strategy & Planning',
-    icon: <SvgGameIcon name="Compass" color="#a855f7" />,
+    icon: <SvgGameIcon name="Compass" color="var(--color-secondary)" />,
     description: 'Train adaptive executive control, dynamic plan correction, card matching rule-switching, and decision confidence.',
     games: [
       {
         id: 'PriorityQueue',
         title: 'Priority Queue',
-        icon: <SvgGameIcon name="Inbox" color="#a855f7" />,
+        icon: <SvgGameIcon name="Inbox" color="var(--color-secondary)" />,
         objective: 'Drag and drop incoming task cards into Urgent, Important, or Delegate bins before they scroll off the conveyor belt.',
         benefit: 'Trains executive triage, multi-priority switching, decision speed under pressure, and resource allocation.'
       },
       {
         id: 'NeuroMaze',
         title: 'Neuro Maze',
-        icon: <SvgGameIcon name="Maze" color="#a855f7" />,
+        icon: <SvgGameIcon name="Maze" color="var(--color-secondary)" />,
         objective: 'Escape dynamic grid mazes with moving barrier walls and shifting exit locations.',
         benefit: 'Improves real-time replanning, visual obstacle prediction, and quick strategic changes.'
       },
       {
         id: 'MentalFlex',
         title: 'Mental Flex',
-        icon: <SvgGameIcon name="Juggler" color="#a855f7" />,
+        icon: <SvgGameIcon name="Juggler" color="var(--color-secondary)" />,
         objective: 'Match incoming target items based on rapidly shifting rules (color, shape, count).',
         benefit: 'Enhances cognitive flexibility, rule induction switching, and adaptive execution.'
       }

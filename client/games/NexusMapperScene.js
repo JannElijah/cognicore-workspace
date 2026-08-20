@@ -69,7 +69,7 @@ export default class NexusMapperScene extends BaseCognitiveScene {
             fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
-            fill: '#38bdf8' // light cyan
+            fill: (getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8') // light cyan
         });
 
         this.accuracyText = this.add.text(20, 50, 'ACCURACY: 100%', {
@@ -82,7 +82,7 @@ export default class NexusMapperScene extends BaseCognitiveScene {
             fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
-            fill: '#38bdf8'
+            fill: (getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8')
         }).setOrigin(1, 0);
 
         this.timerText = this.add.text(width / 2, 20, '00:45', {
@@ -96,7 +96,7 @@ export default class NexusMapperScene extends BaseCognitiveScene {
             fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: '900',
-            fill: '#38bdf8',
+            fill: (getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8'),
             letterSpacing: '0.05em'
         }).setOrigin(0.5, 0);
 
@@ -118,12 +118,12 @@ export default class NexusMapperScene extends BaseCognitiveScene {
             this.registerFirstInteraction();
         });
 
-        createMlHud(this, 0x38bdf8);
+        createMlHud(this, parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16));
         createTutorialOverlay(this, {
             title: "NEXUS MAPPER",
             domain: "spatial_visual_memory",
             instructions: "• Memorize the letter locations on the node map.\n\n• Reconstruct their positions from memory.\n\n• Accuracy and response times govern difficulty.",
-            themeColorHex: 0x38bdf8,
+            themeColorHex: parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16),
             onStart: () => this.startGameplay()
         });
     }
@@ -162,7 +162,7 @@ updateTimer() {
         if (this.timeLeft <= 0 || this.gamePhase === 'GAMEOVER') return;
 
         this.gamePhase = 'MEMORIZE';
-        this.statusText.setText('MEMORIZE LETTER LOCATIONS!').setFill('#38bdf8');
+        this.statusText.setText('MEMORIZE LETTER LOCATIONS!').setFill((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8'));
 
         // Cleanup previous layouts
         this.gridCells.forEach(row => {
@@ -199,7 +199,7 @@ updateTimer() {
                     fontFamily: CogniTheme.fonts.body,
                     fontSize: `${cellSize * 0.35}px`,
                     fontWeight: 'bold',
-                    fill: '#38bdf8'
+                    fill: (getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8')
                 }).setOrigin(0.5);
 
                 rowCells.push({ c, r, x, y, bg, text, glyph: null });
@@ -214,7 +214,7 @@ updateTimer() {
 
                 bg.on('pointerover', () => {
                     if (this.gamePhase === 'RECALL') {
-                        bg.lineStyle(2, 0x38bdf8, 0.85);
+                        bg.lineStyle(2, parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16), 0.85);
                         bg.strokeRoundedRect(-cellSize / 2 + 2, -cellSize / 2 + 2, cellSize - 4, cellSize - 4, 6);
                     }
                 });

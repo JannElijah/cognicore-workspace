@@ -28,7 +28,7 @@ export default class FocusFinderScene extends BaseCognitiveScene {
         const shapesList = ['circle', 'square', 'triangle', 'star', 'hexagon'];
         const colorsMap = {
             'teal':   0x06b6d4,
-            'purple': 0xa855f7,
+            'purple': parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16),
             'yellow': 0xf59e0b,
             'coral':  0xf97316,
             'green':  0x10b981
@@ -163,7 +163,7 @@ export default class FocusFinderScene extends BaseCognitiveScene {
         this.shapesList = ['circle', 'square', 'triangle', 'star', 'hexagon'];
         this.colorsMap = {
             'teal': 0x06b6d4,
-            'purple': 0xa855f7,
+            'purple': parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16),
             'yellow': 0xf59e0b,
             'coral': 0xf97316,
             'green': 0x10b981
@@ -198,7 +198,7 @@ export default class FocusFinderScene extends BaseCognitiveScene {
             fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
-            fill: '#38bdf8'
+            fill: (getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8')
         });
 
         this.accuracyText = this.add.text(20, 50, 'ACCURACY: 100%', {
@@ -211,7 +211,7 @@ export default class FocusFinderScene extends BaseCognitiveScene {
             fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
-            fill: '#a855f7'
+            fill: (getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7')
         }).setOrigin(1, 0);
 
         this.timerText = this.add.text(width / 2 - 120, 20, '00:30', {
@@ -243,12 +243,12 @@ export default class FocusFinderScene extends BaseCognitiveScene {
         }).setOrigin(0.5);
 
         // 3. Spawning Loops
-        createMlHud(this, 0xa855f7);
+        createMlHud(this, parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16));
         createTutorialOverlay(this, {
             title: "FOCUS FINDER",
             domain: "reflexes_and_focus",
             instructions: "• Locate and click the target shape matching the top preview window.\n\n• Ignore distracting shape/color combinations.\n\n• Maintain accuracy: misses and false clicks degrade score.",
-            themeColorHex: 0xa855f7,
+            themeColorHex: parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16),
             onStart: () => this.startGameplay()
         });
 
@@ -525,7 +525,7 @@ updateTimer() {
         if (this.showParticleBurst) {
             const px = this.input.activePointer.x || this.scale.width / 2;
             const py = this.input.activePointer.y || this.scale.height / 2;
-            this.showParticleBurst(px, py, 0xa855f7);
+            this.showParticleBurst(px, py, parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16));
         }
         this.hits++;
 
@@ -786,7 +786,7 @@ updateTimer() {
 
                     if (difficultyChanged) {
                         const direction = params.difficulty_level > this.difficultyLevel ? 'INCREASED' : 'ADJUSTED';
-                        this.showFloatingText(this.scale.width / 2, this.scale.height / 2, `DIFFICULTY ${direction}! LEVEL ${this.difficultyLevel}`, '#a855f7');
+                        this.showFloatingText(this.scale.width / 2, this.scale.height / 2, `DIFFICULTY ${direction}! LEVEL ${this.difficultyLevel}`, (getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7'));
                         
                         if (this.difficultyLevel >= 4) {
                             cogniFX.startNoise(this.difficultyLevel);

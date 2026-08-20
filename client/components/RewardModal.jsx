@@ -56,7 +56,7 @@ const RewardModal = ({ rewards, onClose }) => {
         <button 
           onClick={onClose}
           style={{
-            background: 'linear-gradient(to right, #38bdf8, #818cf8)',
+            background: 'linear-gradient(to right, var(--color-primary), #818cf8)',
             border: 'none',
             color: '#ffffff',
             padding: '0.75rem 2rem',

@@ -5,13 +5,20 @@ import audioEngine from '../utils/audioEngine';
 import HoverTooltip from './HoverTooltip';
 
 const SHOP_ITEMS = [
+  { id: 'default-theme', type: 'theme', name: 'Original CogniCore', description: 'The standard blue experience.', price: 0, category: 'Themes' },
   { id: 'theme-red', type: 'theme', name: 'Crimson Synapse', description: 'Deep red energetic UI theme.', price: 200, category: 'Themes' },
   { id: 'theme-blue', type: 'theme', name: 'Azure Neuro', description: 'Calming blue focus theme.', price: 200, category: 'Themes' },
   { id: 'theme-purple', type: 'theme', name: 'Void Cortex', description: 'Dark purple mysterious aesthetic.', price: 250, category: 'Themes' },
   { id: 'theme-yellow', type: 'theme', name: 'Solar Glial', description: 'Bright vibrant yellow theme.', price: 200, category: 'Themes' },
+  { id: 'theme-green', type: 'theme', name: 'Emerald Enigma', description: 'Fresh green growth and nature theme.', price: 250, category: 'Themes' },
+  { id: 'theme-pink', type: 'theme', name: 'Sakura Synthesis', description: 'Vibrant pink and rose aesthetics.', price: 250, category: 'Themes' },
+  { id: 'theme-cyan', type: 'theme', name: 'Quantum Freeze', description: 'Ice cold cyan logic theme.', price: 200, category: 'Themes' },
+  { id: 'theme-monochrome', type: 'theme', name: 'Neural Noir', description: 'Sleek, minimalist monochrome theme.', price: 300, category: 'Themes' },
+  { id: 'default-avatar', type: 'avatar', name: 'Standard Avatar', description: 'Default user silhouette.', price: 0, category: 'Avatars' },
   { id: 'avatar-robot', type: 'avatar', name: 'Mech-Node', description: 'Robotic cognitive assistant avatar.', price: 500, category: 'Avatars' },
   { id: 'avatar-brain', type: 'avatar', name: 'Cerebrum Prime', description: 'Glowing brain master avatar.', price: 500, category: 'Avatars' },
   { id: 'avatar-hacker', type: 'avatar', name: 'Data Runner', description: 'Cyberpunk hacker aesthetic avatar.', price: 750, category: 'Avatars' },
+  { id: 'default-banner', type: 'banner', name: 'No Banner', description: 'Clean default background.', price: 0, category: 'Banners' },
   { id: 'banner-neon', type: 'banner', name: 'Neon Grid', description: 'Cyberpunk synthwave background.', price: 300, category: 'Banners' },
   { id: 'banner-stellar', type: 'banner', name: 'Stellar Void', description: 'Deep space galactic background.', price: 400, category: 'Banners' },
   { id: 'banner-cyber', type: 'banner', name: 'Cyber Matrix', description: 'Digital matrix data stream background.', price: 500, category: 'Banners' },
@@ -28,7 +35,8 @@ const Shop = ({ onClose }) => {
   useEffect(() => {
     const loadUserData = async () => {
       try {
-        const res = await fetch(`${API_BASE}/api/user-inventory/${user}`, {
+        const username = typeof user === 'string' ? user : user?.username;
+        const res = await fetch(`${API_BASE}/api/user-inventory/${username}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
@@ -61,7 +69,7 @@ const Shop = ({ onClose }) => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ user_id: user, item_id: itemId })
+        body: JSON.stringify({ user_id: typeof user === 'string' ? user : user?.username, item_id: itemId })
       });
       const data = await res.json();
       if (res.ok && data.status === 'success') {
@@ -90,7 +98,7 @@ const Shop = ({ onClose }) => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ user_id: user, item_id: itemId })
+        body: JSON.stringify({ user_id: typeof user === 'string' ? user : user?.username, item_id: itemId })
       });
       const data = await res.json();
       if (data.status === 'success') {
@@ -185,16 +193,25 @@ const Shop = ({ onClose }) => {
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
                 {SHOP_ITEMS.filter(item => item.category === category).map(item => {
+                  const isDefaultItem = item.id.startsWith('default-');
                   const ownedItem = inventory.find(i => i.item_id === item.id);
-                  const isOwned = !!ownedItem;
-                  const isEquipped = ownedItem?.is_equipped;
+                  const isOwned = isDefaultItem || !!ownedItem;
+                  let isEquipped = false;
+                  
+                  if (isDefaultItem) {
+                    // Check if any other item of this type is equipped. If none, default is equipped.
+                    const anyEquipped = inventory.some(i => i.item_type === item.type && i.is_equipped);
+                    isEquipped = !anyEquipped;
+                  } else {
+                    isEquipped = ownedItem?.is_equipped;
+                  }
 
                   return (
                     <div key={item.id} style={{
                       background: '#1e293b',
                       borderRadius: '12px',
                       padding: '1.5rem',
-                      border: isEquipped ? '2px solid #38bdf8' : '2px solid transparent',
+                      border: isEquipped ? '2px solid var(--color-primary)' : '2px solid transparent',
                       position: 'relative',
                       display: 'flex',
                       flexDirection: 'column',
@@ -207,6 +224,11 @@ const Shop = ({ onClose }) => {
                           {item.id === 'theme-blue' && <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#3b82f6', boxShadow: '0 0 8px #3b82f6' }}></div>}
                           {item.id === 'theme-purple' && <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#a855f7', boxShadow: '0 0 8px #a855f7' }}></div>}
                           {item.id === 'theme-yellow' && <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#eab308', boxShadow: '0 0 8px #eab308' }}></div>}
+                          {item.id === 'theme-green' && <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981' }}></div>}
+                          {item.id === 'theme-pink' && <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#f43f5e', boxShadow: '0 0 8px #f43f5e' }}></div>}
+                          {item.id === 'theme-cyan' && <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#06b6d4', boxShadow: '0 0 8px #06b6d4' }}></div>}
+                          {item.id === 'theme-monochrome' && <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#94a3b8', boxShadow: '0 0 8px #94a3b8' }}></div>}
+                          {item.id === 'default-theme' && <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#38bdf8', boxShadow: '0 0 8px #38bdf8' }}></div>}
                           <h4 style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#f8fafc', margin: 0 }}>{item.name}</h4>
                         </div>
                         <p style={{ color: '#94a3b8', fontSize: '0.875rem', margin: 0, minHeight: '40px' }}>{item.description}</p>
@@ -233,7 +255,7 @@ const Shop = ({ onClose }) => {
                             onClick={() => handlePurchase(item.id)}
                             disabled={coins < item.price}
                             style={{
-                              background: coins >= item.price ? '#38bdf8' : '#334155',
+                              background: coins >= item.price ? 'var(--color-primary)' : '#334155',
                               color: coins >= item.price ? '#0f172a' : '#94a3b8',
                               border: 'none',
                               padding: '0.5rem 1rem',
@@ -252,8 +274,8 @@ const Shop = ({ onClose }) => {
                             onClick={() => handleEquip(item.id)}
                             style={{
                               background: isEquipped ? 'transparent' : '#10b981',
-                              color: isEquipped ? '#38bdf8' : '#ffffff',
-                              border: isEquipped ? '1px solid #38bdf8' : 'none',
+                              color: isEquipped ? 'var(--color-primary)' : '#ffffff',
+                              border: isEquipped ? '1px solid var(--color-primary)' : 'none',
                               padding: '0.5rem 1rem',
                               borderRadius: '6px',
                               fontWeight: 'bold',

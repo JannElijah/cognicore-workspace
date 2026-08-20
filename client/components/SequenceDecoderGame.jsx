@@ -446,7 +446,7 @@ const handleRestart = () => {
                             <span className="stat-val" style={{ color: '#ef4444'  }}>{finalStats?.misses}</span>
                         </div>
                         <div className='stat-row'>
-                            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'4px',filter:'drop-shadow(0 0 4px rgba(56,189,248,0.7))'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="#38bdf8" strokeWidth="1.5"/><circle cx="12" cy="12" r="5" stroke="#38bdf8" strokeWidth="1.5"/><circle cx="12" cy="12" r="2" fill="#38bdf8"/></svg> Induction Accuracy</span>
+                            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'4px',filter:'drop-shadow(0 0 4px rgba(var(--rgb-primary),0.7))'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="var(--color-primary)" strokeWidth="1.5"/><circle cx="12" cy="12" r="5" stroke="var(--color-primary)" strokeWidth="1.5"/><circle cx="12" cy="12" r="2" fill="var(--color-primary)"/></svg> Induction Accuracy</span>
                             <span className="stat-val" style={{ color: grade  }}>{accuracy}%</span>
                         </div>
                         <div className='stat-row'>
@@ -455,7 +455,7 @@ const handleRestart = () => {
                         </div>
                         <div style={{ ...styles.statRow, border: 'none' }}>
                             <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'4px',filter:'drop-shadow(0 0 4px rgba(250,204,21,0.9))'}} xmlns="http://www.w3.org/2000/svg"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#facc15"/></svg> First Response Latency</span>
-                            <span className="stat-val" style={{ color: '#38bdf8'  }}>
+                            <span className="stat-val" style={{ color: 'var(--color-primary)'  }}>
                                 {finalStats?.hesitation_ms ? `${Math.round(finalStats.hesitation_ms)}ms` : 'N/A'}
                             </span>
                         </div>

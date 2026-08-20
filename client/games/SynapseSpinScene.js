@@ -319,13 +319,13 @@ updateTimer() {
             if (this.showParticleBurst) {
                 const px = this.input.activePointer.x || this.scale.width / 2;
                 const py = this.input.activePointer.y || this.scale.height / 2;
-                this.showParticleBurst(px, py, 0x38bdf8);
+                this.showParticleBurst(px, py, parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16));
             }
     
         if (this.showParticleBurst) {
             const px = this.input.activePointer.x || this.scale.width / 2;
             const py = this.input.activePointer.y || this.scale.height / 2;
-            this.showParticleBurst(px, py, 0x38bdf8);
+            this.showParticleBurst(px, py, parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16));
         }
         this.hits++;
             const points = 150 * this.difficultyLevel + Math.max(0, Math.round((12000 - solveTime) / 10));

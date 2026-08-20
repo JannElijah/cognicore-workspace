@@ -44,7 +44,7 @@ export function createTutorialOverlay(scene, { title, domain, instructions, them
         fontFamily: 'system-ui, -apple-system, sans-serif',
         fontSize: '13px',
         fontWeight: '700',
-        fill: '#a855f7'
+        fill: (getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7')
     }).setOrigin(0.5);
 
     // Divider

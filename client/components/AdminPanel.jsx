@@ -1,6 +1,6 @@
 import React from 'react';
 import { Line, Scatter } from 'react-chartjs-2';
-const SvgAdminIcon = ({ name, color = "#38bdf8", size = 24 }) => (
+const SvgAdminIcon = ({ name, color = "var(--color-primary)", size = 24 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ filter: `drop-shadow(0 0 5px ${color}80)`, verticalAlign: 'middle', marginRight: '8px' }}>
     {name === 'Microscope' && <path d="M12 2a2 2 0 00-2 2v2a2 2 0 00-2 2v2a2 2 0 00-2 2v2a2 2 0 00-2 2v4a2 2 0 002 2h12a2 2 0 002-2v-4a2 2 0 00-2-2v-2a2 2 0 00-2-2v-2a2 2 0 00-2-2V4a2 2 0 00-2-2zm0 2h.01M9 6v2m6-2v2m-8 2v2m10-2v2" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
     {name === 'Inbox' && <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>}
@@ -76,38 +76,38 @@ export default function AdminPanel(props) {
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: activeResearcherTab === 'cohort-stats' ? '#38bdf8' : '#94a3b8',
+                  color: activeResearcherTab === 'cohort-stats' ? 'var(--color-primary)' : '#94a3b8',
                   fontSize: '1.05rem',
                   fontWeight: 'bold',
                   cursor: 'pointer',
                   padding: '0.5rem 1.25rem',
-                  borderBottom: activeResearcherTab === 'cohort-stats' ? '3px solid #38bdf8' : 'none',
+                  borderBottom: activeResearcherTab === 'cohort-stats' ? '3px solid var(--color-primary)' : 'none',
                   transition: 'all 0.2s',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem'
                 }}
               >
-                <SvgAdminIcon name="ChartBar" color={activeResearcherTab === 'cohort-stats' ? '#38bdf8' : '#94a3b8'} /> Cohort Statistics & ISO 25010
+                <SvgAdminIcon name="ChartBar" color={activeResearcherTab === 'cohort-stats' ? 'var(--color-primary)' : '#94a3b8'} /> Cohort Statistics & ISO 25010
               </button>
               <button
                 onClick={() => setActiveResearcherTab('ai-sandbox')}
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: activeResearcherTab === 'ai-sandbox' ? '#38bdf8' : '#94a3b8',
+                  color: activeResearcherTab === 'ai-sandbox' ? 'var(--color-primary)' : '#94a3b8',
                   fontSize: '1.05rem',
                   fontWeight: 'bold',
                   cursor: 'pointer',
                   padding: '0.5rem 1.25rem',
-                  borderBottom: activeResearcherTab === 'ai-sandbox' ? '3px solid #38bdf8' : 'none',
+                  borderBottom: activeResearcherTab === 'ai-sandbox' ? '3px solid var(--color-primary)' : 'none',
                   transition: 'all 0.2s',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '0.5rem'
                 }}
               >
-                <SvgAdminIcon name="Robot" color={activeResearcherTab === 'ai-sandbox' ? '#38bdf8' : '#94a3b8'} /> AI Sandbox & Clustering
+                <SvgAdminIcon name="Robot" color={activeResearcherTab === 'ai-sandbox' ? 'var(--color-primary)' : '#94a3b8'} /> AI Sandbox & Clustering
               </button>
             </div>
 
@@ -215,7 +215,7 @@ export default function AdminPanel(props) {
               {/* Statistical Output Results Table */}
               {evalResult && (
                 <div style={{ background: '#09090b', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', padding: '1.5rem', animation: 'fadeIn 0.3s ease-out' }}>
-                  <h4 style={{ color: '#38bdf8', marginBottom: '1rem', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}><SvgAdminIcon name="Microscope" color="#38bdf8" /> Paired t-test Evaluation Report</h4>
+                  <h4 style={{ color: 'var(--color-primary)', marginBottom: '1rem', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}><SvgAdminIcon name="Microscope" color="var(--color-primary)" /> Paired t-test Evaluation Report</h4>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
                     <div style={{ borderRight: '1px solid rgba(255,255,255,0.05)', paddingRight: '1rem' }}>
                       <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Cohort Sample Size (n)</div>
@@ -280,8 +280,8 @@ export default function AdminPanel(props) {
 
             <h2 className="section-title" style={{ marginTop: '2.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><SvgAdminIcon name="Microscope" color="#ffffff" size={28} /> Interactive Statistical Sandbox & Correlation Tool</h2>
             <div className="game-card" style={{ width: '100%', alignItems: 'stretch', padding: '2rem', marginBottom: '2rem', boxSizing: 'border-box' }}>
-              <div style={{ background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.2)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
-                <span style={{ fontWeight: 'bold', color: '#38bdf8', fontSize: '0.9rem' }}>Pillar 1 Dynamic Correlation Analysis & Cohort Comparison</span>
+              <div style={{ background: 'rgba(var(--rgb-primary), 0.08)', border: '1px solid rgba(var(--rgb-primary), 0.2)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
+                <span style={{ fontWeight: 'bold', color: 'var(--color-primary)', fontSize: '0.9rem' }}>Pillar 1 Dynamic Correlation Analysis & Cohort Comparison</span>
                 <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: '0.25rem 0 0 0' }}>
                   Analyze relationships between cognitive micro-behaviors and performance telemetry on-the-fly. Select any two parameters to compute the Pearson Correlation Coefficient (r), R-squared (R²), and statistical significance (p-value).
                 </p>
@@ -346,11 +346,11 @@ export default function AdminPanel(props) {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem', alignItems: 'stretch' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', textAlign: 'left' }}>
                     <div style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '1.5rem' }}>
-                      <h4 style={{ color: '#38bdf8', fontSize: '1.05rem', margin: '0 0 1rem 0', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}><SvgAdminIcon name="ChartLine" color="#38bdf8" /> Pearson Correlation Coefficient</h4>
+                      <h4 style={{ color: 'var(--color-primary)', fontSize: '1.05rem', margin: '0 0 1rem 0', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}><SvgAdminIcon name="ChartLine" color="var(--color-primary)" /> Pearson Correlation Coefficient</h4>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
                         <div style={{ borderRight: '1px solid rgba(255,255,255,0.05)', paddingRight: '0.5rem' }}>
                           <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>Pearson r Coefficient</span>
-                          <span style={{ fontSize: '2rem', fontWeight: '900', color: correlationResult.r >= 0 ? '#38bdf8' : '#fb923c' }}>{correlationResult.r}</span>
+                          <span style={{ fontSize: '2rem', fontWeight: '900', color: correlationResult.r >= 0 ? 'var(--color-primary)' : '#fb923c' }}>{correlationResult.r}</span>
                         </div>
                         <div>
                           <span style={{ fontSize: '0.75rem', color: '#64748b', display: 'block' }}>R-squared (R²)</span>
@@ -388,7 +388,7 @@ export default function AdminPanel(props) {
                               padding: '0.45rem',
                               borderRadius: '6px',
                               border: '1px solid ' + (curveMetric === 'accuracy' ? 'transparent' : 'rgba(255,255,255,0.1)'),
-                              background: curveMetric === 'accuracy' ? 'linear-gradient(to right, #4ade80, #38bdf8)' : 'rgba(255,255,255,0.03)',
+                              background: curveMetric === 'accuracy' ? 'linear-gradient(to right, #4ade80, var(--color-primary))' : 'rgba(255,255,255,0.03)',
                               color: '#fff',
                               fontWeight: 'bold',
                               cursor: 'pointer'
@@ -403,7 +403,7 @@ export default function AdminPanel(props) {
                               padding: '0.45rem',
                               borderRadius: '6px',
                               border: '1px solid ' + (curveMetric === 'reaction_time' ? 'transparent' : 'rgba(255,255,255,0.1)'),
-                              background: curveMetric === 'reaction_time' ? 'linear-gradient(to right, #4ade80, #38bdf8)' : 'rgba(255,255,255,0.03)',
+                              background: curveMetric === 'reaction_time' ? 'linear-gradient(to right, #4ade80, var(--color-primary))' : 'rgba(255,255,255,0.03)',
                               color: '#fff',
                               fontWeight: 'bold',
                               cursor: 'pointer'
@@ -447,8 +447,8 @@ export default function AdminPanel(props) {
               
               {/* Active Model Status Card */}
               <div className="game-card" style={{ flex: '1', alignItems: 'stretch', padding: '2rem', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '16px', backdropFilter: 'blur(20px)', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
-                <h3 style={{ color: '#38bdf8', marginBottom: '1.25rem', fontWeight: 'bold', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <SvgAdminIcon name="Robot" color="#38bdf8" size={28} /> Active Model Status
+                <h3 style={{ color: 'var(--color-primary)', marginBottom: '1.25rem', fontWeight: 'bold', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <SvgAdminIcon name="Robot" color="var(--color-primary)" size={28} /> Active Model Status
                 </h3>
                 
                 {modelStatus ? (
@@ -487,7 +487,7 @@ export default function AdminPanel(props) {
                     {modelStatus.hyperparameters && (
                       <div style={{ marginTop: '0.5rem' }}>
                         <span style={{ color: '#94a3b8', fontSize: '0.85rem', display: 'block', marginBottom: '0.25rem', fontWeight: 'bold' }}>Active Classifier Hyperparams:</span>
-                        <pre style={{ margin: 0, padding: '0.75rem', background: '#09090b', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', fontSize: '0.75rem', overflowX: 'auto', color: '#38bdf8' }}>
+                        <pre style={{ margin: 0, padding: '0.75rem', background: '#09090b', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', fontSize: '0.75rem', overflowX: 'auto', color: 'var(--color-primary)' }}>
                           {JSON.stringify({
                             n_estimators: modelStatus.hyperparameters.n_estimators || 50,
                             max_depth: modelStatus.hyperparameters.max_depth || 6,
@@ -505,8 +505,8 @@ export default function AdminPanel(props) {
 
               {/* Retrain Control Panel */}
               <div className="game-card" style={{ flex: '1', alignItems: 'stretch', padding: '2rem', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '16px', backdropFilter: 'blur(20px)', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
-                <h3 style={{ color: '#38bdf8', marginBottom: '1.25rem', fontWeight: 'bold', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <SvgAdminIcon name="Gear" color="#38bdf8" size={28} /> Retrain & Optimize Engine
+                <h3 style={{ color: 'var(--color-primary)', marginBottom: '1.25rem', fontWeight: 'bold', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <SvgAdminIcon name="Gear" color="var(--color-primary)" size={28} /> Retrain & Optimize Engine
                 </h3>
                 <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: '0 0 1.5rem 0', lineHeight: '1.4' }}>
                   Trigger online retraining of the supervised DDA classifier. The engine runs unsupervised K-Means clustering ($k=3$) over 7 telemetry dimensions to form fresh player archetypes, then retrains a Random Forest Classifier via Grid Search to predict these labels.
@@ -517,7 +517,7 @@ export default function AdminPanel(props) {
                   disabled={retrainLoading}
                   className="dashboard-toggle-btn"
                   style={{
-                    background: 'linear-gradient(to right, #38bdf8, #a855f7)',
+                    background: 'linear-gradient(to right, var(--color-primary), var(--color-secondary))',
                     color: '#ffffff',
                     border: 'none',
                     padding: '0.75rem 1.5rem',
@@ -554,7 +554,7 @@ export default function AdminPanel(props) {
                       </div>
                       <div>
                         <span style={{ color: '#64748b', display: 'block' }}>Optimized Hyperparams:</span>
-                        <span style={{ fontWeight: 'bold', color: '#38bdf8' }}>
+                        <span style={{ fontWeight: 'bold', color: 'var(--color-primary)' }}>
                           d={retrainMetrics.best_params.max_depth || 'none'}, est={retrainMetrics.best_params.n_estimators}
                         </span>
                       </div>
@@ -573,8 +573,8 @@ export default function AdminPanel(props) {
               
               {/* Centroids Table */}
               <div className="game-card" style={{ flex: '1', alignItems: 'stretch', padding: '2rem', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '16px' }}>
-                <h3 style={{ color: '#38bdf8', marginBottom: '1.25rem', fontWeight: 'bold', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <SvgAdminIcon name="ChartBar" color="#38bdf8" size={28} /> Dynamic Archetype Centroids
+                <h3 style={{ color: 'var(--color-primary)', marginBottom: '1.25rem', fontWeight: 'bold', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <SvgAdminIcon name="ChartBar" color="var(--color-primary)" size={28} /> Dynamic Archetype Centroids
                 </h3>
                 <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '1.25rem' }}>
                   The average performance values for each discovered archetype, computed dynamically across the database cohort:
@@ -621,8 +621,8 @@ export default function AdminPanel(props) {
 
               {/* Classification Report Card */}
               <div className="game-card" style={{ flex: '1', alignItems: 'stretch', padding: '2rem', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '16px' }}>
-                <h3 style={{ color: '#38bdf8', marginBottom: '1.25rem', fontWeight: 'bold', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <SvgAdminIcon name="ChartLine" color="#38bdf8" size={28} /> Classification Performance Report
+                <h3 style={{ color: 'var(--color-primary)', marginBottom: '1.25rem', fontWeight: 'bold', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <SvgAdminIcon name="ChartLine" color="var(--color-primary)" size={28} /> Classification Performance Report
                 </h3>
                 {retrainMetrics && retrainMetrics.classification_report ? (
                   <div style={{ overflowX: 'auto' }}>
@@ -670,8 +670,8 @@ export default function AdminPanel(props) {
 
             {/* 2D SCATTER PLOT VIEW */}
             <div className="game-card" style={{ width: '100%', alignItems: 'stretch', padding: '2rem', boxSizing: 'border-box', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '16px' }}>
-              <h3 style={{ color: '#38bdf8', marginBottom: '0.5rem', fontWeight: 'bold', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <SvgAdminIcon name="Target" color="#38bdf8" size={28} /> Interactive 2D Archetype Space
+              <h3 style={{ color: 'var(--color-primary)', marginBottom: '0.5rem', fontWeight: 'bold', fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <SvgAdminIcon name="Target" color="var(--color-primary)" size={28} /> Interactive 2D Archetype Space
               </h3>
               <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: '0 0 1.5rem 0' }}>
                 Plot sessions in a 2-dimensional scatter space colored by cluster archetype. Select metrics for X and Y axes to observe feature boundaries.

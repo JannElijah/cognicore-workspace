@@ -14,7 +14,7 @@ export default function KnowledgeBase() {
       </div>
 
       <div className="game-card" style={{ marginBottom: '2rem', background: 'rgba(30, 41, 59, 0.7)' }}>
-        <h2 style={{ color: '#38bdf8', marginBottom: '1rem', borderBottom: '1px solid rgba(56, 189, 248, 0.3)', paddingBottom: '0.5rem' }}>Scoring & Standardized Metrics</h2>
+        <h2 style={{ color: 'var(--color-primary)', marginBottom: '1rem', borderBottom: '1px solid rgba(var(--rgb-primary), 0.3)', paddingBottom: '0.5rem' }}>Scoring & Standardized Metrics</h2>
         <p style={{ color: '#e2e8f0', lineHeight: '1.6' }}>
           Our scoring algorithms are aligned with standard clinical neuropsychological baselines. Your score isn't just about speed—accuracy is heavily weighted. We also track 'spam clicking' and 'latency' to measure your decision-making methodicalness versus impulsivity. This creates a holistic view of your cognitive playstyle.
         </p>

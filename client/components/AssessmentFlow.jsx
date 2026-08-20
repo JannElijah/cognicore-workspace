@@ -11,7 +11,7 @@ export default function AssessmentFlow({
   assessmentLoading
 }) {
   return (
-    <div style={{ maxWidth: '750px', margin: '3rem auto', padding: '2.5rem', background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(20px)', border: '1px solid rgba(168, 85, 247, 0.35)', borderRadius: '16px', boxShadow: '0 12px 40px rgba(0,0,0,0.6)', animation: 'fadeIn 0.4s ease-out' }}>
+    <div style={{ maxWidth: '750px', margin: '3rem auto', padding: '2.5rem', background: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(20px)', border: '1px solid rgba(var(--rgb-secondary), 0.35)', borderRadius: '16px', boxShadow: '0 12px 40px rgba(0,0,0,0.6)', animation: 'fadeIn 0.4s ease-out' }}>
       <h2 style={{ color: '#ffffff', margin: '0 0 0.5rem 0', textTransform: 'uppercase', fontSize: '1.6rem', letterSpacing: '0.05em', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <span>📋</span> {assessmentStage === 'pre-test' ? 'Phase 1: Objective Pre-Test Evaluation' : 'Phase 4: Objective Post-Test Evaluation'}
       </h2>
@@ -54,7 +54,7 @@ export default function AssessmentFlow({
           <button
             type="submit"
             disabled={assessmentLoading}
-            style={{ background: 'linear-gradient(to right, #38bdf8, #a855f7)', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '0.8rem 2rem', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(168, 85, 247, 0.3)' }}
+            style={{ background: 'linear-gradient(to right, var(--color-primary), var(--color-secondary))', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '0.8rem 2rem', fontSize: '1rem', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(var(--rgb-secondary), 0.3)' }}
             onMouseOver={(e) => e.target.style.filter = 'brightness(1.15)'}
             onMouseOut={(e) => e.target.style.filter = 'brightness(1.0)'}
           >

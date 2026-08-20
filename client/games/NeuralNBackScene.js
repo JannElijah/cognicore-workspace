@@ -73,14 +73,14 @@ export default class NeuralNBackScene extends BaseCognitiveScene {
             fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
-            fill: '#38bdf8' // light blue
+            fill: (getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8') // light blue
         });
 
         this.nValText = this.add.text(20, 50, `TARGET: ${this.nValue}-BACK (Compare to ${this.nValue === 1 ? 'Previous Node' : this.nValue + ' Nodes Ago'})`, {
             fontFamily: CogniTheme.fonts.body,
             fontSize: '14px',
             fontWeight: 'bold',
-            fill: '#a855f7' // purple
+            fill: (getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7') // purple
         });
 
         this.accuracyText = this.add.text(20, 80, 'ACCURACY: 100%', {
@@ -93,7 +93,7 @@ export default class NeuralNBackScene extends BaseCognitiveScene {
             fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
-            fill: '#38bdf8'
+            fill: (getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8')
         }).setOrigin(1, 0);
 
         this.timerText = this.add.text(width / 2, 20, '00:45', {
@@ -130,7 +130,7 @@ export default class NeuralNBackScene extends BaseCognitiveScene {
             bgCirc.strokeCircle(x, y, 24);
 
             const activeCirc = this.add.graphics();
-            activeCirc.fillStyle(0x38bdf8, 1);
+            activeCirc.fillStyle(parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16), 1);
             activeCirc.fillCircle(x, y, 20);
             activeCirc.lineStyle(3, 0xffffff, 0.9);
             activeCirc.strokeCircle(x, y, 22);
@@ -151,7 +151,7 @@ export default class NeuralNBackScene extends BaseCognitiveScene {
             fontFamily: CogniTheme.fonts.body,
             fontSize: '18px',
             fontWeight: 'bold',
-            fill: '#a855f7'
+            fill: (getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7')
         }).setOrigin(0.5);
 
         // Draw "MATCH" Button for Mobile Compatibility
@@ -217,7 +217,7 @@ export default class NeuralNBackScene extends BaseCognitiveScene {
             }
         });
 
-        createMlHud(this, 0x38bdf8);
+        createMlHud(this, parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16));
         createTutorialOverlay(this, {
             title: "NEURAL N-BACK",
             domain: "working_memory",
@@ -348,13 +348,13 @@ updateTimer() {
             if (this.showParticleBurst) {
                 const px = this.input.activePointer.x || this.scale.width / 2;
                 const py = this.input.activePointer.y || this.scale.height / 2;
-                this.showParticleBurst(px, py, 0x38bdf8);
+                this.showParticleBurst(px, py, parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16));
             }
     
         if (this.showParticleBurst) {
             const px = this.input.activePointer.x || this.scale.width / 2;
             const py = this.input.activePointer.y || this.scale.height / 2;
-            this.showParticleBurst(px, py, 0x38bdf8);
+            this.showParticleBurst(px, py, parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16));
         }
         this.hits++;
             const points = 100 * this.difficultyLevel + Math.max(0, Math.round((this.stepDelay - solveTime) / 10));
@@ -467,7 +467,7 @@ updateTimer() {
                     }
 
                     if (diffChanged) {
-                        this.showFloatingFeedback(`LEVEL ADJUSTED: LEVEL ${this.difficultyLevel}`, '#a855f7');
+                        this.showFloatingFeedback(`LEVEL ADJUSTED: LEVEL ${this.difficultyLevel}`, (getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7'));
                     }
                 }
             }

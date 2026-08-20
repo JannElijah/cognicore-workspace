@@ -78,7 +78,7 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
             fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
-            fill: '#a855f7'
+            fill: (getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7')
         }).setOrigin(1, 0);
 
         this.timerText = this.add.text(width / 2, 20, '00:45', {
@@ -657,7 +657,7 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
                     updateMlHud(this);
 
                     if (diffChanged) {
-                        this.showFloatingFeedback(`DIFFICULTY LEVEL ADJUSTED: LEVEL ${this.difficultyLevel}`, '#a855f7');
+                        this.showFloatingFeedback(`DIFFICULTY LEVEL ADJUSTED: LEVEL ${this.difficultyLevel}`, (getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7'));
                     }
                 }
             }

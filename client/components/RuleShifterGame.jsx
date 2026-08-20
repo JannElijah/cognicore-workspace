@@ -163,22 +163,22 @@ export default function RuleShifterGame({
             color: '#f8fafc',
             fontFamily: 'system-ui, -apple-system, sans-serif',
             borderRadius: '12px',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.6), inset 0 1px 1px rgba(168,85,247,0.06)',
-            border: '1px solid rgba(168,85,247,0.15)',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.6), inset 0 1px 1px rgba(var(--rgb-secondary),0.06)',
+            border: '1px solid rgba(var(--rgb-secondary),0.15)',
             padding: '2rem', textAlign: 'center', boxSizing: 'border-box'
         },
         card: {
             background: 'rgba(13, 7, 29, 0.6)',
             backdropFilter: 'blur(16px)',
             borderRadius: '18px',
-            border: '1px solid rgba(168,85,247,0.15)',
+            border: '1px solid rgba(var(--rgb-secondary),0.15)',
             padding: '2.5rem',
             width: '100%', maxWidth: '520px',
-            boxShadow: '0 20px 50px rgba(0,0,0,0.45), 0 0 40px rgba(168,85,247,0.04)'
+            boxShadow: '0 20px 50px rgba(0,0,0,0.45), 0 0 40px rgba(var(--rgb-secondary),0.04)'
         },
         title: {
             fontSize: '2.4rem', fontWeight: '800',
-            background: 'linear-gradient(to right, #a855f7, #c084fc)',
+            background: 'linear-gradient(to right, var(--color-secondary), #c084fc)',
             WebkitBackgroundClip: 'text', backgroundClip: 'text',
             WebkitTextFillColor: 'transparent', color: 'transparent',
             marginBottom: '0.4rem', letterSpacing: '-0.02em', display: 'inline-block'
@@ -187,7 +187,7 @@ export default function RuleShifterGame({
         badge: {
             display: 'inline-block', padding: '0.2rem 0.8rem',
             borderRadius: '9999px',
-            background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.18)',
+            background: 'rgba(var(--rgb-secondary),0.08)', border: '1px solid rgba(var(--rgb-secondary),0.18)',
             color: '#c084fc', fontSize: '0.75rem', fontWeight: '600',
             marginBottom: '1.8rem', letterSpacing: '0.05em'
         },
@@ -196,7 +196,7 @@ export default function RuleShifterGame({
             gap: '0.75rem', marginBottom: '2rem', textAlign: 'left'
         },
         featureItem: {
-            background: 'rgba(168,85,247,0.04)', border: '1px solid rgba(168,85,247,0.1)',
+            background: 'rgba(var(--rgb-secondary),0.04)', border: '1px solid rgba(var(--rgb-secondary),0.1)',
             borderRadius: '10px', padding: '0.75rem',
             fontSize: '0.78rem', color: '#94a3b8'
         },
@@ -215,10 +215,10 @@ export default function RuleShifterGame({
         },
         button: {
             width: '100%', padding: '0.85rem 1.5rem',
-            background: 'linear-gradient(135deg, #a855f7, #6366f1)',
+            background: 'linear-gradient(135deg, var(--color-secondary), #6366f1)',
             border: 'none', borderRadius: '10px', color: '#ffffff',
             fontSize: '1rem', fontWeight: '700', cursor: 'pointer',
-            boxShadow: '0 4px 20px rgba(168,85,247,0.2)',
+            boxShadow: '0 4px 20px rgba(var(--rgb-secondary),0.2)',
             transition: 'all 0.2s', letterSpacing: '0.03em'
         },
         errorMsg: {
@@ -230,18 +230,18 @@ export default function RuleShifterGame({
         canvasWrapper: {
             width: '100%', maxWidth: '800px', aspectRatio: '4/3',
             borderRadius: '14px', overflow: 'hidden',
-            border: '1px solid rgba(168,85,247,0.18)',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.5), 0 0 60px rgba(168,85,247,0.05)'
+            border: '1px solid rgba(var(--rgb-secondary),0.18)',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.5), 0 0 60px rgba(var(--rgb-secondary),0.05)'
         },
         statRow: {
             display: 'flex', justifyContent: 'space-between',
             padding: '0.75rem 0', borderBottom: '1px solid rgba(255,255,255,0.04)'
         },
-        statVal: { fontWeight: '700', color: '#a855f7' },
+        statVal: { fontWeight: '700', color: 'var(--color-secondary)' },
         archetypeBadge: {
             display: 'inline-block', padding: '0.5rem 1.2rem',
             borderRadius: '9999px',
-            background: 'rgba(168,85,247,0.1)', border: '1px solid rgba(168,85,247,0.28)',
+            background: 'rgba(var(--rgb-secondary),0.1)', border: '1px solid rgba(var(--rgb-secondary),0.28)',
             color: '#c084fc', fontWeight: 'bold', marginTop: '0.5rem', fontSize: '1.05rem'
         }
     };
@@ -300,8 +300,8 @@ export default function RuleShifterGame({
                 <div style={S.card}>
                     <div style={{
                         width: '42px', height: '42px',
-                        border: '4px solid rgba(168,85,247,0.15)',
-                        borderTop: '4px solid #a855f7',
+                        border: '4px solid rgba(var(--rgb-secondary),0.15)',
+                        borderTop: '4px solid var(--color-secondary)',
                         borderRadius: '50%', margin: '0 auto 1.5rem auto',
                         animation: 'spin 1s linear infinite'
                     }} />
@@ -331,7 +331,7 @@ export default function RuleShifterGame({
                 <div style={S.card}>
                     <h1 style={{
                         ...S.title,
-                        background: 'linear-gradient(to right, #c084fc, #a855f7)',
+                        background: 'linear-gradient(to right, #c084fc, var(--color-secondary))',
                         WebkitBackgroundClip: 'text', backgroundClip: 'text'
                     }}>TRAINING COMPLETED</h1>
                     <p style={S.subtitle}>Set-shifting metrics synchronized successfully.</p>
@@ -350,16 +350,16 @@ export default function RuleShifterGame({
                             <span style={{ ...S.statVal, color: '#ef4444' }}>{finalStats?.misses}</span>
                         </div>
                         <div style={S.statRow}>
-                            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'4px',filter:'drop-shadow(0 0 4px rgba(56,189,248,0.7))'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="#38bdf8" strokeWidth="1.5"/><circle cx="12" cy="12" r="5" stroke="#38bdf8" strokeWidth="1.5"/><circle cx="12" cy="12" r="2" fill="#38bdf8"/></svg> Shifting Match Accuracy</span>
+                            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'4px',filter:'drop-shadow(0 0 4px rgba(var(--rgb-primary),0.7))'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="var(--color-primary)" strokeWidth="1.5"/><circle cx="12" cy="12" r="5" stroke="var(--color-primary)" strokeWidth="1.5"/><circle cx="12" cy="12" r="2" fill="var(--color-primary)"/></svg> Shifting Match Accuracy</span>
                             <span style={{ ...S.statVal, color: grade }}>{acc}%</span>
                         </div>
                         <div style={S.statRow}>
                             <span>⚖️ High-Confidence Decisions</span>
-                            <span style={{ ...S.statVal, color: '#38bdf8' }}>{conf}%</span>
+                            <span style={{ ...S.statVal, color: 'var(--color-primary)' }}>{conf}%</span>
                         </div>
                         <div style={S.statRow}>
                             <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'4px',filter:'drop-shadow(0 0 4px rgba(74,222,128,0.7))'}} xmlns="http://www.w3.org/2000/svg"><polyline points="2,17 8,11 13,16 22,7" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><polyline points="17,7 22,7 22,12" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> Highest DDA Level Reached</span>
-                            <span style={{ ...S.statVal, color: '#a855f7' }}>Level {finalStats?.difficultyLevel}</span>
+                            <span style={{ ...S.statVal, color: 'var(--color-secondary)' }}>Level {finalStats?.difficultyLevel}</span>
                         </div>
                     </div>
 

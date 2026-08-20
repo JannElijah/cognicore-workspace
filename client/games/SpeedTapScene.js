@@ -34,7 +34,7 @@ export default class SpeedTapScene extends BaseCognitiveScene {
         // --- Target: Neon-teal filled circle with inner ring ---
         if (!this.textures.exists('speedtap_target')) {
             const tGfx = this.add.graphics();
-            tGfx.lineStyle(3, 0x38bdf8, 0.9);
+            tGfx.lineStyle(3, parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16), 0.9);
             tGfx.fillStyle(0x06b6d4, 0.45);
             tGfx.fillCircle(size + padding, size + padding, size);
             tGfx.strokeCircle(size + padding, size + padding, size);
@@ -127,7 +127,7 @@ export default class SpeedTapScene extends BaseCognitiveScene {
             fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
-            fill: '#38bdf8'
+            fill: (getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8')
         });
 
         this.accuracyText = this.add.text(20, 50, 'ACCURACY: 100%', {
@@ -140,7 +140,7 @@ export default class SpeedTapScene extends BaseCognitiveScene {
             fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
-            fill: '#a855f7'
+            fill: (getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7')
         }).setOrigin(1, 0);
 
         this.timerText = this.add.text(width / 2, 20, '00:30', {
@@ -169,12 +169,12 @@ export default class SpeedTapScene extends BaseCognitiveScene {
         });
 
         // Setup ML HUD & Tutorial Overlay
-        createMlHud(this, 0xa855f7);
+        createMlHud(this, parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16));
         createTutorialOverlay(this, {
             title: "SPEED TAP",
             domain: "reflexes_and_focus",
             instructions: "• Tap the glowing cyan target circles as fast as possible.\n\n• DO NOT click the neon-orange triangles (false alarms/penalties).\n\n• Targets shrink over time; click before they get too small!\n\n• Rapid click spamming on blank space degrades accuracy.",
-            themeColorHex: 0xa855f7,
+            themeColorHex: parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16),
             onStart: () => this.startGameplay()
         });
     }
@@ -313,13 +313,13 @@ export default class SpeedTapScene extends BaseCognitiveScene {
             if (this.showParticleBurst) {
                 const px = this.input.activePointer.x || this.scale.width / 2;
                 const py = this.input.activePointer.y || this.scale.height / 2;
-                this.showParticleBurst(px, py, 0xa855f7);
+                this.showParticleBurst(px, py, parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16));
             }
     
         if (this.showParticleBurst) {
             const px = this.input.activePointer.x || this.scale.width / 2;
             const py = this.input.activePointer.y || this.scale.height / 2;
-            this.showParticleBurst(px, py, 0xa855f7);
+            this.showParticleBurst(px, py, parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16));
         }
         this.hits++;
             this.consecutiveHits++;
@@ -468,7 +468,7 @@ export default class SpeedTapScene extends BaseCognitiveScene {
                     }
                     updateMlHud(this);
                     
-                    this.showFloatingText(this.scale.width / 2, this.scale.height / 2, `DIFFICULTY ${direction}!`, '#a855f7');
+                    this.showFloatingText(this.scale.width / 2, this.scale.height / 2, `DIFFICULTY ${direction}!`, (getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7'));
                 }
 
                 // Update archetype if returned

@@ -134,7 +134,7 @@ const LeaderboardModal = memo(({ onClose }) => {
                   </div>
                 </div>
                 
-                <div style={{ fontWeight: 'bold', fontSize: '1.2rem', color: idx < 3 ? '#0f172a' : '#38bdf8' }}>
+                <div style={{ fontWeight: 'bold', fontSize: '1.2rem', color: idx < 3 ? '#0f172a' : 'var(--color-primary)' }}>
                   {player.xp} XP
                 </div>
               </div>

@@ -18,7 +18,7 @@ const ACHIEVEMENT_META = {
 const RARITY_STYLES = {
   common: { gradient: 'linear-gradient(135deg, #64748b, #94a3b8)', glow: 'rgba(148, 163, 184, 0.4)', label: 'Common' },
   rare: { gradient: 'linear-gradient(135deg, #3b82f6, #60a5fa)', glow: 'rgba(59, 130, 246, 0.5)', label: 'Rare' },
-  epic: { gradient: 'linear-gradient(135deg, #a855f7, #c084fc)', glow: 'rgba(168, 85, 247, 0.5)', label: 'Epic' },
+  epic: { gradient: 'linear-gradient(135deg, var(--color-secondary), #c084fc)', glow: 'rgba(var(--rgb-secondary), 0.5)', label: 'Epic' },
   legendary: { gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)', glow: 'rgba(245, 158, 11, 0.6)', label: 'Legendary' },
 };
 

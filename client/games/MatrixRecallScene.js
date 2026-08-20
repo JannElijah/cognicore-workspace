@@ -83,7 +83,7 @@ export default class MatrixRecallScene extends BaseCognitiveScene {
             fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
-            fill: '#38bdf8' // neon blue
+            fill: (getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8') // neon blue
         });
 
         this.accuracyText = this.add.text(20, 50, 'ACCURACY: 100%', {
@@ -96,7 +96,7 @@ export default class MatrixRecallScene extends BaseCognitiveScene {
             fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
-            fill: '#a855f7' // neon purple
+            fill: (getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7') // neon purple
         }).setOrigin(1, 0);
 
         this.timerText = this.add.text(width / 2, 20, '00:45', {
@@ -137,12 +137,12 @@ export default class MatrixRecallScene extends BaseCognitiveScene {
         });
 
         // Setup ML HUD & Tutorial Overlay
-        createMlHud(this, 0x38bdf8);
+        createMlHud(this, parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16));
         createTutorialOverlay(this, {
             title: "MATRIX RECALL",
             domain: "spatial_visual_memory",
             instructions: "• Memorize the highlighted spatial nodes as they flash.\n\n• Click/tap the exact node sequence locations from memory.\n\n• DDA scales target grid sizing and decoy count.\n\n• Decoy cells flash red/coral at higher difficulty levels.",
-            themeColorHex: 0x38bdf8,
+            themeColorHex: parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16),
             onStart: () => this.startGameplay()
         });
     }
@@ -211,7 +211,7 @@ export default class MatrixRecallScene extends BaseCognitiveScene {
                     if (this.gamePhase === 'RECALL' && !this.playerSelections.includes(index)) {
                         cellBg.clear();
                         cellBg.fillStyle(0x334155, 0.6);
-                        cellBg.lineStyle(2, 0x38bdf8, 0.4);
+                        cellBg.lineStyle(2, parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16), 0.4);
                         cellBg.fillRoundedRect(-cellWidth / 2, -cellHeight / 2, cellWidth, cellHeight, 6);
                         cellBg.strokeRoundedRect(-cellWidth / 2, -cellHeight / 2, cellWidth, cellHeight, 6);
                     }
@@ -297,7 +297,7 @@ updateTimer() {
 
         // Flash targets (Gold/Cyan) and decoys (Coral/Red) simultaneously
         this.targets.forEach(index => {
-            this.highlightCell(index, 0x38bdf8, 0xffffff, this.flashDuration); // Cyan target glow
+            this.highlightCell(index, parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16), 0xffffff, this.flashDuration); // Cyan target glow
         });
         this.decoyTargets.forEach(index => {
             this.highlightCell(index, 0xef4444, 0xfca5a5, this.flashDuration); // Red decoy glow
@@ -319,7 +319,7 @@ updateTimer() {
             this.stimulusSpawnTime = this.getTime();
             this.firstInteractionRegistered = false;
             this.firstInteractionLatency = 0;
-            this.statusText.setText('RECALL PATTERN!').setFill('#38bdf8'); // neon blue
+            this.statusText.setText('RECALL PATTERN!').setFill((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8')); // neon blue
             
             this.tweens.add({
                 targets: this.statusText,
@@ -401,7 +401,7 @@ updateTimer() {
         if (this.showParticleBurst) {
             const px = this.input.activePointer.x || this.scale.width / 2;
             const py = this.input.activePointer.y || this.scale.height / 2;
-            this.showParticleBurst(px, py, 0x38bdf8);
+            this.showParticleBurst(px, py, parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16));
         }
         this.hits++;
         this.totalAttempts++;
@@ -570,7 +570,7 @@ updateTimer() {
                     updateMlHud(this);
 
                     if (difficultyChanged) {
-                        this.showFloatingFeedback(`DIFFICULTY ADJUSTED: LEVEL ${this.difficultyLevel}`, '#a855f7');
+                        this.showFloatingFeedback(`DIFFICULTY ADJUSTED: LEVEL ${this.difficultyLevel}`, (getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7'));
                     }
 
                     if (data.cognitive_profile) {

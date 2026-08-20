@@ -224,7 +224,11 @@ def init_db():
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
             username VARCHAR(255) NOT NULL UNIQUE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            pin_hash VARCHAR(64) DEFAULT NULL,
+            course VARCHAR(255) DEFAULT NULL,
+            age INTEGER DEFAULT NULL,
+            gender VARCHAR(50) DEFAULT NULL
         )
     """)
     
@@ -400,6 +404,14 @@ def init_db():
     try:
         cursor.execute("ALTER TABLE users ADD COLUMN pin_hash VARCHAR(64) DEFAULT NULL")
         print("[DB Migration] Added pin_hash column to users")
+    except psycopg2.Error:
+        pass
+
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN course VARCHAR(255) DEFAULT NULL")
+        cursor.execute("ALTER TABLE users ADD COLUMN age INTEGER DEFAULT NULL")
+        cursor.execute("ALTER TABLE users ADD COLUMN gender VARCHAR(50) DEFAULT NULL")
+        print("[DB Migration] Added demographics columns to users")
     except psycopg2.Error:
         pass
 

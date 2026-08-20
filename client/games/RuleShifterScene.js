@@ -54,7 +54,7 @@ export default class RuleShifterScene extends BaseCognitiveScene {
         // Card definitions
         this.colors = [
             { name: 'RED', value: 0xef4444 },
-            { name: 'BLUE', value: 0x38bdf8 },
+            { name: 'BLUE', value: parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16) },
             { name: 'GREEN', value: 0x22c55e },
             { name: 'YELLOW', value: 0xeab308 }
         ];
@@ -83,13 +83,13 @@ export default class RuleShifterScene extends BaseCognitiveScene {
 
         // 1. Dark purple-navy gradient background
         this.createStandardBackground();// Cyber Grid Lines
-        const grid = this.add.grid(W / 2, H / 2, W, H, 80, 80, 0x000000, 0, 0xa855f7, 0.02);
+        const grid = this.add.grid(W / 2, H / 2, W, H, 80, 80, 0x000000, 0, parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16), 0.02);
         grid.setOrigin(0.5);
 
         // 2. HUD Setup
         this.scoreText = this.add.text(20, 18, 'SCORE: 0', {
             fontFamily: CogniTheme.fonts.body,
-            fontSize: '22px', fontWeight: 'bold', fill: '#a855f7'
+            fontSize: '22px', fontWeight: 'bold', fill: (getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7')
         });
 
         this.accuracyText = this.add.text(20, 46, 'ACCURACY: 100%', {
@@ -110,7 +110,7 @@ export default class RuleShifterScene extends BaseCognitiveScene {
         // Matching Rule status bar
         const rPanelBg = this.add.graphics();
         rPanelBg.fillStyle(0x09090b, 0.75);
-        rPanelBg.lineStyle(1.5, 0xa855f7, 0.4);
+        rPanelBg.lineStyle(1.5, parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16), 0.4);
         rPanelBg.fillRoundedRect(W / 2 - 200, 80, 400, 42, 8);
         rPanelBg.strokeRoundedRect(W / 2 - 200, 80, 400, 42, 8);
 
@@ -142,12 +142,12 @@ export default class RuleShifterScene extends BaseCognitiveScene {
         this.input.on('pointermove', () => this.registerFirstInteraction());
 
         // 5. Initialize shared HUD overlays & tutorial
-        createMlHud(this, 0xa855f7);
+        createMlHud(this, parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16));
         createTutorialOverlay(this, {
             title: "RULE SHIFTER",
             domain: "executive_strategy",
             instructions: "• Match choice cards to the target template at the top center.\n\n• The rule switches dynamically (Color, Shape, or Count).\n\n• Implicit switches require you to discover rules via choice feedback.\n\n• Rate your Decision Confidence to increase points risk/reward.",
-            themeColorHex: 0xa855f7,
+            themeColorHex: parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16),
             onStart: () => this.startGameplay()
         });
     }
@@ -233,7 +233,7 @@ export default class RuleShifterScene extends BaseCognitiveScene {
                 if (this.confidenceModal.visible || this.gamePhase !== 'PLAYING') return;
                 card.cardBg.clear();
                 card.cardBg.fillStyle(0x1e293b, 0.75);
-                card.cardBg.lineStyle(3, 0xa855f7, 0.9);
+                card.cardBg.lineStyle(3, parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16), 0.9);
                 card.cardBg.fillRoundedRect(-55, -75, 110, 150, 10);
                 card.cardBg.strokeRoundedRect(-55, -75, 110, 150, 10);
                 this.game.canvas.style.cursor = 'pointer';
@@ -399,7 +399,7 @@ export default class RuleShifterScene extends BaseCognitiveScene {
                 this.hits++;
                 this.statusText.setText('HIGH CONFIDENCE SUCCESS!').setFill('#22c55e');
                 this.cameras.main.flash(120, 34, 197, 94, 0.1);
-                this.showParticleBurst(this.input.activePointer.x, this.input.activePointer.y, 0xa855f7);
+                this.showParticleBurst(this.input.activePointer.x, this.input.activePointer.y, parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16));
             } else {
                 points = -100;
                 this.misses++;
@@ -411,7 +411,7 @@ export default class RuleShifterScene extends BaseCognitiveScene {
             if (isCorrect) {
                 points = 50;
                 this.hits++;
-                this.statusText.setText('CORRECT MATCH!').setFill('#38bdf8');
+                this.statusText.setText('CORRECT MATCH!').setFill((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8'));
             } else {
                 points = -10;
                 this.misses++;
@@ -504,14 +504,14 @@ export default class RuleShifterScene extends BaseCognitiveScene {
         // Backplate frame
         const plate = this.add.graphics();
         plate.fillStyle(0x0a0a0f, 0.95);
-        plate.lineStyle(2, 0xa855f7, 0.85);
+        plate.lineStyle(2, parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16), 0.85);
         plate.fillRoundedRect(-110, -50, 220, 100, 8);
         plate.strokeRoundedRect(-110, -50, 220, 100, 8);
         this.confidenceModal.add(plate);
 
         const heading = this.add.text(0, -38, 'CONFIDENCE LEVEL?', {
             fontFamily: CogniTheme.fonts.body,
-            fontSize: '11px', fontWeight: '800', fill: '#a855f7'
+            fontSize: '11px', fontWeight: '800', fill: (getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7')
         }).setOrigin(0.5);
         this.confidenceModal.add(heading);
 

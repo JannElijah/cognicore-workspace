@@ -90,7 +90,7 @@ export default class MemoryMatchScene extends BaseCognitiveScene {
             fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
-            fill: '#a855f7' // neon purple
+            fill: (getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7') // neon purple
         }).setOrigin(1, 0);
 
         this.timerText = this.add.text(width / 2, 20, '00:45', {
@@ -112,12 +112,12 @@ export default class MemoryMatchScene extends BaseCognitiveScene {
         // 3. Draw grid and begin
         this.drawGrid();
 
-        createMlHud(this, 0x38bdf8);
+        createMlHud(this, parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16));
         createTutorialOverlay(this, {
             title: "MEMORY MATCH",
             domain: "spatial_visual_memory",
             instructions: "• Click cards to flip them and reveal their symbols.\n\n• Find matching pairs in as few moves as possible.\n\n• DDA adapts grid sizes based on your memory recall speed.",
-            themeColorHex: 0x38bdf8,
+            themeColorHex: parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16),
             onStart: () => this.startGameplay()
         });
 
@@ -179,7 +179,7 @@ export default class MemoryMatchScene extends BaseCognitiveScene {
                 const cellGlow = this.add.graphics();
                 cellGlow.setPosition(x, y);
                 cellGlow.setVisible(false);
-                cellGlow.fillStyle(0xa855f7, 0.6); // Purple highlight fill
+                cellGlow.fillStyle(parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16), 0.6); // Purple highlight fill
                 cellGlow.lineStyle(3, 0xd8b4fe, 0.9); // Brighter border
                 cellGlow.fillRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
                 cellGlow.strokeRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
@@ -206,7 +206,7 @@ export default class MemoryMatchScene extends BaseCognitiveScene {
                     if (this.gamePhase === 'RECALL') {
                         cellBg.clear();
                         cellBg.fillStyle(0x334155, 0.6);
-                        cellBg.lineStyle(2, 0x38bdf8, 0.4);
+                        cellBg.lineStyle(2, parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16), 0.4);
                         cellBg.fillRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
                         cellBg.strokeRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
                     }
@@ -294,7 +294,7 @@ updateTimer() {
         this.sequence.forEach((cellIndex, step) => {
             this.time.delayedCall(delayOffset, () => {
                 if (this.gamePhase !== 'FLASHING') return;
-                this.highlightCell(cellIndex, 0xa855f7, stepDelay * 0.7); // purple flash
+                this.highlightCell(cellIndex, parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16), stepDelay * 0.7); // purple flash
             });
             delayOffset += stepDelay;
         });
@@ -307,7 +307,7 @@ updateTimer() {
             this.stimulusSpawnTime = this.getTime();
             this.firstInteractionRegistered = false;
             this.firstInteractionLatency = 0;
-            this.statusText.setText('REPEAT SEQUENCE!').setFill('#38bdf8');
+            this.statusText.setText('REPEAT SEQUENCE!').setFill((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8'));
             
             // Micro-pulsing scale animation on status text
             this.tweens.add({
@@ -379,7 +379,7 @@ updateTimer() {
         if (this.showParticleBurst) {
             const px = this.input.activePointer.x || this.scale.width / 2;
             const py = this.input.activePointer.y || this.scale.height / 2;
-            this.showParticleBurst(px, py, 0x38bdf8);
+            this.showParticleBurst(px, py, parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16));
         }
         this.correctSequences++;
         this.totalAttempts++;
@@ -540,7 +540,7 @@ updateTimer() {
 
                     if (difficultyChanged) {
                         const direction = difficultyChanged && params.difficulty_level > this.difficultyLevel ? 'INCREASED' : 'ADJUSTED';
-                        this.showFloatingFeedback(`DIFFICULTY ADJUSTED: LEVEL ${this.difficultyLevel}`, '#a855f7');
+                        this.showFloatingFeedback(`DIFFICULTY ADJUSTED: LEVEL ${this.difficultyLevel}`, (getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7'));
                     }
 
                     // Re-render grid mapping dynamically if size scales (e.g. 3x3 -> 4x4)

@@ -29,10 +29,10 @@ export default function HoverTooltip({ content, children, delay = 200, style = {
           transform: 'translate(-50%, -12px)',
           zIndex: 9999,
           background: 'rgba(15, 23, 42, 0.95)',
-          border: '1px solid rgba(56, 189, 248, 0.3)',
+          border: '1px solid rgba(var(--rgb-primary), 0.3)',
           borderRadius: '12px',
           padding: '1rem',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.8), 0 0 20px rgba(56, 189, 248, 0.15)',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.8), 0 0 20px rgba(var(--rgb-primary), 0.15)',
           pointerEvents: 'none',
           minWidth: '220px',
           textAlign: 'center',
@@ -49,7 +49,7 @@ export default function HoverTooltip({ content, children, delay = 200, style = {
             transform: 'translateX(-50%)',
             borderWidth: '6px',
             borderStyle: 'solid',
-            borderColor: 'rgba(56, 189, 248, 0.3) transparent transparent transparent'
+            borderColor: 'rgba(var(--rgb-primary), 0.3) transparent transparent transparent'
           }} />
         </div>
       )}

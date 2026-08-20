@@ -358,8 +358,8 @@ function decorateSceneClass(SceneClass) {
 
     // Cognitive domain → particle tint color mapping
     const DOMAIN_PARTICLE_COLOR = {
-        'reflexes_and_focus':  0xa855f7, // vivid purple
-        'spatial_visual_memory': 0x38bdf8, // cyan
+        'reflexes_and_focus':  parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16), // vivid purple
+        'spatial_visual_memory': parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16), // cyan
         'logical_mathematical': 0x10b981, // emerald
         'executive_strategy':  0xf59e0b, // amber
     };
@@ -385,7 +385,7 @@ function decorateSceneClass(SceneClass) {
             PriorityQueueScene: 'executive_strategy',
         };
         const domain = domainMap[scene.constructor.name] || 'reflexes_and_focus';
-        return DOMAIN_PARTICLE_COLOR[domain] || 0x38bdf8;
+        return DOMAIN_PARTICLE_COLOR[domain] || parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16);
     }
 
     // 2. Wrap Scene create() to render custom glassmorphic HUD components + bootstrap particles
@@ -471,7 +471,7 @@ function decorateSceneClass(SceneClass) {
                 fontFamily: 'Outfit, system-ui, -apple-system, sans-serif',
                 fontSize: '13px',
                 fontWeight: 'bold',
-                fill: '#38bdf8' // Cyber Punk Cyan
+                fill: (getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8') // Cyber Punk Cyan
             });
         }
     };

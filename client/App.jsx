@@ -77,7 +77,7 @@ ChartJS.defaults.font.family = 'system-ui, -apple-system, sans-serif';
 ChartJS.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 23, 42, 0.95)';
 ChartJS.defaults.plugins.tooltip.titleColor = '#f8fafc';
 ChartJS.defaults.plugins.tooltip.bodyColor = '#e2e8f0';
-ChartJS.defaults.plugins.tooltip.borderColor = 'rgba(56, 189, 248, 0.3)';
+ChartJS.defaults.plugins.tooltip.borderColor = 'rgba(var(--rgb-primary), 0.3)';
 ChartJS.defaults.plugins.tooltip.borderWidth = 1;
 ChartJS.defaults.plugins.tooltip.padding = 12;
 ChartJS.defaults.plugins.tooltip.cornerRadius = 8;
@@ -316,7 +316,7 @@ export default function App() {
     }
   }, [researchMode]);
 
-  const handleCheckUserStatus = async (username) => {
+  const handleCheckUserStatus = async (username, course = null, age = null, gender = null) => {
     if (!username || !username.trim()) {
       setAssessmentError("Please enter a valid username.");
       return;
@@ -337,7 +337,7 @@ export default function App() {
           const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ 
               email, 
               password,
-              options: { data: { username: trimmedName } }
+              options: { data: { username: trimmedName, course, age, gender } }
           });
           if (signUpError) throw new Error(signUpError.message);
           authData = signUpData;
@@ -921,8 +921,8 @@ export default function App() {
         {
           label: 'Observed Telemetry Points',
           data: pts,
-          backgroundColor: '#38bdf8',
-          borderColor: 'rgba(56, 189, 248, 0.4)',
+          backgroundColor: 'var(--color-primary)',
+          borderColor: 'rgba(var(--rgb-primary), 0.4)',
           borderWidth: 1,
           pointRadius: 5,
           pointHoverRadius: 7,
@@ -931,7 +931,7 @@ export default function App() {
         {
           label: 'Linear Regression Fit',
           data: linePoints,
-          borderColor: '#a855f7',
+          borderColor: 'var(--color-secondary)',
           backgroundColor: 'transparent',
           borderWidth: 2,
           pointRadius: 0,
@@ -1019,8 +1019,8 @@ export default function App() {
         {
           label: `${activeDashboardUser.toUpperCase()} (Active Subject)`,
           data: activeData,
-          borderColor: '#38bdf8',
-          backgroundColor: 'rgba(56, 189, 248, 0.1)',
+          borderColor: 'var(--color-primary)',
+          backgroundColor: 'rgba(var(--rgb-primary), 0.1)',
           borderWidth: 3,
           tension: 0.15,
           fill: false,
@@ -1515,13 +1515,13 @@ export default function App() {
           skills.reflexes_and_focus,
           skills.executive_strategy
         ],
-        backgroundColor: 'rgba(168, 85, 247, 0.2)',
-        borderColor: '#a855f7',
+        backgroundColor: 'rgba(var(--rgb-secondary), 0.2)',
+        borderColor: 'var(--color-secondary)',
         borderWidth: 2,
-        pointBackgroundColor: '#38bdf8',
+        pointBackgroundColor: 'var(--color-primary)',
         pointBorderColor: '#ffffff',
         pointHoverBackgroundColor: '#ffffff',
-        pointHoverBorderColor: '#38bdf8'
+        pointHoverBorderColor: 'var(--color-primary)'
       }
     ]
   };
@@ -1576,8 +1576,8 @@ export default function App() {
     return val !== diffLevels[idx - 1] ? 8 : 4;
   });
   const diffPointColors = diffLevels.map((val, idx) => {
-    if (idx === 0) return '#a855f7';
-    return val !== diffLevels[idx - 1] ? '#22c55e' : '#a855f7';
+    if (idx === 0) return 'var(--color-secondary)';
+    return val !== diffLevels[idx - 1] ? '#22c55e' : 'var(--color-secondary)';
   });
 
   const lineChartData = {
@@ -1586,8 +1586,8 @@ export default function App() {
       {
         label: 'Difficulty Level',
         data: diffLevels,
-        borderColor: '#a855f7',
-        backgroundColor: 'rgba(168, 85, 247, 0.12)',
+        borderColor: 'var(--color-secondary)',
+        backgroundColor: 'rgba(var(--rgb-secondary), 0.12)',
         borderWidth: 3,
         yAxisID: 'yDiff',
         tension: 0.15,
@@ -1601,13 +1601,13 @@ export default function App() {
       {
         label: 'Reaction Time (ms)',
         data: latestSessionMetrics.map(m => m.reaction_time_ms),
-        borderColor: '#38bdf8',
-        backgroundColor: 'rgba(56, 189, 248, 0.04)',
+        borderColor: 'var(--color-primary)',
+        backgroundColor: 'rgba(var(--rgb-primary), 0.04)',
         borderWidth: 2,
         yAxisID: 'yRt',
         tension: 0.2,
         fill: true,
-        pointBackgroundColor: '#38bdf8',
+        pointBackgroundColor: 'var(--color-primary)',
         pointRadius: 3,
         borderDash: [5, 5]
       }
@@ -1653,11 +1653,11 @@ export default function App() {
         position: 'right',
         min: 0,
         grid: { drawOnChartArea: false },
-        ticks: { color: '#38bdf8', font: { size: 9 } },
+        ticks: { color: 'var(--color-primary)', font: { size: 9 } },
         title: {
           display: true,
           text: 'RT (ms)',
-          color: '#38bdf8',
+          color: 'var(--color-primary)',
           font: { size: 10, weight: 'bold' }
         }
       }
@@ -1675,8 +1675,8 @@ export default function App() {
       {
         label: 'RT (ms)',
         data: [userRt, cohortRt],
-        backgroundColor: 'rgba(56, 189, 248, 0.75)',
-        borderColor: '#38bdf8',
+        backgroundColor: 'rgba(var(--rgb-primary), 0.75)',
+        borderColor: 'var(--color-primary)',
         borderWidth: 1.5,
         yAxisID: 'yRt',
         borderRadius: 4
@@ -1713,11 +1713,11 @@ export default function App() {
         position: 'left',
         min: 0,
         grid: { color: 'rgba(255, 255, 255, 0.05)' },
-        ticks: { color: '#38bdf8', font: { size: 9 } },
+        ticks: { color: 'var(--color-primary)', font: { size: 9 } },
         title: {
           display: true,
           text: 'RT (ms)',
-          color: '#38bdf8',
+          color: 'var(--color-primary)',
           font: { size: 10, weight: 'bold' }
         }
       },
@@ -1764,10 +1764,10 @@ export default function App() {
       {
         label: 'Avg Reaction Time (ms)',
         data: trendRt,
-        borderColor: '#38bdf8',
-        backgroundColor: 'rgba(56,189,248,0.07)',
+        borderColor: 'var(--color-primary)',
+        backgroundColor: 'rgba(var(--rgb-primary),0.07)',
         borderWidth: 2,
-        pointBackgroundColor: '#38bdf8',
+        pointBackgroundColor: 'var(--color-primary)',
         pointRadius: 4,
         pointHoverRadius: 6,
         tension: 0.35,
@@ -1802,16 +1802,16 @@ export default function App() {
           label: (item) => ` ${item.dataset.label}: ${item.raw} ms`
         },
         backgroundColor: 'rgba(15,23,42,0.95)',
-        borderColor: 'rgba(56,189,248,0.4)', borderWidth: 1,
-        titleColor: '#38bdf8', bodyColor: '#e2e8f0'
+        borderColor: 'rgba(var(--rgb-primary),0.4)', borderWidth: 1,
+        titleColor: 'var(--color-primary)', bodyColor: '#e2e8f0'
       }
     },
     scales: {
       x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', font: { size: 9 } } },
       y: {
         grid: { color: 'rgba(255,255,255,0.05)' },
-        ticks: { color: '#38bdf8', font: { size: 9 } },
-        title: { display: true, text: 'RT (ms)', color: '#38bdf8', font: { size: 10 } }
+        ticks: { color: 'var(--color-primary)', font: { size: 9 } },
+        title: { display: true, text: 'RT (ms)', color: 'var(--color-primary)', font: { size: 10 } }
       }
     }
   };
@@ -1831,8 +1831,8 @@ export default function App() {
     datasets: [{
       label: 'Avg Accuracy (%)',
       data: domainAccAvg,
-      backgroundColor: ['rgba(168,85,247,0.75)', 'rgba(56,189,248,0.75)', 'rgba(245,158,11,0.75)', 'rgba(16,185,129,0.75)'],
-      borderColor: ['#a855f7', '#38bdf8', '#f59e0b', '#10b981'],
+      backgroundColor: ['rgba(var(--rgb-secondary),0.75)', 'rgba(var(--rgb-primary),0.75)', 'rgba(245,158,11,0.75)', 'rgba(16,185,129,0.75)'],
+      borderColor: ['var(--color-secondary)', 'var(--color-primary)', '#f59e0b', '#10b981'],
       borderWidth: 1.5,
       borderRadius: 6,
     }]
@@ -1938,9 +1938,9 @@ export default function App() {
       {
         label: 'Your Profile',
         data: [skills.spatial_visual_memory, skills.logical_mathematical, skills.reflexes_and_focus, skills.executive_strategy],
-        backgroundColor: 'rgba(168,85,247,0.2)',
-        borderColor: '#a855f7', borderWidth: 2.5,
-        pointBackgroundColor: '#38bdf8', pointBorderColor: '#ffffff',
+        backgroundColor: 'rgba(var(--rgb-secondary),0.2)',
+        borderColor: 'var(--color-secondary)', borderWidth: 2.5,
+        pointBackgroundColor: 'var(--color-primary)', pointBorderColor: '#ffffff',
         pointRadius: 5, pointHoverRadius: 7, order: 1
       },
       {
@@ -2026,8 +2026,8 @@ export default function App() {
           left: '50%',
           transform: 'translateX(-50%)',
           background: 'linear-gradient(135deg, #1e1b4b, #115e59)',
-          border: '2px solid #a855f7',
-          boxShadow: '0 0 25px rgba(168, 85, 247, 0.6), 0 10px 40px rgba(0,0,0,0.6)',
+          border: '2px solid var(--color-secondary)',
+          boxShadow: '0 0 25px rgba(var(--rgb-secondary), 0.6), 0 10px 40px rgba(0,0,0,0.6)',
           borderRadius: '12px',
           padding: '1rem 2rem',
           color: '#ffffff',
@@ -2051,8 +2051,8 @@ export default function App() {
           width: '320px',
           background: 'rgba(15, 23, 42, 0.85)',
           backdropFilter: 'blur(20px)',
-          border: '1.5px solid #a855f7',
-          boxShadow: '0 0 25px rgba(168, 85, 247, 0.4), 0 10px 40px rgba(0,0,0,0.6)',
+          border: '1.5px solid var(--color-secondary)',
+          boxShadow: '0 0 25px rgba(var(--rgb-secondary), 0.4), 0 10px 40px rgba(0,0,0,0.6)',
           borderRadius: '12px',
           padding: '1rem 1.25rem',
           color: '#ffffff',
@@ -2110,7 +2110,7 @@ export default function App() {
             marginBottom: '2rem',
             background: 'rgba(15, 23, 42, 0.6)',
             backdropFilter: 'blur(16px)',
-            border: '1px solid rgba(168, 85, 247, 0.3)',
+            border: '1px solid rgba(var(--rgb-secondary), 0.3)',
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
             animation: 'fadeInDown 0.3s ease-out',
             display: 'flex',
@@ -2129,7 +2129,7 @@ export default function App() {
                   <div key={i} style={{
                     width: '3px',
                     height: '100%',
-                    backgroundColor: '#38bdf8',
+                    backgroundColor: 'var(--color-primary)',
                     borderRadius: '1px',
                     animation: `pulseGlow 1.2s infinite ease-in-out alternate`,
                     animationDelay: `${i * 0.15}s`
@@ -2152,10 +2152,10 @@ export default function App() {
                       }}
                       style={{
                         flex: 1,
-                        background: oscillatorType === type ? 'rgba(56, 189, 248, 0.15)' : 'rgba(255, 255, 255, 0.02)',
-                        border: oscillatorType === type ? '1.5px solid #38bdf8' : '1.5px solid rgba(255, 255, 255, 0.08)',
+                        background: oscillatorType === type ? 'rgba(var(--rgb-primary), 0.15)' : 'rgba(255, 255, 255, 0.02)',
+                        border: oscillatorType === type ? '1.5px solid var(--color-primary)' : '1.5px solid rgba(255, 255, 255, 0.08)',
                         borderRadius: '8px',
-                        color: oscillatorType === type ? '#38bdf8' : '#e2e8f0',
+                        color: oscillatorType === type ? 'var(--color-primary)' : '#e2e8f0',
                         padding: '0.5rem',
                         fontSize: '0.85rem',
                         fontWeight: 'bold',
@@ -2173,7 +2173,7 @@ export default function App() {
               <div style={{ flex: '2', minWidth: '280px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                   <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Tempo Multiplier</span>
-                  <span style={{ fontSize: '0.9rem', color: '#38bdf8', fontWeight: 'bold' }}>{bpmMultiplier.toFixed(2)}x</span>
+                  <span style={{ fontSize: '0.9rem', color: 'var(--color-primary)', fontWeight: 'bold' }}>{bpmMultiplier.toFixed(2)}x</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <span style={{ fontSize: '0.75rem', color: '#64748b' }}>0.5x</span>
@@ -2190,7 +2190,7 @@ export default function App() {
                     }}
                     style={{
                       flex: 1,
-                      accentColor: '#38bdf8',
+                      accentColor: 'var(--color-primary)',
                       height: '5px',
                       borderRadius: '3px',
                       background: 'rgba(255,255,255,0.1)',
@@ -2205,7 +2205,7 @@ export default function App() {
               <div style={{ flex: '2', minWidth: '280px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                   <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>DDA Smoothing Damping</span>
-                  <span style={{ fontSize: '0.9rem', color: '#a855f7', fontWeight: 'bold' }}>
+                  <span style={{ fontSize: '0.9rem', color: 'var(--color-secondary)', fontWeight: 'bold' }}>
                     {smoothingAlpha === 1.0 ? 'Instant (1.0)' : smoothingAlpha <= 0.3 ? `Heavy Damping (${smoothingAlpha.toFixed(2)})` : `EMA Filter (${smoothingAlpha.toFixed(2)})`}
                   </span>
                 </div>
@@ -2220,7 +2220,7 @@ export default function App() {
                     onChange={(e) => setSmoothingAlpha(parseFloat(e.target.value))}
                     style={{
                       flex: 1,
-                      accentColor: '#a855f7',
+                      accentColor: 'var(--color-secondary)',
                       height: '5px',
                       borderRadius: '3px',
                       background: 'rgba(255,255,255,0.1)',
@@ -2288,7 +2288,7 @@ export default function App() {
                       color: '#94a3b8'
                     }}>
                       <div style={{ fontSize: '2.5rem', marginBottom: '1.5rem', animation: 'pulse 1.5s infinite ease-in-out' }}>🧠</div>
-                      <div style={{ fontWeight: 'bold', fontSize: '1.1rem', letterSpacing: '0.05em', color: '#38bdf8' }}>LOADING NEURAL WORKSPACE...</div>
+                      <div style={{ fontWeight: 'bold', fontSize: '1.1rem', letterSpacing: '0.05em', color: 'var(--color-primary)' }}>LOADING NEURAL WORKSPACE...</div>
                     </div>
                   }>
                     {activeGame === 'SpeedTap' && <SpeedTapGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
@@ -2435,20 +2435,20 @@ export default function App() {
             {weakestDomain && DOMAINS_LIST.find(d => d.id === weakestDomain) && (
               <div style={{ marginBottom: '3.5rem' }}>
                 <h2 className="section-title" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 5px rgba(192,132,252,0.7))',verticalAlign:'middle',marginRight:'6px',flexShrink:0}} xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="7" rx="7" ry="5" stroke="#c084fc" strokeWidth="2"/><path d="M5 10c0 3 3 6 7 6s7-3 7-6" stroke="#c084fc" strokeWidth="2" strokeLinecap="round"/><line x1="9" y1="13" x2="9" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/><line x1="15" y1="13" x2="15" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/><line x1="7" y1="19" x2="17" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/></svg> Daily Personalized Workout <span style={{ fontSize: '1rem', color: '#a855f7', fontWeight: 'normal', marginLeft: '0.5rem' }}>— Target: {DOMAINS_LIST.find(d => d.id === weakestDomain).title}</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 5px rgba(192,132,252,0.7))',verticalAlign:'middle',marginRight:'6px',flexShrink:0}} xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="7" rx="7" ry="5" stroke="#c084fc" strokeWidth="2"/><path d="M5 10c0 3 3 6 7 6s7-3 7-6" stroke="#c084fc" strokeWidth="2" strokeLinecap="round"/><line x1="9" y1="13" x2="9" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/><line x1="15" y1="13" x2="15" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/><line x1="7" y1="19" x2="17" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/></svg> Daily Personalized Workout <span style={{ fontSize: '1rem', color: 'var(--color-secondary)', fontWeight: 'normal', marginLeft: '0.5rem' }}>— Target: {DOMAINS_LIST.find(d => d.id === weakestDomain).title}</span>
                 </h2>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
                   {DOMAINS_LIST.find(d => d.id === weakestDomain).games.slice(0, 3).map((game) => (
                     <HoverTooltip key={game.id} text="This game targets your weakest domain" content="This game targets your weakest domain" delay={200}>
                     <div className="game-card glass-panel" style={{ cursor: 'pointer', position: 'relative', overflow: 'hidden' }} onClick={() => { audioEngine.playClick(); launchGame(game.id); }} onMouseEnter={() => audioEngine.playHover()}>
-                      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '4px', background: 'linear-gradient(90deg, #a855f7, #38bdf8)' }}></div>
+                      <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '4px', background: 'linear-gradient(90deg, var(--color-secondary), var(--color-primary))' }}></div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
                         <div style={{ fontSize: '2.5rem', width: '60px', height: '60px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           {game.icon}
                         </div>
                         <div>
                           <h3 style={{ margin: '0 0 0.25rem 0', color: '#f8fafc', fontSize: '1.25rem' }}>{game.title}</h3>
-                          <span style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', background: 'rgba(168, 85, 247, 0.2)', color: '#c084fc', borderRadius: '4px', fontWeight: 'bold' }}>Recommended</span>
+                          <span style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem', background: 'rgba(var(--rgb-secondary), 0.2)', color: '#c084fc', borderRadius: '4px', fontWeight: 'bold' }}>Recommended</span>
                         </div>
                       </div>
                       <p style={{ color: '#cbd5e1', fontSize: '0.9rem', margin: '0 0 1rem 0', lineHeight: 1.5 }}>
@@ -2464,7 +2464,7 @@ export default function App() {
             {/* Cognitive Targets & Milestones (Option C) */}
             <div className="goals-section-container" style={{ marginBottom: '3.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <h2 className="section-title" style={{ margin: 0 }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(56,189,248,0.7))',verticalAlign:'middle',marginRight:'6px'}} xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> Cognitive Targets & Milestones</h2>
+                <h2 className="section-title" style={{ margin: 0 }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(var(--rgb-primary),0.7))',verticalAlign:'middle',marginRight:'6px'}} xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> Cognitive Targets & Milestones</h2>
                 <button
                   onClick={() => setShowGoalForm(!showGoalForm)}
                   style={{
@@ -2495,7 +2495,7 @@ export default function App() {
                   marginBottom: '1.5rem',
                   background: 'rgba(15, 23, 42, 0.6)',
                   backdropFilter: 'blur(12px)',
-                  border: '1px solid rgba(168, 85, 247, 0.2)',
+                  border: '1px solid rgba(var(--rgb-secondary), 0.2)',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '1rem',
@@ -2583,7 +2583,7 @@ export default function App() {
                     <button
                       type="submit"
                       style={{
-                        background: 'linear-gradient(to right, #a855f7, #38bdf8)',
+                        background: 'linear-gradient(to right, var(--color-secondary), var(--color-primary))',
                         color: '#ffffff',
                         border: 'none',
                         borderRadius: '6px',
@@ -2591,7 +2591,7 @@ export default function App() {
                         fontSize: '0.875rem',
                         fontWeight: 'bold',
                         cursor: 'pointer',
-                        boxShadow: '0 4px 10px rgba(168, 85, 247, 0.25)',
+                        boxShadow: '0 4px 10px rgba(var(--rgb-secondary), 0.25)',
                         transition: 'all 0.2s'
                       }}
                       onMouseOver={(e) => e.target.style.filter = 'brightness(1.1)'}
@@ -2608,7 +2608,7 @@ export default function App() {
                 
                 {/* Active Goals Section */}
                 <div className="game-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <h3 style={{ fontSize: '1.1rem', margin: 0, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(56,189,248,0.7))',verticalAlign:'middle',marginRight:'5px'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="#38bdf8" strokeWidth="1.5"/><circle cx="12" cy="12" r="5" stroke="#38bdf8" strokeWidth="1.5"/><circle cx="12" cy="12" r="2" fill="#38bdf8"/></svg> Active Targets</h3>
+                  <h3 style={{ fontSize: '1.1rem', margin: 0, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(var(--rgb-primary),0.7))',verticalAlign:'middle',marginRight:'5px'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="var(--color-primary)" strokeWidth="1.5"/><circle cx="12" cy="12" r="5" stroke="var(--color-primary)" strokeWidth="1.5"/><circle cx="12" cy="12" r="2" fill="var(--color-primary)"/></svg> Active Targets</h3>
                   
                   {goalsLoading ? (
                     <div style={{ color: '#94a3b8', fontSize: '0.875rem', textAlign: 'center', padding: '2rem 0' }}>
@@ -2625,7 +2625,7 @@ export default function App() {
                   ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
                       {goals.filter(g => !g.is_completed).map(goal => {
-                        const domainObj = DOMAIN_INFO[goal.domain] || { title: goal.domain, color: '#a855f7', icon: '🎯' };
+                        const domainObj = DOMAIN_INFO[goal.domain] || { title: goal.domain, color: 'var(--color-secondary)', icon: '🎯' };
                         const progress = getGoalProgress(goal);
                         const displayProgress = Math.min(100, Math.round(progress * 100));
                         
@@ -2714,7 +2714,7 @@ export default function App() {
                   ) : (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
                       {goals.filter(g => g.is_completed).map(goal => {
-                        const domainObj = DOMAIN_INFO[goal.domain] || { title: goal.domain, color: '#a855f7', icon: '🏆' };
+                        const domainObj = DOMAIN_INFO[goal.domain] || { title: goal.domain, color: 'var(--color-secondary)', icon: '🏆' };
                         
                         // Dynamic badge name/class based on domain and metric
                         let badgeTitle = "Novice Challenger";
@@ -2731,18 +2731,18 @@ export default function App() {
                             key={goal.id}
                             style={{
                               background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.4), rgba(17, 94, 89, 0.4))',
-                              border: `2px solid #a855f7`,
+                              border: `2px solid var(--color-secondary)`,
                               borderRadius: '12px',
                               padding: '0.75rem 1.25rem',
                               display: 'flex',
                               alignItems: 'center',
                               gap: '0.75rem',
-                              boxShadow: '0 0 15px rgba(168, 85, 247, 0.2), inset 0 1px 1px rgba(255,255,255,0.05)',
+                              boxShadow: '0 0 15px rgba(var(--rgb-secondary), 0.2), inset 0 1px 1px rgba(255,255,255,0.05)',
                               animation: 'pulseGlow 2.5s infinite alternate',
                               position: 'relative'
                             }}
                           >
-                            <span style={{ fontSize: '1.8rem', filter: 'drop-shadow(0 0 5px #a855f7)' }}>🏅</span>
+                            <span style={{ fontSize: '1.8rem', filter: 'drop-shadow(0 0 5px var(--color-secondary))' }}>🏅</span>
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
                               <span style={{ fontSize: '0.85rem', fontWeight: '800', color: '#ffffff' }}>
                                 {badgeTitle}
@@ -2789,7 +2789,7 @@ export default function App() {
                 marginBottom: '3rem',
                 background: 'rgba(24, 24, 27, 0.75)',
                 backdropFilter: 'blur(16px)',
-                border: '1.5px dashed rgba(168, 85, 247, 0.4)',
+                border: '1.5px dashed rgba(var(--rgb-secondary), 0.4)',
                 borderRadius: '16px',
                 display: 'flex',
                 flexDirection: 'column',
@@ -2799,10 +2799,10 @@ export default function App() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '1rem', gap: '1rem' }}>
                   <div>
                     <h3 style={{ fontSize: '1.25rem', margin: 0, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',filter:'drop-shadow(0 0 4px rgba(168,85,247,0.7))'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="#a855f7" strokeWidth="1.5"/><polygon points="16,8 10,10 8,16 14,14" fill="#a855f7"/><circle cx="12" cy="12" r="1.5" fill="#1e1b4b"/></svg></span> Quasi-Experimental Research Track
+                      <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',filter:'drop-shadow(0 0 4px rgba(var(--rgb-secondary),0.7))'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="var(--color-secondary)" strokeWidth="1.5"/><polygon points="16,8 10,10 8,16 14,14" fill="var(--color-secondary)"/><circle cx="12" cy="12" r="1.5" fill="#1e1b4b"/></svg></span> Quasi-Experimental Research Track
                     </h3>
                     <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
-                      Subject ID: <strong>{currentUser}</strong> | Mapped Weakest Domain: <strong style={{ color: '#38bdf8' }}>{weakestDomain?.replace(/_/g, ' ').toUpperCase()}</strong>
+                      Subject ID: <strong>{currentUser}</strong> | Mapped Weakest Domain: <strong style={{ color: 'var(--color-primary)' }}>{weakestDomain?.replace(/_/g, ' ').toUpperCase()}</strong>
                     </p>
                   </div>
                   <div style={{ display: 'flex', gap: '0.75rem' }}>
@@ -2821,7 +2821,7 @@ export default function App() {
                           setAssessmentStage('post-test');
                         }}
                         style={{
-                          background: 'linear-gradient(to right, #4ade80, #38bdf8)',
+                          background: 'linear-gradient(to right, #4ade80, var(--color-primary))',
                           color: '#ffffff',
                           border: 'none',
                           borderRadius: '8px',
@@ -2847,7 +2847,7 @@ export default function App() {
                   <button
                     onClick={() => setResearchMode('individual')}
                     style={{
-                      background: researchMode === 'individual' ? 'linear-gradient(to right, #38bdf8, #a855f7)' : 'rgba(255, 255, 255, 0.05)',
+                      background: researchMode === 'individual' ? 'linear-gradient(to right, var(--color-primary), var(--color-secondary))' : 'rgba(255, 255, 255, 0.05)',
                       border: researchMode === 'individual' ? 'none' : '1.5px solid rgba(255, 255, 255, 0.1)',
                       color: '#ffffff',
                       padding: '0.4rem 1rem',
@@ -2863,7 +2863,7 @@ export default function App() {
                   <button
                     onClick={() => setResearchMode('aggregate')}
                     style={{
-                      background: researchMode === 'aggregate' ? 'linear-gradient(to right, #38bdf8, #a855f7)' : 'rgba(255, 255, 255, 0.05)',
+                      background: researchMode === 'aggregate' ? 'linear-gradient(to right, var(--color-primary), var(--color-secondary))' : 'rgba(255, 255, 255, 0.05)',
                       border: researchMode === 'aggregate' ? 'none' : '1px solid rgba(255, 255, 255, 0.1)',
                       color: '#ffffff',
                       padding: '0.4rem 1rem',
@@ -2874,7 +2874,7 @@ export default function App() {
                       transition: 'all 0.2s'
                     }}
                   >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'5px',filter:'drop-shadow(0 0 3px rgba(56,189,248,0.6))'}} xmlns="http://www.w3.org/2000/svg"><rect x="3" y="12" width="4" height="9" rx="1" fill="#38bdf8"/><rect x="10" y="6" width="4" height="15" rx="1" fill="#38bdf8"/><rect x="17" y="3" width="4" height="18" rx="1" fill="#38bdf8" fillOpacity="0.7"/></svg> Aggregate Cohort Study View
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'5px',filter:'drop-shadow(0 0 3px rgba(var(--rgb-primary),0.6))'}} xmlns="http://www.w3.org/2000/svg"><rect x="3" y="12" width="4" height="9" rx="1" fill="var(--color-primary)"/><rect x="10" y="6" width="4" height="15" rx="1" fill="var(--color-primary)"/><rect x="17" y="3" width="4" height="18" rx="1" fill="var(--color-primary)" fillOpacity="0.7"/></svg> Aggregate Cohort Study View
                   </button>
                 </div>
 
@@ -2919,7 +2919,7 @@ export default function App() {
                       </div>
 
                       {/* Hypothesis & Expose Diffs */}
-                      <div style={{ padding: '1rem', background: 'rgba(168,85,247,0.05)', border: '1px solid rgba(168,85,247,0.15)', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      <div style={{ padding: '1rem', background: 'rgba(var(--rgb-secondary),0.05)', border: '1px solid rgba(var(--rgb-secondary),0.15)', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                         <div style={{ fontSize: '0.85rem', color: '#c084fc', fontWeight: 'bold' }}>📊 Thesis Hypothesis Testing Outcome</div>
                         <div style={{ fontSize: '0.95rem', color: '#ffffff', lineHeight: '1.5' }}>
                           {evaluationReport.hypothesis_result}
@@ -2950,7 +2950,7 @@ export default function App() {
                 ) : (
                   // AGGREGATE COHORT STUDY VIEW
                   cohortLoading ? (
-                    <div style={{ padding: '2rem', textAlign: 'center', color: '#38bdf8', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                    <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-primary)', fontSize: '0.9rem', fontWeight: 'bold' }}>
                       ⚡ Accessing Research Database & Running Paired t-tests...
                     </div>
                   ) : cohortAnalytics ? (
@@ -2963,7 +2963,7 @@ export default function App() {
                           <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem' }}>
                             {cohortAnalytics.sample_size} subjects
                           </div>
-                          <div style={{ fontSize: '0.75rem', color: '#38bdf8', marginTop: '0.25rem', fontWeight: 'bold' }}>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--color-primary)', marginTop: '0.25rem', fontWeight: 'bold' }}>
                             100% Gating & Telemetry Logged
                           </div>
                         </div>
@@ -3004,7 +3004,7 @@ export default function App() {
                       </div>
 
                       {/* Hypothesis Verdict */}
-                      <div style={{ padding: '1rem', background: 'rgba(168,85,247,0.05)', border: '1px solid rgba(168,85,247,0.15)', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      <div style={{ padding: '1rem', background: 'rgba(var(--rgb-secondary),0.05)', border: '1px solid rgba(var(--rgb-secondary),0.15)', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                         <div style={{ fontSize: '0.85rem', color: '#c084fc', fontWeight: 'bold' }}>📊 Thesis Hypothesis Testing Outcome (Aggregate)</div>
                         <div style={{ fontSize: '0.95rem', color: '#ffffff', lineHeight: '1.5' }}>
                           {cohortAnalytics.hypothesis_verdict}
@@ -3016,7 +3016,7 @@ export default function App() {
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginTop: '0.5rem' }}>
                               {Object.entries(cohortAnalytics.domains).map(([dom, dStats]) => (
                                 <div key={dom} style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', borderRadius: '8px', fontSize: '0.8rem', color: '#cbd5e1' }}>
-                                  <strong style={{ textTransform: 'capitalize', color: '#38bdf8', display: 'block', marginBottom: '0.25rem' }}>
+                                  <strong style={{ textTransform: 'capitalize', color: 'var(--color-primary)', display: 'block', marginBottom: '0.25rem' }}>
                                     {dom.replace(/_/g, ' ')}
                                   </strong>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0.15rem 0' }}>
@@ -3376,7 +3376,7 @@ export default function App() {
                     style={{
                       flex: 2,
                       padding: '0.75rem',
-                      background: DOMAIN_THEMES[pendingGameToLaunch.themeClass]?.btnGradient || 'linear-gradient(to right, #38bdf8, #a855f7)',
+                      background: DOMAIN_THEMES[pendingGameToLaunch.themeClass]?.btnGradient || 'linear-gradient(to right, var(--color-primary), var(--color-secondary))',
                       border: 'none',
                       borderRadius: '8px',
                       color: '#ffffff',

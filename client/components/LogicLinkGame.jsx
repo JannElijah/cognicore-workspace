@@ -234,7 +234,7 @@ export default function LogicLinkGame({ username = 'default_player', apiUrl = AP
         title: {
             fontSize: '2.5rem',
             fontWeight: '800',
-            background: 'linear-gradient(to right, #f59e0b, #a855f7)',
+            background: 'linear-gradient(to right, #f59e0b, var(--color-secondary))',
             WebkitBackgroundClip: 'text',
             backgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
@@ -410,7 +410,7 @@ export default function LogicLinkGame({ username = 'default_player', apiUrl = AP
                             <span className="stat-val" style={{ color: '#ef4444'  }}>{finalStats?.misses}</span>
                         </div>
                         <div className='stat-row'>
-                            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'4px',filter:'drop-shadow(0 0 4px rgba(56,189,248,0.7))'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="#38bdf8" strokeWidth="1.5"/><circle cx="12" cy="12" r="5" stroke="#38bdf8" strokeWidth="1.5"/><circle cx="12" cy="12" r="2" fill="#38bdf8"/></svg> Success Rate Accuracy</span>
+                            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'4px',filter:'drop-shadow(0 0 4px rgba(var(--rgb-primary),0.7))'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="var(--color-primary)" strokeWidth="1.5"/><circle cx="12" cy="12" r="5" stroke="var(--color-primary)" strokeWidth="1.5"/><circle cx="12" cy="12" r="2" fill="var(--color-primary)"/></svg> Success Rate Accuracy</span>
                             <span className='stat-val'>{Math.round((finalStats?.accuracy || 0) * 100)}%</span>
                         </div>
                         <div className='stat-row'>

@@ -50,7 +50,7 @@ const ProfileModal = ({ onClose }) => {
   const RARITY_STYLES = {
     common: { gradient: 'linear-gradient(135deg, #64748b, #94a3b8)', glow: 'rgba(148, 163, 184, 0.15)', border: 'rgba(148, 163, 184, 0.3)', label: 'Common', labelColor: '#94a3b8' },
     rare: { gradient: 'linear-gradient(135deg, #3b82f6, #60a5fa)', glow: 'rgba(59, 130, 246, 0.15)', border: 'rgba(59, 130, 246, 0.4)', label: 'Rare', labelColor: '#60a5fa' },
-    epic: { gradient: 'linear-gradient(135deg, #a855f7, #c084fc)', glow: 'rgba(168, 85, 247, 0.15)', border: 'rgba(168, 85, 247, 0.4)', label: 'Epic', labelColor: '#c084fc' },
+    epic: { gradient: 'linear-gradient(135deg, var(--color-secondary), #c084fc)', glow: 'rgba(var(--rgb-secondary), 0.15)', border: 'rgba(var(--rgb-secondary), 0.4)', label: 'Epic', labelColor: '#c084fc' },
     legendary: { gradient: 'linear-gradient(135deg, #f59e0b, #fbbf24)', glow: 'rgba(245, 158, 11, 0.15)', border: 'rgba(245, 158, 11, 0.4)', label: 'Legendary', labelColor: '#fbbf24' },
   };
 
@@ -139,7 +139,7 @@ const ProfileModal = ({ onClose }) => {
   };
 
   const equippedAvatar = (inventory || []).find(i => i.item_type === 'avatar' && i.is_equipped)?.item_id;
-  const avatarIcon = equippedAvatar === 'avatar-robot' ? '🤖' : equippedAvatar === 'avatar-brain' ? '🧠' : equippedAvatar === 'avatar-hacker' ? '👨‍💻' : <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 0 5px rgba(56,189,248,0.5))' }}><circle cx="12" cy="8" r="4" fill="#38bdf8"/><path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round"/></svg>;
+  const avatarIcon = equippedAvatar === 'avatar-robot' ? '🤖' : equippedAvatar === 'avatar-brain' ? '🧠' : equippedAvatar === 'avatar-hacker' ? '👨‍💻' : <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 0 5px rgba(var(--rgb-primary),0.5))' }}><circle cx="12" cy="8" r="4" fill="var(--color-primary)"/><path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round"/></svg>;
 
   const equippedBanner = (inventory || []).find(i => i.item_type === 'banner' && i.is_equipped)?.item_id;
   const bannerBackgrounds = {
@@ -154,10 +154,10 @@ const ProfileModal = ({ onClose }) => {
     datasets: [{
       label: 'Accuracy %',
       data: domainStats.map(d => (d.avg_accuracy * 100).toFixed(1)),
-      backgroundColor: 'rgba(56, 189, 248, 0.4)',
-      borderColor: 'rgba(56, 189, 248, 1)',
+      backgroundColor: 'rgba(var(--rgb-primary), 0.4)',
+      borderColor: 'rgba(var(--rgb-primary), 1)',
       borderWidth: 2,
-      pointBackgroundColor: 'rgba(56, 189, 248, 1)',
+      pointBackgroundColor: 'rgba(var(--rgb-primary), 1)',
     }]
   };
   const radarOptions = { scales: { r: { angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, pointLabels: { color: '#e2e8f0', font: { size: 11 } }, ticks: { backdropColor: 'transparent', color: '#94a3b8', min: 0, max: 100 } } }, plugins: { legend: { display: false } }, maintainAspectRatio: false };
@@ -170,8 +170,8 @@ const ProfileModal = ({ onClose }) => {
     datasets: [{ 
       label: metricToggle === 'accuracy' ? 'Accuracy (%)' : 'Reaction Time (ms)', 
       data: timelineStats.map(d => metricToggle === 'accuracy' ? (d.avg_accuracy * 100).toFixed(1) : d.avg_rt), 
-      borderColor: metricToggle === 'accuracy' ? '#10b981' : '#a855f7', 
-      backgroundColor: metricToggle === 'accuracy' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(168, 85, 247, 0.2)', 
+      borderColor: metricToggle === 'accuracy' ? '#10b981' : 'var(--color-secondary)', 
+      backgroundColor: metricToggle === 'accuracy' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(var(--rgb-secondary), 0.2)', 
       fill: true, 
       tension: 0.4 
     }]
@@ -183,8 +183,8 @@ const ProfileModal = ({ onClose }) => {
       {
         label: 'Fast Learner Core',
         data: [{ x: 950, y: 85 }],
-        backgroundColor: 'rgba(56, 189, 248, 0.1)',
-        borderColor: 'rgba(56, 189, 248, 0.4)',
+        backgroundColor: 'rgba(var(--rgb-primary), 0.1)',
+        borderColor: 'rgba(var(--rgb-primary), 0.4)',
         pointRadius: 40,
         pointHoverRadius: 40
       },
@@ -230,7 +230,7 @@ const ProfileModal = ({ onClose }) => {
 
   const getArchetypeTheme = (name) => {
     switch (name) {
-      case 'Fast Learner': return { color: '#38bdf8', icon: '⚡', gradient: 'rgba(56, 189, 248, 0.15)' };
+      case 'Fast Learner': return { color: 'var(--color-primary)', icon: '⚡', gradient: 'rgba(var(--rgb-primary), 0.15)' };
       case 'High Fatigue': return { color: '#f59e0b', icon: '🔋', gradient: 'rgba(245, 158, 11, 0.15)' };
       case 'Plateauing': return { color: '#c084fc', icon: '📈', gradient: 'rgba(192, 132, 252, 0.15)' };
       default: return { color: '#94a3b8', icon: '🧠', gradient: 'rgba(148, 163, 184, 0.15)' };
@@ -250,16 +250,16 @@ const ProfileModal = ({ onClose }) => {
         <div style={{ display: 'flex', flexDirection: 'column', borderBottom: '1px solid rgba(148, 163, 184, 0.1)', background: headerBg }}>
           <div style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-              <div style={{ width: '64px', height: '64px', background: 'rgba(56, 189, 248, 0.15)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', border: '2px solid #38bdf8' }}>
+              <div style={{ width: '64px', height: '64px', background: 'rgba(var(--rgb-primary), 0.15)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', border: '2px solid var(--color-primary)' }}>
                 {avatarIcon}
               </div>
               <div>
                 <h2 style={{ color: '#f8fafc', margin: '0 0 0.25rem 0', fontSize: '1.5rem' }}>{username}</h2>
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                   <span style={{ color: '#fbbf24', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><svg width="16" height="16" viewBox="0 0 24 24" style={{ filter: 'drop-shadow(0 0 4px rgba(251,191,36,0.7))', flexShrink: 0 }} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="11" fill="#fbbf24"/><circle cx="12" cy="12" r="8" fill="#f59e0b"/><text x="12" y="16.5" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#78350f" fontFamily="Arial">C</text></svg> {coins} Coins</span>
-                  <span style={{ color: '#a855f7', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#a855f7" style={{ filter: 'drop-shadow(0 0 4px rgba(168,85,247,0.8))', flexShrink: 0 }} xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#a855f7"/>
+                  <span style={{ color: 'var(--color-secondary)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--color-secondary)" style={{ filter: 'drop-shadow(0 0 4px rgba(var(--rgb-secondary),0.8))', flexShrink: 0 }} xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="var(--color-secondary)"/>
                     </svg>
                     Level {level}
                   </span>
@@ -273,8 +273,8 @@ const ProfileModal = ({ onClose }) => {
             {['overview', 'stats', 'ai report', 'badges', 'settings'].map(tab => (
               <button key={tab} onClick={() => setActiveTab(tab)} style={{
                 flex: 1, padding: '1rem', background: 'transparent', border: 'none',
-                borderBottom: activeTab === tab ? '2px solid #38bdf8' : '2px solid transparent',
-                color: activeTab === tab ? '#38bdf8' : '#94a3b8',
+                borderBottom: activeTab === tab ? '2px solid var(--color-primary)' : '2px solid transparent',
+                color: activeTab === tab ? 'var(--color-primary)' : '#94a3b8',
                 fontWeight: 'bold', cursor: 'pointer', textTransform: 'capitalize', transition: 'all 0.2s'
               }}>
                 {tab}
@@ -298,16 +298,16 @@ const ProfileModal = ({ onClose }) => {
                         <span>Level {level + 1}</span>
                       </div>
                       <div style={{ width: '100%', height: '12px', background: '#1e293b', borderRadius: '6px', overflow: 'hidden', marginBottom: '0.5rem' }}>
-                        <div style={{ width: `${xpPercent}%`, height: '100%', background: 'linear-gradient(to right, #38bdf8, #a855f7)' }} />
+                        <div style={{ width: `${xpPercent}%`, height: '100%', background: 'linear-gradient(to right, var(--color-primary), var(--color-secondary))' }} />
                       </div>
-                      <div style={{ textAlign: 'center', color: '#a855f7', fontSize: '0.85rem' }}>
+                      <div style={{ textAlign: 'center', color: 'var(--color-secondary)', fontSize: '0.85rem' }}>
                         {currentLevelXp} / 500 XP to next level (+500 Coins Reward!)
                       </div>
                     </div>
                     
-                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(var(--rgb-primary), 0.2)' }}>
                       <h3 style={{ margin: '0 0 1rem 0', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{color: '#38bdf8'}}>🎯</span> Current Active Goal
+                        <span style={{color: 'var(--color-primary)'}}>🎯</span> Current Active Goal
                       </h3>
                       {activeGoals.length > 0 ? (
                         <div>
@@ -319,7 +319,7 @@ const ProfileModal = ({ onClose }) => {
                             <span>{activeGoals[0].current_value.toFixed(1)} / {activeGoals[0].target_value}</span>
                           </div>
                           <div style={{ width: '100%', height: '8px', background: '#1e293b', borderRadius: '4px', overflow: 'hidden' }}>
-                            <div style={{ width: `${Math.min(100, (activeGoals[0].current_value / activeGoals[0].target_value) * 100)}%`, height: '100%', background: '#38bdf8' }} />
+                            <div style={{ width: `${Math.min(100, (activeGoals[0].current_value / activeGoals[0].target_value) * 100)}%`, height: '100%', background: 'var(--color-primary)' }} />
                           </div>
                         </div>
                       ) : (
@@ -437,8 +437,8 @@ const ProfileModal = ({ onClose }) => {
                             </div>
                           </div>
                           <div style={{ textAlign: 'right' }}>
-                            <div style={{ color: '#38bdf8', fontWeight: 'bold' }}>{(session.accuracy_rate * 100).toFixed(0)}% Acc</div>
-                            <div style={{ color: '#a855f7', fontSize: '0.75rem' }}>Lvl {session.difficulty_level}</div>
+                            <div style={{ color: 'var(--color-primary)', fontWeight: 'bold' }}>{(session.accuracy_rate * 100).toFixed(0)}% Acc</div>
+                            <div style={{ color: 'var(--color-secondary)', fontSize: '0.75rem' }}>Lvl {session.difficulty_level}</div>
                           </div>
                         </div>
                       )) : (
@@ -455,13 +455,13 @@ const ProfileModal = ({ onClose }) => {
                   {/* KPI Cards Row */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
                     <HoverTooltip text="Total number of valid neuro-training sessions recorded." delay={200}>
-                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', textAlign: 'center', border: '1px solid rgba(56, 189, 248, 0.1)' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', textAlign: 'center', border: '1px solid rgba(var(--rgb-primary), 0.1)' }}>
                       <div style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Total Games Played</div>
                       <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#f8fafc' }}>{kpis.total_games}</div>
                     </div>
                     </HoverTooltip>
                     <HoverTooltip text="The maximum difficulty tier you have achieved across all games." delay={200}>
-                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', textAlign: 'center', border: '1px solid rgba(168, 85, 247, 0.1)' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', textAlign: 'center', border: '1px solid rgba(var(--rgb-secondary), 0.1)' }}>
                       <div style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Highest Level Reached</div>
                       <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#f8fafc' }}>{kpis.highest_level}</div>
                     </div>
@@ -492,13 +492,13 @@ const ProfileModal = ({ onClose }) => {
                         <div style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '4px' }}>
                           <button 
                             onClick={() => setMetricToggle('accuracy')}
-                            style={{ background: metricToggle === 'accuracy' ? '#38bdf8' : 'transparent', color: metricToggle === 'accuracy' ? '#0f172a' : '#94a3b8', border: 'none', padding: '4px 12px', borderRadius: '6px', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 'bold' }}
+                            style={{ background: metricToggle === 'accuracy' ? 'var(--color-primary)' : 'transparent', color: metricToggle === 'accuracy' ? '#0f172a' : '#94a3b8', border: 'none', padding: '4px 12px', borderRadius: '6px', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 'bold' }}
                           >
                             Accuracy
                           </button>
                           <button 
                             onClick={() => setMetricToggle('reactionTime')}
-                            style={{ background: metricToggle === 'reactionTime' ? '#a855f7' : 'transparent', color: metricToggle === 'reactionTime' ? '#f8fafc' : '#94a3b8', border: 'none', padding: '4px 12px', borderRadius: '6px', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 'bold' }}
+                            style={{ background: metricToggle === 'reactionTime' ? 'var(--color-secondary)' : 'transparent', color: metricToggle === 'reactionTime' ? '#f8fafc' : '#94a3b8', border: 'none', padding: '4px 12px', borderRadius: '6px', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 'bold' }}
                           >
                             Reaction Time
                           </button>
@@ -562,8 +562,8 @@ const ProfileModal = ({ onClose }) => {
 
                         {/* AI Insights Bubble */}
                         <HoverTooltip text="Personalized coaching tips generated dynamically using AI based on your gameplay data." delay={200}>
-                        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', borderLeft: '4px solid #38bdf8', position: 'relative' }}>
-                          <h4 style={{ margin: '0 0 0.5rem 0', color: '#38bdf8', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', borderLeft: '4px solid var(--color-primary)', position: 'relative' }}>
+                          <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--color-primary)', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <span>🤖</span> AI Coaching Insight
                           </h4>
                           <p style={{ margin: 0, color: '#e2e8f0', lineHeight: '1.6', fontSize: '1.05rem', fontStyle: 'italic' }}>
@@ -706,7 +706,7 @@ const ProfileModal = ({ onClose }) => {
                       step="0.05" 
                       value={localVolume} 
                       onChange={handleVolumeChange} 
-                      style={{ width: '120px', accentColor: '#a855f7' }}
+                      style={{ width: '120px', accentColor: 'var(--color-secondary)' }}
                     />
                   </div>
                   
@@ -715,7 +715,7 @@ const ProfileModal = ({ onClose }) => {
                       <h3 style={{ color: '#f8fafc', margin: '0 0 0.25rem 0' }}>Adaptive Distractors</h3>
                       <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.85rem' }}>Enable auditory/visual noise during high-difficulty challenges.</p>
                     </div>
-                    <button onClick={handleDistractorsToggle} style={{ width: '50px', height: '26px', borderRadius: '13px', background: localDistractors ? '#a855f7' : '#334155', border: 'none', position: 'relative', cursor: 'pointer' }}>
+                    <button onClick={handleDistractorsToggle} style={{ width: '50px', height: '26px', borderRadius: '13px', background: localDistractors ? 'var(--color-secondary)' : '#334155', border: 'none', position: 'relative', cursor: 'pointer' }}>
                       <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: '#ffffff', position: 'absolute', top: '2px', left: localDistractors ? '26px' : '2px', transition: 'left 0.3s' }} />
                     </button>
                   </div>

@@ -154,6 +154,10 @@ def api_purchase(current_user_id, current_username):
         'theme-blue': {'type': 'theme', 'price': 200},
         'theme-purple': {'type': 'theme', 'price': 250},
         'theme-yellow': {'type': 'theme', 'price': 200},
+        'theme-green': {'type': 'theme', 'price': 250},
+        'theme-pink': {'type': 'theme', 'price': 250},
+        'theme-cyan': {'type': 'theme', 'price': 200},
+        'theme-monochrome': {'type': 'theme', 'price': 300},
         'avatar-robot': {'type': 'avatar', 'price': 500},
         'avatar-brain': {'type': 'avatar', 'price': 500},
         'avatar-hacker': {'type': 'avatar', 'price': 750},
@@ -211,6 +215,25 @@ def api_equip(current_user_id, current_username):
     data = request.get_json() or {}
     item_id = str(data.get('item_id', '')).strip()
     
+    if item_id.startswith('default-'):
+        item_type = item_id.split('-')[1]
+        prof = UserProfile.query.filter_by(user_id=current_user_id).first()
+        if not prof:
+            prof = UserProfile(user_id=current_user_id)
+            db.session.add(prof)
+        if item_type == 'avatar':
+            prof.equipped_avatar = None
+        elif item_type == 'banner':
+            prof.equipped_banner = None
+        elif item_type == 'theme':
+            prof.equipped_theme = None
+        db.session.commit()
+        return jsonify({
+            "status": "success", 
+            "message": f"Successfully equipped {item_id}",
+            "item_type": item_type
+        }), 200
+
     item_row = UserInventory.query.filter_by(user_id=current_user_id, item_id=item_id).first()
     if not item_row:
         return jsonify({"status": "error", "message": "Item not owned."}), 400

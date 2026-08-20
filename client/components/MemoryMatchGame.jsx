@@ -233,7 +233,7 @@ export default function MemoryMatchGame({ username = 'default_player', apiUrl = 
         title: {
             fontSize: '2.5rem',
             fontWeight: '800',
-            background: 'linear-gradient(to right, #a855f7, #38bdf8)',
+            background: 'linear-gradient(to right, var(--color-secondary), var(--color-primary))',
             WebkitBackgroundClip: 'text',
             backgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
@@ -299,15 +299,15 @@ export default function MemoryMatchGame({ username = 'default_player', apiUrl = 
         },
         statVal: {
             fontWeight: '700',
-            color: '#a855f7'
+            color: 'var(--color-secondary)'
         },
         archetypeBadge: {
             display: 'inline-block',
             padding: '0.5rem 1rem',
             borderRadius: '9999px',
-            background: 'rgba(56, 189, 248, 0.15)',
-            border: '1px solid rgba(56, 189, 248, 0.3)',
-            color: '#38bdf8',
+            background: 'rgba(var(--rgb-primary), 0.15)',
+            border: '1px solid rgba(var(--rgb-primary), 0.3)',
+            color: 'var(--color-primary)',
             fontWeight: 'bold',
             marginTop: '0.5rem',
             fontSize: '1.1rem'
@@ -354,8 +354,8 @@ export default function MemoryMatchGame({ username = 'default_player', apiUrl = 
                     <div style={{
                         width: '40px',
                         height: '40px',
-                        border: '4px solid rgba(168, 85, 247, 0.2)',
-                        borderTop: '4px solid #a855f7',
+                        border: '4px solid rgba(var(--rgb-secondary), 0.2)',
+                        borderTop: '4px solid var(--color-secondary)',
                         borderRadius: '50%',
                         margin: '0 auto 1.5rem auto',
                         animation: 'spin 1s linear infinite'
@@ -388,7 +388,7 @@ export default function MemoryMatchGame({ username = 'default_player', apiUrl = 
                 <div className='premium-glass-card'>
                     <h1 style={{
                         ...styles.title,
-                        background: 'linear-gradient(to right, #4ade80, #a855f7)',
+                        background: 'linear-gradient(to right, #4ade80, var(--color-secondary))',
                         WebkitBackgroundClip: 'text',
                         backgroundClip: 'text'
                     }}>SESSION COMPLETE</h1>
@@ -408,12 +408,12 @@ export default function MemoryMatchGame({ username = 'default_player', apiUrl = 
                             <span className="stat-val" style={{ color: '#ef4444' }}>{finalStats?.misses}</span>
                         </div>
                         <div className='stat-row'>
-                            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'4px',filter:'drop-shadow(0 0 4px rgba(56,189,248,0.7))'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="#38bdf8" strokeWidth="1.5"/><circle cx="12" cy="12" r="5" stroke="#38bdf8" strokeWidth="1.5"/><circle cx="12" cy="12" r="2" fill="#38bdf8"/></svg> Recall Accuracy</span>
+                            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'4px',filter:'drop-shadow(0 0 4px rgba(var(--rgb-primary),0.7))'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="var(--color-primary)" strokeWidth="1.5"/><circle cx="12" cy="12" r="5" stroke="var(--color-primary)" strokeWidth="1.5"/><circle cx="12" cy="12" r="2" fill="var(--color-primary)"/></svg> Recall Accuracy</span>
                             <span className='stat-val'>{Math.round((finalStats?.accuracy || 0) * 100)}%</span>
                         </div>
                         <div className='stat-row'>
                             <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'4px',filter:'drop-shadow(0 0 4px rgba(74,222,128,0.7))'}} xmlns="http://www.w3.org/2000/svg"><polyline points="2,17 8,11 13,16 22,7" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><polyline points="17,7 22,7 22,12" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> Max Difficulty Achieved</span>
-                            <span className="stat-val" style={{ color: '#38bdf8' }}>Level {finalStats?.difficultyLevel}</span>
+                            <span className="stat-val" style={{ color: 'var(--color-primary)' }}>Level {finalStats?.difficultyLevel}</span>
                         </div>
                     </div>
 
