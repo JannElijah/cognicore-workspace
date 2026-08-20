@@ -324,6 +324,7 @@ def init_db():
             logical_math_score REAL NOT NULL,
             attention_score REAL NOT NULL,
             executive_score REAL NOT NULL,
+            item_metadata JSONB DEFAULT NULL,
             completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
@@ -412,6 +413,18 @@ def init_db():
         cursor.execute("ALTER TABLE users ADD COLUMN age INTEGER DEFAULT NULL")
         cursor.execute("ALTER TABLE users ADD COLUMN gender VARCHAR(50) DEFAULT NULL")
         print("[DB Migration] Added demographics columns to users")
+    except psycopg2.Error:
+        pass
+
+    try:
+        cursor.execute("ALTER TABLE cognitive_assessments ADD COLUMN item_metadata JSON DEFAULT NULL")
+        print("[DB Migration] Added item_metadata column to cognitive_assessments")
+    except psycopg2.Error:
+        pass
+
+    try:
+        cursor.execute("ALTER TABLE cognitive_assessments ADD COLUMN ai_feedback TEXT DEFAULT NULL")
+        print("[DB Migration] Added ai_feedback column to cognitive_assessments")
     except psycopg2.Error:
         pass
 

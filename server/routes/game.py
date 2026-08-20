@@ -7,6 +7,7 @@ from models import (User, GameSession, PerformanceMetric, CognitiveProfile,
 from game_utils import (GAME_TO_DOMAIN, calculate_dda_parameters, 
                         calculate_ols_slope, archetype_classifier, 
                         ml_history_cache, generate_pros_cons)
+from ai_engine import generate_post_test_ai_feedback
 import logging
 
 game_bp = Blueprint('game_bp', __name__)
@@ -473,11 +474,35 @@ def submit_assessment(current_user_id, current_username):
         at = safe_float(answers.get('attention_score'), 50.0)
         ex = safe_float(answers.get('executive_score'), 50.0)
         
-        ca = CognitiveAssessment(user_id=current_user_id, assessment_type=assessment_type, spatial_visual_score=sv, logical_math_score=lm, attention_score=at, executive_score=ex)
+        ca = CognitiveAssessment(
+            user_id=current_user_id, 
+            assessment_type=assessment_type, 
+            spatial_visual_score=sv, 
+            logical_math_score=lm, 
+            attention_score=at, 
+            executive_score=ex,
+            item_metadata=data.get('metadata')
+        )
+        
+        scores_map = {"spatial_visual_memory": sv, "logical_mathematical": lm, "reflexes_and_focus": at, "executive_strategy": ex}
+        
+        # Generate AI Feedback if it's a post-test
+        ai_feedback_string = None
+        if assessment_type == 'post-test':
+            pre_test = CognitiveAssessment.query.filter_by(user_id=current_user_id, assessment_type='pre-test').order_by(CognitiveAssessment.completed_at.desc()).first()
+            if pre_test:
+                pre_scores = {
+                    "spatial_visual_memory": pre_test.spatial_visual_score,
+                    "logical_mathematical": pre_test.logical_math_score,
+                    "reflexes_and_focus": pre_test.attention_score,
+                    "executive_strategy": pre_test.executive_score
+                }
+                ai_feedback_string = generate_post_test_ai_feedback(pre_scores, scores_map, data.get('metadata'))
+                ca.ai_feedback = ai_feedback_string
+
         db.session.add(ca)
         db.session.commit()
         
-        scores_map = {"spatial_visual_memory": sv, "logical_mathematical": lm, "reflexes_and_focus": at, "executive_strategy": ex}
         weakest_domain = min(scores_map, key=scores_map.get)
         domain_to_game = {"spatial_visual_memory": "MatrixRecall", "logical_mathematical": "LogicLink", "reflexes_and_focus": "SpeedTap", "executive_strategy": "PriorityQueue"}
         
@@ -485,7 +510,8 @@ def submit_assessment(current_user_id, current_username):
             "status": "success", "user_id": current_user_id, "assessment_type": assessment_type,
             "scores": {"spatial_visual_memory": round(sv, 2), "logical_mathematical": round(lm, 2), "reflexes_and_focus": round(at, 2), "executive_strategy": round(ex, 2)},
             "weakest_domain": weakest_domain, "prescribed_game": domain_to_game.get(weakest_domain),
-            "personalized_report": generate_pros_cons(scores_map)
+            "personalized_report": generate_pros_cons(scores_map),
+            "ai_feedback": ai_feedback_string
         }), 201
     except Exception as e:
         db.session.rollback()

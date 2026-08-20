@@ -29,7 +29,9 @@ import DailyRewardModal from './components/DailyRewardModal';
 import AchievementToast from './components/AchievementToast';
 import DailyQuests from './components/DailyQuests';
 import PretestResults from './components/PretestResults';
+import PostTestResults from './components/PostTestResults';
 import SeizureDisclaimerModal from './components/SeizureDisclaimerModal';
+import AccessibilityMenu from './components/AccessibilityMenu';
 import LoginFlow from './components/LoginFlow';
 import AssessmentFlow from './components/AssessmentFlow';
 import AdminPanel from './components/AdminPanel';
@@ -260,6 +262,7 @@ export default function App() {
   const [hasPlayedPrescribed, setHasPlayedPrescribed] = useState(false);
   const [assessmentStage, setAssessmentStage] = useState('none'); // 'none' | 'pre-test' | 'post-test' | 'completed'
   const [evaluationReport, setEvaluationReport] = useState(null);
+  const [aiFeedback, setAiFeedback] = useState(null);
   const [assessmentAnswers, setAssessmentAnswers] = useState({
     q1: '', q2: '', q3: '', q4: '',
     q5: '', q6: '', q7: '', q8: '',
@@ -387,6 +390,7 @@ export default function App() {
           
           if (data.post_test) {
             setPostTestScores(data.post_test);
+            setAiFeedback(data.ai_feedback);
             setAssessmentStage('completed');
             fetchEvaluationReport(trimmedName);
           } else {
@@ -421,42 +425,32 @@ export default function App() {
     }
   };
 
-  const handleSubmitAssessment = async (e) => {
-    if (e) e.preventDefault();
-    
-    // Check if all questions are answered
-    const unanswered = COGNITIVE_QUESTIONS.filter(q => !assessmentAnswers[q.id]);
-    if (unanswered.length > 0) {
-      setAssessmentError(`Please answer all questions before submitting. Unanswered: ${unanswered.map(q => q.id.toUpperCase()).join(', ')}`);
-      return;
-    }
-
+  const handleSubmitAssessment = async (resultsPayload) => {
     setAssessmentLoading(true);
     setAssessmentError(null);
     try {
       const type = assessmentStage === 'pre-test' ? 'pre-test' : 'post-test';
       
-      // Calculate correctness and scores out of 100
-      const q1_corr = assessmentAnswers.q1 === 'A' ? 1 : 0;
-      const q5_corr = assessmentAnswers.q5 === 'D' ? 1 : 0;
-      const q9_corr = assessmentAnswers.q9 === 'A' ? 1 : 0;
+      // Calculate scores based on the new payload
+      let spatialScore = 0, logicalScore = 0, attentionScore = 0, executiveScore = 0;
+      let spatialCount = 0, logicalCount = 0, attentionCount = 0, executiveCount = 0;
+
+      const flatAnswers = {};
       
-      const q2_corr = assessmentAnswers.q2 === 'B' ? 1 : 0;
-      const q6_corr = assessmentAnswers.q6 === 'C' ? 1 : 0;
-      const q10_corr = assessmentAnswers.q10 === 'B' ? 1 : 0;
+      for (const [qId, data] of Object.entries(resultsPayload)) {
+        const qDomain = COGNITIVE_QUESTIONS.find(q => q.id === qId)?.domain;
+        if (qDomain === 'spatial_visual_memory') { spatialScore += data.isCorrect ? 1 : 0; spatialCount++; }
+        if (qDomain === 'logical_mathematical') { logicalScore += data.isCorrect ? 1 : 0; logicalCount++; }
+        if (qDomain === 'reflexes_and_focus') { attentionScore += data.isCorrect ? 1 : 0; attentionCount++; }
+        if (qDomain === 'executive_strategy') { executiveScore += data.isCorrect ? 1 : 0; executiveCount++; }
+        
+        flatAnswers[qId] = data.isCorrect ? 1 : 0;
+      }
       
-      const q3_corr = assessmentAnswers.q3 === 'C' ? 1 : 0;
-      const q7_corr = assessmentAnswers.q7 === 'B' ? 1 : 0;
-      const q11_corr = assessmentAnswers.q11 === 'C' ? 1 : 0;
-      
-      const q4_corr = assessmentAnswers.q4 === 'A' ? 1 : 0;
-      const q8_corr = assessmentAnswers.q8 === 'D' ? 1 : 0;
-      const q12_corr = assessmentAnswers.q12 === 'A' ? 1 : 0;
-      
-      const spatial_visual_score = ((q1_corr + q5_corr + q9_corr) / 3.0) * 100.0;
-      const logical_math_score = ((q2_corr + q6_corr + q10_corr) / 3.0) * 100.0;
-      const attention_score = ((q3_corr + q7_corr + q11_corr) / 3.0) * 100.0;
-      const executive_score = ((q4_corr + q8_corr + q12_corr) / 3.0) * 100.0;
+      const spatial_visual_score = spatialCount ? (spatialScore / spatialCount) * 100.0 : 0;
+      const logical_math_score = logicalCount ? (logicalScore / logicalCount) * 100.0 : 0;
+      const attention_score = attentionCount ? (attentionScore / attentionCount) * 100.0 : 0;
+      const executive_score = executiveCount ? (executiveScore / executiveCount) * 100.0 : 0;
 
       const res = await fetch(`${API_BASE}/api/submit-assessment`, {
         method: 'POST',
@@ -465,14 +459,13 @@ export default function App() {
           username: currentUser,
           assessment_type: type,
           answers: {
-            q1: q1_corr, q2: q2_corr, q3: q3_corr, q4: q4_corr,
-            q5: q5_corr, q6: q6_corr, q7: q7_corr, q8: q8_corr,
-            q9: q9_corr, q10: q10_corr, q11: q11_corr, q12: q12_corr,
+            ...flatAnswers,
             spatial_visual_score,
             logical_math_score,
             attention_score,
             executive_score
-          }
+          },
+          metadata: resultsPayload
         })
       });
       if (!res.ok) throw new Error("Failed to submit assessment.");
@@ -492,6 +485,7 @@ export default function App() {
           });
         } else {
           setPostTestScores(data.scores);
+          setAiFeedback(data.ai_feedback);
           setAssessmentStage('completed');
           fetchEvaluationReport(currentUser);
         }
@@ -2408,7 +2402,17 @@ export default function App() {
           // ORIGINAL GAME LOBBY
           // ==========================================
           <div className="lobby-content">
-            {preTestScores && !hasPlayedPrescribed && (
+            
+            {assessmentStage === 'completed' && (
+               <PostTestResults 
+                  preScores={preTestScores} 
+                  postScores={postTestScores} 
+                  aiFeedback={aiFeedback}
+                  currentUser={currentUser} 
+               />
+            )}
+
+            {preTestScores && !hasPlayedPrescribed && assessmentStage !== 'completed' && (
               <div style={{ marginBottom: '3rem' }}>
                 <PretestResults 
                   preTestScores={preTestScores} 
@@ -3414,6 +3418,9 @@ export default function App() {
       <OfflineCacheWarningBanner isVisible={offlineCacheFullWarning} onClose={() => setOfflineCacheFullWarning(false)} />
 
       {activeAchievements.length > 0 && <AchievementToast achievementIds={activeAchievements} onDone={() => setActiveAchievements([])} />}
+
+      {/* PWD Accessibility Menu overlaid globally */}
+      <AccessibilityMenu />
     </div>
   );
 }

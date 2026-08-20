@@ -78,6 +78,8 @@ class CognitiveAssessment(db.Model):
     logical_math_score = db.Column(db.Float, nullable=False)
     attention_score = db.Column(db.Float, nullable=False)
     executive_score = db.Column(db.Float, nullable=False)
+    item_metadata = db.Column(db.JSON)
+    ai_feedback = db.Column(db.Text)
     completed_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class ArchetypeHistory(db.Model):
