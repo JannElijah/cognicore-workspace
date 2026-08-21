@@ -11,6 +11,7 @@ class User(db.Model):
     course = db.Column(db.String(255))
     age = db.Column(db.Integer)
     gender = db.Column(db.String(50))
+    pwd_status = db.Column(db.String(255))
 
     # Relationships
     profile = db.relationship('UserProfile', backref='user', uselist=False, cascade='all, delete')

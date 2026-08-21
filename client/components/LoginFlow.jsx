@@ -12,17 +12,18 @@ export default function LoginFlow({
   const [course, setCourse] = useState('');
   const [age, setAge] = useState('');
   const [gender, setGender] = useState('');
+  const [pwdStatus, setPwdStatus] = useState('');
 
   const submitLogin = () => {
     if (!agreed) return;
     if (isAnonymous) {
-      if (!course || !age || !gender) {
-        alert("Please fill in Course, Age, and Gender for anonymous registration.");
+      if (!course || !age || !gender || !pwdStatus) {
+        alert("Please fill in Course, Age, Gender, and PWD Status for anonymous registration.");
         return;
       }
       const guestId = 'Anon_' + Math.random().toString(36).substring(2, 6).toUpperCase();
       setUsernameInput(guestId);
-      handleCheckUserStatus(guestId, course, age, gender);
+      handleCheckUserStatus(guestId, course, age, gender, pwdStatus);
     } else {
       handleCheckUserStatus(usernameInput);
     }
@@ -79,6 +80,16 @@ export default function LoginFlow({
                 <option value="Prefer not to say">Prefer not to say</option>
               </select>
             </div>
+            <select value={pwdStatus} onChange={e=>setPwdStatus(e.target.value)} style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem', fontSize: '0.9rem', outline: 'none', width: '100%' }}>
+              <option value="" disabled>PWD Status (Person with Disability)</option>
+              <option value="None">None</option>
+              <option value="Visual Impairment">Visual Impairment</option>
+              <option value="Hearing Impairment">Hearing Impairment</option>
+              <option value="Motor/Physical Disability">Motor/Physical Disability</option>
+              <option value="Cognitive/Learning Disability">Cognitive/Learning Disability</option>
+              <option value="Other">Other</option>
+              <option value="Prefer not to say">Prefer not to say</option>
+            </select>
           </div>
         )}
 

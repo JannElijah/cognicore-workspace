@@ -2,24 +2,34 @@ import React, { useState, useEffect } from 'react';
 
 export default function AccessibilityMenu() {
   const [isOpen, setIsOpen] = useState(false);
-  const [highContrast, setHighContrast] = useState(false);
-  const [colorBlind, setColorBlind] = useState(false);
-  const [dyslexiaFont, setDyslexiaFont] = useState(false);
+  const [highContrast, setHighContrast] = useState(() => localStorage.getItem('pwd_highContrast') === 'true');
+  const [colorBlind, setColorBlind] = useState(() => localStorage.getItem('pwd_colorBlind') === 'true');
+  const [dyslexiaFont, setDyslexiaFont] = useState(() => localStorage.getItem('pwd_dyslexiaFont') === 'true');
+  const [reducedMotion, setReducedMotion] = useState(() => localStorage.getItem('pwd_reducedMotion') === 'true');
 
   useEffect(() => {
+    localStorage.setItem('pwd_highContrast', highContrast);
     if (highContrast) document.body.classList.add('high-contrast');
     else document.body.classList.remove('high-contrast');
   }, [highContrast]);
 
   useEffect(() => {
+    localStorage.setItem('pwd_colorBlind', colorBlind);
     if (colorBlind) document.body.classList.add('color-blind');
     else document.body.classList.remove('color-blind');
   }, [colorBlind]);
 
   useEffect(() => {
+    localStorage.setItem('pwd_dyslexiaFont', dyslexiaFont);
     if (dyslexiaFont) document.body.classList.add('dyslexia-font');
     else document.body.classList.remove('dyslexia-font');
   }, [dyslexiaFont]);
+
+  useEffect(() => {
+    localStorage.setItem('pwd_reducedMotion', reducedMotion);
+    if (reducedMotion) document.body.classList.add('reduced-motion');
+    else document.body.classList.remove('reduced-motion');
+  }, [reducedMotion]);
 
   return (
     <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 9999 }}>
@@ -58,6 +68,11 @@ export default function AccessibilityMenu() {
           <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', color: '#cbd5e1', fontSize: '0.9rem' }}>
             <span>Dyslexia Font</span>
             <input type="checkbox" checked={dyslexiaFont} onChange={(e) => setDyslexiaFont(e.target.checked)} style={{ transform: 'scale(1.2)' }} />
+          </label>
+          
+          <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', color: '#cbd5e1', fontSize: '0.9rem' }}>
+            <span>Reduced Motion</span>
+            <input type="checkbox" checked={reducedMotion} onChange={(e) => setReducedMotion(e.target.checked)} style={{ transform: 'scale(1.2)' }} />
           </label>
           
         </div>

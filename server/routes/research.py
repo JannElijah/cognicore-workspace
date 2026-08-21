@@ -106,6 +106,71 @@ def get_cohort_db_scores():
     finally:
         conn.close()
 
+@research_bp.route('/api/research/cohort-data', methods=['GET'])
+def get_overall_cohort_data():
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        
+        # Total Participants and PWD distribution
+        cursor.execute("SELECT pwd_status FROM users")
+        users = cursor.fetchall()
+        total_participants = len(users)
+        
+        pwd_distribution = {}
+        for u in users:
+            status = u['pwd_status'] or 'None'
+            pwd_distribution[status] = pwd_distribution.get(status, 0) + 1
+            
+        # Average Pre/Post Scores
+        cursor.execute("SELECT assessment_type, spatial_visual_score, logical_math_score, attention_score, executive_score FROM cognitive_assessments")
+        assessments = cursor.fetchall()
+        
+        pre_scores = {"sv": 0, "lm": 0, "at": 0, "ex": 0, "count": 0}
+        post_scores = {"sv": 0, "lm": 0, "at": 0, "ex": 0, "count": 0}
+        
+        for a in assessments:
+            if a['assessment_type'] == 'pre-test':
+                pre_scores['sv'] += a['spatial_visual_score'] or 0
+                pre_scores['lm'] += a['logical_math_score'] or 0
+                pre_scores['at'] += a['attention_score'] or 0
+                pre_scores['ex'] += a['executive_score'] or 0
+                pre_scores['count'] += 1
+            elif a['assessment_type'] == 'post-test':
+                post_scores['sv'] += a['spatial_visual_score'] or 0
+                post_scores['lm'] += a['logical_math_score'] or 0
+                post_scores['at'] += a['attention_score'] or 0
+                post_scores['ex'] += a['executive_score'] or 0
+                post_scores['count'] += 1
+                
+        def get_avg(data):
+            if data['count'] == 0: return {"sv": 0, "lm": 0, "at": 0, "ex": 0, "overall": 0}
+            sv = data['sv'] / data['count']
+            lm = data['lm'] / data['count']
+            at = data['at'] / data['count']
+            ex = data['ex'] / data['count']
+            overall = (sv + lm + at + ex) / 4.0
+            return {"sv": round(sv, 2), "lm": round(lm, 2), "at": round(at, 2), "ex": round(ex, 2), "overall": round(overall, 2)}
+            
+        avg_pre = get_avg(pre_scores)
+        avg_post = get_avg(post_scores)
+        
+        return jsonify({
+            "status": "success",
+            "total_participants": total_participants,
+            "pwd_distribution": pwd_distribution,
+            "avg_pre_scores": avg_pre,
+            "avg_post_scores": avg_post,
+            "pre_test_count": pre_scores['count'],
+            "post_test_count": post_scores['count']
+        }), 200
+        
+    except Exception as e:
+        logger.error(f"Error in get_overall_cohort_data: {e}")
+        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+    finally:
+        conn.close()
+
 @research_bp.route('/api/export-csv', methods=['GET'])
 def export_csv():
     conn = get_db_connection()

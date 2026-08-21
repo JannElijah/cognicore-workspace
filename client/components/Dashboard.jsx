@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Radar, Line, Bar, Scatter } from 'react-chartjs-2';
 import HoverTooltip from './HoverTooltip';
 
@@ -48,11 +48,48 @@ export default function Dashboard({
   scatterData, scatterOptions,
   skills, domainDeltas, rec
 }) {
+  const [activeTab, setActiveTab] = useState('participant');
+  const [cohortData, setCohortData] = useState(null);
+  const [cohortLoading, setCohortLoading] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'cohort') {
+      setCohortLoading(true);
+      fetch('/api/research/cohort-data')
+        .then(res => res.json())
+        .then(data => {
+          if(data.status === 'success') {
+            setCohortData(data);
+          }
+          setCohortLoading(false);
+        })
+        .catch(err => {
+          console.error(err);
+          setCohortLoading(false);
+        });
+    }
+  }, [activeTab]);
+
   return (
-          // ==========================================
-          // PARTICIPANT ANALYTICS DASHBOARD
-          // ==========================================
-          <div className="dashboard-content" style={{ animation: 'fadeIn 0.4s ease-out' }}>
+    <div className="dashboard-content" style={{ animation: 'fadeIn 0.4s ease-out' }}>
+      
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+        <button 
+          onClick={() => setActiveTab('participant')}
+          style={{ flex: 1, padding: '1rem', background: activeTab === 'participant' ? 'rgba(var(--rgb-primary), 0.2)' : 'rgba(0,0,0,0.3)', border: activeTab === 'participant' ? '1px solid var(--color-primary)' : '1px solid rgba(255,255,255,0.1)', color: activeTab === 'participant' ? '#fff' : '#94a3b8', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.1rem', transition: 'all 0.2s' }}
+        >
+          👤 Participant Analytics
+        </button>
+        <button 
+          onClick={() => setActiveTab('cohort')}
+          style={{ flex: 1, padding: '1rem', background: activeTab === 'cohort' ? 'rgba(var(--rgb-secondary), 0.2)' : 'rgba(0,0,0,0.3)', border: activeTab === 'cohort' ? '1px solid var(--color-secondary)' : '1px solid rgba(255,255,255,0.1)', color: activeTab === 'cohort' ? '#fff' : '#94a3b8', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.1rem', transition: 'all 0.2s' }}
+        >
+          🧬 Research Cohort Analysis
+        </button>
+      </div>
+
+      {activeTab === 'participant' ? (
+        <>
             <div className="intro-card" style={{ padding: '2rem', marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', alignItems: 'stretch' }}>
               <div>
                 <h1 style={{ fontSize: '2.25rem', margin: 0 }}>Cognitive Performance Analytics</h1>
@@ -649,7 +686,88 @@ export default function Dashboard({
                 )}
               </div>
             </div>
+        </>
+      ) : (
+        <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
+          <div className="intro-card" style={{ padding: '2rem', marginBottom: '2rem' }}>
+            <h1 style={{ fontSize: '2.25rem', margin: '0 0 1rem 0' }}>Research Cohort Analytics</h1>
+            <p style={{ color: '#94a3b8' }}>Aggregated system data for Chapter 3 methodology reporting.</p>
           </div>
+          
+          {cohortLoading ? (
+            <div style={{ textAlign: 'center', color: '#94a3b8', padding: '3rem' }}>Loading cohort metrics...</div>
+          ) : cohortData ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
+                <div className="game-card">
+                  <div style={{ fontSize: '0.85rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Total Participants</div>
+                  <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--color-primary)' }}>{cohortData.total_participants}</div>
+                </div>
+                <div className="game-card">
+                  <div style={{ fontSize: '0.85rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Pre-Tests Completed</div>
+                  <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#f59e0b' }}>{cohortData.pre_test_count}</div>
+                </div>
+                <div className="game-card">
+                  <div style={{ fontSize: '0.85rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Post-Tests Completed</div>
+                  <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#4ade80' }}>{cohortData.post_test_count}</div>
+                </div>
+              </div>
+              
+              <div className="game-card">
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  📈 Overall System Effectiveness (Pre vs Post)
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
+                    <strong style={{ color: '#94a3b8' }}>Cognitive Domain</strong>
+                    <strong style={{ color: '#94a3b8' }}>Baseline (Pre)</strong>
+                    <strong style={{ color: '#94a3b8' }}>Post-Intervention</strong>
+                    <strong style={{ color: '#94a3b8' }}>Delta</strong>
+                  </div>
+                  {[
+                    { key: 'sv', label: 'Spatial-Visual Memory', color: '#4ade80' },
+                    { key: 'lm', label: 'Logical-Mathematical', color: '#f59e0b' },
+                    { key: 'at', label: 'Reflexes & Focus', color: 'var(--color-primary)' },
+                    { key: 'ex', label: 'Executive Strategy', color: 'var(--color-secondary)' },
+                    { key: 'overall', label: 'Overall Cognitive Index', color: '#ffffff' }
+                  ].map(d => {
+                    const pre = cohortData.avg_pre_scores[d.key] || 0;
+                    const post = cohortData.avg_post_scores[d.key] || 0;
+                    const delta = (post - pre).toFixed(2);
+                    const isPositive = delta > 0;
+                    return (
+                      <div key={d.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ width: '150px', color: d.color, fontWeight: d.key === 'overall' ? 'bold' : 'normal' }}>{d.label}</span>
+                        <span style={{ width: '80px', textAlign: 'center' }}>{pre}%</span>
+                        <span style={{ width: '80px', textAlign: 'center' }}>{post}%</span>
+                        <span style={{ width: '80px', textAlign: 'right', fontWeight: 'bold', color: isPositive ? '#4ade80' : (delta < 0 ? '#ef4444' : '#94a3b8') }}>
+                          {isPositive ? '+' : ''}{delta}%
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
 
+              <div className="game-card">
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  ♿ PWD Cohort Distribution
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                  {Object.entries(cohortData.pwd_distribution).map(([status, count]) => (
+                    <div key={status} style={{ background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                      <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.5rem' }}>{status}</div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#fff' }}>{count}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', color: '#ef4444' }}>Failed to load cohort data.</div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

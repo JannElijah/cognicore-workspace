@@ -380,5 +380,61 @@ export const COGNITIVE_QUESTIONS = [
       { key: 'C', text: '5 days' },
       { key: 'D', text: '8 days' }
     ]
+  },
+  {
+    id: 'q13',
+    domain: 'spatial_visual_memory',
+    difficulty: 4,
+    title: 'Spatial-Visual Memory: Architect Blueprint (4/4)',
+    text: 'You are an architect reviewing a building blueprint. The lobby is on the ground floor facing South. The elevator bank is strictly on the North wall of the lobby. To the immediate East of the elevator bank is the stairwell. If you walk into the lobby from the South entrance and walk straight to the elevator, what direction is the stairwell relative to you?',
+    visual: <div style={{width:'100%', height:'120px', background:'rgba(74, 222, 128, 0.1)', border:'1px solid #4ade80', borderRadius:'8px', display:'flex', alignItems:'center', justifyContent:'center'}}><span style={{color:'#4ade80', fontSize:'1.2rem'}}>N ▲ | E ▶ | S ▼ | W ◀</span></div>,
+    options: [
+      { key: 'A', text: 'On your left (West)' },
+      { key: 'B', text: 'On your right (East)' },
+      { key: 'C', text: 'Directly behind you (South)' },
+      { key: 'D', text: 'Straight ahead (North)' }
+    ]
+  },
+  {
+    id: 'q14',
+    domain: 'logical_mathematical',
+    difficulty: 4,
+    title: 'Logical-Mathematical: Algorithm Efficiency (4/4)',
+    text: 'A sorting algorithm takes 5 seconds to sort 100 items. Its time complexity is O(N^2), meaning if the number of items doubles, the time quadruples. How long will it take to sort 400 items?',
+    visual: <div style={{textAlign:'center', background:'rgba(245, 158, 11, 0.1)', padding:'20px', borderRadius:'8px', border:'1px solid #f59e0b', color:'#f59e0b'}}><strong>O(N²)</strong><br/>100 items = 5s<br/>400 items = ?</div>,
+    options: [
+      { key: 'A', text: '20 seconds' },
+      { key: 'B', text: '40 seconds' },
+      { key: 'C', text: '80 seconds' },
+      { key: 'D', text: '160 seconds' }
+    ]
+  },
+  {
+    id: 'q15',
+    domain: 'reflexes_and_focus',
+    difficulty: 4,
+    title: 'Reflexes & Focus: Flight Simulator (4/4)',
+    text: 'You are a pilot in a flight simulator. A sudden wind shear warning (LOUD BEEP + RED FLASH) occurs. Standard procedure is to pitch UP. However, a secondary engine warning (BLUE LIGHT) appears simultaneously, which overrides standard procedure and requires you to pitch DOWN. Both happen at the exact same time. What do you do?',
+    visual: <div style={{display:'flex', justifyContent:'space-around', background:'#1e3a8a', padding:'15px', borderRadius:'8px', border:'2px solid #3b82f6', color:'#fff'}}><span>🔴 WIND SHEAR</span> <span>+</span> <span>🔵 ENGINE WARN</span></div>,
+    options: [
+      { key: 'A', text: 'Pitch UP' },
+      { key: 'B', text: 'Pitch DOWN' },
+      { key: 'C', text: 'Maintain current pitch' },
+      { key: 'D', text: 'Eject' }
+    ]
+  },
+  {
+    id: 'q16',
+    domain: 'executive_strategy',
+    difficulty: 4,
+    title: 'Executive Strategy: Kitchen Chaos (4/4)',
+    text: 'You are the head chef. A VIP orders a soufflé (takes 45 mins). Table 2 orders a steak (takes 15 mins). Table 3 orders a salad (takes 5 mins). All dishes must be served hot and fresh exactly 60 minutes from now. When should you start preparing the steak?',
+    visual: <div style={{display:'flex', flexDirection:'column', gap:'5px', background:'rgba(192, 132, 252, 0.1)', padding:'15px', borderRadius:'8px', border:'1px solid #c084fc', color:'#c084fc'}}><span>⏱️ T-minus 60 mins to serve ALL</span><span>Soufflé: 45m | Steak: 15m | Salad: 5m</span></div>,
+    options: [
+      { key: 'A', text: 'Immediately (0 mins in)' },
+      { key: 'B', text: '15 minutes from now' },
+      { key: 'C', text: '30 minutes from now' },
+      { key: 'D', text: '45 minutes from now' }
+    ]
   }
 ];

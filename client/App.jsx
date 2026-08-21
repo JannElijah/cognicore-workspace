@@ -319,7 +319,7 @@ export default function App() {
     }
   }, [researchMode]);
 
-  const handleCheckUserStatus = async (username, course = null, age = null, gender = null) => {
+  const handleCheckUserStatus = async (username, course = null, age = null, gender = null, pwdStatus = null) => {
     if (!username || !username.trim()) {
       setAssessmentError("Please enter a valid username.");
       return;
@@ -340,7 +340,7 @@ export default function App() {
           const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ 
               email, 
               password,
-              options: { data: { username: trimmedName, course, age, gender } }
+              options: { data: { username: trimmedName, course, age, gender, pwd_status: pwdStatus } }
           });
           if (signUpError) throw new Error(signUpError.message);
           authData = signUpData;

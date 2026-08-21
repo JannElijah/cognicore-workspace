@@ -56,6 +56,7 @@ def token_required(f):
                 except:
                     age = None
             gender = meta.get('gender')
+            pwd_status = meta.get('pwd_status')
             
             if user_record:
                 # Update existing user demographics if they are empty
@@ -69,6 +70,9 @@ def token_required(f):
                 if gender and not user_record.gender:
                     user_record.gender = gender
                     updated = True
+                if pwd_status and not user_record.pwd_status:
+                    user_record.pwd_status = pwd_status
+                    updated = True
                 if updated:
                     db.session.commit()
                 current_user_id = user_record.id
@@ -79,6 +83,7 @@ def token_required(f):
                     if course and not existing_user.course: existing_user.course = course
                     if age and not existing_user.age: existing_user.age = age
                     if gender and not existing_user.gender: existing_user.gender = gender
+                    if pwd_status and not existing_user.pwd_status: existing_user.pwd_status = pwd_status
                     db.session.commit()
                     current_user_id = existing_user.id
                 else:
@@ -87,7 +92,8 @@ def token_required(f):
                         supabase_uid=supabase_uid,
                         course=course,
                         age=age,
-                        gender=gender
+                        gender=gender,
+                        pwd_status=pwd_status
                     )
                     db.session.add(new_user)
                     db.session.commit()

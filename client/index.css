@@ -90,7 +90,13 @@
 }
 
 html {
-  font-size: 18px; /* ENLARGED FONT SIZE for overall readability */
+  font-size: 20px; /* ENLARGED FONT SIZE for overall readability */
+  background-color: var(--bg-dark); /* PREVENT WHITE FLASHES */
+}
+
+#root {
+  background-color: var(--bg-dark); /* PREVENT WHITE FLASHES */
+  min-height: 100vh;
 }
 
 body {
@@ -184,8 +190,8 @@ body {
 /* Main Layout */
 .portal-main {
   flex: 1;
-  padding: 1rem 1rem; /* MINIMIZED WHITE SPACE */
-  max-width: 1200px;
+  padding: 0.5rem 0.5rem; /* MINIMIZED WHITE SPACE */
+  max-width: 1400px; /* INCREASED MAX WIDTH */
   margin: 0 auto;
   width: 100%;
 }
@@ -197,9 +203,9 @@ body {
   backdrop-filter: blur(16px);
   border: none !important;
   border-radius: 16px;
-  padding: 1.5rem; /* MINIMIZED WHITE SPACE */
+  padding: 1.25rem; /* MINIMIZED WHITE SPACE */
   text-align: center;
-  margin-bottom: 2rem; /* MINIMIZED WHITE SPACE */
+  margin-bottom: 1.25rem; /* MINIMIZED WHITE SPACE */
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
 }
 
@@ -280,7 +286,7 @@ body.dyslexia-font, body.dyslexia-font * {
   backdrop-filter: blur(20px);
   border: none !important;
   border-radius: 16px;
-  padding: 2.5rem;
+  padding: 1.5rem; /* MINIMIZED WHITE SPACE */
   display: flex;
   flex-direction: column;
   align-items: flex-start;
