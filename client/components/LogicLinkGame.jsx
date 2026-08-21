@@ -209,7 +209,7 @@ export default function LogicLinkGame({ username = 'default_player', apiUrl = AP
             justifyContent: 'center',
             width: '100%',
             maxWidth: '800px',
-            minHeight: '600px',
+            minHeight: 'auto',
             height: 'auto',
             background: 'linear-gradient(135deg, #09090b 0%, #1e1b4b 100%)',
             color: '#f8fafc',

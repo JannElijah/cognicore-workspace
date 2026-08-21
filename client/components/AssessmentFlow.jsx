@@ -143,7 +143,7 @@ export default function AssessmentFlow({
             </div>
           )}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="eval-inputs-grid" style={{ gap: '1rem' }}>
             {currentQ.options.map((opt) => (
               <button 
                 key={opt.key} 

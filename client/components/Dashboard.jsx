@@ -115,7 +115,6 @@ export default function Dashboard({
                 justifyContent: 'space-between', 
                 alignItems: 'center',
                 gap: '1rem',
-                minWidth: '260px',
                 boxSizing: 'border-box'
               }}>
                 <div style={{ flex: 1 }}>
@@ -160,7 +159,6 @@ export default function Dashboard({
                 justifyContent: 'space-between', 
                 alignItems: 'center',
                 gap: '1rem',
-                minWidth: '260px',
                 boxSizing: 'border-box'
               }}>
                 <div style={{ flex: 1 }}>
@@ -205,7 +203,6 @@ export default function Dashboard({
                 justifyContent: 'space-between', 
                 alignItems: 'center',
                 gap: '1rem',
-                minWidth: '260px',
                 boxSizing: 'border-box'
               }}>
                 <div style={{ flex: 1 }}>
@@ -250,7 +247,6 @@ export default function Dashboard({
                 justifyContent: 'space-between', 
                 alignItems: 'center',
                 gap: '1rem',
-                minWidth: '260px',
                 boxSizing: 'border-box'
               }}>
                 <div style={{ flex: 1 }}>

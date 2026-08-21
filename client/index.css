@@ -505,7 +505,7 @@ svg circle:hover {
   }
 
   .intro-card {
-    padding: 1.5rem;
+    padding: 1.25rem;
     margin-bottom: 2rem;
   }
 
@@ -527,8 +527,25 @@ svg circle:hover {
     gap: 1.5rem;
   }
 
-  .game-card {
-    padding: 1.75rem;
+  .game-card, .pause-card {
+    padding: 1.25rem !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  /* Override fixed widths */
+  input[type="text"] {
+    width: 100% !important;
+  }
+
+  /* Strict modal sizing */
+  div[style*="800px"], 
+  div[style*="900px"], 
+  div[style*="1000px"],
+  div[style*="maxWidth"] {
+    width: 95% !important;
+    max-width: 100% !important;
   }
 
   .dashboard-row-grid {
@@ -558,6 +575,7 @@ svg circle:hover {
   div[style*="canvasWrapper"] {
     border-radius: 8px !important;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+    min-height: auto !important; /* override rigid heights */
   }
 }
 

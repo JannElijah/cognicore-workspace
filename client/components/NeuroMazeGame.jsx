@@ -190,7 +190,7 @@ export default function NeuroMazeGame({ username = 'default_player', apiUrl = AP
             justifyContent: 'center',
             width: '100%',
             maxWidth: '800px',
-            minHeight: '600px',
+            minHeight: 'auto',
             height: 'auto',
             background: 'linear-gradient(135deg, #090b09 0%, #064e3b 100%)',
             color: '#f8fafc',

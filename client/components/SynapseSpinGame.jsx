@@ -190,7 +190,7 @@ export default function SynapseSpinGame({ username = 'default_player', apiUrl = 
             justifyContent: 'center',
             width: '100%',
             maxWidth: '800px',
-            minHeight: '600px',
+            minHeight: 'auto',
             height: 'auto',
             background: 'linear-gradient(135deg, #0a0f1d 0%, #1e1b4b 100%)',
             color: '#f8fafc',

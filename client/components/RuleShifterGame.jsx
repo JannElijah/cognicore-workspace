@@ -158,7 +158,7 @@ export default function RuleShifterGame({
         overlay: {
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center',
-            width: '100%', maxWidth: '800px', minHeight: '600px',
+            width: '100%', maxWidth: '800px', minHeight: 'auto',
             background: 'linear-gradient(135deg, #02020a 0%, #0d071d 50%, #080312 100%)',
             color: '#f8fafc',
             fontFamily: 'system-ui, -apple-system, sans-serif',

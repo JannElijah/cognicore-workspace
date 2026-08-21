@@ -133,7 +133,7 @@ export default function PriorityQueueGame({
         overlay: {
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center',
-            width: '100%', maxWidth: '800px', minHeight: '600px',
+            width: '100%', maxWidth: '800px', minHeight: 'auto',
             background: 'linear-gradient(135deg, #020209 0%, #041208 50%, #020a04 100%)',
             color: '#f8fafc', fontFamily: 'system-ui, -apple-system, sans-serif',
             borderRadius: '12px',

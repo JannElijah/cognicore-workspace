@@ -163,7 +163,7 @@ export default function RouteOptimizerGame({
         overlay: {
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center',
-            width: '100%', maxWidth: '800px', minHeight: '600px',
+            width: '100%', maxWidth: '800px', minHeight: 'auto',
             background: 'linear-gradient(135deg, #020617 0%, #041a0d 50%, #0f172a 100%)',
             color: '#f8fafc',
             fontFamily: 'system-ui, -apple-system, sans-serif',

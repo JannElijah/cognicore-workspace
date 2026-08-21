@@ -212,7 +212,7 @@ export default function SpeedTapGame({ username = 'default_player', apiUrl = API
             justifyContent: 'center',
             width: '100%',
             maxWidth: '800px',
-            minHeight: '600px',
+            minHeight: 'auto',
             height: 'auto',
             background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)',
             color: '#f8fafc',

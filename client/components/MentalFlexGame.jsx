@@ -209,7 +209,7 @@ const handleRestart = () => {
             justifyContent: 'center',
             width: '100%',
             maxWidth: '800px',
-            minHeight: '600px',
+            minHeight: 'auto',
             height: 'auto',
             background: 'linear-gradient(135deg, #09090b 0%, #160f29 100%)',
             color: '#f8fafc',
