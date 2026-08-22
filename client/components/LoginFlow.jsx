@@ -13,12 +13,14 @@ export default function LoginFlow({
   const [age, setAge] = useState('');
   const [gender, setGender] = useState('');
   const [pwdStatus, setPwdStatus] = useState('');
+  const [formError, setFormError] = useState('');
 
   const submitLogin = () => {
+    setFormError('');
     if (!agreed) return;
     if (isAnonymous) {
       if (!course || !age || !gender || !pwdStatus) {
-        alert("Please fill in Course, Age, Gender, and PWD Status for anonymous registration.");
+        setFormError("Please fill in Course, Age, Gender, and PWD Status. You may select 'Prefer not to say'.");
         return;
       }
       const guestId = 'Anon_' + Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -71,8 +73,8 @@ export default function LoginFlow({
             </p>
             <input type="text" placeholder="Course / Program (e.g. BSCS)" value={course} onChange={e=>setCourse(e.target.value)} style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem', fontSize: '0.9rem', outline: 'none', width: '100%', boxSizing: 'border-box' }} />
             <div style={{ display: 'flex', gap: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
-              <input type="number" placeholder="Age" value={age} onChange={e=>setAge(e.target.value)} style={{ flex: 1, minWidth: 0, background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} />
-              <select value={gender} onChange={e=>setGender(e.target.value)} style={{ flex: 1, minWidth: 0, background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}>
+              <input type="number" placeholder="Age" value={age} onChange={e=>setAge(e.target.value)} style={{ flex: 1, width: '100%', minWidth: 0, background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} />
+              <select value={gender} onChange={e=>setGender(e.target.value)} style={{ flex: 1, width: '100%', minWidth: 0, background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}>
                 <option value="" disabled>Select Gender</option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
@@ -105,6 +107,12 @@ export default function LoginFlow({
             <strong>Data Privacy Agreement:</strong> I acknowledge that my performance telemetry and assessment results will be collected and strictly used for academic research purposes only.
           </label>
         </div>
+
+        {formError && (
+          <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#fca5a5', padding: '0.75rem', borderRadius: '8px', fontSize: '0.85rem', textAlign: 'center' }}>
+            ⚠️ {formError}
+          </div>
+        )}
 
         {assessmentError && <div style={{ color: '#f87171', fontSize: '0.85rem', fontWeight: 'bold' }}>⚠️ {assessmentError}</div>}
         

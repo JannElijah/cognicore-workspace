@@ -37,6 +37,9 @@ export default defineConfig({
     port: 5173,
     host: true
   },
+  esbuild: {
+    drop: ['console', 'debugger'],
+  },
   build: {
     chunkSizeWarningLimit: 2000,
     rollupOptions: {
