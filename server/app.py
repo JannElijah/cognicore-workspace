@@ -468,6 +468,19 @@ def index():
 
 @app.route('/metrics', methods=['GET'])
 def get_metrics():
+    import redis
+    import json
+    redis_url = os.environ.get("REDIS_URL", "memory://")
+    redis_client = None
+    if redis_url != "memory://":
+        try:
+            redis_client = redis.from_url(redis_url)
+            cached_metrics = redis_client.get("cognicore:global_metrics")
+            if cached_metrics:
+                return jsonify(json.loads(cached_metrics)), 200
+        except Exception:
+            pass
+
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
@@ -500,12 +513,22 @@ def get_metrics():
                 "total_records": cnt
             }
             
-        return jsonify({
+        response_data = {
             "status": "success",
             "total_sessions": total_sessions,
             "average_score": average_score,
-            "domain_breakdown": domain_breakdown
-        }), 200
+            "domain_breakdown": domain_breakdown,
+            "cached": False
+        }
+        
+        if redis_client:
+            try:
+                # Cache for 5 minutes
+                redis_client.setex("cognicore:global_metrics", 300, json.dumps(response_data))
+            except Exception:
+                pass
+                
+        return jsonify(response_data), 200
         
     except Exception as e:
         app.logger.error(f"Error in get_metrics: {e}")
