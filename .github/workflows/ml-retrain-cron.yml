@@ -1,0 +1,16 @@
+name: Nightly ML Retrain
+
+on:
+  schedule:
+    # Runs at 3:00 AM UTC every day
+    - cron: '0 3 * * *'
+  workflow_dispatch: # Allows you to manually trigger it from the GitHub Actions tab anytime!
+
+jobs:
+  retrain-model:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render Backend Endpoint
+        run: |
+          curl -X POST 'https://cognicore-workspace.onrender.com/api/model/retrain' \
+          -H 'X-Cron-Secret: Basta698!!!!!'

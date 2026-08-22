@@ -78,13 +78,13 @@ export default function Dashboard({
           onClick={() => setActiveTab('participant')}
           style={{ flex: 1, padding: '1rem', background: activeTab === 'participant' ? 'rgba(var(--rgb-primary), 0.2)' : 'rgba(0,0,0,0.3)', border: activeTab === 'participant' ? '1px solid var(--color-primary)' : '1px solid rgba(255,255,255,0.1)', color: activeTab === 'participant' ? '#fff' : '#94a3b8', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.1rem', transition: 'all 0.2s' }}
         >
-          👤 Participant Analytics
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign: "middle", marginRight: "6px"}}><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Participant Analytics
         </button>
         <button 
           onClick={() => setActiveTab('cohort')}
           style={{ flex: 1, padding: '1rem', background: activeTab === 'cohort' ? 'rgba(var(--rgb-secondary), 0.2)' : 'rgba(0,0,0,0.3)', border: activeTab === 'cohort' ? '1px solid var(--color-secondary)' : '1px solid rgba(255,255,255,0.1)', color: activeTab === 'cohort' ? '#fff' : '#94a3b8', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', fontSize: '1.1rem', transition: 'all 0.2s' }}
         >
-          🧬 Research Cohort Analysis
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign: "middle", marginRight: "6px"}}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg> Research Cohort Analysis
         </button>
       </div>
 
@@ -96,7 +96,7 @@ export default function Dashboard({
                 <p style={{ margin: '0.5rem 0 0 0' }}>Real-time analytics collected across validated cognitive tracks. Evaluate skill scores, track multi-session trends, and view personalized reports.</p>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '1rem', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid rgba(255, 255, 255, 0.08)', padding: '0.75rem 1.25rem', borderRadius: '10px', width: 'fit-content', marginTop: '0.25rem' }}>
-                <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 'bold' }}>👤 Participant Selector:</span>
+                <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 'bold' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign: "middle", marginRight: "6px"}}><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Participant Selector:</span>
                 <input 
                   type="text" 
                   value={activeDashboardUser} 
@@ -142,10 +142,10 @@ export default function Dashboard({
             <div style={{ marginBottom: '2rem' }}>
               <h2 className="section-title" style={{ marginTop: 0 }}>Quick Play Training Modules</h2>
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                <button onClick={() => setActiveGame('memory')} className="glass-btn" style={{flex: 1, minWidth: '150px', background: 'rgba(236,72,153,0.15)', border: '1px solid rgba(236,72,153,0.3)', color: '#fbcfe8', fontWeight: 'bold'}}>🧩 Matrix Recall</button>
-                <button onClick={() => setActiveGame('attention')} className="glass-btn" style={{flex: 1, minWidth: '150px', background: 'rgba(234,179,8,0.15)', border: '1px solid rgba(234,179,8,0.3)', color: '#fef08a', fontWeight: 'bold'}}>🎯 Focus Finder</button>
+                <button onClick={() => setActiveGame('memory')} className="glass-btn" style={{flex: 1, minWidth: '150px', background: 'rgba(236,72,153,0.15)', border: '1px solid rgba(236,72,153,0.3)', color: '#fbcfe8', fontWeight: 'bold'}}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign: "middle", marginRight: "6px"}}><path d="M19 12h-2a3 3 0 010-6h2M5 12h2a3 3 0 000-6H5M12 19v-2a3 3 0 00-6 0v2M12 5v2a3 3 0 01-6 0V5"/></svg> Matrix Recall</button>
+                <button onClick={() => setActiveGame('attention')} className="glass-btn" style={{flex: 1, minWidth: '150px', background: 'rgba(234,179,8,0.15)', border: '1px solid rgba(234,179,8,0.3)', color: '#fef08a', fontWeight: 'bold'}}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign: "middle", marginRight: "6px"}}><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="2"/></svg> Focus Finder</button>
                 <button onClick={() => setActiveGame('executive')} className="glass-btn" style={{flex: 1, minWidth: '150px', background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', color: '#a7f3d0', fontWeight: 'bold'}}>⚡ Rule Shifter</button>
-                <button onClick={() => setActiveGame('processing')} className="glass-btn" style={{flex: 1, minWidth: '150px', background: 'rgba(56,189,248,0.15)', border: '1px solid rgba(56,189,248,0.3)', color: '#bae6fd', fontWeight: 'bold'}}>🚀 Speed Tap</button>
+                <button onClick={() => setActiveGame('processing')} className="glass-btn" style={{flex: 1, minWidth: '150px', background: 'rgba(56,189,248,0.15)', border: '1px solid rgba(56,189,248,0.3)', color: '#bae6fd', fontWeight: 'bold'}}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign: "middle", marginRight: "6px"}}><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Speed Tap</button>
               </div>
             </div>
 
@@ -169,7 +169,7 @@ export default function Dashboard({
                     </ul>
                   </div>
                   <div style={{ background: 'rgba(248, 113, 113, 0.1)', border: '1px solid rgba(248, 113, 113, 0.2)', padding: '1rem', borderRadius: '8px' }}>
-                    <h4 style={{ margin: '0 0 0.5rem 0', color: '#f87171', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span>📈</span> Growth Opportunities</h4>
+                    <h4 style={{ margin: '0 0 0.5rem 0', color: '#f87171', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Growth Opportunities</h4>
                     <ul style={{ margin: 0, paddingLeft: '1.25rem', color: '#e2e8f0', fontSize: '0.85rem' }}>
                       {personalizedReport.weaknesses && personalizedReport.weaknesses.map((w, i) => <li key={i}>{w}</li>)}
                     </ul>
@@ -593,10 +593,10 @@ export default function Dashboard({
               {/* Skill Diagnostics & Recommendations */}
               <div className="game-card" style={{ justifyContent: 'space-between', boxSizing: 'border-box' }}>
                 <div>
-                  <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>🔍 Diagnostic Report</h3>
+                  <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign: "middle", marginRight: "8px"}}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Diagnostic Report</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     <div style={{ background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)', padding: '0.75rem', borderRadius: '8px' }}>
-                      <span style={{ fontWeight: 'bold', color: '#22c55e', fontSize: '0.85rem' }}>💪 SKILL STRENGTH:</span>
+                      <span style={{ fontWeight: 'bold', color: '#22c55e', fontSize: '0.85rem' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign: "middle", marginRight: "4px"}}><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> SKILL STRENGTH:</span>
                       <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#e2e8f0' }}>
                         {skills.reflexes_and_focus >= 70 ? 'Rapid Visuomotor Attentional Focus. High reflexive reaction times and rapid target selection.' : 'Standard motor control latency. Stabilizing baseline performance.'}
                       </p>
@@ -611,7 +611,7 @@ export default function Dashboard({
                 </div>
 
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem', marginTop: '1rem' }}>
-                  <div style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>💡 Personalized Adviser Recommendation</div>
+                  <div style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign: "middle", marginRight: "6px"}}><path d="M9 21h6"/><path d="M10 21v-2a4 4 0 01-4-4 7 7 0 1112 0 4 4 0 01-4 4v2"/></svg> Personalized Adviser Recommendation</div>
                   <div style={{ fontWeight: '700', color: '#c084fc', marginTop: '0.25rem', fontSize: '0.95rem' }}>
                     <button onClick={() => setActiveGame && setActiveGame(prescribedGame)} style={{ width: '100%', padding: '0.75rem', marginTop: '0.5rem', background: 'linear-gradient(90deg, var(--color-secondary), #ec4899)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
                       ▶ Start Recommended Training: {rec.game}
@@ -755,7 +755,7 @@ export default function Dashboard({
               
               <div className="game-card">
                 <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  📈 Overall System Effectiveness (Pre vs Post)
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign: "middle", marginRight: "6px"}}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Overall System Effectiveness (Pre vs Post)
                 </h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>

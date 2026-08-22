@@ -276,8 +276,8 @@ body.dyslexia-font, body.dyslexia-font * {
 /* Game Card Grid */
 .game-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
 }
 
 .game-card {
@@ -286,7 +286,7 @@ body.dyslexia-font, body.dyslexia-font * {
   backdrop-filter: blur(20px);
   border: none !important;
   border-radius: 16px;
-  padding: 1.5rem; /* MINIMIZED WHITE SPACE */
+  padding: 1rem;
   display: flex;
   flex-direction: column;
   align-items: flex-start;

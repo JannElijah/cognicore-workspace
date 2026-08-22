@@ -1339,7 +1339,7 @@ export default function App() {
         if (completed.length > 0) {
           completed.forEach(g => {
             const cleanDomain = (DOMAIN_LABELS[g.domain] || g.domain.replace(/_/g, ' ')).toUpperCase();
-            triggerMilestoneToast(`🏆 Goal Achieved in ${cleanDomain}: Reached ${g.metric_type} target of ${g.target_value}!`);
+            triggerMilestoneToast(`Goal Achieved in ${cleanDomain}: Reached ${g.metric_type} target of ${g.target_value}!`);
           });
         }
       } else {
@@ -2062,7 +2062,7 @@ export default function App() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.8rem', fontWeight: 'bold' }}>
             {ddaAdvisorMessage.changes.map((ch, idx) => (
               <div key={idx} style={{ color: '#4ade80', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <span>🔧</span>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
                 <span>{ch}</span>
               </div>
             ))}
@@ -2115,7 +2115,7 @@ export default function App() {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <span style={{ fontSize: '1.25rem' }}>🎛️</span>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 0 4px rgba(var(--rgb-secondary),0.7))' }}><line x1="4" y1="6" x2="20" y2="6" stroke="#c084fc" strokeWidth="2" strokeLinecap="round"/><circle cx="8" cy="6" r="2.5" fill="#c084fc"/><line x1="4" y1="12" x2="20" y2="12" stroke="#c084fc" strokeWidth="2" strokeLinecap="round"/><circle cx="16" cy="12" r="2.5" fill="#c084fc"/><line x1="4" y1="18" x2="20" y2="18" stroke="#c084fc" strokeWidth="2" strokeLinecap="round"/><circle cx="10" cy="18" r="2.5" fill="#c084fc"/></svg>
                 <strong style={{ fontSize: '1rem', color: '#c084fc', letterSpacing: '0.05em' }}>BACKGROUND AUDIO SETTINGS</strong>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '3px', height: '12px' }}>
@@ -2442,13 +2442,13 @@ export default function App() {
                 <h2 className="section-title" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 5px rgba(192,132,252,0.7))',verticalAlign:'middle',marginRight:'6px',flexShrink:0}} xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="7" rx="7" ry="5" stroke="#c084fc" strokeWidth="2"/><path d="M5 10c0 3 3 6 7 6s7-3 7-6" stroke="#c084fc" strokeWidth="2" strokeLinecap="round"/><line x1="9" y1="13" x2="9" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/><line x1="15" y1="13" x2="15" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/><line x1="7" y1="19" x2="17" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/></svg> Daily Personalized Workout <span style={{ fontSize: '1rem', color: 'var(--color-secondary)', fontWeight: 'normal', marginLeft: '0.5rem' }}>— Target: {DOMAINS_LIST.find(d => d.id === weakestDomain).title}</span>
                 </h2>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
                   {DOMAINS_LIST.find(d => d.id === weakestDomain).games.slice(0, 3).map((game) => (
                     <HoverTooltip key={game.id} text="This game targets your weakest domain" content="This game targets your weakest domain" delay={200}>
-                    <div className="game-card glass-panel" style={{ cursor: 'pointer', position: 'relative', overflow: 'hidden' }} onClick={() => { audioEngine.playClick(); launchGame(game.id); }} onMouseEnter={() => audioEngine.playHover()}>
+                    <div className="game-card glass-panel" style={{ cursor: 'pointer', position: 'relative', overflow: 'hidden', padding: '1rem' }} onClick={() => { audioEngine.playClick(); launchGame(game.id); }} onMouseEnter={() => audioEngine.playHover()}>
                       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '4px', background: 'linear-gradient(90deg, var(--color-secondary), var(--color-primary))' }}></div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                        <div style={{ fontSize: '2.5rem', width: '60px', height: '60px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <div style={{ fontSize: '2rem', width: '50px', height: '50px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           {game.icon}
                         </div>
                         <div>
@@ -2604,7 +2604,7 @@ export default function App() {
 
                       {/* Hypothesis & Expose Diffs */}
                       <div style={{ padding: '1rem', background: 'rgba(var(--rgb-secondary),0.05)', border: '1px solid rgba(var(--rgb-secondary),0.15)', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                        <div style={{ fontSize: '0.85rem', color: '#c084fc', fontWeight: 'bold' }}>📊 Thesis Hypothesis Testing Outcome</div>
+                        <div style={{ fontSize: '0.85rem', color: '#c084fc', fontWeight: 'bold' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{marginRight: "6px", verticalAlign: "middle"}}><path d="M4 20h16M8 16v-6M12 16V6M16 16v-3"/></svg> Thesis Hypothesis Testing Outcome</div>
                         <div style={{ fontSize: '0.95rem', color: '#ffffff', lineHeight: '1.5' }}>
                           {evaluationReport.hypothesis_result}
                         </div>
@@ -2689,7 +2689,7 @@ export default function App() {
 
                       {/* Hypothesis Verdict */}
                       <div style={{ padding: '1rem', background: 'rgba(var(--rgb-secondary),0.05)', border: '1px solid rgba(var(--rgb-secondary),0.15)', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                        <div style={{ fontSize: '0.85rem', color: '#c084fc', fontWeight: 'bold' }}>📊 Thesis Hypothesis Testing Outcome (Aggregate)</div>
+                        <div style={{ fontSize: '0.85rem', color: '#c084fc', fontWeight: 'bold' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{marginRight: "6px", verticalAlign: "middle"}}><path d="M4 20h16M8 16v-6M12 16V6M16 16v-3"/></svg> Thesis Hypothesis Testing Outcome (Aggregate)</div>
                         <div style={{ fontSize: '0.95rem', color: '#ffffff', lineHeight: '1.5' }}>
                           {cohortAnalytics.hypothesis_verdict}
                         </div>
@@ -2743,7 +2743,7 @@ export default function App() {
                               opacity: retrainLoading ? 0.7 : 1
                             }}
                           >
-                            {retrainLoading ? '⚙️ Retraining Live Models...' : '🧠 Trigger Live ML Retraining Loop'}
+                            {retrainLoading ? 'Retraining Live Models...' : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9.5 3a4.5 4.5 0 100 9h5a4.5 4.5 0 100-9h-5zm0 9a4.5 4.5 0 100 9h5a4.5 4.5 0 100-9h-5z"/></svg> Trigger Live ML Retraining Loop'}
                           </button>
                         </div>
                       </div>
@@ -2816,9 +2816,9 @@ export default function App() {
                         }}
                       >
                         <option value="reflexes_and_focus">⚡ Reflexes & Focus</option>
-                        <option value="spatial_visual_memory">🧠 Memory & Recall</option>
-                        <option value="logical_mathematical">🔢 Logical Reasoning</option>
-                        <option value="executive_strategy">🧭 Executive Strategy</option>
+                        <option value="spatial_visual_memory">Memory & Recall</option>
+                        <option value="logical_mathematical">Logical Reasoning</option>
+                        <option value="executive_strategy">Executive Strategy</option>
                       </select>
                     </div>
 
@@ -2920,7 +2920,7 @@ export default function App() {
                   ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
                       {goals.filter(g => !g.is_completed).map(goal => {
-                        const domainObj = DOMAIN_INFO[goal.domain] || { title: goal.domain, color: 'var(--color-secondary)', icon: '🎯' };
+                        const domainObj = DOMAIN_INFO[goal.domain] || { title: goal.domain, color: 'var(--color-secondary)', icon: <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'><circle cx='12' cy='12' r='9'/><circle cx='12' cy='12' r='5'/><circle cx='12' cy='12' r='2'/></svg> };
                         const progress = getGoalProgress(goal);
                         const displayProgress = Math.min(100, Math.round(progress * 100));
                         
@@ -3009,7 +3009,7 @@ export default function App() {
                   ) : (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
                       {goals.filter(g => g.is_completed).map(goal => {
-                        const domainObj = DOMAIN_INFO[goal.domain] || { title: goal.domain, color: 'var(--color-secondary)', icon: '🏆' };
+                        const domainObj = DOMAIN_INFO[goal.domain] || { title: goal.domain, color: 'var(--color-secondary)', icon: <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'><path d='M5 9v1a7 7 0 0014 0V9M5 9h14M8 21h8M12 16v5'/></svg> };
                         
                         // Dynamic badge name/class based on domain and metric
                         let badgeTitle = "Novice Challenger";
@@ -3037,7 +3037,7 @@ export default function App() {
                               position: 'relative'
                             }}
                           >
-                            <span style={{ fontSize: '1.8rem', filter: 'drop-shadow(0 0 5px var(--color-secondary))' }}>🏅</span>
+                            <span style={{ fontSize: '1.8rem', filter: 'drop-shadow(0 0 5px var(--color-secondary))' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 9v1a7 7 0 0014 0V9M5 9h14M8 21h8M12 16v5"/></svg></span>
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
                               <span style={{ fontSize: '0.85rem', fontWeight: '800', color: '#ffffff' }}>
                                 {badgeTitle}
@@ -3169,7 +3169,7 @@ export default function App() {
                               transition: 'all 0.2s'
                             }}
                           >
-                            {game.inProgress ? 'In Progress 🚧' : isPrescribed ? 'Launch Active Game' : 'Launch Game'}
+                            {game.inProgress ? 'In Progress ' : isPrescribed ? 'Launch Active Game' : 'Launch Game'}
                           </button>
                         </div>
                         </HoverTooltip>
