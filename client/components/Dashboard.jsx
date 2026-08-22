@@ -46,7 +46,7 @@ export default function Dashboard({
   domainAccData, domainAccOptions,
   perGameScoreData, perGameScoreOptions,
   scatterData, scatterOptions,
-  skills, domainDeltas, rec
+  skills, domainDeltas, rec, personalizedReport
 }) {
   const [activeTab, setActiveTab] = useState('participant');
   const [cohortData, setCohortData] = useState(null);
@@ -137,6 +137,46 @@ export default function Dashboard({
                 </button>
               </div>
             </div>
+
+            {/* Quick Play Shortcuts */}
+            <div style={{ marginBottom: '2rem' }}>
+              <h2 className="section-title" style={{ marginTop: 0 }}>Quick Play Training Modules</h2>
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                <button onClick={() => setActiveGame('memory')} className="glass-btn" style={{flex: 1, minWidth: '150px', background: 'rgba(236,72,153,0.15)', border: '1px solid rgba(236,72,153,0.3)', color: '#fbcfe8', fontWeight: 'bold'}}>🧩 Matrix Recall</button>
+                <button onClick={() => setActiveGame('attention')} className="glass-btn" style={{flex: 1, minWidth: '150px', background: 'rgba(234,179,8,0.15)', border: '1px solid rgba(234,179,8,0.3)', color: '#fef08a', fontWeight: 'bold'}}>🎯 Focus Finder</button>
+                <button onClick={() => setActiveGame('executive')} className="glass-btn" style={{flex: 1, minWidth: '150px', background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', color: '#a7f3d0', fontWeight: 'bold'}}>⚡ Rule Shifter</button>
+                <button onClick={() => setActiveGame('processing')} className="glass-btn" style={{flex: 1, minWidth: '150px', background: 'rgba(56,189,248,0.15)', border: '1px solid rgba(56,189,248,0.3)', color: '#bae6fd', fontWeight: 'bold'}}>🚀 Speed Tap</button>
+              </div>
+            </div>
+
+            {/* Permanent Cognitive Profile */}
+            {personalizedReport && (
+              <div className="game-card" style={{ marginBottom: '3rem', padding: '1.5rem', display: 'flex', gap: '2rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <div style={{ flex: '1', minWidth: '200px' }}>
+                  <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--color-primary)' }}>Your Cognitive Archetype</h3>
+                  <div style={{ fontSize: '2rem', fontWeight: '900', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '2px', textShadow: '0 0 10px rgba(255,255,255,0.3)' }}>
+                    {personalizedReport.archetype_name}
+                  </div>
+                  <p style={{ fontSize: '0.9rem', color: '#cbd5e1', marginTop: '0.5rem', lineHeight: '1.5' }}>
+                    {personalizedReport.summary}
+                  </p>
+                </div>
+                <div style={{ flex: '1', minWidth: '250px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div style={{ background: 'rgba(74, 222, 128, 0.1)', border: '1px solid rgba(74, 222, 128, 0.2)', padding: '1rem', borderRadius: '8px' }}>
+                    <h4 style={{ margin: '0 0 0.5rem 0', color: '#4ade80', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span>⭐</span> Core Strengths</h4>
+                    <ul style={{ margin: 0, paddingLeft: '1.25rem', color: '#e2e8f0', fontSize: '0.85rem' }}>
+                      {personalizedReport.strengths && personalizedReport.strengths.map((s, i) => <li key={i}>{s}</li>)}
+                    </ul>
+                  </div>
+                  <div style={{ background: 'rgba(248, 113, 113, 0.1)', border: '1px solid rgba(248, 113, 113, 0.2)', padding: '1rem', borderRadius: '8px' }}>
+                    <h4 style={{ margin: '0 0 0.5rem 0', color: '#f87171', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span>📈</span> Growth Opportunities</h4>
+                    <ul style={{ margin: 0, paddingLeft: '1.25rem', color: '#e2e8f0', fontSize: '0.85rem' }}>
+                      {personalizedReport.weaknesses && personalizedReport.weaknesses.map((w, i) => <li key={i}>{w}</li>)}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Cognitive Skills Score Row */}
             <h2 className="section-title">Cognitive Domain Profiling <span title="Scoring system based on standard clinical normative baselines for reaction time and accuracy." style={{fontSize: '1rem', cursor: 'help'}}>ⓘ</span></h2>

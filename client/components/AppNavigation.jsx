@@ -146,7 +146,11 @@ const AppNavigation = memo(function AppNavigation({
               <button 
                 className="dashboard-toggle-btn" 
                 title="Detailed History"
-                onClick={() => setShowDashboard(!showDashboard)}
+                onClick={() => {
+                  setShowDashboard(true);
+                  setActiveGame(null);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
                 style={{
                   background: showDashboard ? 'rgba(255, 255, 255, 0.05)' : 'linear-gradient(to right, var(--color-primary), var(--color-secondary))',
                   color: '#ffffff',
@@ -174,6 +178,36 @@ const AppNavigation = memo(function AppNavigation({
                       <rect x="17" y="3" width="4" height="18" rx="1" fill="var(--color-primary)" fillOpacity="0.7"/>
                     </svg>
                 }
+              </button>
+
+              <button 
+                className="dashboard-toggle-btn" 
+                title="Sign Out"
+                onClick={() => {
+                  localStorage.clear();
+                  window.location.reload();
+                }}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  color: '#ef4444',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  padding: '0.5rem',
+                  borderRadius: '8px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '38px',
+                  height: '38px',
+                  marginLeft: '0.5rem'
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 0 5px rgba(239,68,68,0.7))' }} xmlns="http://www.w3.org/2000/svg">
+                  <path d="M16 17l5-5-5-5M21 12H9" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="#ef4444" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
               </button>
             </div>
           )}

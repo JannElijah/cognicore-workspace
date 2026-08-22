@@ -2116,7 +2116,7 @@ export default function App() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <span style={{ fontSize: '1.25rem' }}>🎛️</span>
-                <strong style={{ fontSize: '1rem', color: '#c084fc', letterSpacing: '0.05em' }}>AMBIENT SOUNDSCAPE TUNER</strong>
+                <strong style={{ fontSize: '1rem', color: '#c084fc', letterSpacing: '0.05em' }}>BACKGROUND AUDIO SETTINGS</strong>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '3px', height: '12px' }}>
                 {[1, 2, 3, 4, 5].map(i => (
@@ -2134,7 +2134,7 @@ export default function App() {
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', alignItems: 'center' }}>
               <div style={{ flex: '1', minWidth: '240px', display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-start' }}>
-                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Waveform Shape</span>
+                <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Sound Type</span>
                 <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
                   {['sine', 'triangle', 'square'].map(type => (
                     <button
@@ -2166,7 +2166,7 @@ export default function App() {
 
               <div style={{ flex: '2', minWidth: '280px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                  <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Tempo Multiplier</span>
+                  <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Music Speed</span>
                   <span style={{ fontSize: '0.9rem', color: 'var(--color-primary)', fontWeight: 'bold' }}>{bpmMultiplier.toFixed(2)}x</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -2198,7 +2198,7 @@ export default function App() {
 
               <div style={{ flex: '2', minWidth: '280px', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                  <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>DDA Smoothing Damping</span>
+                  <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Difficulty Adjustment Speed</span>
                   <span style={{ fontSize: '0.9rem', color: 'var(--color-secondary)', fontWeight: 'bold' }}>
                     {smoothingAlpha === 1.0 ? 'Instant (1.0)' : smoothingAlpha <= 0.3 ? `Heavy Damping (${smoothingAlpha.toFixed(2)})` : `EMA Filter (${smoothingAlpha.toFixed(2)})`}
                   </span>
@@ -2394,6 +2394,7 @@ export default function App() {
             skills={skills}
             domainDeltas={domainDeltas}
             rec={rec}
+            personalizedReport={personalizedReport}
           />
         ) : portalView === 'knowledge' ? (
           <KnowledgeBase />
@@ -2465,6 +2466,296 @@ export default function App() {
               </div>
             )}
 
+            {/* Quasi-Experimental Analytics Banner */}
+            {preTestScores && (
+              <div className="game-card" style={{
+                padding: '2rem',
+                marginBottom: '3rem',
+                background: 'rgba(24, 24, 27, 0.75)',
+                backdropFilter: 'blur(16px)',
+                border: '1.5px dashed rgba(var(--rgb-secondary), 0.4)',
+                borderRadius: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1.5rem',
+                animation: 'fadeIn 0.3s ease-out'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '1rem', gap: '1rem' }}>
+                  <div>
+                    <h3 style={{ fontSize: '1.25rem', margin: 0, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',filter:'drop-shadow(0 0 4px rgba(var(--rgb-secondary),0.7))'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="var(--color-secondary)" strokeWidth="1.5"/><polygon points="16,8 10,10 8,16 14,14" fill="var(--color-secondary)"/><circle cx="12" cy="12" r="1.5" fill="#1e1b4b"/></svg></span> Your Training Progress
+                    </h3>
+                    <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
+                      Subject ID: <strong>{currentUser}</strong> | Mapped Weakest Domain: <strong style={{ color: 'var(--color-primary)' }}>{weakestDomain?.replace(/_/g, ' ').toUpperCase()}</strong>
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.75rem' }}>
+                    {assessmentStage === 'completed' ? (
+                      <span style={{ background: 'rgba(74, 222, 128, 0.1)', color: '#4ade80', border: '1px solid #4ade80', padding: '0.35rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                        ✓ Evaluation Finalized
+                      </span>
+                    ) : hasPlayedPrescribed ? (
+                      <button
+                        onClick={() => {
+                          setAssessmentAnswers({
+                            q1: '', q2: '', q3: '', q4: '',
+                            q5: '', q6: '', q7: '', q8: '',
+                            q9: '', q10: '', q11: '', q12: ''
+                          });
+                          setAssessmentStage('post-test');
+                        }}
+                        style={{
+                          background: 'linear-gradient(to right, #4ade80, var(--color-primary))',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '8px',
+                          padding: '0.5rem 1.25rem',
+                          fontSize: '0.85rem',
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          boxShadow: '0 4px 10px rgba(74, 222, 128, 0.2)'
+                        }}
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'5px'}} xmlns="http://www.w3.org/2000/svg"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> Take Post-Test Questionnaire
+                      </button>
+                    ) : (
+                      <span style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: '1px solid #f59e0b', padding: '0.35rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'5px',filter:'drop-shadow(0 0 3px rgba(245,158,11,0.7))'}} xmlns="http://www.w3.org/2000/svg"><path d="M12 2v4M12 18v4M6 6l2 2M16 16l2 2M2 12h4M18 12h4M6 18l2-2M16 8l2-2" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round"/><circle cx="12" cy="12" r="4" stroke="#f59e0b" strokeWidth="1.5"/></svg> Play Prescribed Game to Unlock Post-Test
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* VIEW SWITCH TOGGLE */}
+                <div style={{ display: 'flex', gap: '0.75rem', margin: '0.5rem 0' }}>
+                  <button
+                    onClick={() => setResearchMode('individual')}
+                    style={{
+                      background: researchMode === 'individual' ? 'linear-gradient(to right, var(--color-primary), var(--color-secondary))' : 'rgba(255, 255, 255, 0.05)',
+                      border: researchMode === 'individual' ? 'none' : '1.5px solid rgba(255, 255, 255, 0.1)',
+                      color: '#ffffff',
+                      padding: '0.4rem 1rem',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontSize: '0.8rem',
+                      fontWeight: 'bold',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'5px',filter:'drop-shadow(0 0 3px rgba(255,255,255,0.5))'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#ffffff"/><path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="#ffffff" strokeWidth="2" strokeLinecap="round"/></svg> Individual Participant View
+                  </button>
+                  <button
+                    onClick={() => setResearchMode('aggregate')}
+                    style={{
+                      background: researchMode === 'aggregate' ? 'linear-gradient(to right, var(--color-primary), var(--color-secondary))' : 'rgba(255, 255, 255, 0.05)',
+                      border: researchMode === 'aggregate' ? 'none' : '1px solid rgba(255, 255, 255, 0.1)',
+                      color: '#ffffff',
+                      padding: '0.4rem 1rem',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontSize: '0.8rem',
+                      fontWeight: 'bold',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'5px',filter:'drop-shadow(0 0 3px rgba(var(--rgb-primary),0.6))'}} xmlns="http://www.w3.org/2000/svg"><rect x="3" y="12" width="4" height="9" rx="1" fill="var(--color-primary)"/><rect x="10" y="6" width="4" height="15" rx="1" fill="var(--color-primary)"/><rect x="17" y="3" width="4" height="18" rx="1" fill="var(--color-primary)" fillOpacity="0.7"/></svg> Aggregate Cohort Study View
+                  </button>
+                </div>
+
+                {researchMode === 'individual' ? (
+                  evaluationReport ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
+                        
+                        {/* Pre vs Post Averages */}
+                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
+                          <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Standardized Test Mean</span>
+                          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem' }}>
+                            {evaluationReport.mean_pretest} <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>→</span> <span style={{ color: '#4ade80' }}>{evaluationReport.mean_posttest}</span>
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: '#4ade80', marginTop: '0.25rem', fontWeight: 'bold' }}>
+                            +{evaluationReport.overall_improvement_rate_pct}% Improvement Rate
+                          </div>
+                        </div>
+
+                        {/* T-Statistic */}
+                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
+                          <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Paired t-Statistic</span>
+                          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem' }}>
+                            t = {evaluationReport.t_statistic}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem' }}>
+                            Sample Size (n = {evaluationReport.sample_size} Domains)
+                          </div>
+                        </div>
+
+                        {/* Cohen's d / Effect Size */}
+                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
+                          <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Cohen's d Effect Size</span>
+                          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem', textTransform: 'capitalize' }}>
+                            {evaluationReport.cohens_d} <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>({evaluationReport.effect_size_magnitude})</span>
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: evaluationReport.statistically_significant ? '#4ade80' : '#f87171', marginTop: '0.25rem', fontWeight: 'bold' }}>
+                            {evaluationReport.statistically_significant ? "Statistically Significant" : "Not Statistically Significant"}
+                          </div>
+                        </div>
+
+                      </div>
+
+                      {/* Hypothesis & Expose Diffs */}
+                      <div style={{ padding: '1rem', background: 'rgba(var(--rgb-secondary),0.05)', border: '1px solid rgba(var(--rgb-secondary),0.15)', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        <div style={{ fontSize: '0.85rem', color: '#c084fc', fontWeight: 'bold' }}>📊 Thesis Hypothesis Testing Outcome</div>
+                        <div style={{ fontSize: '0.95rem', color: '#ffffff', lineHeight: '1.5' }}>
+                          {evaluationReport.hypothesis_result}
+                        </div>
+                        
+                        {evaluationReport.domain_improvements && (
+                          <div style={{ marginTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.75rem' }}>
+                            <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold' }}>Domain Score Margin Changes:</span>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.5rem' }}>
+                              {Object.entries(evaluationReport.domain_improvements).map(([dom, margin]) => (
+                                <div key={dom} style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>
+                                  <span style={{ textTransform: 'capitalize', color: '#94a3b8' }}>{dom.replace(/_/g, ' ')}:</span>{' '}
+                                  <strong style={{ color: margin >= 0 ? '#4ade80' : '#ef4444' }}>
+                                    {margin >= 0 ? `+${margin}` : margin}
+                                  </strong>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8' }}>
+                      ⌛ Once you complete both Pre-Test and Post-Test questionnaires, this dashboard will compute dynamic empirical analytics (paired t-tests and Cohen's d effect sizes) to validate cognitive skill improvements.
+                    </div>
+                  )
+                ) : (
+                  // AGGREGATE COHORT STUDY VIEW
+                  cohortLoading ? (
+                    <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-primary)', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                      ⚡ Accessing Research Database & Running Paired t-tests...
+                    </div>
+                  ) : cohortAnalytics ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
+                        
+                        {/* Sample Size */}
+                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
+                          <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Study Cohort Size (n)</span>
+                          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem' }}>
+                            {cohortAnalytics.sample_size} subjects
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--color-primary)', marginTop: '0.25rem', fontWeight: 'bold' }}>
+                            100% Gating & Telemetry Logged
+                          </div>
+                        </div>
+
+                        {/* Overall Improvement Margin */}
+                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
+                          <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Cohort Improvement Margin</span>
+                          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#4ade80', marginTop: '0.5rem' }}>
+                            +{cohortAnalytics.overall_improvement_rate_pct}%
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: '#cbd5e1', marginTop: '0.25rem' }}>
+                            {cohortAnalytics.overall_pre_mean} Pre → {cohortAnalytics.overall_post_mean} Post
+                          </div>
+                        </div>
+
+                        {/* p-value metric card */}
+                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
+                          <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Cohort Significance Level</span>
+                          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: cohortAnalytics.statistically_significant ? '#4ade80' : '#f87171', marginTop: '0.5rem' }}>
+                            p = {cohortAnalytics.cohort_p_value}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: '#cbd5e1', marginTop: '0.25rem' }}>
+                            t-Statistic: t = {cohortAnalytics.cohort_t_statistic}
+                          </div>
+                        </div>
+
+                        {/* Global Cohen's d Effect Size */}
+                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
+                          <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Global Cohen's d</span>
+                          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem', textTransform: 'capitalize' }}>
+                            d = {cohortAnalytics.cohort_cohens_d}
+                          </div>
+                          <div style={{ fontSize: '0.75rem', color: '#4ade80', marginTop: '0.25rem', fontWeight: 'bold' }}>
+                            ({cohortAnalytics.effect_size_magnitude} Magnitude)
+                          </div>
+                        </div>
+
+                      </div>
+
+                      {/* Hypothesis Verdict */}
+                      <div style={{ padding: '1rem', background: 'rgba(var(--rgb-secondary),0.05)', border: '1px solid rgba(var(--rgb-secondary),0.15)', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        <div style={{ fontSize: '0.85rem', color: '#c084fc', fontWeight: 'bold' }}>📊 Thesis Hypothesis Testing Outcome (Aggregate)</div>
+                        <div style={{ fontSize: '0.95rem', color: '#ffffff', lineHeight: '1.5' }}>
+                          {cohortAnalytics.hypothesis_verdict}
+                        </div>
+                        
+                        {cohortAnalytics.domains && (
+                          <div style={{ marginTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.75rem' }}>
+                            <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold' }}>Group-Wide Domain Comparisons (Mean ± SD):</span>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginTop: '0.5rem' }}>
+                              {Object.entries(cohortAnalytics.domains).map(([dom, dStats]) => (
+                                <div key={dom} style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', borderRadius: '8px', fontSize: '0.8rem', color: '#cbd5e1' }}>
+                                  <strong style={{ textTransform: 'capitalize', color: 'var(--color-primary)', display: 'block', marginBottom: '0.25rem' }}>
+                                    {dom.replace(/_/g, ' ')}
+                                  </strong>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0.15rem 0' }}>
+                                    <span>Pre-Test:</span>
+                                    <strong>{dStats.pre_mean} ± {dStats.pre_std}</strong>
+                                  </div>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0.15rem 0' }}>
+                                    <span>Post-Test:</span>
+                                    <strong>{dStats.post_mean} ± {dStats.post_std}</strong>
+                                  </div>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0.15rem 0', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.15rem', color: '#4ade80', fontWeight: 'bold' }}>
+                                    <span>Improvement:</span>
+                                    <span>+{dStats.improvement_pct}%</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Force ML Retrain Button */}
+                        <div style={{ marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem', display: 'flex', justifyContent: 'center' }}>
+                          <button
+                            onClick={handleRetrain}
+                            disabled={retrainLoading}
+                            style={{
+                              background: 'linear-gradient(to right, #f59e0b, #ef4444)',
+                              color: '#ffffff',
+                              border: 'none',
+                              padding: '0.75rem 1.5rem',
+                              borderRadius: '8px',
+                              fontWeight: 'bold',
+                              fontSize: '0.9rem',
+                              cursor: retrainLoading ? 'not-allowed' : 'pointer',
+                              boxShadow: '0 4px 15px rgba(239, 68, 68, 0.25)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.5rem',
+                              transition: 'all 0.2s',
+                              opacity: retrainLoading ? 0.7 : 1
+                            }}
+                          >
+                            {retrainLoading ? '⚙️ Retraining Live Models...' : '🧠 Trigger Live ML Retraining Loop'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8' }}>
+                      ⌛ No research cohort statistics returned. Check backend.
+                    </div>
+                  )
+                )}
+              </div>
+            )}
             {/* Cognitive Targets & Milestones (Option C) */}
             <div className="goals-section-container" style={{ marginBottom: '3.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
@@ -2786,296 +3077,6 @@ export default function App() {
               <DailyQuests />
             </div>
 
-            {/* Quasi-Experimental Analytics Banner */}
-            {preTestScores && (
-              <div className="game-card" style={{
-                padding: '2rem',
-                marginBottom: '3rem',
-                background: 'rgba(24, 24, 27, 0.75)',
-                backdropFilter: 'blur(16px)',
-                border: '1.5px dashed rgba(var(--rgb-secondary), 0.4)',
-                borderRadius: '16px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '1.5rem',
-                animation: 'fadeIn 0.3s ease-out'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '1rem', gap: '1rem' }}>
-                  <div>
-                    <h3 style={{ fontSize: '1.25rem', margin: 0, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',filter:'drop-shadow(0 0 4px rgba(var(--rgb-secondary),0.7))'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="9" stroke="var(--color-secondary)" strokeWidth="1.5"/><polygon points="16,8 10,10 8,16 14,14" fill="var(--color-secondary)"/><circle cx="12" cy="12" r="1.5" fill="#1e1b4b"/></svg></span> Quasi-Experimental Research Track
-                    </h3>
-                    <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
-                      Subject ID: <strong>{currentUser}</strong> | Mapped Weakest Domain: <strong style={{ color: 'var(--color-primary)' }}>{weakestDomain?.replace(/_/g, ' ').toUpperCase()}</strong>
-                    </p>
-                  </div>
-                  <div style={{ display: 'flex', gap: '0.75rem' }}>
-                    {assessmentStage === 'completed' ? (
-                      <span style={{ background: 'rgba(74, 222, 128, 0.1)', color: '#4ade80', border: '1px solid #4ade80', padding: '0.35rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold' }}>
-                        ✓ Evaluation Finalized
-                      </span>
-                    ) : hasPlayedPrescribed ? (
-                      <button
-                        onClick={() => {
-                          setAssessmentAnswers({
-                            q1: '', q2: '', q3: '', q4: '',
-                            q5: '', q6: '', q7: '', q8: '',
-                            q9: '', q10: '', q11: '', q12: ''
-                          });
-                          setAssessmentStage('post-test');
-                        }}
-                        style={{
-                          background: 'linear-gradient(to right, #4ade80, var(--color-primary))',
-                          color: '#ffffff',
-                          border: 'none',
-                          borderRadius: '8px',
-                          padding: '0.5rem 1.25rem',
-                          fontSize: '0.85rem',
-                          fontWeight: 'bold',
-                          cursor: 'pointer',
-                          boxShadow: '0 4px 10px rgba(74, 222, 128, 0.2)'
-                        }}
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'5px'}} xmlns="http://www.w3.org/2000/svg"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> Take Post-Test Questionnaire
-                      </button>
-                    ) : (
-                      <span style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: '1px solid #f59e0b', padding: '0.35rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold' }}>
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'5px',filter:'drop-shadow(0 0 3px rgba(245,158,11,0.7))'}} xmlns="http://www.w3.org/2000/svg"><path d="M12 2v4M12 18v4M6 6l2 2M16 16l2 2M2 12h4M18 12h4M6 18l2-2M16 8l2-2" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round"/><circle cx="12" cy="12" r="4" stroke="#f59e0b" strokeWidth="1.5"/></svg> Play Prescribed Game to Unlock Post-Test
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* VIEW SWITCH TOGGLE */}
-                <div style={{ display: 'flex', gap: '0.75rem', margin: '0.5rem 0' }}>
-                  <button
-                    onClick={() => setResearchMode('individual')}
-                    style={{
-                      background: researchMode === 'individual' ? 'linear-gradient(to right, var(--color-primary), var(--color-secondary))' : 'rgba(255, 255, 255, 0.05)',
-                      border: researchMode === 'individual' ? 'none' : '1.5px solid rgba(255, 255, 255, 0.1)',
-                      color: '#ffffff',
-                      padding: '0.4rem 1rem',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontSize: '0.8rem',
-                      fontWeight: 'bold',
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'5px',filter:'drop-shadow(0 0 3px rgba(255,255,255,0.5))'}} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#ffffff"/><path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="#ffffff" strokeWidth="2" strokeLinecap="round"/></svg> Individual Participant View
-                  </button>
-                  <button
-                    onClick={() => setResearchMode('aggregate')}
-                    style={{
-                      background: researchMode === 'aggregate' ? 'linear-gradient(to right, var(--color-primary), var(--color-secondary))' : 'rgba(255, 255, 255, 0.05)',
-                      border: researchMode === 'aggregate' ? 'none' : '1px solid rgba(255, 255, 255, 0.1)',
-                      color: '#ffffff',
-                      padding: '0.4rem 1rem',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontSize: '0.8rem',
-                      fontWeight: 'bold',
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'5px',filter:'drop-shadow(0 0 3px rgba(var(--rgb-primary),0.6))'}} xmlns="http://www.w3.org/2000/svg"><rect x="3" y="12" width="4" height="9" rx="1" fill="var(--color-primary)"/><rect x="10" y="6" width="4" height="15" rx="1" fill="var(--color-primary)"/><rect x="17" y="3" width="4" height="18" rx="1" fill="var(--color-primary)" fillOpacity="0.7"/></svg> Aggregate Cohort Study View
-                  </button>
-                </div>
-
-                {researchMode === 'individual' ? (
-                  evaluationReport ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
-                        
-                        {/* Pre vs Post Averages */}
-                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
-                          <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Standardized Test Mean</span>
-                          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem' }}>
-                            {evaluationReport.mean_pretest} <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>→</span> <span style={{ color: '#4ade80' }}>{evaluationReport.mean_posttest}</span>
-                          </div>
-                          <div style={{ fontSize: '0.75rem', color: '#4ade80', marginTop: '0.25rem', fontWeight: 'bold' }}>
-                            +{evaluationReport.overall_improvement_rate_pct}% Improvement Rate
-                          </div>
-                        </div>
-
-                        {/* T-Statistic */}
-                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
-                          <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Paired t-Statistic</span>
-                          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem' }}>
-                            t = {evaluationReport.t_statistic}
-                          </div>
-                          <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem' }}>
-                            Sample Size (n = {evaluationReport.sample_size} Domains)
-                          </div>
-                        </div>
-
-                        {/* Cohen's d / Effect Size */}
-                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
-                          <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Cohen's d Effect Size</span>
-                          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem', textTransform: 'capitalize' }}>
-                            {evaluationReport.cohens_d} <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>({evaluationReport.effect_size_magnitude})</span>
-                          </div>
-                          <div style={{ fontSize: '0.75rem', color: evaluationReport.statistically_significant ? '#4ade80' : '#f87171', marginTop: '0.25rem', fontWeight: 'bold' }}>
-                            {evaluationReport.statistically_significant ? "Statistically Significant" : "Not Statistically Significant"}
-                          </div>
-                        </div>
-
-                      </div>
-
-                      {/* Hypothesis & Expose Diffs */}
-                      <div style={{ padding: '1rem', background: 'rgba(var(--rgb-secondary),0.05)', border: '1px solid rgba(var(--rgb-secondary),0.15)', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                        <div style={{ fontSize: '0.85rem', color: '#c084fc', fontWeight: 'bold' }}>📊 Thesis Hypothesis Testing Outcome</div>
-                        <div style={{ fontSize: '0.95rem', color: '#ffffff', lineHeight: '1.5' }}>
-                          {evaluationReport.hypothesis_result}
-                        </div>
-                        
-                        {evaluationReport.domain_improvements && (
-                          <div style={{ marginTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.75rem' }}>
-                            <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold' }}>Domain Score Margin Changes:</span>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.5rem' }}>
-                              {Object.entries(evaluationReport.domain_improvements).map(([dom, margin]) => (
-                                <div key={dom} style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>
-                                  <span style={{ textTransform: 'capitalize', color: '#94a3b8' }}>{dom.replace(/_/g, ' ')}:</span>{' '}
-                                  <strong style={{ color: margin >= 0 ? '#4ade80' : '#ef4444' }}>
-                                    {margin >= 0 ? `+${margin}` : margin}
-                                  </strong>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8' }}>
-                      ⌛ Once you complete both Pre-Test and Post-Test questionnaires, this dashboard will compute dynamic empirical analytics (paired t-tests and Cohen's d effect sizes) to validate cognitive skill improvements.
-                    </div>
-                  )
-                ) : (
-                  // AGGREGATE COHORT STUDY VIEW
-                  cohortLoading ? (
-                    <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-primary)', fontSize: '0.9rem', fontWeight: 'bold' }}>
-                      ⚡ Accessing Research Database & Running Paired t-tests...
-                    </div>
-                  ) : cohortAnalytics ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
-                        
-                        {/* Sample Size */}
-                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
-                          <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Study Cohort Size (n)</span>
-                          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem' }}>
-                            {cohortAnalytics.sample_size} subjects
-                          </div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--color-primary)', marginTop: '0.25rem', fontWeight: 'bold' }}>
-                            100% Gating & Telemetry Logged
-                          </div>
-                        </div>
-
-                        {/* Overall Improvement Margin */}
-                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
-                          <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Cohort Improvement Margin</span>
-                          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#4ade80', marginTop: '0.5rem' }}>
-                            +{cohortAnalytics.overall_improvement_rate_pct}%
-                          </div>
-                          <div style={{ fontSize: '0.75rem', color: '#cbd5e1', marginTop: '0.25rem' }}>
-                            {cohortAnalytics.overall_pre_mean} Pre → {cohortAnalytics.overall_post_mean} Post
-                          </div>
-                        </div>
-
-                        {/* p-value metric card */}
-                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
-                          <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Cohort Significance Level</span>
-                          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: cohortAnalytics.statistically_significant ? '#4ade80' : '#f87171', marginTop: '0.5rem' }}>
-                            p = {cohortAnalytics.cohort_p_value}
-                          </div>
-                          <div style={{ fontSize: '0.75rem', color: '#cbd5e1', marginTop: '0.25rem' }}>
-                            t-Statistic: t = {cohortAnalytics.cohort_t_statistic}
-                          </div>
-                        </div>
-
-                        {/* Global Cohen's d Effect Size */}
-                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
-                          <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Global Cohen's d</span>
-                          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem', textTransform: 'capitalize' }}>
-                            d = {cohortAnalytics.cohort_cohens_d}
-                          </div>
-                          <div style={{ fontSize: '0.75rem', color: '#4ade80', marginTop: '0.25rem', fontWeight: 'bold' }}>
-                            ({cohortAnalytics.effect_size_magnitude} Magnitude)
-                          </div>
-                        </div>
-
-                      </div>
-
-                      {/* Hypothesis Verdict */}
-                      <div style={{ padding: '1rem', background: 'rgba(var(--rgb-secondary),0.05)', border: '1px solid rgba(var(--rgb-secondary),0.15)', borderRadius: '10px', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                        <div style={{ fontSize: '0.85rem', color: '#c084fc', fontWeight: 'bold' }}>📊 Thesis Hypothesis Testing Outcome (Aggregate)</div>
-                        <div style={{ fontSize: '0.95rem', color: '#ffffff', lineHeight: '1.5' }}>
-                          {cohortAnalytics.hypothesis_verdict}
-                        </div>
-                        
-                        {cohortAnalytics.domains && (
-                          <div style={{ marginTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.75rem' }}>
-                            <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold' }}>Group-Wide Domain Comparisons (Mean ± SD):</span>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginTop: '0.5rem' }}>
-                              {Object.entries(cohortAnalytics.domains).map(([dom, dStats]) => (
-                                <div key={dom} style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', borderRadius: '8px', fontSize: '0.8rem', color: '#cbd5e1' }}>
-                                  <strong style={{ textTransform: 'capitalize', color: 'var(--color-primary)', display: 'block', marginBottom: '0.25rem' }}>
-                                    {dom.replace(/_/g, ' ')}
-                                  </strong>
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0.15rem 0' }}>
-                                    <span>Pre-Test:</span>
-                                    <strong>{dStats.pre_mean} ± {dStats.pre_std}</strong>
-                                  </div>
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0.15rem 0' }}>
-                                    <span>Post-Test:</span>
-                                    <strong>{dStats.post_mean} ± {dStats.post_std}</strong>
-                                  </div>
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0.15rem 0', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.15rem', color: '#4ade80', fontWeight: 'bold' }}>
-                                    <span>Improvement:</span>
-                                    <span>+{dStats.improvement_pct}%</span>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Force ML Retrain Button */}
-                        <div style={{ marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem', display: 'flex', justifyContent: 'center' }}>
-                          <button
-                            onClick={handleRetrain}
-                            disabled={retrainLoading}
-                            style={{
-                              background: 'linear-gradient(to right, #f59e0b, #ef4444)',
-                              color: '#ffffff',
-                              border: 'none',
-                              padding: '0.75rem 1.5rem',
-                              borderRadius: '8px',
-                              fontWeight: 'bold',
-                              fontSize: '0.9rem',
-                              cursor: retrainLoading ? 'not-allowed' : 'pointer',
-                              boxShadow: '0 4px 15px rgba(239, 68, 68, 0.25)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.5rem',
-                              transition: 'all 0.2s',
-                              opacity: retrainLoading ? 0.7 : 1
-                            }}
-                          >
-                            {retrainLoading ? '⚙️ Retraining Live Models...' : '🧠 Trigger Live ML Retraining Loop'}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8' }}>
-                      ⌛ No research cohort statistics returned. Check backend.
-                    </div>
-                  )
-                )}
-              </div>
-            )}
 
             {/* Game Mode Selector has been moved to the Launch Modal to eliminate clutter */}
 

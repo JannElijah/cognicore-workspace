@@ -169,11 +169,25 @@ const Shop = ({ onClose }) => {
             </HoverTooltip>
             <button
               onClick={onClose}
-              style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '1.5rem', cursor: 'pointer' }}
-              onMouseOver={e => e.target.style.color = '#f8fafc'}
-              onMouseOut={e => e.target.style.color = '#94a3b8'}
+              className="dashboard-toggle-btn"
+              style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: '#e2e8f0',
+                padding: '0.5rem 1rem',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                transition: 'all 0.2s'
+              }}
             >
-              ✕
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Back to Dashboard
             </button>
           </div>
         </div>

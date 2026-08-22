@@ -113,10 +113,10 @@ export default function AdminPanel(props) {
 
             {activeResearcherTab === 'cohort-stats' ? (
               <>
-                <h2 className="section-title">Thesis Verification Engine (Pillar 1 Research Design)</h2>
+                <h2 className="section-title" style={{ fontSize: '1.8rem', color: '#c084fc', textShadow: '0 0 10px rgba(192, 132, 252, 0.4)', borderBottom: '2px solid rgba(192, 132, 252, 0.3)', paddingBottom: '0.5rem', marginBottom: '1.5rem' }}>Researcher Portal: Cohort Analytics</h2>
             <div className="game-card" style={{ width: '100%', alignItems: 'stretch', padding: '2rem', marginBottom: '2rem' }}>
               <div style={{ background: 'rgba(124, 58, 237, 0.08)', border: '1px solid rgba(124, 58, 237, 0.2)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
-                <span style={{ fontWeight: 'bold', color: '#c084fc', fontSize: '0.9rem' }}>Pillar 1: Empirical Cognitive Improvement (Pretest-Posttest Design)</span>
+                <span style={{ fontWeight: 'bold', color: '#c084fc', fontSize: '1.1rem' }}>Empirical Cognitive Improvement (Pretest vs Posttest)</span>
                 <p style={{ fontSize: '0.85rem', color: '#94a3b8', margin: '0.25rem 0 0 0' }}>
                   Input pre-intervention and post-intervention scores for your research cohort. The backend will calculate the overall group Improvement Rate (%) and run a **Paired t-test** to calculate the t-statistic and p-value.
                 </p>
