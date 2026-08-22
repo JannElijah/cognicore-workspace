@@ -40,7 +40,7 @@ except ImportError:
 def create_app(test_config=None):
     app = Flask(__name__)
     # CORS restricts your React/Phaser frontend to authorized origins
-    CORS(app, origins=["http://localhost:5173", "http://127.0.0.1:5173"])
+    CORS(app, supports_credentials=True)
 
     if test_config is None:
         db_url = os.environ.get("DATABASE_URL")
