@@ -3192,7 +3192,7 @@ export default function App() {
               alignItems: 'center',
               zIndex: 1000,
               animation: 'fadeIn 0.25s ease-out'
-            }}>
+            }} className="game-mode-modal-overlay">
               <div style={{
                 background: 'rgba(15, 23, 42, 0.95)',
                 border: `2px solid ${DOMAIN_THEMES[pendingGameToLaunch.themeClass]?.color || '#ffffff'}`,
@@ -3205,7 +3205,7 @@ export default function App() {
                 flexDirection: 'column',
                 gap: '1.5rem',
                 position: 'relative'
-              }}>
+              }} className="game-mode-modal-card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <span style={{ fontSize: '2.25rem' }}>{pendingGameToLaunch.icon}</span>
@@ -3242,7 +3242,7 @@ export default function App() {
                     Select Gameplay Mode
                   </div>
                   
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }} className="game-mode-grid">
                     {[
                       { id: 'timed', label: 'Standard Timed', desc: 'Standard 2-minute timed session.' },
                       { id: 'zen', label: 'Zen Mode', desc: 'Unlimited time, counts up, no pressure.' },
@@ -3262,6 +3262,7 @@ export default function App() {
                           onClick={() => setSelectedGameMode(mode.id)}
                           onMouseEnter={() => setHoveredMode(mode.id)}
                           onMouseLeave={() => setHoveredMode(null)}
+                          className="game-mode-btn"
                           style={{
                             background: isSelected ? `rgba(255, 255, 255, 0.05)` : 'rgba(255, 255, 255, 0.02)',
                             border: isSelected ? `2px solid ${themeColor}` : '1.5px solid rgba(255, 255, 255, 0.08)',
@@ -3282,7 +3283,7 @@ export default function App() {
                             <SvgLauncherIcon name={mode.id} style={{ color: isSelected ? themeColor : '#cbd5e1' }} />
                             <span style={{ fontWeight: 'bold', fontSize: '0.95rem' }}>{mode.label}</span>
                           </div>
-                          <span style={{ fontSize: '0.75rem', color: isSelected ? '#ffffff' : '#94a3b8' }}>{mode.desc}</span>
+                          <span className="game-mode-btn-desc" style={{ fontSize: '0.75rem', color: isSelected ? '#ffffff' : '#94a3b8' }}>{mode.desc}</span>
                         </button>
                       );
                     })}
@@ -3337,7 +3338,7 @@ export default function App() {
 
                     return (
                       <>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} className="game-mode-rules-header">
                           <strong style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.95rem', color: DOMAIN_THEMES[pendingGameToLaunch.themeClass]?.color || '#ffffff' }}>
                             <SvgLauncherIcon name={activeModeId} />
                             {modeDetails.title} {hoveredMode && <span style={{ fontSize: '0.7rem', background: 'rgba(255,255,255,0.08)', padding: '0.1rem 0.4rem', borderRadius: '4px', color: '#94a3b8', marginLeft: '0.5rem' }}>Previewing</span>}
@@ -3354,7 +3355,7 @@ export default function App() {
                   })()}
                 </div>
 
-                <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }} className="game-mode-actions">
                   <button
                     onClick={() => setPendingGameToLaunch(null)}
                     style={{

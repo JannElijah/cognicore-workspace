@@ -670,8 +670,9 @@ svg circle:hover {
     padding-top: max(0.85rem, env(safe-area-inset-top));
   }
 
-  /* Hide the desktop nav controls (tabs + icon buttons) */
-  .portal-header > div:last-child {
+  /* Hide the desktop nav controls (tabs + icon buttons) -- last-of-type targets
+     the second <div>, not the hamburger <button> which is the actual last child */
+  .portal-header > div:last-of-type {
     display: none;
   }
 
@@ -797,6 +798,63 @@ svg circle:hover {
     padding: 0.85rem 1rem; /* Bigger tap target */
   }
 }
+
+/* ==========================================
+   GAME MODE LAUNCH MODAL — Mobile Responsive
+   ========================================== */
+@media (max-width: 768px) {
+  /* Overlay becomes top-aligned + scrollable so modal never overflows off screen */
+  .game-mode-modal-overlay {
+    align-items: flex-start !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    padding-top: max(0.75rem, env(safe-area-inset-top)) !important;
+    padding-bottom: 1rem !important;
+  }
+
+  /* Modal card: tighter padding, no fixed maxWidth fighting viewport */
+  .game-mode-modal-card {
+    padding: 1.25rem !important;
+    gap: 0.75rem !important;
+    border-radius: 12px !important;
+    width: 94% !important;
+    max-width: 94% !important;
+    margin: 0 auto !important;
+  }
+
+  /* Mode grid: single column saves vertical space and avoids crowding */
+  .game-mode-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.4rem !important;
+  }
+
+  /* Each mode button becomes a horizontal row */
+  .game-mode-btn {
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 0.6rem !important;
+    padding: 0.65rem 0.85rem !important;
+  }
+
+  /* Hide inline description text inside the buttons — info is in the rules panel */
+  .game-mode-btn-desc {
+    display: none !important;
+  }
+
+  /* Rules info panel: stack title + subtitle vertically instead of side by side */
+  .game-mode-rules-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.2rem !important;
+  }
+
+  /* Action row (Cancel / Launch): stack on very narrow phones */
+  .game-mode-actions {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+}
+
 
 /* Cognitive Category Layouts */
 .category-container {
