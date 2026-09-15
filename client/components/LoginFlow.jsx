@@ -58,7 +58,7 @@ export default function LoginFlow({
               value={usernameInput} 
               onChange={(e) => setUsernameInput(e.target.value)} 
               placeholder="e.g. subject_01" 
-              style={{ background: '#09090b', border: '1.5px solid rgba(var(--rgb-secondary), 0.4)', borderRadius: '8px', color: '#ffffff', padding: '0.75rem', fontSize: '1rem', outline: 'none', width: '100%', boxSizing: 'border-box' }}
+              style={{ minHeight: '44px', background: '#09090b', border: '1.5px solid rgba(var(--rgb-secondary), 0.4)', borderRadius: '8px', color: '#ffffff', padding: '0.75rem', fontSize: '1rem', outline: 'none', width: '100%', boxSizing: 'border-box' }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !assessmentLoading && agreed) {
                   submitLogin();
@@ -71,10 +71,10 @@ export default function LoginFlow({
              <p style={{ color: '#94a3b8', fontSize: '0.8rem', margin: '0 0 0.5rem 0', lineHeight: '1.4' }}>
               Your identity will remain completely anonymous. We only collect the demographic data below for cohort analysis.
             </p>
-            <input type="text" placeholder="Course / Program (e.g. BSCS)" value={course} onChange={e=>setCourse(e.target.value)} style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem', fontSize: '0.9rem', outline: 'none', width: '100%', boxSizing: 'border-box' }} />
+            <input type="text" placeholder="Course / Program (e.g. BSCS)" value={course} onChange={e=>setCourse(e.target.value)} style={{ minHeight: '44px', background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem', fontSize: '0.9rem', outline: 'none', width: '100%', boxSizing: 'border-box' }} />
             <div style={{ display: 'flex', gap: '0.5rem', width: '100%', boxSizing: 'border-box' }}>
-              <input type="number" placeholder="Age" value={age} onChange={e=>setAge(e.target.value)} style={{ flex: 1, width: '100%', minWidth: 0, background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} />
-              <select value={gender} onChange={e=>setGender(e.target.value)} style={{ flex: 1, width: '100%', minWidth: 0, background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}>
+              <input type="number" placeholder="Age" value={age} onChange={e=>setAge(e.target.value)} style={{ minHeight: '44px', flex: 1, width: '100%', minWidth: 0, background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }} />
+              <select value={gender} onChange={e=>setGender(e.target.value)} style={{ minHeight: '44px', flex: 1, width: '100%', minWidth: 0, background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}>
                 <option value="" disabled>Select Gender</option>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
@@ -82,7 +82,7 @@ export default function LoginFlow({
                 <option value="Prefer not to say">Prefer not to say</option>
               </select>
             </div>
-            <select value={pwdStatus} onChange={e=>setPwdStatus(e.target.value)} style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem', fontSize: '0.9rem', outline: 'none', width: '100%', boxSizing: 'border-box' }}>
+            <select value={pwdStatus} onChange={e=>setPwdStatus(e.target.value)} style={{ minHeight: '44px', background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem', fontSize: '0.9rem', outline: 'none', width: '100%', boxSizing: 'border-box' }}>
               <option value="" disabled>PWD Status (Person with Disability)</option>
               <option value="None">None</option>
               <option value="Visual Impairment">Visual Impairment</option>
@@ -95,15 +95,15 @@ export default function LoginFlow({
           </div>
         )}
 
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', marginTop: '0.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', margin: '0.75rem 0', background: 'rgba(255,255,255,0.03)', padding: '0.85rem', borderRadius: '10px' }}>
           <input 
             type="checkbox" 
             id="disclaimerAgree" 
             checked={agreed} 
             onChange={(e) => setAgreed(e.target.checked)} 
-            style={{ marginTop: '0.25rem', transform: 'scale(1.2)', accentColor: 'var(--color-secondary)', cursor: 'pointer' }}
+            style={{ minWidth: '24px', minHeight: '24px', transform: 'scale(1.2)', accentColor: 'var(--color-secondary)', cursor: 'pointer', flexShrink: 0 }}
           />
-          <label htmlFor="disclaimerAgree" style={{ fontSize: '0.8rem', color: '#cbd5e1', lineHeight: '1.4', cursor: 'pointer' }}>
+          <label htmlFor="disclaimerAgree" style={{ fontSize: '0.85rem', color: '#cbd5e1', lineHeight: '1.6', cursor: 'pointer' }}>
             <strong>Data Privacy Agreement:</strong> I acknowledge that my performance telemetry and assessment results will be collected and strictly used for academic research purposes only.
           </label>
         </div>

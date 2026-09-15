@@ -586,7 +586,8 @@ svg circle:hover {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.85rem 1rem;
+  padding: 1rem;
+  min-height: 48px;
   border-radius: 10px;
   border: 1px solid transparent;
   background: transparent;
@@ -718,6 +719,10 @@ svg circle:hover {
     border-right: none !important;
   }
 
+  .game-canvas-wrapper canvas {
+    touch-action: none !important;
+  }
+
   /* Prevent text selection during rapid taps in game overlays */
   .game-screen-wrapper,
   .game-canvas-wrapper,
@@ -821,7 +826,7 @@ svg circle:hover {
   /* Mode grid: single column saves vertical space and avoids crowding */
   .game-mode-grid {
     grid-template-columns: 1fr !important;
-    gap: 0.4rem !important;
+    gap: 0.85rem !important;
   }
 
   /* Each mode button becomes a horizontal row */
