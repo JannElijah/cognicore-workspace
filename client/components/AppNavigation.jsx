@@ -8,6 +8,7 @@ const AppNavigation = memo(function AppNavigation({
   setShowShop, showSoundTuner, setShowSoundTuner
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [portalDropdownOpen, setPortalDropdownOpen] = useState(false);
   const closeDrawer = () => setDrawerOpen(false);
 
   return (
@@ -67,57 +68,99 @@ const AppNavigation = memo(function AppNavigation({
             </button>
           )}
         </div>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div className="desktop-nav-container" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           {activeGame === null && (
-            <div style={{ display: 'flex', gap: '0.5rem', background: 'rgba(255, 255, 255, 0.05)', padding: '0.25rem', borderRadius: '8px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+            <div style={{ position: 'relative' }}>
               <button 
-                onClick={() => { setPortalView('participant'); }}
+                onClick={() => setPortalDropdownOpen(!portalDropdownOpen)}
                 style={{
-                  background: portalView === 'participant' ? 'linear-gradient(to right, var(--color-primary), var(--color-secondary))' : 'transparent',
+                  background: 'linear-gradient(to right, var(--color-primary), var(--color-secondary))',
                   border: 'none',
                   color: '#ffffff',
-                  padding: '0.4rem 0.8rem',
-                  borderRadius: '6px',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '8px',
                   cursor: 'pointer',
-                  fontWeight: '600',
-                  fontSize: '0.85rem',
+                  fontWeight: 'bold',
+                  fontSize: '0.9rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  boxShadow: '0 2px 10px rgba(var(--rgb-primary), 0.3)',
                   transition: 'all 0.2s'
                 }}
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="#ffffff" style={{ display: 'inline', verticalAlign: 'middle', marginRight: '5px', filter: 'drop-shadow(0 0 3px rgba(255,255,255,0.4))' }} xmlns="http://www.w3.org/2000/svg"><rect x="2" y="3" width="20" height="14" rx="2" fill="none" stroke="currentColor" strokeWidth="2"/><path d="M8 21h8M12 17v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><rect x="5" y="7" width="3" height="3" rx="0.5" fill="currentColor"/><rect x="11" y="7" width="3" height="3" rx="0.5" fill="currentColor"/><rect x="5" y="12" width="3" height="3" rx="0.5" fill="currentColor"/><rect x="11" y="12" width="3" height="3" rx="0.5" fill="currentColor"/></svg> Participant Portal
+                {portalView === 'participant' ? (
+                  <><svg width="15" height="15" viewBox="0 0 24 24" fill="#ffffff" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="3" width="20" height="14" rx="2" fill="none" stroke="currentColor" strokeWidth="2"/><path d="M8 21h8M12 17v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><rect x="5" y="7" width="3" height="3" rx="0.5" fill="currentColor"/><rect x="11" y="7" width="3" height="3" rx="0.5" fill="currentColor"/><rect x="5" y="12" width="3" height="3" rx="0.5" fill="currentColor"/><rect x="11" y="12" width="3" height="3" rx="0.5" fill="currentColor"/></svg> Participant Portal</>
+                ) : portalView === 'researcher' ? (
+                  <><svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="currentColor"/></svg> Researcher Portal</>
+                ) : (
+                  <><svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2V3zm20 0h-6a4 4 0 00-4 4v14a3 3 0 013-3h7V3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> Knowledge Base</>
+                )}
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ transform: portalDropdownOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}><polyline points="6 9 12 15 18 9"></polyline></svg>
               </button>
-              <button 
-                onClick={() => { setPortalView('researcher'); }}
-                style={{
-                  background: portalView === 'researcher' ? 'linear-gradient(to right, var(--color-primary), var(--color-secondary))' : 'transparent',
-                  border: 'none',
-                  color: '#ffffff',
-                  padding: '0.4rem 0.8rem',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  fontSize: '0.85rem',
-                  transition: 'all 0.2s'
-                }}
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ display: 'inline', verticalAlign: 'middle', marginRight: '5px', filter: 'drop-shadow(0 0 3px rgba(255,255,255,0.4))' }} xmlns="http://www.w3.org/2000/svg"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="currentColor"/></svg> Researcher Portal
-              </button>
-              <button 
-                onClick={() => { setPortalView('knowledge'); setActiveGame(null); setShowDashboard(false); }}
-                style={{
-                  background: portalView === 'knowledge' ? 'linear-gradient(to right, var(--color-primary), var(--color-secondary))' : 'transparent',
-                  border: 'none',
-                  color: '#ffffff',
-                  padding: '0.4rem 0.8rem',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  fontWeight: '600',
-                  fontSize: '0.85rem',
-                  transition: 'all 0.2s'
-                }}
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ display: 'inline', verticalAlign: 'middle', marginRight: '5px', filter: 'drop-shadow(0 0 3px rgba(255,255,255,0.4))' }} xmlns="http://www.w3.org/2000/svg"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2V3zm20 0h-6a4 4 0 00-4 4v14a3 3 0 013-3h7V3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> Knowledge Base
-              </button>
+
+              {portalDropdownOpen && (
+                <>
+                  <div 
+                    style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 90 }} 
+                    onClick={() => setPortalDropdownOpen(false)} 
+                  />
+                  <div style={{
+                    position: 'absolute',
+                    top: '120%',
+                    left: 0,
+                    minWidth: '200px',
+                    background: 'rgba(15, 23, 42, 0.95)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '10px',
+                    padding: '0.5rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.25rem',
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+                    zIndex: 100,
+                    animation: 'fadeIn 0.2s ease-out'
+                  }}>
+                    {[
+                      { id: 'participant', label: 'Participant Portal', icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="#ffffff" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="3" width="20" height="14" rx="2" fill="none" stroke="currentColor" strokeWidth="2"/><path d="M8 21h8M12 17v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><rect x="5" y="7" width="3" height="3" rx="0.5" fill="currentColor"/><rect x="11" y="7" width="3" height="3" rx="0.5" fill="currentColor"/><rect x="5" y="12" width="3" height="3" rx="0.5" fill="currentColor"/><rect x="11" y="12" width="3" height="3" rx="0.5" fill="currentColor"/></svg> },
+                      { id: 'researcher', label: 'Researcher Portal', icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="currentColor"/></svg> },
+                      { id: 'knowledge', label: 'Knowledge Base', icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2V3zm20 0h-6a4 4 0 00-4 4v14a3 3 0 013-3h7V3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> }
+                    ].map(portal => (
+                      <button
+                        key={portal.id}
+                        onClick={() => {
+                          setPortalView(portal.id);
+                          if (portal.id === 'knowledge') {
+                            setActiveGame(null);
+                            setShowDashboard(false);
+                          }
+                          setPortalDropdownOpen(false);
+                        }}
+                        style={{
+                          background: portalView === portal.id ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                          border: 'none',
+                          color: portalView === portal.id ? '#ffffff' : '#94a3b8',
+                          padding: '0.6rem 0.8rem',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontWeight: '600',
+                          fontSize: '0.85rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          textAlign: 'left',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseOver={(e) => { if (portalView !== portal.id) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)' }}
+                        onMouseOut={(e) => { if (portalView !== portal.id) e.currentTarget.style.background = 'transparent' }}
+                      >
+                        {portal.icon} {portal.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           )}
           

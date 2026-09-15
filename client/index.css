@@ -670,12 +670,6 @@ svg circle:hover {
     padding-top: max(0.85rem, env(safe-area-inset-top));
   }
 
-  /* Hide the desktop nav controls (tabs + icon buttons) -- last-of-type targets
-     the second <div>, not the hamburger <button> which is the actual last child */
-  .portal-header > div:last-of-type {
-    display: none;
-  }
-
   .portal-main {
     padding: 0.75rem 0.75rem;
     /* Prevent content from sliding under notch */
