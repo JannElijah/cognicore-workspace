@@ -87,16 +87,32 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  /* Mobile: kill grey tap flash on all interactive elements */
+  -webkit-tap-highlight-color: transparent;
+  /* Mobile: prevent 300ms tap delay, allow native scroll */
+  touch-action: manipulation;
 }
 
 html {
   font-size: 20px; /* ENLARGED FONT SIZE for overall readability */
   background-color: var(--bg-dark); /* PREVENT WHITE FLASHES */
+  /* Prevent pull-to-refresh gesture from interrupting gameplay */
+  overscroll-behavior: none;
+}
+
+body {
+  /* Prevent pull-to-refresh on the body level too */
+  overscroll-behavior: none;
+  /* Safe area padding for notched Android devices (e.g., punch-hole cameras) */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 #root {
   background-color: var(--bg-dark); /* PREVENT WHITE FLASHES */
   min-height: 100vh;
+  min-height: 100dvh; /* Use dynamic viewport height on mobile (accounts for browser chrome) */
 }
 
 body {
@@ -488,6 +504,141 @@ svg circle:hover {
 }
 
 /* ==========================================
+   HAMBURGER MENU — Mobile Navigation
+   ========================================== */
+.hamburger-btn {
+  display: none; /* hidden on desktop */
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.hamburger-btn span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--text-main);
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: center;
+}
+
+.hamburger-btn.open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.hamburger-btn.open span:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+.hamburger-btn.open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* The slide-out drawer */
+.mobile-nav-drawer {
+  display: none;
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 80vw;
+  max-width: 300px;
+  height: 100dvh;
+  background: rgba(9, 9, 11, 0.97);
+  backdrop-filter: blur(20px);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 999;
+  flex-direction: column;
+  padding: 1.5rem 1.25rem;
+  gap: 0.5rem;
+  transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-y: auto;
+}
+
+.mobile-nav-drawer.open {
+  right: 0;
+}
+
+.mobile-nav-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 998;
+  backdrop-filter: blur(2px);
+}
+
+.mobile-nav-backdrop.open {
+  display: block;
+}
+
+.mobile-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  text-align: left;
+}
+
+.mobile-nav-item.active {
+  background: rgba(var(--rgb-primary), 0.1);
+  border-color: rgba(var(--rgb-primary), 0.25);
+  color: var(--color-primary);
+}
+
+.mobile-nav-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-main);
+}
+
+.mobile-nav-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 0.5rem 0;
+}
+
+/* Mobile pause button floating above the canvas */
+.mobile-pause-btn {
+  display: none; /* visible only on mobile via media query */
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 50;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(9, 9, 11, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: var(--text-main);
+  transition: background 0.2s;
+  /* Minimum touch target size (WCAG 2.5.5) */
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* ==========================================
    MOBILE & TABLET RESPONSIVE STYLING (Pillar 3)
    ========================================== */
 @media (max-width: 768px) {
@@ -495,104 +646,155 @@ svg circle:hover {
     background-attachment: scroll; /* Optimize performance on mobile rendering */
   }
 
-  .portal-header {
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
-    text-align: center;
+  /* Show hamburger, hide desktop nav row */
+  .hamburger-btn {
+    display: flex;
   }
 
-  .portal-header div {
-    justify-content: center;
+  .mobile-nav-drawer {
+    display: flex;
+  }
+
+  .mobile-pause-btn {
+    display: flex;
+  }
+
+  /* Compress header to logo + hamburger only */
+  .portal-header {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.85rem 1rem;
+    /* Account for notch/status bar */
+    padding-top: max(0.85rem, env(safe-area-inset-top));
+  }
+
+  /* Hide the desktop nav controls (tabs + icon buttons) */
+  .portal-header > div:last-child {
+    display: none;
   }
 
   .portal-main {
-    padding: 1.5rem 1rem;
+    padding: 0.75rem 0.75rem;
+    /* Prevent content from sliding under notch */
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+    padding-right: max(0.75rem, env(safe-area-inset-right));
   }
 
   .intro-card {
-    padding: 1.25rem;
-    margin-bottom: 2rem;
+    padding: 1rem;
+    margin-bottom: 1.25rem;
   }
 
   .intro-card h1 {
-    font-size: 1.85rem;
+    font-size: 1.6rem;
   }
 
   .intro-card p {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
   }
 
   .section-title {
-    font-size: 1.4rem;
-    margin-bottom: 1.5rem;
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
   }
 
+  /* 2-column game grid on tablet, 1-column on small phones handled in 480px */
   .game-grid {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
   }
 
-  .game-card, .pause-card {
-    padding: 1.25rem !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    text-align: center !important;
+  .game-card {
+    padding: 1rem !important;
   }
 
-  /* Override fixed widths */
-  input[type="text"] {
+  /* Game canvas wrapper — fill the portrait viewport */
+  .game-canvas-wrapper {
     width: 100% !important;
+    max-width: 100vw !important;
+    /* Prevent horizontal overflow */
+    overflow: hidden;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
   }
 
-  /* Strict modal sizing */
-  div[style*="800px"], 
-  div[style*="900px"], 
-  div[style*="1000px"],
-  div[style*="maxWidth"] {
-    width: 95% !important;
-    max-width: 100% !important;
+  /* Prevent text selection during rapid taps in game overlays */
+  .game-screen-wrapper,
+  .game-canvas-wrapper,
+  .pause-overlay {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .pause-card {
+    padding: 1.5rem !important;
+    width: 90% !important;
+    max-width: 340px;
   }
 
   .dashboard-row-grid {
     grid-template-columns: 1fr;
-    gap: 1.5rem !important;
+    gap: 1rem !important;
   }
 
   .eval-inputs-grid {
     grid-template-columns: 1fr;
-    gap: 1rem !important;
+    gap: 0.75rem !important;
   }
 
-  /* React overlay containers */
-  div[style*="overlay"] {
+  /* Override fixed widths on inline-style modals */
+  div[style*="maxWidth: '800px'"],
+  div[style*="maxWidth: '900px'"],
+  div[style*="maxWidth: '1000px'"] {
     width: 100% !important;
-    height: auto !important;
-    min-height: auto !important;
-    padding: 1.25rem !important;
-  }
-
-  div[style*="card"] {
-    padding: 1.5rem !important;
     max-width: 100% !important;
   }
 
-  /* Make sure canvas auto-resizes cleanly on portrait mobile devices */
-  div[style*="canvasWrapper"] {
-    border-radius: 8px !important;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
-    min-height: auto !important; /* override rigid heights */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"] {
+    width: 100% !important;
+    font-size: 16px !important; /* Prevents iOS/Android auto-zoom on focus */
   }
 }
 
 @media (max-width: 480px) {
   .logo-glow {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
+  }
+
+  /* Single column on small phones */
+  .game-grid {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+
+  .intro-card h1 {
+    font-size: 1.35rem;
+  }
+
+  .section-title {
+    font-size: 1.1rem;
+  }
+
+  .game-card h3 {
+    font-size: 1.1rem;
   }
 
   .dashboard-toggle-btn {
     width: 100%;
     text-align: center;
+  }
+
+  /* Make back button full-width and thumb-friendly on tiny phones */
+  .back-btn {
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+    padding: 0.85rem 1rem; /* Bigger tap target */
   }
 }
 

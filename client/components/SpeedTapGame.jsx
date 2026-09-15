@@ -89,8 +89,9 @@ export default function SpeedTapGame({ username = 'default_player', apiUrl = API
             scale: {
                 mode: Phaser.Scale.FIT,
                 autoCenter: Phaser.Scale.CENTER_BOTH,
-                width: 800,
-                height: 600
+                // Mobile-responsive: use viewport width on portrait phones, fixed 800x600 on desktop
+                width: window.innerWidth < 768 ? window.innerWidth : 800,
+                height: window.innerWidth < 768 ? Math.round(window.innerWidth * 0.75) : 600,
             },
             physics: {
                 default: 'arcade',
@@ -380,8 +381,8 @@ export default function SpeedTapGame({ username = 'default_player', apiUrl = API
     if (gameState === 'PLAYING') {
         return (
             <div style={{ position: 'relative', width: '100%', maxWidth: '800px', margin: '0 auto' }}>
-                <div style={styles.canvasWrapper} ref={gameContainerRef} />
-                <PauseOverlay isPaused={isPaused} onTogglePause={() => setIsPaused(false)} />
+                <div style={styles.canvasWrapper} ref={gameContainerRef} className="game-canvas-wrapper" />
+                <PauseOverlay isPaused={isPaused} onTogglePause={() => setIsPaused(false)} onPauseRequest={() => setIsPaused(true)} />
             </div>
         );
     }

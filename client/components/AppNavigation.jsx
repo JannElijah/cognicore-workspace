@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 
 const AppNavigation = memo(function AppNavigation({
   currentUser, portalView, setPortalView, setShowProfileModal, activeGame,
@@ -7,7 +7,11 @@ const AppNavigation = memo(function AppNavigation({
   globalMuted, setGlobalMuted, audioDda,
   setShowShop, showSoundTuner, setShowSoundTuner
 }) {
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const closeDrawer = () => setDrawerOpen(false);
+
   return (
+    <>
       <header className="portal-header">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <div className="logo-glow" onClick={() => { setActiveGame(null); setShowDashboard(false); setPortalView('participant'); }} style={{ cursor: 'pointer', alignSelf: 'flex-start', display: 'flex', alignItems: 'center' }}>
@@ -292,8 +296,105 @@ const AppNavigation = memo(function AppNavigation({
             <span className="status-dot"></span> Secure Telemetry Hub
           </div>
         </div>
+
+        {/* Hamburger button -- CSS shows this only on mobile (≤768px) */}
+        <button
+          className={`hamburger-btn${drawerOpen ? ' open' : ''}`}
+          onClick={() => setDrawerOpen(o => !o)}
+          aria-label="Open navigation menu"
+          aria-expanded={drawerOpen}
+        >
+          <span />
+          <span />
+          <span />
+        </button>
       </header>
 
+      {/* Mobile Nav Backdrop -- closes drawer on tap outside */}
+      <div
+        className={`mobile-nav-backdrop${drawerOpen ? ' open' : ''}`}
+        onClick={closeDrawer}
+        aria-hidden="true"
+      />
+
+      {/* Mobile Slide-Out Drawer */}
+      <nav className={`mobile-nav-drawer${drawerOpen ? ' open' : ''}`} aria-label="Mobile navigation">
+        {/* Profile card at top of drawer */}
+        {currentUser && (
+          <>
+            <button
+              className="mobile-nav-item"
+              onClick={() => { setShowProfileModal(true); closeDrawer(); }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="var(--color-primary)"/><path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round"/></svg>
+              {currentUser}
+              <span style={{ marginLeft: 'auto', fontSize: '0.8rem', color: 'var(--color-secondary)' }}>Lv. {currentLevel}</span>
+            </button>
+            <div className="mobile-nav-divider" />
+          </>
+        )}
+
+        {/* Portal switcher */}
+        <button
+          className={`mobile-nav-item${portalView === 'participant' ? ' active' : ''}`}
+          onClick={() => { setPortalView('participant'); setActiveGame(null); setShowDashboard(false); closeDrawer(); }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="3" width="20" height="14" rx="2" fill="none" stroke="currentColor" strokeWidth="2"/><path d="M8 21h8M12 17v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+          Participant Portal
+        </button>
+        <button
+          className={`mobile-nav-item${portalView === 'researcher' ? ' active' : ''}`}
+          onClick={() => { setPortalView('researcher'); closeDrawer(); }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="currentColor"/></svg>
+          Researcher Portal
+        </button>
+        <button
+          className={`mobile-nav-item${portalView === 'knowledge' ? ' active' : ''}`}
+          onClick={() => { setPortalView('knowledge'); setActiveGame(null); setShowDashboard(false); closeDrawer(); }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2V3zm20 0h-6a4 4 0 00-4 4v14a3 3 0 013-3h7V3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          Knowledge Base
+        </button>
+
+        <div className="mobile-nav-divider" />
+
+        {/* Action items */}
+        <button
+          className="mobile-nav-item"
+          onClick={() => { setShowDashboard(true); setActiveGame(null); closeDrawer(); }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="12" width="4" height="9" rx="1" fill="currentColor"/><rect x="10" y="6" width="4" height="15" rx="1" fill="currentColor"/><rect x="17" y="3" width="4" height="18" rx="1" fill="currentColor" fillOpacity="0.7"/></svg>
+          Dashboard
+        </button>
+        <button
+          className="mobile-nav-item"
+          onClick={() => { setShowShop(true); closeDrawer(); }}
+          style={{ color: '#fbbf24' }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" fill="#fbbf24" fillOpacity="0.15" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M3 6h18" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round"/><path d="M16 10a4 4 0 01-8 0" stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          Shop
+        </button>
+        <button
+          className="mobile-nav-item"
+          onClick={() => { const m = !globalMuted; audioDda.setMuted(m); setGlobalMuted(m); closeDrawer(); }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11 5L6 9H2v6h4l5 4V5z" fill="currentColor"/>{globalMuted ? <><line x1="23" y1="9" x2="17" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/><line x1="17" y1="9" x2="23" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></> : <path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>}</svg>
+          {globalMuted ? 'Unmute Sound' : 'Mute Sound'}
+        </button>
+
+        <div className="mobile-nav-divider" />
+
+        <button
+          className="mobile-nav-item"
+          onClick={() => { localStorage.clear(); window.location.reload(); }}
+          style={{ color: '#ef4444' }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 17l5-5-5-5M21 12H9" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="#ef4444" strokeWidth="2" strokeLinecap="round"/></svg>
+          Sign Out
+        </button>
+      </nav>
+    </>
   );
 });
 

@@ -328,8 +328,8 @@ export default function RouteOptimizerGame({
     if (gameState === 'PLAYING') {
         return (
             <div style={{ position: 'relative', width: '100%', maxWidth: '800px', margin: '0 auto' }}>
-                <div style={S.canvasWrapper} ref={gameContainerRef} />
-                <PauseOverlay isPaused={isPaused} onTogglePause={() => setIsPaused(false)} />
+                <div style={S.canvasWrapper} ref={gameContainerRef} className="game-canvas-wrapper" />
+                <PauseOverlay isPaused={isPaused} onTogglePause={() => setIsPaused(false)} onPauseRequest={() => setIsPaused(true)} />
             </div>
         );
     }
