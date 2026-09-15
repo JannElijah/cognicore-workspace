@@ -69,7 +69,7 @@ const AppNavigation = memo(function AppNavigation({
           )}
         </div>
         <div className="desktop-nav-container" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-          {activeGame === null && (
+          {activeGame === null && currentUser !== '' && (
             <div style={{ position: 'relative' }}>
               <button 
                 onClick={() => setPortalDropdownOpen(!portalDropdownOpen)}
