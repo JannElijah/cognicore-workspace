@@ -108,7 +108,7 @@ const AppNavigation = memo(function AppNavigation({
                   <div style={{
                     position: 'absolute',
                     top: '120%',
-                    left: 0,
+                    right: 0,
                     minWidth: '200px',
                     background: 'rgba(15, 23, 42, 0.95)',
                     backdropFilter: 'blur(12px)',
