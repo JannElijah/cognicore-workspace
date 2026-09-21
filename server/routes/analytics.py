@@ -214,6 +214,102 @@ def get_user_analytics(current_user_id, current_username, username):
     finally:
         conn.close()
 
+@analytics_bp.route('/api/evaluate', methods=['POST'])
+def run_evaluation():
+    data = request.json
+    username = data.get('username')
+    if not username:
+        return jsonify({"status": "error", "message": "Username required"}), 400
+
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
+        user = cursor.fetchone()
+        if not user:
+            return jsonify({"status": "error", "message": "User not found"}), 404
+        user_id = user['id']
+        
+        cursor.execute("SELECT * FROM cognitive_assessments WHERE user_id = %s", (user_id,))
+        assessments = cursor.fetchall()
+        
+        pre_test = next((a for a in assessments if a['assessment_type'] == 'pre-test'), None)
+        post_test = next((a for a in assessments if a['assessment_type'] == 'post-test'), None)
+        
+        if not pre_test or not post_test:
+            return jsonify({"status": "error", "message": "Incomplete assessments"}), 400
+            
+        pre_scores = [pre_test['spatial_visual_score'], pre_test['logical_math_score'], pre_test['attention_score'], pre_test['executive_score']]
+        post_scores = [post_test['spatial_visual_score'], post_test['logical_math_score'], post_test['attention_score'], post_test['executive_score']]
+        
+        n = 4 # Number of domains
+        mean_pre = sum(pre_scores) / n
+        mean_post = sum(post_scores) / n
+        improvement_pct = ((mean_post - mean_pre) / mean_pre * 100) if mean_pre != 0 else 0.0
+        
+        import math
+        diffs = [post_scores[i] - pre_scores[i] for i in range(n)]
+        mean_diff = sum(diffs) / n
+        
+        if SCIPY_AVAILABLE:
+            t_stat, p_val = stats.ttest_rel(post_scores, pre_scores)
+        else:
+            var_diff = sum((d - mean_diff) ** 2 for d in diffs) / (n - 1) if n > 1 else 0.0
+            sd_diff = var_diff ** 0.5
+            se_diff = sd_diff / (n ** 0.5) if n > 0 else 0.0
+            t_stat = mean_diff / se_diff if se_diff != 0 else 0.0
+            p_val = calculate_approx_t_p_value(t_stat, n - 1)
+            
+        if math.isnan(t_stat) or math.isinf(t_stat):
+            t_stat = 0.0
+        if math.isnan(p_val) or math.isinf(p_val):
+            p_val = 1.0
+            
+        var_diff_d = sum((d - mean_diff) ** 2 for d in diffs) / (n - 1) if n > 1 else 0.0
+        sd_diff_d = var_diff_d ** 0.5
+        cohens_d = mean_diff / sd_diff_d if sd_diff_d > 0 else 0.0
+        
+        if math.isnan(cohens_d) or math.isinf(cohens_d):
+            cohens_d = 0.0
+            
+        abs_d = abs(cohens_d)
+        if abs_d < 0.2:
+            effect_magnitude = "negligible"
+        elif abs_d < 0.5:
+            effect_magnitude = "small"
+        elif abs_d < 0.8:
+            effect_magnitude = "medium"
+        else:
+            effect_magnitude = "large"
+            
+        significant = p_val < 0.05
+        
+        return jsonify({
+            "status": "success",
+            "sample_size": n,
+            "mean_pretest": round(mean_pre, 2),
+            "mean_posttest": round(mean_post, 2),
+            "overall_improvement_rate_pct": round(improvement_pct, 2),
+            "t_statistic": round(t_stat, 4),
+            "p_value": round(p_val, 6),
+            "cohens_d": round(cohens_d, 4),
+            "effect_size_magnitude": effect_magnitude,
+            "statistically_significant": bool(significant),
+            "hypothesis_result": "Reject Null Hypothesis: Significant improvement detected across domains." if significant else "Fail to Reject Null Hypothesis: Improvement is not statistically significant.",
+            "domain_improvements": {
+                "spatial_visual_memory": round(post_test['spatial_visual_score'] - pre_test['spatial_visual_score'], 2),
+                "logical_mathematical": round(post_test['logical_math_score'] - pre_test['logical_math_score'], 2),
+                "attention": round(post_test['attention_score'] - pre_test['attention_score'], 2),
+                "executive_strategy": round(post_test['executive_score'] - pre_test['executive_score'], 2)
+            }
+        }), 200
+    except Exception as e:
+        logger.error(f"Error in run_evaluation: {e}")
+        return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
+    finally:
+        conn.close()
+
 @analytics_bp.route('/api/cohort-analytics', methods=['GET'])
 def get_cohort_analytics():
     conn = get_db_connection()

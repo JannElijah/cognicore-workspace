@@ -299,8 +299,10 @@ export default function App() {
   const fetchCohortAnalytics = async () => {
     setCohortLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/cohort-analytics`);
-      if (!res.ok) throw new Error("Failed to fetch cohort analytics.");
+      const res = await fetch(`${API_BASE}/api/cohort-analytics`, {
+        method: 'GET'
+      });
+      if (!res.ok) throw new Error("Failed to fetch cohort data.");
       const data = await res.json();
       if (data.status === 'success') {
         setCohortAnalytics(data);
