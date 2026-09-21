@@ -42,9 +42,52 @@ export default class BaseCognitiveScene extends Phaser.Scene {
         this.events.on('pause', this.handlePause, this);
         this.events.on('resume', this.handleResume, this);
         this.events.once('shutdown', this.handleShutdown, this);
+
+        // Global telemetry buffer initialization
+        if (!this.telemetryBuffer) this.telemetryBuffer = [];
+
+        // Setup background telemetry batching (flush every 2500ms)
+        this.telemetryTimer = this.time.addEvent({
+            delay: 2500,
+            callback: this.flushGlobalTelemetry,
+            callbackScope: this,
+            loop: true
+        });
+    }
+
+    async flushGlobalTelemetry() {
+        if (!this.sessionId || !this.telemetryBuffer || this.telemetryBuffer.length === 0) return;
+        
+        const payloadBatch = { metrics: [...this.telemetryBuffer] };
+        this.telemetryBuffer = []; // Clear immediately to prevent duplicate sends
+
+        try {
+            // Using fetch for background batching
+            fetch(`${this.apiUrl || 'http://127.0.0.1:5000'}/api/submit-metrics/batch`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${useCogniStore.getState().token}`
+                },
+                body: JSON.stringify(payloadBatch),
+                keepalive: true // Ensure it sends even if unmounting
+            });
+        } catch (e) {
+            console.warn('[Global Telemetry Dispatch] Failed batch send', e);
+        }
     }
 
     handleShutdown() {
+        // Flush remaining before shutdown using beacon for reliability
+        if (this.telemetryBuffer && this.telemetryBuffer.length > 0 && this.sessionId) {
+            const payloadBatch = { metrics: [...this.telemetryBuffer] };
+            const blob = new Blob([JSON.stringify(payloadBatch)], { type: 'application/json' });
+            navigator.sendBeacon(`${this.apiUrl || 'http://127.0.0.1:5000'}/api/submit-metrics/batch`, blob);
+            this.telemetryBuffer = [];
+        }
+
+        if (this.telemetryTimer) this.telemetryTimer.remove();
+
         // Aggressive Garbage Collection to prevent memory leaks during rapid game switching
         if (this.textures) this.textures.removeAll();
         if (this.sound) this.sound.removeAll();

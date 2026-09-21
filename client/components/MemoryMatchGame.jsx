@@ -17,10 +17,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import MemoryMatchScene from '../games/MemoryMatchScene';
 import PauseOverlay from './PauseOverlay';
+import { usePhaserEngine } from '../hooks/usePhaserEngine';
 
 export default function MemoryMatchGame({ username = 'default_player', apiUrl = API_BASE, onGameFinished }) {
     const gameContainerRef = useRef(null);
-    const phaserInstanceRef = useRef(null);
 
     const [sessionId, setSessionId] = useState(null);
     const [ddaParameters, setDdaParameters] = useState(null);
@@ -71,82 +71,50 @@ export default function MemoryMatchGame({ username = 'default_player', apiUrl = 
         }
     };
 
-    // Initialize Phaser game when state changes to PLAYING
-    useEffect(() => {
-        if (gameState !== 'PLAYING' || !sessionId || !gameContainerRef.current) {
-            return;
-        }
+    // Handle Phaser engine initialization and lifecycle via generic hook
+    const sceneData = React.useMemo(() => ({
+        sessionId: sessionId,
+        apiUrl: apiUrl,
+        ddaParameters: ddaParameters,
+        cognitiveProfile: cognitiveProfile,
+        onGameOver: async (stats) => {
+            setFinalStats(stats);
 
-        console.log('[React MM Wrapper] Starting Phaser game instance...');
-
-        // Phaser configuration with auto-scaling Scale Manager for mobile responsiveness
-        const config = {
-            type: Phaser.AUTO,
-            parent: gameContainerRef.current,
-            backgroundColor: '#09090b',
-            scale: {
-                mode: Phaser.Scale.FIT,
-                autoCenter: Phaser.Scale.CENTER_BOTH,
-                // Mobile-responsive: use viewport width on portrait phones, fixed 800x600 on desktop
-                width: window.innerWidth < 768 ? window.innerWidth : 800,
-                height: window.innerWidth < 768 ? Math.round(window.innerWidth * 0.75) : 600,
-            },
-            scene: [MemoryMatchScene]
-        };
-
-        // Instantiate Phaser
-        const game = new Phaser.Game(config);
-        phaserInstanceRef.current = game;
-        window.phaserGame = game;
-
-        // Boot and pass the state objects to Phaser MemoryMatchScene
-        game.scene.start('MemoryMatchScene', {
-            sessionId: sessionId,
-            apiUrl: apiUrl,
-            ddaParameters: ddaParameters,
-            cognitiveProfile: cognitiveProfile,
-            onGameOver: async (stats) => {
-                setFinalStats(stats);
-
-                let profileInfo = null;
-                // Fetch final cognitive profile archetype updates from the database
-                try {
-                    const profileRes = await fetch(`${apiUrl}/api/dda`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${useCogniStore.getState().token}`},
-                        body: JSON.stringify({ session_id: sessionId })
-                    });
-                    if (profileRes.ok) {
-                        const profileData = await profileRes.json();
-                        if (profileData.status === 'success' && profileData.cognitive_profile) {
-                            setCognitiveProfile(profileData.cognitive_profile);
-                            profileInfo = profileData.cognitive_profile;
-                        }
+            let profileInfo = null;
+            try {
+                const profileRes = await fetch(`${apiUrl}/api/dda`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${useCogniStore.getState().token}`},
+                    body: JSON.stringify({ session_id: sessionId })
+                });
+                if (profileRes.ok) {
+                    const profileData = await profileRes.json();
+                    if (profileData.status === 'success' && profileData.cognitive_profile) {
+                        setCognitiveProfile(profileData.cognitive_profile);
+                        profileInfo = profileData.cognitive_profile;
                     }
-                } catch (e) {
-                    console.warn('[React MM Wrapper] Failed to fetch final cognitive profile:', e);
                 }
-
-                setGameState('FINISHED');
-                if (onGameFinished) {
-                    onGameFinished({ ...stats, cognitiveProfile: profileInfo });
-                }
+            } catch (e) {
+                console.warn('[React MM Wrapper] Failed to fetch final cognitive profile:', e);
             }
-        });
 
-        // Cleanup: destroy Phaser instance on component unmount
-        // This is critical to avoid multiple canvas tags and memory leaks!
-        return () => {
-            if (phaserInstanceRef.current) {
-                console.log('[React MM Wrapper] Destroying Phaser instance...');
-                phaserInstanceRef.current.destroy(true);
-                phaserInstanceRef.current = null;
-                window.phaserGame = null;
+            setGameState('FINISHED');
+            if (onGameFinished) {
+                onGameFinished({ ...stats, cognitiveProfile: profileInfo });
             }
-        };
-    }, [gameState, sessionId, apiUrl, ddaParameters, onGameFinished]);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }), [sessionId, apiUrl, ddaParameters]);
+
+    const phaserInstanceRef = usePhaserEngine(
+        gameContainerRef, 
+        gameState, 
+        MemoryMatchScene, 
+        'MemoryMatchScene', 
+        sceneData
+    );
 
 
     // Handle pause state transitions

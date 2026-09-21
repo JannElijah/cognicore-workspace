@@ -141,14 +141,10 @@ export default class MemoryMatchScene extends BaseCognitiveScene {
     }
 
     drawGrid() {
-        // Clear old cell containers if they exist
-        this.gridCells.forEach(cell => {
-            if (cell.bg) cell.bg.destroy();
-            if (cell.glow) cell.glow.destroy();
-            if (cell.label) cell.label.destroy();
-        });
-        this.gridCells = [];
-
+        // Object Pooling: Do not destroy cells. Reuse existing ones to prevent GC spikes.
+        if (!this.gridCells) {
+            this.gridCells = [];
+        }
         const width = this.scale.width;
         const height = this.scale.height;
 
@@ -166,73 +162,108 @@ export default class MemoryMatchScene extends BaseCognitiveScene {
                 const index = row * this.gridSize + col;
                 const x = startX + col * (cellSize + spacing);
                 const y = startY + row * (cellSize + spacing);
-
-                // Base graphic: Dark glassmorphic square
-                const cellBg = this.add.graphics();
-                cellBg.setPosition(x, y);
-                cellBg.fillStyle(0x1e293b, 0.45); // Glass grey
-                cellBg.lineStyle(1.5, 0xffffff, 0.08); // Subtle border
-                cellBg.fillRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
-                cellBg.strokeRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
-
-                // Glow graphic (overlay rendered during highlighting)
-                const cellGlow = this.add.graphics();
-                cellGlow.setPosition(x, y);
-                cellGlow.setVisible(false);
-                cellGlow.fillStyle(parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16), 0.6); // Purple highlight fill
-                cellGlow.lineStyle(3, 0xd8b4fe, 0.9); // Brighter border
-                cellGlow.fillRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
-                cellGlow.strokeRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
-
-                // Label showing row/col indexes in spatial terms (for subtle accessibility or detail)
-                const cellLabel = this.add.text(x, y, '', {
-                    fontFamily: 'Arial',
-                    fontSize: '14px',
-                    fill: '#475569'
-                }).setOrigin(0.5);
-
-                // Set Interactive area
-                cellBg.setInteractive(new Phaser.Geom.Rectangle(-cellSize / 2, -cellSize / 2, cellSize, cellSize), Phaser.Geom.Rectangle.Contains);
-
-                // Click event
-                cellBg.on('pointerdown', (pointer, localX, localY, event) => {
-                    if (this.isTutorialActive) return;
-                    if (event) event.stopPropagation();
-                    this.handleCellInput(index);
-                });
-
-                // Hover micro-animations
-                cellBg.on('pointerover', () => {
-                    if (this.gamePhase === 'RECALL') {
-                        cellBg.clear();
-                        cellBg.fillStyle(0x334155, 0.6);
-                        cellBg.lineStyle(2, parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16), 0.4);
-                        cellBg.fillRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
-                        cellBg.strokeRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
-                    }
-                });
-
-                cellBg.on('pointerout', () => {
-                    cellBg.clear();
-                    cellBg.fillStyle(0x1e293b, 0.45);
-                    cellBg.lineStyle(1.5, 0xffffff, 0.08);
+                let cellObj;
+                if (index < this.gridCells.length) {
+                    // Reuse existing pooled cell
+                    cellObj = this.gridCells[index];
+                    cellObj.bg.setPosition(x, y);
+                    cellObj.glow.setPosition(x, y);
+                    cellObj.label.setPosition(x, y);
+                    cellObj.bg.setVisible(true);
+                    cellObj.label.setVisible(true);
+                    
+                    // Rebind interactive area since cell size might have changed
+                    cellObj.bg.input.hitArea.setTo(-cellSize / 2, -cellSize / 2, cellSize, cellSize);
+                } else {
+                    // Base graphic: Dark glassmorphic square
+                    const cellBg = this.add.graphics();
+                    cellBg.setPosition(x, y);
+                    cellBg.fillStyle(0x1e293b, 0.45); // Glass grey
+                    cellBg.lineStyle(1.5, 0xffffff, 0.08); // Subtle border
                     cellBg.fillRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
                     cellBg.strokeRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
-                });
 
-                // Reference bindings
-                const cellObj = {
-                    index,
-                    x,
-                    y,
-                    bg: cellBg,
-                    glow: cellGlow,
-                    label: cellLabel,
-                    cellSize
-                };
+                    // Glow graphic (overlay rendered during highlighting)
+                    const cellGlow = this.add.graphics();
+                    cellGlow.setPosition(x, y);
+                    cellGlow.setVisible(false);
+                    cellGlow.fillStyle(parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16), 0.6); // Purple highlight fill
+                    cellGlow.lineStyle(3, 0xd8b4fe, 0.9); // Brighter border
+                    cellGlow.fillRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
+                    cellGlow.strokeRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
 
-                this.gridCells.push(cellObj);
+                    // Label showing row/col indexes in spatial terms
+                    const cellLabel = this.add.text(x, y, '', {
+                        fontFamily: 'Arial',
+                        fontSize: '14px',
+                        fill: '#475569'
+                    }).setOrigin(0.5);
+
+                    // Set Interactive area
+                    cellBg.setInteractive(new Phaser.Geom.Rectangle(-cellSize / 2, -cellSize / 2, cellSize, cellSize), Phaser.Geom.Rectangle.Contains);
+
+                    // Click event
+                    cellBg.on('pointerdown', (pointer, localX, localY, event) => {
+                        if (this.isTutorialActive) return;
+                        if (event) event.stopPropagation();
+                        this.handleCellInput(cellObj.index);
+                    });
+
+                    // Hover micro-animations
+                    cellBg.on('pointerover', () => {
+                        if (this.gamePhase === 'RECALL') {
+                            cellBg.clear();
+                            cellBg.fillStyle(0x334155, 0.6);
+                            cellBg.lineStyle(2, parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16), 0.4);
+                            cellBg.fillRoundedRect(-cellObj.cellSize / 2, -cellObj.cellSize / 2, cellObj.cellSize, cellObj.cellSize, 8);
+                            cellBg.strokeRoundedRect(-cellObj.cellSize / 2, -cellObj.cellSize / 2, cellObj.cellSize, cellObj.cellSize, 8);
+                        }
+                    });
+
+                    cellBg.on('pointerout', () => {
+                        cellBg.clear();
+                        cellBg.fillStyle(0x1e293b, 0.45);
+                        cellBg.lineStyle(1.5, 0xffffff, 0.08);
+                        cellBg.fillRoundedRect(-cellObj.cellSize / 2, -cellObj.cellSize / 2, cellObj.cellSize, cellObj.cellSize, 8);
+                        cellBg.strokeRoundedRect(-cellObj.cellSize / 2, -cellObj.cellSize / 2, cellObj.cellSize, cellObj.cellSize, 8);
+                    });
+
+                    // Reference bindings
+                    cellObj = {
+                        index,
+                        bg: cellBg,
+                        glow: cellGlow,
+                        label: cellLabel,
+                        cellSize
+                    };
+
+                    this.gridCells.push(cellObj);
+                }
+                
+                // Always update the cellSize reference
+                cellObj.cellSize = cellSize;
+                
+                // Redraw graphics for the cell since size might have changed
+                cellObj.bg.clear();
+                cellObj.bg.fillStyle(0x1e293b, 0.45);
+                cellObj.bg.lineStyle(1.5, 0xffffff, 0.08);
+                cellObj.bg.fillRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
+                cellObj.bg.strokeRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
+                
+                cellObj.glow.clear();
+                cellObj.glow.fillStyle(parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16), 0.6);
+                cellObj.glow.lineStyle(3, 0xd8b4fe, 0.9);
+                cellObj.glow.fillRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
+                cellObj.glow.strokeRoundedRect(-cellSize / 2, -cellSize / 2, cellSize, cellSize, 8);
             }
+        }
+        
+        // Hide unused pooled cells
+        const requiredCells = this.gridSize * this.gridSize;
+        for (let i = requiredCells; i < this.gridCells.length; i++) {
+            this.gridCells[i].bg.setVisible(false);
+            this.gridCells[i].glow.setVisible(false);
+            this.gridCells[i].label.setVisible(false);
         }
     }
 
@@ -484,31 +515,13 @@ updateTimer() {
         this.telemetryBuffer.push(payload);
     }
 
-    async flushTelemetry() {
-        if (!this.sessionId || !this.telemetryBuffer || this.telemetryBuffer.length === 0) return;
-        const payloadBatch = { metrics: this.telemetryBuffer };
-        this.telemetryBuffer = [];
-        
-        try {
-            console.log('[Telemetry Dispatch] Sending batched metrics...', payloadBatch);
-            await fetch(`${this.apiUrl}/api/submit-metrics/batch`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${useCogniStore.getState().token}`},
-                body: JSON.stringify(payloadBatch)
-            });
-        } catch (e) {
-            console.warn('[Telemetry Dispatch] Connection offline, telemetry buffered.', e);
-        }
-    }
-
     async adaptDifficulty() {
         if (!this.sessionId) return;
 
         this.statusText.setText('SYNCING ADAPTATION...').setFill('#64748b');
 
         // Flush telemetry in batch before querying DDA updates
-        await this.flushTelemetry();
+        await this.flushGlobalTelemetry();
 
         try {
             console.log('[DDA Bridge] Checking memory scaling profiles...');
@@ -565,7 +578,7 @@ updateTimer() {
         this.gamePhase = 'GAMEOVER';
 
         // Flush remaining telemetry before closing session
-        await this.flushTelemetry();
+        await this.flushGlobalTelemetry();
 
         this.gridCells.forEach(cell => {
             if (cell.bg) cell.bg.destroy();
