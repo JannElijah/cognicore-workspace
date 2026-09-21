@@ -2413,7 +2413,7 @@ export default function App() {
                />
             )}
 
-            {preTestScores && !hasPlayedPrescribed && assessmentStage !== 'completed' && (
+            {preTestScores && assessmentStage !== 'completed' && (
               <div style={{ marginBottom: '3rem' }}>
                 <PretestResults 
                   preTestScores={preTestScores} 
