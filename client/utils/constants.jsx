@@ -120,14 +120,6 @@ export const DOMAINS_LIST = [
         benefit: 'Improves spatial orientation and visual-spatial short-term working retention.'
       },
       {
-        id: 'NeuralNBack',
-        title: 'Neural N-Back',
-        icon: <SvgGameIcon name="Puzzle" color="#4ade80" />,
-        objective: 'Track visual element sequences and identify target matches located N steps backwards.',
-        benefit: 'Exercises active mental template updates, temporal processing, and continuous memory storage.',
-        inProgress: true
-      },
-      {
         id: 'SynapseSpin',
         title: 'Synapse Spin',
         icon: <SvgGameIcon name="Sync" color="#4ade80" />,

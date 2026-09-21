@@ -52,7 +52,6 @@ const EquationBalanceGame = lazy(() => import('./components/EquationBalanceGame'
 const SequenceDecoderGame = lazy(() => import('./components/SequenceDecoderGame'));
 const RouteOptimizerGame = lazy(() => import('./components/RouteOptimizerGame'));
 const NeuroMazeGame = lazy(() => import('./components/NeuroMazeGame'));
-const NeuralNBackGame = lazy(() => import('./components/NeuralNBackGame'));
 const SynapseSpinGame = lazy(() => import('./components/SynapseSpinGame'));
 const NexusMapperGame = lazy(() => import('./components/NexusMapperGame'));
 import { audioDda } from './utils/audioSynth';
@@ -696,7 +695,7 @@ export default function App() {
     if (lastGameStats) {
       const calculatedScore = Math.round(lastGameStats.accuracy * 70 + lastGameStats.difficultyLevel * 6);
       
-      if (lastGameStats.gameType === 'MemoryMatch' || lastGameStats.gameType === 'MatrixRecall' || lastGameStats.gameType === 'NeuralNBack' || lastGameStats.gameType === 'SynapseSpin' || lastGameStats.gameType === 'NexusMapper') {
+      if (lastGameStats.gameType === 'MemoryMatch' || lastGameStats.gameType === 'MatrixRecall' || lastGameStats.gameType === 'SynapseSpin' || lastGameStats.gameType === 'NexusMapper') {
         setSkills(prev => ({
           ...prev,
           spatial_visual_memory: Math.max(calculatedScore, prev.spatial_visual_memory)
@@ -1736,7 +1735,7 @@ export default function App() {
   // ─── GAME TYPE → DOMAIN HELPER ────────────────────────────────────────────
   const GAME_DOMAIN_MAP = {
     SpeedTap: 'Reflexes', FocusFinder: 'Reflexes', StroopShift: 'Reflexes',
-    MemoryMatch: 'Memory', MatrixRecall: 'Memory', NeuralNBack: 'Memory',
+    MemoryMatch: 'Memory', MatrixRecall: 'Memory',
     SynapseSpin: 'Memory', NexusMapper: 'Memory',
     LogicLink: 'Logic', EquationBalance: 'Logic', SequenceDecoder: 'Logic', RouteOptimizer: 'Logic',
     MazeEscape: 'Strategy', PriorityQueue: 'Strategy', MentalFlex: 'Strategy', NeuroMaze: 'Strategy'
@@ -2297,7 +2296,6 @@ export default function App() {
                     {activeGame === 'SequenceDecoder' && <SequenceDecoderGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
                     {activeGame === 'RouteOptimizer' && <RouteOptimizerGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
                     {activeGame === 'NeuroMaze' && <NeuroMazeGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                    {activeGame === 'NeuralNBack' && <NeuralNBackGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
                     {activeGame === 'SynapseSpin' && <SynapseSpinGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
                     {activeGame === 'NexusMapper' && <NexusMapperGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
                   </Suspense>
