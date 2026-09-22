@@ -158,7 +158,7 @@ export default function Dashboard({
                   <div style={{ background: 'rgba(74, 222, 128, 0.1)', border: '1px solid rgba(74, 222, 128, 0.2)', padding: '1rem', borderRadius: '8px' }}>
                     <h4 style={{ margin: '0 0 0.5rem 0', color: '#4ade80', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span>⭐</span> Core Strengths</h4>
                     <ul style={{ margin: 0, paddingLeft: '1.25rem', color: '#e2e8f0', fontSize: '0.85rem' }}>
-                      {personalizedReport.strengths && personalizedReport.strengths.map((s, i) => <li key={i}>{s}</li>)}
+                      {personalizedReport.pros && personalizedReport.pros.map((s, i) => <li key={i}>{s}</li>)}
                     </ul>
                   </div>
                   <div style={{ background: 'rgba(248, 113, 113, 0.1)', border: '1px solid rgba(248, 113, 113, 0.2)', padding: '1rem', borderRadius: '8px' }}>
