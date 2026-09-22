@@ -2390,6 +2390,7 @@ export default function App() {
                   postScores={postTestScores} 
                   aiFeedback={aiFeedback}
                   currentUser={currentUser} 
+                  onReturn={() => setAssessmentStage('none')}
                />
             )}
 

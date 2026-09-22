@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function PostTestResults({ preScores, postScores, aiFeedback, currentUser }) {
+export default function PostTestResults({ preScores, postScores, aiFeedback, currentUser, onReturn }) {
   const domains = [
     { key: 'spatial_visual_memory', label: 'Spatial-Visual', color: '#4ade80' },
     { key: 'logical_mathematical', label: 'Logical-Math', color: '#f59e0b' },
@@ -10,7 +10,7 @@ export default function PostTestResults({ preScores, postScores, aiFeedback, cur
 
   // Simple Markdown Parser for the AI Output
   const renderFeedback = (text) => {
-    if (!text) return null;
+    if (!text) return <p style={{ color: '#94a3b8', fontStyle: 'italic', padding: '1rem' }}>AI Profiling is unavailable. This usually occurs if a baseline Pre-Test was not found for comparison.</p>;
     return text.split('\n\n').map((paragraph, i) => {
       if (paragraph.startsWith('### ')) {
         return <h3 key={i} style={{ color: '#fff', fontSize: '1.4rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem', marginBottom: '1rem' }}>{paragraph.replace('### ', '')}</h3>;
@@ -95,12 +95,12 @@ export default function PostTestResults({ preScores, postScores, aiFeedback, cur
 
       <div style={{ marginTop: '4rem', textAlign: 'center' }}>
         <button 
-          onClick={() => window.location.reload()}
+          onClick={onReturn || (() => window.location.reload())}
           style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '0.8rem 2rem', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', fontSize: '0.9rem' }}
           onMouseOver={(e) => { e.target.style.background = 'rgba(255,255,255,0.05)'; e.target.style.borderColor = 'rgba(255,255,255,0.4)'; }}
           onMouseOut={(e) => { e.target.style.background = 'transparent'; e.target.style.borderColor = 'rgba(255,255,255,0.2)'; }}
         >
-          Return to Dashboard
+          Close Assessment
         </button>
       </div>
 

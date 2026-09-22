@@ -541,7 +541,8 @@ def get_assessment_status(username):
         return jsonify({
             "status": "success", "exists": True, "pre_test": pre_data, "post_test": post_data,
             "weakest_domain": weakest_domain, "prescribed_game": prescribed_game,
-            "personalized_report": generate_pros_cons(pre_data) if pre_data else None
+            "personalized_report": generate_pros_cons(pre_data) if pre_data else None,
+            "ai_feedback": post.ai_feedback if post else None
         }), 200
     except Exception as e:
         logger.error(f"Error in assessment_status: {e}")
