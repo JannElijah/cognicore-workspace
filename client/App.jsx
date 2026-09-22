@@ -2493,8 +2493,14 @@ export default function App() {
                   </div>
                   <div style={{ display: 'flex', gap: '0.75rem' }}>
                     {assessmentStage === 'completed' ? (
-                      <span style={{ background: 'rgba(74, 222, 128, 0.1)', color: '#4ade80', border: '1px solid #4ade80', padding: '0.35rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold' }}>
-                        ✓ Evaluation Finalized
+                      <span 
+                        onClick={() => setAssessmentStage('post-test')}
+                        title="Take a follow-up assessment"
+                        style={{ cursor: 'pointer', background: 'rgba(74, 222, 128, 0.1)', color: '#4ade80', border: '1px solid #4ade80', padding: '0.35rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold', transition: 'all 0.2s', display: 'inline-block' }}
+                        onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(74, 222, 128, 0.2)'; e.currentTarget.style.transform = 'scale(1.05)'; }}
+                        onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(74, 222, 128, 0.1)'; e.currentTarget.style.transform = 'scale(1)'; }}
+                      >
+                        ↻ Take Follow-up Evaluation
                       </span>
                     ) : hasPlayedPrescribed ? (
                       <button

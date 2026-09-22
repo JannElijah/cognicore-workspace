@@ -316,22 +316,32 @@ def get_cohort_analytics():
     try:
         cursor = conn.cursor()
         
-        # Query matched pre and post scores for research subjects
+        # Query matched pre and post scores for all users (using latest pre/post tests)
         cursor.execute(
             """
+            WITH latest_pre AS (
+                SELECT DISTINCT ON (user_id) * 
+                FROM cognitive_assessments 
+                WHERE assessment_type = 'pre-test' 
+                ORDER BY user_id, completed_at DESC
+            ),
+            latest_post AS (
+                SELECT DISTINCT ON (user_id) * 
+                FROM cognitive_assessments 
+                WHERE assessment_type = 'post-test' 
+                ORDER BY user_id, completed_at DESC
+            )
             SELECT 
-                ca_pre.spatial_visual_score AS pre_sv,
-                ca_pre.logical_math_score AS pre_lm,
-                ca_pre.attention_score AS pre_at,
-                ca_pre.executive_score AS pre_ex,
-                ca_post.spatial_visual_score AS post_sv,
-                ca_post.logical_math_score AS post_lm,
-                ca_post.attention_score AS post_at,
-                ca_post.executive_score AS post_ex
-            FROM users u
-            JOIN cognitive_assessments ca_pre ON u.id = ca_pre.user_id AND ca_pre.assessment_type = 'pre-test'
-            JOIN cognitive_assessments ca_post ON u.id = ca_post.user_id AND ca_post.assessment_type = 'post-test'
-            WHERE u.username LIKE 'research_subject_%'
+                pre.spatial_visual_score AS pre_sv,
+                pre.logical_math_score AS pre_lm,
+                pre.attention_score AS pre_at,
+                pre.executive_score AS pre_ex,
+                post.spatial_visual_score AS post_sv,
+                post.logical_math_score AS post_lm,
+                post.attention_score AS post_at,
+                post.executive_score AS post_ex
+            FROM latest_pre pre
+            JOIN latest_post post ON pre.user_id = post.user_id
             """
         )
         rows = cursor.fetchall()
