@@ -8,16 +8,13 @@ from game_utils import (GAME_TO_DOMAIN, calculate_dda_parameters,
                         calculate_ols_slope, archetype_classifier, 
                         ml_history_cache, generate_pros_cons)
 from ai_engine import generate_post_test_ai_feedback
+from utils import safe_float
 import logging
 
 game_bp = Blueprint('game_bp', __name__)
 logger = logging.getLogger(__name__)
 
-def safe_float(val, default=0.0):
-    try:
-        return float(val) if val is not None else default
-    except (ValueError, TypeError):
-        return default
+
 
 def safe_int(val, default=0):
     try:
@@ -489,7 +486,7 @@ def submit_assessment(current_user_id, current_username):
         # Generate AI Feedback if it's a post-test
         ai_feedback_string = None
         if assessment_type == 'post-test':
-            pre_test = CognitiveAssessment.query.filter_by(user_id=current_user_id, assessment_type='pre-test').order_by(CognitiveAssessment.completed_at.desc()).first()
+            pre_test = CognitiveAssessment.query.filter_by(user_id=current_user_id, assessment_type='pre-test').order_by(CognitiveAssessment.completed_at.asc()).first()
             if pre_test:
                 pre_scores = {
                     "spatial_visual_memory": pre_test.spatial_visual_score,

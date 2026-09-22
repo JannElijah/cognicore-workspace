@@ -23,6 +23,7 @@ from psycopg2.pool import ThreadedConnectionPool
 import os
 import time
 import bcrypt
+from utils import safe_float
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -95,11 +96,7 @@ from auth import token_required
 
 # Auth routes moved to server/routes/auth.py
 
-def safe_float(val, default=None):
-    try:
-        return float(val) if val is not None else default
-    except (ValueError, TypeError):
-        return default
+
 
 def safe_int(val, default=None):
     try:

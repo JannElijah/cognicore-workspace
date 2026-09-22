@@ -1,3 +1,5 @@
+from utils import safe_float
+
 GAME_TO_DOMAIN = {'MemoryMatch': 'spatial_visual_memory', 'memory_match': 'spatial_visual_memory', 'LogicLink': 'logical_mathematical', 'logic_link': 'logical_mathematical', 'EquationBalance': 'logical_mathematical', 'equation_balance': 'logical_mathematical', 'SequenceDecoder': 'logical_mathematical', 'sequence_decoder': 'logical_mathematical', 'RouteOptimizer': 'logical_mathematical', 'route_optimizer': 'logical_mathematical', 'SpeedTap': 'reflexes_and_focus', 'speed_tap': 'reflexes_and_focus', 'FocusFinder': 'reflexes_and_focus', 'focus_finder': 'reflexes_and_focus', 'MazeEscape': 'executive_strategy', 'maze_escape': 'executive_strategy', 'PriorityQueue': 'executive_strategy', 'priority_queue': 'executive_strategy', 'NeuroMaze': 'executive_strategy', 'neuro_maze': 'executive_strategy', 'MatrixRecall': 'spatial_visual_memory', 'matrix_recall': 'spatial_visual_memory', 'StroopShift': 'reflexes_and_focus', 'stroop_shift': 'reflexes_and_focus', 'MentalFlex': 'executive_strategy', 'mental_flex': 'executive_strategy', 'NeuralNBack': 'spatial_visual_memory', 'neural_n_back': 'spatial_visual_memory', 'SynapseSpin': 'spatial_visual_memory', 'synapse_spin': 'spatial_visual_memory', 'NexusMapper': 'spatial_visual_memory', 'nexus_mapper': 'spatial_visual_memory'}
 
 def calculate_ols_slope(y_vals):
@@ -675,11 +677,7 @@ def calculate_pearson_r(x, y):
         
     return float(r), float(p_val)
 
-def safe_float(val, default=None):
-    try:
-        return float(val) if val is not None else default
-    except (ValueError, TypeError):
-        return default
+
 
 def safe_int(val, default=None):
     try:

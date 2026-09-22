@@ -22,9 +22,12 @@ research_bp = Blueprint('research_bp', __name__)
 def get_iso_evaluations():
     conn = get_db_connection()
     try:
+        limit = int(request.args.get('limit', 100))
+        offset = int(request.args.get('offset', 0))
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT id, functionality_score, usability_score, reliability_score, efficiency_score, ux_score, created_at FROM iso_evaluations ORDER BY created_at DESC"
+            "SELECT id, functionality_score, usability_score, reliability_score, efficiency_score, ux_score, created_at FROM iso_evaluations ORDER BY created_at DESC LIMIT %s OFFSET %s",
+            (limit, offset)
         )
         rows = cursor.fetchall()
         
@@ -55,10 +58,12 @@ def get_iso_evaluations():
 def get_cohort_db_scores():
     conn = get_db_connection()
     try:
+        limit = int(request.args.get('limit', 50))
+        offset = int(request.args.get('offset', 0))
         cursor = conn.cursor()
         
         # Get all users starting with clinical_subject_
-        cursor.execute("SELECT id, username FROM users WHERE username LIKE 'clinical_subject_%' ORDER BY username ASC")
+        cursor.execute("SELECT id, username FROM users WHERE username LIKE 'clinical_subject_%%' ORDER BY username ASC LIMIT %s OFFSET %s", (limit, offset))
         users = cursor.fetchall()
         
         pretest_scores = []

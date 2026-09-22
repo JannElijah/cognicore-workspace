@@ -39,21 +39,8 @@ import Dashboard from './components/Dashboard';
 import KnowledgeBase from './components/KnowledgeBase';
 import AppNavigation from './components/AppNavigation';
 import HoverTooltip from './components/HoverTooltip';
+import GameRenderer from './components/GameRenderer';
 
-const SpeedTapGame = lazy(() => import('./components/SpeedTapGame'));
-const MemoryMatchGame = lazy(() => import('./components/MemoryMatchGame'));
-const FocusFinderGame = lazy(() => import('./components/FocusFinderGame'));
-const LogicLinkGame = lazy(() => import('./components/LogicLinkGame'));
-const PriorityQueueGame = lazy(() => import('./components/PriorityQueueGame'));
-const MatrixRecallGame = lazy(() => import('./components/MatrixRecallGame'));
-const StroopShiftGame = lazy(() => import('./components/StroopShiftGame'));
-const MentalFlexGame = lazy(() => import('./components/MentalFlexGame'));
-const EquationBalanceGame = lazy(() => import('./components/EquationBalanceGame'));
-const SequenceDecoderGame = lazy(() => import('./components/SequenceDecoderGame'));
-const RouteOptimizerGame = lazy(() => import('./components/RouteOptimizerGame'));
-const NeuroMazeGame = lazy(() => import('./components/NeuroMazeGame'));
-const SynapseSpinGame = lazy(() => import('./components/SynapseSpinGame'));
-const NexusMapperGame = lazy(() => import('./components/NexusMapperGame'));
 import { audioDda } from './utils/audioSynth';
 import audioEngine from './utils/audioEngine';
 
@@ -2286,20 +2273,11 @@ export default function App() {
                       <div style={{ fontWeight: 'bold', fontSize: '1.1rem', letterSpacing: '0.05em', color: 'var(--color-primary)' }}>LOADING NEURAL WORKSPACE...</div>
                     </div>
                   }>
-                    {activeGame === 'SpeedTap' && <SpeedTapGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                    {activeGame === 'MemoryMatch' && <MemoryMatchGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                    {activeGame === 'FocusFinder' && <FocusFinderGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                    {activeGame === 'LogicLink' && <LogicLinkGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                    {activeGame === 'PriorityQueue' && <PriorityQueueGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                    {activeGame === 'MatrixRecall' && <MatrixRecallGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                    {activeGame === 'StroopShift' && <StroopShiftGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                    {activeGame === 'MentalFlex' && <MentalFlexGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                    {activeGame === 'EquationBalance' && <EquationBalanceGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                    {activeGame === 'SequenceDecoder' && <SequenceDecoderGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                    {activeGame === 'RouteOptimizer' && <RouteOptimizerGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                    {activeGame === 'NeuroMaze' && <NeuroMazeGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                    {activeGame === 'SynapseSpin' && <SynapseSpinGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
-                    {activeGame === 'NexusMapper' && <NexusMapperGame username={activeDashboardUser} apiUrl="http://127.0.0.1:5000" onGameFinished={handleGameFinished} />}
+                    <GameRenderer 
+                      activeGame={activeGame} 
+                      activeDashboardUser={activeDashboardUser} 
+                      handleGameFinished={handleGameFinished} 
+                    />
                   </Suspense>
                 </ErrorBoundary>
               </div>

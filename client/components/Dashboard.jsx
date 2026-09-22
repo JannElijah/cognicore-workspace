@@ -544,6 +544,7 @@ export default function Dashboard({
 
                   {/* Behavioral Analytics Insight Alerts */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1.25rem' }}>
+                    <div style={{ fontSize: '0.8rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 'bold', marginBottom: '-0.25rem' }}>Latest Session Insights</div>
                     {lastGameStats && lastGameStats.hesitation_ms >= 800 && lastGameStats.accuracy >= 0.85 && (
                       <div style={{ 
                         background: 'rgba(6, 182, 212, 0.08)', 
@@ -571,7 +572,7 @@ export default function Dashboard({
                         boxShadow: '0 0 10px rgba(249, 115, 22, 0.15)',
                         lineHeight: '1.4'
                       }}>
-                        <strong><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 5px rgba(249,115,22,0.8))', verticalAlign:'text-bottom', marginRight:'4px'}} xmlns="http://www.w3.org/2000/svg"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke="#fb923c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> Frustration Alert:</strong> Impulsive Task Friction Identified: Real-time kinetic feedback indicates panic-driven or non-target execution behaviors during accelerated DDA challenge thresholds.
+                        <strong><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 5px rgba(249,115,22,0.8))', verticalAlign:'text-bottom', marginRight:'4px'}} xmlns="http://www.w3.org/2000/svg"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke="#fb923c" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg> Frustration Alert:</strong> Impulsive Task Friction Identified in your latest session. Real-time kinetic feedback indicates panic-driven or non-target execution behaviors.
                       </div>
                     )}
                     {(!lastGameStats || (lastGameStats.hesitation_ms < 800 && lastGameStats.spam_click_count < 3)) && (

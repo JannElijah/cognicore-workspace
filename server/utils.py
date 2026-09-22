@@ -1,5 +1,14 @@
 import math
 
+def safe_float(val, default=0.0):
+    if val is None:
+        return default
+    try:
+        return float(val)
+    except (ValueError, TypeError):
+        return default
+
+
 GAME_TO_DOMAIN = {
     "MemoryMatch": "spatial_visual_memory",
     "memory_match": "spatial_visual_memory",
