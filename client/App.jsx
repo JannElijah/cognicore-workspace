@@ -2395,6 +2395,8 @@ export default function App() {
             domainDeltas={domainDeltas}
             rec={rec}
             personalizedReport={personalizedReport}
+            lastGameStats={lastGameStats}
+            cognitiveProfile={cognitiveProfile}
           />
         ) : portalView === 'knowledge' ? (
           <KnowledgeBase />

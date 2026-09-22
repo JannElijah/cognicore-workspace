@@ -46,7 +46,8 @@ export default function Dashboard({
   domainAccData, domainAccOptions,
   perGameScoreData, perGameScoreOptions,
   scatterData, scatterOptions,
-  skills, domainDeltas, rec, personalizedReport
+  skills, domainDeltas, rec, personalizedReport,
+  lastGameStats, cognitiveProfile
 }) {
   const [activeTab, setActiveTab] = useState('participant');
   const [cohortData, setCohortData] = useState(null);
@@ -433,7 +434,7 @@ export default function Dashboard({
                       <div className="skeleton-box" style={{ height: '15px', width: '30%' }}></div>
                       <div className="skeleton-box" style={{ flex: 1, width: '100%' }}></div>
                     </div>
-                  ) : reversedSessions.length === 0 ? (
+                  ) : (!sessionTrendData || sessionTrendData.labels.length === 0) ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#64748b', fontSize: '0.8rem', textAlign: 'center' }}>
                       <span>No session history found.</span>
                       <span style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: '#4b5563' }}>Complete sessions to plot learning trends.</span>
@@ -486,7 +487,7 @@ export default function Dashboard({
                       <div className="skeleton-box" style={{ height: '20px', width: '95%' }}></div>
                       <div className="skeleton-box" style={{ height: '20px', width: '45%' }}></div>
                     </div>
-                  ) : sortedGames.length === 0 ? (
+                  ) : (!perGameScoreData || perGameScoreData.labels.length === 0) ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#64748b', fontSize: '0.8rem', textAlign: 'center' }}>
                       <span>No high scores recorded.</span>
                     </div>
