@@ -534,10 +534,10 @@ export default function Dashboard({
                       marginTop: '0.5rem',
                       fontSize: '1.3rem'
                     }}>
-                      {cognitiveProfile.archetype}
+                      {cognitiveProfile ? cognitiveProfile.archetype : 'Assessing...'}
                     </div>
                     <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.4rem', fontWeight: '500' }}>
-                      AI Prediction Confidence: {Math.round(cognitiveProfile.confidence_score * 100)}%
+                      AI Prediction Confidence: {cognitiveProfile ? Math.round(cognitiveProfile.confidence_score * 100) : 0}%
                     </div>
                   </div>
 
