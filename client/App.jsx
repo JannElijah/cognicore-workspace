@@ -1562,39 +1562,29 @@ export default function App() {
     return val !== diffLevels[idx - 1] ? '#22c55e' : 'var(--color-secondary)';
   });
 
-  const lineChartData = {
-    labels: latestSessionMetrics.map((_, index) => `R${index + 1}`),
+  const lineChartData = useMemo(() => ({
+    labels: latestSessionMetrics.map((_, index) => R),
     datasets: [
       {
-        label: 'Difficulty Level',
-        data: diffLevels,
-        borderColor: 'var(--color-secondary)',
-        backgroundColor: 'rgba(var(--rgb-secondary), 0.12)',
-        borderWidth: 3,
-        yAxisID: 'yDiff',
-        tension: 0.15,
+        label: 'Reaction Time (ms)',
+        data: latestSessionMetrics.map(m => m.reaction_time),
+        borderColor: 'var(--color-primary)',
+        backgroundColor: 'rgba(var(--rgb-primary), 0.1)',
+        tension: 0.4,
+        yAxisID: 'y',
         fill: true,
-        pointBackgroundColor: diffPointColors,
-        pointBorderColor: diffPointColors.map(c => c === '#22c55e' ? '#ffffff' : 'transparent'),
-        pointBorderWidth: diffPointColors.map(c => c === '#22c55e' ? 2 : 0),
-        pointRadius: diffPointRadii,
-        pointHoverRadius: diffPointRadii.map(r => r + 2)
       },
       {
-        label: 'Reaction Time (ms)',
-        data: latestSessionMetrics.map(m => m.reaction_time_ms),
-        borderColor: 'var(--color-primary)',
-        backgroundColor: 'rgba(var(--rgb-primary), 0.04)',
-        borderWidth: 2,
-        yAxisID: 'yRt',
-        tension: 0.2,
-        fill: true,
-        pointBackgroundColor: 'var(--color-primary)',
-        pointRadius: 3,
-        borderDash: [5, 5]
+        label: 'Accuracy (%)',
+        data: latestSessionMetrics.map(m => m.accuracy_rate),
+        borderColor: 'var(--color-secondary)',
+        backgroundColor: 'transparent',
+        borderDash: [5, 5],
+        tension: 0.4,
+        yAxisID: 'y1',
       }
     ]
-  };
+  }), [latestSessionMetrics]);
 
   const lineChartOptions = {
     responsive: true,
@@ -1913,29 +1903,31 @@ export default function App() {
     'Beginner':        [42, 40, 45, 38],
     'Initializing...': [55, 55, 55, 55],
   };
-  const baselineValues = ARCHETYPE_BASELINES[cognitiveProfile?.archetype] || ARCHETYPE_BASELINES['Initializing...'];
-  const radarDataEnhanced = {
-    labels: ['Spatial-Visual Memory','Logical-Mathematical','Reflexes & Focus','Executive Strategy'],
-    datasets: [
-      {
-        label: 'Your Profile',
-        data: [skills.spatial_visual_memory, skills.logical_mathematical, skills.reflexes_and_focus, skills.executive_strategy],
-        backgroundColor: 'rgba(var(--rgb-secondary),0.2)',
-        borderColor: 'var(--color-secondary)', borderWidth: 2.5,
-        pointBackgroundColor: 'var(--color-primary)', pointBorderColor: '#ffffff',
-        pointRadius: 5, pointHoverRadius: 7, order: 1
-      },
-      {
-        label: `${cognitiveProfile?.archetype || 'Archetype'} Baseline`,
-        data: baselineValues,
-        backgroundColor: 'rgba(255,255,255,0.04)',
-        borderColor: 'rgba(255,255,255,0.22)', borderWidth: 1.5,
-        borderDash: [5, 4],
-        pointBackgroundColor: 'rgba(255,255,255,0.25)', pointBorderColor: 'transparent',
-        pointRadius: 3, order: 2
-      }
-    ]
-  };
+  const radarDataEnhanced = useMemo(() => {
+    const baselineValues = ARCHETYPE_BASELINES[cognitiveProfile?.archetype] || ARCHETYPE_BASELINES['Initializing...'];
+    return {
+      labels: ['Spatial-Visual Memory','Logical-Mathematical','Reflexes & Focus','Executive Strategy'],
+      datasets: [
+        {
+          label: 'Your Profile',
+          data: [skills.spatial_visual_memory, skills.logical_mathematical, skills.reflexes_and_focus, skills.executive_strategy],
+          backgroundColor: 'rgba(var(--rgb-secondary),0.2)',
+          borderColor: 'var(--color-secondary)', borderWidth: 2.5,
+          pointBackgroundColor: 'var(--color-primary)', pointBorderColor: '#ffffff',
+          pointRadius: 5, pointHoverRadius: 7, order: 1
+        },
+        {
+          label: ${cognitiveProfile?.archetype || 'Archetype'} Baseline,
+          data: baselineValues,
+          backgroundColor: 'rgba(255,255,255,0.04)',
+          borderColor: 'rgba(255,255,255,0.22)', borderWidth: 1.5,
+          borderDash: [5, 4],
+          pointBackgroundColor: 'rgba(255,255,255,0.25)', pointBorderColor: 'transparent',
+          pointRadius: 3, order: 2
+        }
+      ]
+    };
+  }, [cognitiveProfile, skills]);
 
   // ─── DOMAIN DELTAS FOR SCORE CARDS ─────────────────────────────────────────
   const domainDeltas = {
