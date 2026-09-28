@@ -15,6 +15,7 @@ Chapter 2 Methodology Compliance: Software Engineering Architecture Patterns
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask_compress import Compress
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import psycopg2
@@ -40,8 +41,13 @@ except ImportError:
 
 def create_app(test_config=None):
     app = Flask(__name__)
+    Compress(app)
     # CORS restricts your React/Phaser frontend to authorized origins
-    CORS(app, supports_credentials=True)
+    cors_origins = os.environ.get("CORS_ORIGINS")
+    if cors_origins:
+        CORS(app, supports_credentials=True, origins=cors_origins.split(","))
+    else:
+        CORS(app, supports_credentials=True)
 
     if test_config is None:
         db_url = os.environ.get("DATABASE_URL")

@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, memo } from 'react';
 import ErrorBoundary from './ErrorBoundary';
 import { API_BASE } from '../utils/apiClient.js';
 
@@ -17,7 +17,7 @@ const NeuroMazeGame = lazy(() => import('./NeuroMazeGame'));
 const SynapseSpinGame = lazy(() => import('./SynapseSpinGame'));
 const NexusMapperGame = lazy(() => import('./NexusMapperGame'));
 
-export default function GameRenderer({ activeGame, activeDashboardUser, handleGameFinished }) {
+const GameRenderer = memo(function GameRenderer({ activeGame, activeDashboardUser, handleGameFinished }) {
   return (
     <div className="game-container" style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
       <ErrorBoundary>
@@ -45,4 +45,6 @@ export default function GameRenderer({ activeGame, activeDashboardUser, handleGa
       </ErrorBoundary>
     </div>
   );
-}
+});
+
+export default GameRenderer;

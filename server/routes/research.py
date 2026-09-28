@@ -50,16 +50,31 @@ def get_iso_evaluations():
         
     except Exception as e:
         logger.error(f"Error in get_iso_evaluations: {e}")
-        return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
+        return jsonify({"status": "error", "message": "An internal server error occurred."}), 500
     finally:
         conn.close()
 
 @research_bp.route('/api/cohort-db-scores', methods=['GET'])
 def get_cohort_db_scores():
+    limit = int(request.args.get('limit', 50))
+    offset = int(request.args.get('offset', 0))
+    cache_key = f"cognicore:cohort_db_scores_{limit}_{offset}"
+    
+    import redis
+    import json
+    import os
+    redis_url = os.environ.get("REDIS_URL", "memory://")
+    redis_client = None
+    if redis_url != "memory://":
+        try:
+            redis_client = redis.from_url(redis_url)
+            cached_data = redis_client.get(cache_key)
+            if cached_data:
+                return jsonify(json.loads(cached_data)), 200
+        except Exception:
+            pass
     conn = get_db_connection()
     try:
-        limit = int(request.args.get('limit', 50))
-        offset = int(request.args.get('offset', 0))
         cursor = conn.cursor()
         
         # Get all users starting with clinical_subject_
@@ -98,16 +113,23 @@ def get_cohort_db_scores():
                 pretest_scores.append(round(accuracies[0] * 100, 1))
                 posttest_scores.append(round(accuracies[-1] * 100, 1))
         
-        return jsonify({
+        
+        response_data = {
             "status": "success",
             "pretest_scores": pretest_scores,
             "posttest_scores": posttest_scores,
             "count": len(pretest_scores)
-        }), 200
+        }
+        if redis_client:
+            try:
+                redis_client.setex(cache_key, 900, json.dumps(response_data))
+            except Exception:
+                pass
+        return jsonify(response_data), 200
         
     except Exception as e:
         logger.error(f"Error in get_cohort_db_scores: {e}")
-        return jsonify({"status": "error", "message": f"Database error: {str(e)}"}), 500
+        return jsonify({"status": "error", "message": "An internal server error occurred."}), 500
     finally:
         conn.close()
 
@@ -172,7 +194,7 @@ def get_overall_cohort_data():
         
     except Exception as e:
         logger.error(f"Error in get_overall_cohort_data: {e}")
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+        return jsonify({"status": "error", "message": "An internal server error occurred."}), 500
     finally:
         conn.close()
 
@@ -240,7 +262,7 @@ def export_csv():
         )
     except Exception as e:
         logger.error(f"Error in export_csv: {e}")
-        return jsonify({"status": "error", "message": f"Export failed: {str(e)}"}), 500
+        return jsonify({"status": "error", "message": "An internal server error occurred."}), 500
     finally:
         conn.close()
 
@@ -252,7 +274,6 @@ def get_research_correlations():
         cohort = request.args.get('cohort', 'all')  # 'all', 'clinical', 'active'
         active_username = request.args.get('username', '')
 
-        # Valid numeric variables for correlation matrix comparison
         valid_vars = {
             'reaction_time', 'accuracy_rate', 'difficulty_level', 
             'error_count', 'hesitation_ms', 'spam_click_count', 
@@ -264,56 +285,59 @@ def get_research_correlations():
         conn = get_db_connection()
         try:
             cursor = conn.cursor()
+            
+            base_select = f"""
+                SELECT 
+                    pm.{var1} AS val1, 
+                    pm.{var2} AS val2, 
+                    u.username,
+                    corr(pm.{var2}, pm.{var1}) OVER () AS r_coeff,
+                    COUNT(*) OVER () AS n_points
+                FROM performance_metrics pm
+                JOIN game_sessions gs ON pm.session_id = gs.id
+                JOIN users u ON gs.user_id = u.id
+                WHERE pm.{var1} IS NOT NULL AND pm.{var2} IS NOT NULL
+            """
 
             if cohort == 'active' and active_username:
-                query = f"""
-                    SELECT pm.{var1}, pm.{var2}, u.username
-                    FROM performance_metrics pm
-                    JOIN game_sessions gs ON pm.session_id = gs.id
-                    JOIN users u ON gs.user_id = u.id
-                    WHERE u.username = %s AND pm.{var1} IS NOT NULL AND pm.{var2} IS NOT NULL
-                """
+                query = base_select + " AND u.username = %s"
                 cursor.execute(query, (active_username,))
             elif cohort == 'clinical':
-                query = f"""
-                    SELECT pm.{var1}, pm.{var2}, u.username
-                    FROM performance_metrics pm
-                    JOIN game_sessions gs ON pm.session_id = gs.id
-                    JOIN users u ON gs.user_id = u.id
-                    WHERE u.username LIKE 'clinical_subject_%' AND pm.{var1} IS NOT NULL AND pm.{var2} IS NOT NULL
-                """
+                query = base_select + " AND u.username LIKE 'clinical_subject_%'"
                 cursor.execute(query)
             else:  # all
-                query = f"""
-                    SELECT pm.{var1}, pm.{var2}, u.username
-                    FROM performance_metrics pm
-                    JOIN game_sessions gs ON pm.session_id = gs.id
-                    JOIN users u ON gs.user_id = u.id
-                    WHERE pm.{var1} IS NOT NULL AND pm.{var2} IS NOT NULL
-                """
+                query = base_select
                 cursor.execute(query)
 
             rows = cursor.fetchall()
         finally:
             conn.close()
 
-        x_vals = []
-        y_vals = []
         data_points = []
-
-        for r in rows:
-            val1 = r[var1]
-            val2 = r[var2]
-            if val1 is not None and val2 is not None:
-                x_vals.append(float(val1))
-                y_vals.append(float(val2))
+        r_coeff = 0.0
+        n_points = 0
+        
+        if rows:
+            r_coeff = rows[0]['r_coeff'] if rows[0]['r_coeff'] is not None else 0.0
+            n_points = rows[0]['n_points']
+            for r in rows:
                 data_points.append({
-                    "x": float(val1),
-                    "y": float(val2),
+                    "x": float(r['val1']),
+                    "y": float(r['val2']),
                     "username": r["username"]
                 })
 
-        r_coeff, p_value = calculate_pearson_r(x_vals, y_vals)
+        # Calculate p-value manually
+        import math
+        p_value = 1.0
+        if n_points > 2 and abs(r_coeff) < 1.0:
+            t_stat = r_coeff * math.sqrt((n_points - 2) / (1.0 - r_coeff**2))
+            # Use approximation from analytics if possible, or simple fallback
+            from routes.analytics import calculate_approx_t_p_value
+            p_value = calculate_approx_t_p_value(t_stat, n_points - 2)
+        elif abs(r_coeff) >= 1.0:
+            p_value = 0.0
+
         r_squared = r_coeff * r_coeff
 
         abs_r = abs(r_coeff)
@@ -344,7 +368,7 @@ def get_research_correlations():
         }), 200
     except Exception as e:
         logger.error(f"Error in get_research_correlations: {e}")
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+        return jsonify({"status": "error", "message": "An internal server error occurred."}), 500
 
 @research_bp.route('/api/research/learning-curves/<username>', methods=['GET'])
 def get_learning_curves(username):
@@ -437,6 +461,6 @@ def get_learning_curves(username):
 
     except Exception as e:
         logger.error(f"Error in get_learning_curves: {e}")
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+        return jsonify({"status": "error", "message": "An internal server error occurred."}), 500
     finally:
         conn.close()

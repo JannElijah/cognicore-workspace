@@ -243,6 +243,13 @@ export default class FocusFinderScene extends BaseCognitiveScene {
         }).setOrigin(0.5);
 
         // 3. Spawning Loops
+        // --- OBJECT POOLING OPTIMIZATION ---
+        this.targetPool = this.add.group({
+            classType: Phaser.GameObjects.Image,
+            maxSize: 60,
+            runChildUpdate: false
+        });
+        
         createMlHud(this, parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16));
         createTutorialOverlay(this, {
             title: "FOCUS FINDER",
@@ -310,8 +317,12 @@ updateTimer() {
             this.spawnVisualNoise();
         }
 
-        // Clear existing wave items
-        this.spawnedObjects.forEach(obj => obj.destroy());
+        // Clear existing wave items (Object Pooling Recycling)
+        this.spawnedObjects.forEach(obj => {
+            this.targetPool.killAndHide(obj);
+            obj.disableInteractive();
+            if (obj.body) obj.body.setVelocity(0, 0);
+        });
         this.spawnedObjects = [];
 
         this.stimulusSpawnTime = this.getTime();
@@ -573,7 +584,8 @@ updateTimer() {
             duration: 200,
             onComplete: () => {
                 this.spawnedObjects = this.spawnedObjects.filter(obj => obj !== container);
-                container.destroy();
+                this.targetPool.killAndHide(container);
+                container.disableInteractive();
             }
         });
     }

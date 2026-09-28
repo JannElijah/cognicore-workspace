@@ -169,6 +169,16 @@ export default class SpeedTapScene extends BaseCognitiveScene {
         });
 
         // Setup ML HUD & Tutorial Overlay
+        
+        // --- OBJECT POOLING OPTIMIZATION ---
+        // Pre-allocating sprite memory prevents the JS Garbage Collector 
+        // from pausing the game during intense waves of rapid clicks.
+        this.targetPool = this.add.group({
+            classType: Phaser.GameObjects.Image,
+            maxSize: 50,
+            runChildUpdate: false
+        });
+        
         createMlHud(this, parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16));
         createTutorialOverlay(this, {
             title: "SPEED TAP",
@@ -220,8 +230,13 @@ export default class SpeedTapScene extends BaseCognitiveScene {
         const textureKey = isDistractor ? 'speedtap_distractor' : 'speedtap_target';
         const scaledSize = 50 * this.targetScale;
 
-        // Create sprite from cached texture
-        const sprite = this.add.image(x, y, textureKey);
+        // --- OBJECT POOLING: Retrieve instead of instantiating ---
+        const sprite = this.targetPool.get(x, y, textureKey);
+        if (!sprite) return; // Pool is exhausted
+
+        sprite.setActive(true).setVisible(true);
+        sprite.setTexture(textureKey);
+        sprite.setPosition(x, y);
         // Scale sprite so it matches DDA-controlled targetScale
         // The texture was drawn at base size 50*2 = 100px wide, normalize:
         sprite.setScale((scaledSize * 2) / sprite.width);
@@ -355,7 +370,11 @@ export default class SpeedTapScene extends BaseCognitiveScene {
 
     removeTarget(sprite) {
         this.activeTargets = this.activeTargets.filter(t => t !== sprite);
-        sprite.destroy();
+        
+        // --- OBJECT POOLING: Recycle instead of destroying ---
+        this.tweens.killTweensOf(sprite);
+        this.targetPool.killAndHide(sprite);
+        sprite.disableInteractive();
     }
 
     registerMiss() {

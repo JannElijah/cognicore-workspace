@@ -1,5 +1,5 @@
 import { API_BASE } from '../utils/apiClient.js';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import useCogniStore from '../store/useCogniStore';
 import audioEngine from '../utils/audioEngine';
 import HoverTooltip from './HoverTooltip';
@@ -31,6 +31,8 @@ const Shop = ({ onClose }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [purchaseMsg, setPurchaseMsg] = useState(null);
+  const [processingId, setProcessingId] = useState(null);
+  const [activeTab, setActiveTab] = useState('Themes');
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -60,8 +62,10 @@ const Shop = ({ onClose }) => {
   }, [user, token, fetchInventory]);
 
   const handlePurchase = async (itemId) => {
+    if (processingId) return;
     audioEngine.playClick();
     setPurchaseMsg(null);
+    setProcessingId(itemId);
     try {
       const res = await fetch(`${API_BASE}/api/purchase`, {
         method: 'POST',
@@ -87,6 +91,8 @@ const Shop = ({ onClose }) => {
     } catch (err) {
       audioEngine.playError();
       setPurchaseMsg('Error during purchase.');
+    } finally {
+      setProcessingId(null);
     }
   };
 
@@ -102,15 +108,13 @@ const Shop = ({ onClose }) => {
       });
       const data = await res.json();
       if (data.status === 'success') {
-        // Update local state to reflect equipping
-        setInventory(inventory.map(item => ({
-          ...item,
-          is_equipped: (item.item_type === data.item_type) ? (item.item_id === itemId) : item.is_equipped
-        })));
-        fetchInventory(); // Sync global
+        fetchInventory(); // Sync global in background
+      } else {
+        setInventory(previousInventory); // Rollback on failure
       }
     } catch (err) {
       console.error(err);
+      setInventory(previousInventory); // Rollback on failure
     }
   };
 
@@ -164,7 +168,11 @@ const Shop = ({ onClose }) => {
                 <circle cx="12" cy="12" r="8" fill="#f59e0b"/>
                 <text x="12" y="16.5" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#78350f" fontFamily="Arial">C</text>
               </svg>
-              <span style={{ fontWeight: 'bold', color: '#f8fafc' }}>{loading ? '...' : coins}</span>
+              {loading ? (
+                <div className="skeleton-box" style={{ width: '40px', height: '16px', borderRadius: '4px' }}></div>
+              ) : (
+                <span style={{ fontWeight: 'bold', color: '#f8fafc' }}>{coins}</span>
+              )}
             </div>
             </HoverTooltip>
             <button
@@ -200,7 +208,38 @@ const Shop = ({ onClose }) => {
             </div>
           )}
 
-          {['Themes', 'Avatars', 'Banners'].map(category => (
+
+          {/* Category Tabs */}
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid #1e293b', paddingBottom: '1rem' }}>
+            {['Themes', 'Avatars', 'Banners'].map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                style={{
+                  background: activeTab === tab ? 'rgba(56, 189, 248, 0.1)' : 'transparent',
+                  color: activeTab === tab ? 'var(--color-primary)' : '#94a3b8',
+                  border: activeTab === tab ? '1px solid var(--color-primary)' : '1px solid transparent',
+                  padding: '0.5rem 1.5rem',
+                  borderRadius: '999px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  boxShadow: activeTab === tab ? '0 0 10px rgba(56, 189, 248, 0.2)' : 'none'
+                }}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          {loading ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+              {[1,2,3,4,5,6].map(n => (
+                <div key={n} className="skeleton-box" style={{ height: '160px', borderRadius: '12px' }}></div>
+              ))}
+            </div>
+          ) : (
+            [activeTab].map(category => (
             <div key={category} style={{ marginBottom: '2.5rem' }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#e2e8f0', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid #1e293b' }}>
                 {category}
@@ -267,8 +306,9 @@ const Shop = ({ onClose }) => {
                           <HoverTooltip text="Buy this item using coins" delay={200}>
                           <button
                             onClick={() => handlePurchase(item.id)}
-                            disabled={coins < item.price}
+                            disabled={coins < item.price || processingId === item.id}
                             style={{
+                              opacity: processingId === item.id ? 0.5 : 1,
                               background: coins >= item.price ? 'var(--color-primary)' : '#334155',
                               color: coins >= item.price ? '#0f172a' : '#94a3b8',
                               border: 'none',
@@ -279,7 +319,7 @@ const Shop = ({ onClose }) => {
                               transition: 'all 0.2s'
                             }}
                           >
-                            Buy
+                            {processingId === item.id ? 'Processing...' : 'Buy'}
                           </button>
                           </HoverTooltip>
                         ) : (
@@ -308,7 +348,8 @@ const Shop = ({ onClose }) => {
                 })}
               </div>
             </div>
-          ))}
+          ))
+          )}
         </div>
       </div>
     </div>

@@ -15,6 +15,7 @@ Chapter 2 Methodology Compliance: Software Engineering Architecture Patterns
 import numpy as np
 import os
 import pickle
+import threading
 
 # Try importing scikit-learn
 try:
@@ -30,6 +31,7 @@ class ArchetypeModel:
         self.clustering_model = None
         self.scaler = None
         self.is_loaded_from_disk = False
+        self.lock = threading.Lock()
         
         if SKLEARN_AVAILABLE:
             dir_path = os.path.dirname(__file__) if '__file__' in globals() else ''
@@ -141,6 +143,34 @@ class ArchetypeModel:
             self.clustering_model = None
             self.scaler = None
 
+    def reload_models(self):
+        """Thread-safe shadow loading of models."""
+        if not SKLEARN_AVAILABLE:
+            return False
+        try:
+            dir_path = os.path.dirname(__file__) if '__file__' in globals() else ''
+            model_path = os.path.join(dir_path, 'cognitive_model.pkl')
+            cluster_path = os.path.join(dir_path, 'clustering_model.pkl')
+            scaler_path = os.path.join(dir_path, 'scaler.pkl')
+            
+            with open(model_path, 'rb') as f:
+                new_model = pickle.load(f)
+            with open(cluster_path, 'rb') as f:
+                new_clustering = pickle.load(f)
+            with open(scaler_path, 'rb') as f:
+                new_scaler = pickle.load(f)
+                
+            with self.lock:
+                self.model = new_model
+                self.clustering_model = new_clustering
+                self.scaler = new_scaler
+                self.is_loaded_from_disk = True
+            print("[ML Model Service] Models shadow-reloaded successfully.")
+            return True
+        except Exception as e:
+            print(f"[ML Model Service] Failed to reload models: {e}")
+            return False
+
     def predict(self, avg_accuracy, avg_rt_ms, acc_slope, rt_slope, avg_hesitation=0.0, avg_spam=0.0, avg_path_eff=1.0):
         """
         Predicts player longitudinal archetype based on session averages and slopes.
@@ -149,9 +179,11 @@ class ArchetypeModel:
         # If the ML model is successfully trained
         if SKLEARN_AVAILABLE and self.model is not None:
             try:
-                features = [[avg_accuracy, avg_rt_ms, acc_slope, rt_slope, avg_hesitation, avg_spam, avg_path_eff]]
-                prediction = self.model.predict(features)[0]
-                probabilities = self.model.predict_proba(features)[0]
+                with self.lock:
+                    features = [[avg_accuracy, avg_rt_ms, acc_slope, rt_slope, avg_hesitation, avg_spam, avg_path_eff]]
+                    prediction = self.model.predict(features)[0]
+                    probabilities = self.model.predict_proba(features)[0]
+
                 class_index = list(self.model.classes_).index(prediction)
                 confidence = float(probabilities[class_index])
                 

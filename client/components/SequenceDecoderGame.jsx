@@ -63,6 +63,12 @@ export default function SequenceDecoderGame({ username = 'default_player', apiUr
             type: Phaser.AUTO,
             parent: gameContainerRef.current,
             backgroundColor: '#020617',
+                        render: {
+                powerPreference: 'high-performance',
+                antialias: true,
+                roundPixels: true,
+                batchSize: 4096
+            },
             scale: {
                 mode: Phaser.Scale.FIT,
                 autoCenter: Phaser.Scale.CENTER_BOTH,

@@ -55,6 +55,12 @@ export default function PriorityQueueGame({
             type: Phaser.AUTO,
             parent: gameContainerRef.current,
             backgroundColor: '#020209',
+                        render: {
+                powerPreference: 'high-performance',
+                antialias: true,
+                roundPixels: true,
+                batchSize: 4096
+            },
             scale: {
                 mode: Phaser.Scale.FIT,
                 autoCenter: Phaser.Scale.CENTER_BOTH,

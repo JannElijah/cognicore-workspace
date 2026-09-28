@@ -84,6 +84,12 @@ export default function StroopShiftGame({ username = 'default_player', apiUrl = 
             type: Phaser.AUTO,
             parent: gameContainerRef.current,
             backgroundColor: '#0f172a',
+                        render: {
+                powerPreference: 'high-performance',
+                antialias: true,
+                roundPixels: true,
+                batchSize: 4096
+            },
             scale: {
                 mode: Phaser.Scale.FIT,
                 autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -370,7 +376,7 @@ const handleRestart = () => {
                         }
                     `}</style>
                     <h3>Initializing Telemetry Session...</h3>
-                    <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Connecting to SQLite secure database...</p>
+                    <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Connecting to Supabase PostgreSQL database...</p>
                 </div>
             </div>
         );

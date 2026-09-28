@@ -729,7 +729,16 @@ export default function Dashboard({
           </div>
           
           {cohortLoading ? (
-            <div style={{ textAlign: 'center', color: '#94a3b8', padding: '3rem' }}>Loading cohort metrics...</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+              <div style={{ display: 'flex', gap: '2rem' }}>
+                <div className="skeleton-box" style={{ height: '300px', flex: 1, borderRadius: '12px' }}></div>
+                <div className="skeleton-box" style={{ height: '300px', flex: 1, borderRadius: '12px' }}></div>
+              </div>
+              <div style={{ display: 'flex', gap: '2rem' }}>
+                <div className="skeleton-box" style={{ height: '350px', flex: 2, borderRadius: '12px' }}></div>
+                <div className="skeleton-box" style={{ height: '350px', flex: 1, borderRadius: '12px' }}></div>
+              </div>
+            </div>
           ) : cohortData ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>

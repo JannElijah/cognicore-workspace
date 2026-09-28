@@ -53,7 +53,7 @@ def retrain_model():
             res = train_retargeted_classifier()
             if res and res.get("status") == "success":
                 # Reload classifier instance to fetch newly serialized pickle files
-                archetype_classifier.__init__()
+                archetype_classifier.reload_models()
                 model_training_state["status"] = "idle"
                 model_training_state["last_trained_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
                 model_training_state["last_retrain_metrics"] = res
@@ -183,7 +183,7 @@ def get_model_clusters():
         }), 200
     except Exception as e:
         logger.error(f"Error in get_model_clusters: {e}")
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+        return jsonify({"status": "error", "message": "An internal server error occurred."}), 500
 
 @ml_bp.route('/api/admin/retrain', methods=['POST'])
 @token_required
@@ -201,10 +201,10 @@ def admin_retrain(current_user_id, current_username):
             
         # Dynamically reload the models in the app memory
         from model import archetype_classifier
-        archetype_classifier.__init__()  # Re-init will pick up new .pkls
+        archetype_classifier.reload_models()  # Re-init will pick up new .pkls
         
         return jsonify(metrics), 200
         
     except Exception as e:
         logger.error(f"Error in admin_retrain: {e}")
-        return jsonify({"status": "error", "message": f"Server error: {str(e)}"}), 500
+        return jsonify({"status": "error", "message": "An internal server error occurred."}), 500

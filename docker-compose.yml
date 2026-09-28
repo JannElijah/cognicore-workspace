@@ -1,27 +1,40 @@
-﻿version: '3.8'
+version: '3.8'
 
 services:
-  backend:
-    build:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: cognicore
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Automatically initialize the database with the schema
+      - ./server/supabase_migration.sql:/docker-entrypoint-initdb.d/init.sql
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  api:
+    build: 
       context: ./server
     ports:
       - "5000:5000"
-    volumes:
-      - ./server:/app
     environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/cognicore
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET=local_development_secret
       - FLASK_ENV=development
-      - FLASK_DEBUG=1
-      # Note: SQLite DB file will be mounted with the volume
-
-  frontend:
-    build:
-      context: ./client
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./client:/app
-      - /app/node_modules
-    environment:
-      - VITE_API_URL=http://localhost:5000
+      - CORS_ORIGINS=*
+      - DB_MIN_CONN=1
+      - DB_MAX_CONN=10
     depends_on:
-      - backend
+      - db
+      - redis
+
+volumes:
+  postgres_data:

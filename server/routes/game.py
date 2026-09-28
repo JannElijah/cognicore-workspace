@@ -53,13 +53,17 @@ def execute_gamification(uid, reaction_time, accuracy, difficulty, game_type):
         elif task.task_description == 'Achieve reaction time under 800ms' and reaction_time < 800:
             task.current_amount += 1
 
-    # Achievements (Simplified logic to fit, will use helper)
+    # Fetch all achievements and inventory ONCE to fix N+1
+    user_achievements = {a.achievement_id: a for a in UserAchievement.query.filter_by(user_id=uid).all()}
+    user_inventory = {inv.item_id: inv for inv in UserInventory.query.filter_by(user_id=uid).all()}
+    
     def unlock_achievement(ach_id, current_amount, target_amount, reward_coins, reward_item=None, reward_item_type=None):
         nonlocal coins_gained
-        ach = UserAchievement.query.filter_by(user_id=uid, achievement_id=ach_id).first()
+        ach = user_achievements.get(ach_id)
         if not ach:
             ach = UserAchievement(user_id=uid, achievement_id=ach_id, current_amount=0)
             db.session.add(ach)
+            user_achievements[ach_id] = ach
         
         if ach.is_completed:
             return
@@ -70,14 +74,14 @@ def execute_gamification(uid, reaction_time, accuracy, difficulty, game_type):
             if reward_coins:
                 prof.coins += reward_coins
                 coins_gained += reward_coins
-            if reward_item:
-                inv = UserInventory.query.filter_by(user_id=uid, item_id=reward_item).first()
-                if not inv:
-                    db.session.add(UserInventory(user_id=uid, item_id=reward_item, item_type=reward_item_type))
+            if reward_item and reward_item not in user_inventory:
+                inv = UserInventory(user_id=uid, item_id=reward_item, item_type=reward_item_type)
+                db.session.add(inv)
+                user_inventory[reward_item] = inv
             newly_unlocked.append(ach_id)
 
     if reaction_time < 400:
-        ach = UserAchievement.query.filter_by(user_id=uid, achievement_id='speed_demon').first()
+        ach = user_achievements.get('speed_demon')
         amt = ach.current_amount + 1 if ach else 1
         unlock_achievement('speed_demon', amt, 10, 0, 'avatar-speed-demon', 'avatar')
         
@@ -86,15 +90,15 @@ def execute_gamification(uid, reaction_time, accuracy, difficulty, game_type):
 
     unlock_achievement('first_steps', 1, 1, 100)
 
-    ach_con = UserAchievement.query.filter_by(user_id=uid, achievement_id='consistency').first()
+    ach_con = user_achievements.get('consistency')
     unlock_achievement('consistency', (ach_con.current_amount + 1 if ach_con else 1), 50, 500)
 
     if accuracy >= 1.0:
-        ach_am = UserAchievement.query.filter_by(user_id=uid, achievement_id='accuracy_master').first()
+        ach_am = user_achievements.get('accuracy_master')
         unlock_achievement('accuracy_master', (ach_am.current_amount + 1 if ach_am else 1), 5, 1000)
 
     if accuracy >= 0.9:
-        ach_ss = UserAchievement.query.filter_by(user_id=uid, achievement_id='sharpshooter').first()
+        ach_ss = user_achievements.get('sharpshooter')
         unlock_achievement('sharpshooter', (ach_ss.current_amount + 1 if ach_ss else 1), 20, 500)
 
     if reaction_time < 300:
@@ -279,7 +283,7 @@ def start_session(current_user_id, current_username):
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error in start_session: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": "An internal server error occurred."}), 500
 
 @game_bp.route('/api/dda', methods=['POST'])
 @token_required
@@ -326,15 +330,26 @@ def dda(current_user_id, current_username):
         alpha = max(0.1, min(1.0, safe_float(data.get('smoothing_alpha'), 0.3)))
         current_smooth_difficulty = session_obj.current_smooth_difficulty if session_obj.current_smooth_difficulty is not None else float(current_difficulty)
         
-        raw_diff = float(current_difficulty)
-        if avg_accuracy > 0.90:
-            raw_diff = min(5.0, current_difficulty + 1.0)
-        elif avg_accuracy < 0.70:
-            raw_diff = max(1.0, current_difficulty - 1.0)
+        # --- Upgraded Item Response Theory (IRT) / Elo DDA Algorithm ---
+        import math
+        theta = current_smooth_difficulty
+        discrimination = 2.0
+        # Flow-state offset: we want expected accuracy to be ~80% when skill == difficulty
+        # 1 / (1 + exp(-2(0 + 1.386))) = 0.80
+        expected_accuracy = 1.0 / (1.0 + math.exp(-discrimination * (theta - float(current_difficulty) + 1.386)))
+        
+        learning_rate = 1.5
+        theta_update = learning_rate * (avg_accuracy - expected_accuracy)
+        
+        if avg_rt > 1200:
+            theta_update -= 0.15
+        elif avg_rt < 400:
+            theta_update += 0.15
             
-        smooth_diff = alpha * raw_diff + (1.0 - alpha) * current_smooth_difficulty
-        new_difficulty = max(1, min(5, int(round(smooth_diff))))
-        session_obj.current_smooth_difficulty = smooth_diff
+        new_theta = max(1.0, min(5.0, theta + theta_update))
+        new_difficulty = max(1, min(5, int(round(new_theta))))
+        session_obj.current_smooth_difficulty = new_theta
+        # -------------------------------------------------------------
         
         dda_params = calculate_dda_parameters(new_difficulty, game_type, user_avg_rt=avg_rt)
         
@@ -404,7 +419,7 @@ def dda(current_user_id, current_username):
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error in dda: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": "An internal server error occurred."}), 500
 
 @game_bp.route('/api/submit-metrics', methods=['POST'])
 @token_required
@@ -454,7 +469,7 @@ def submit_metrics(current_user_id, current_username):
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error in submit_metrics: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": "An internal server error occurred."}), 500
 
 @game_bp.route('/api/submit-assessment', methods=['POST'])
 @token_required
@@ -513,7 +528,7 @@ def submit_assessment(current_user_id, current_username):
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error in submit_assessment: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": "An internal server error occurred."}), 500
 
 @game_bp.route('/api/assessment-status/<username>', methods=['GET'])
 def get_assessment_status(username):
@@ -546,7 +561,7 @@ def get_assessment_status(username):
         }), 200
     except Exception as e:
         logger.error(f"Error in assessment_status: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": "An internal server error occurred."}), 500
 
 @game_bp.route('/api/submit-metrics/batch', methods=['POST'])
 @token_required
@@ -631,4 +646,4 @@ def submit_metrics_batch(current_user_id, current_username):
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error in submit_metrics_batch: {e}")
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": "An internal server error occurred."}), 500

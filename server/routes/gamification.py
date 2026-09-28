@@ -74,7 +74,7 @@ def claim_quest(current_user_id, current_username, quest_id):
         
     quest.is_completed = True
     
-    prof = UserProfile.query.filter_by(user_id=current_user_id).first()
+    prof = UserProfile.query.filter_by(user_id=current_user_id).with_for_update().first() # Row-level lock to prevent double-spend
     if not prof:
         prof = UserProfile(user_id=current_user_id, coins=quest.reward_coins)
         db.session.add(prof)
@@ -141,7 +141,7 @@ def update_accessibility(current_user_id, current_username):
         return jsonify({"status": "success", "reduce_flashes": reduce_flashes}), 200
     except Exception as e:
         db.session.rollback()
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"status": "error", "message": "An internal server error occurred."}), 500
 
 @gamification_bp.route('/api/purchase', methods=['POST'])
 @token_required

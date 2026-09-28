@@ -336,7 +336,7 @@ export default function MemoryMatchGame({ username = 'default_player', apiUrl = 
                         }
                     `}</style>
                     <h3>Initializing Telemetry Session...</h3>
-                    <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Connecting to SQLite secure database...</p>
+                    <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Connecting to Supabase PostgreSQL database...</p>
                 </div>
             </div>
         );
