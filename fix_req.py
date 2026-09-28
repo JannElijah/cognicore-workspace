@@ -1,4 +1,6 @@
-Flask==3.0.0
+﻿import os
+
+req = '''Flask==3.0.0
 Flask-Cors==4.0.0
 Flask-Limiter==3.5.0
 numpy==2.2.6
@@ -18,3 +20,7 @@ gunicorn==21.2.0
 supabase
 Flask-Compress==1.14
 python-json-logger==2.0.7
+'''
+
+with open(r'd:\cognicore-workspace\server\requirements.txt', 'w', encoding='utf-8') as f:
+    f.write(req)
