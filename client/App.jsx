@@ -1917,7 +1917,7 @@ export default function App() {
           pointRadius: 5, pointHoverRadius: 7, order: 1
         },
         {
-          label: ${cognitiveProfile?.archetype || 'Archetype'} Baseline,
+          label: `${cognitiveProfile?.archetype || 'Archetype'} Baseline`,
           data: baselineValues,
           backgroundColor: 'rgba(255,255,255,0.04)',
           borderColor: 'rgba(255,255,255,0.22)', borderWidth: 1.5,
