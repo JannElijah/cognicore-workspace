@@ -28,7 +28,7 @@ def execute_gamification(uid, reaction_time, accuracy, difficulty, game_type):
     leveled_up = False
     newly_unlocked = []
 
-    prof = UserProfile.query.filter_by(user_id=uid).first()
+    prof = UserProfile.query.filter_by(user_id=uid).with_for_update().first()
     if not prof:
         prof = UserProfile(user_id=uid, xp=xp_gained, coins=coins_gained, level=1)
         db.session.add(prof)
@@ -44,7 +44,7 @@ def execute_gamification(uid, reaction_time, accuracy, difficulty, game_type):
     # Update daily tasks
     from datetime import date
     today = date.today()
-    tasks = DailyTask.query.filter(DailyTask.user_id == uid, db.cast(DailyTask.created_at, db.Date) == today).all()
+    tasks = DailyTask.query.filter(DailyTask.user_id == uid, db.cast(DailyTask.created_at, db.Date) == today).with_for_update().all()
     for task in tasks:
         if task.task_description == 'Play 3 Training Games':
             task.current_amount += 1
@@ -131,7 +131,7 @@ def execute_gamification_batch(uid, metrics_data):
         total_xp += item['difficulty'] * 15
         total_coins += int(item['accuracy'] * 10) + (item['difficulty'] * 2)
 
-    prof = UserProfile.query.filter_by(user_id=uid).first()
+    prof = UserProfile.query.filter_by(user_id=uid).with_for_update().first()
     if not prof:
         prof = UserProfile(user_id=uid, xp=total_xp, coins=total_coins, level=1)
         db.session.add(prof)
@@ -146,7 +146,7 @@ def execute_gamification_batch(uid, metrics_data):
 
     from datetime import date
     today = date.today()
-    tasks = DailyTask.query.filter(DailyTask.user_id == uid, db.cast(DailyTask.created_at, db.Date) == today).all()
+    tasks = DailyTask.query.filter(DailyTask.user_id == uid, db.cast(DailyTask.created_at, db.Date) == today).with_for_update().all()
     for task in tasks:
         if task.task_description == 'Play 3 Training Games':
             task.current_amount += len(metrics_data)
