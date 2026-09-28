@@ -175,7 +175,7 @@ updateTimer() {
         this.layout = [];
 
         const width = this.scale.width;
-        const gridAreaSize = 320;
+        const gridAreaSize = Math.min(320, width - 40);
         const cellSize = gridAreaSize / this.gridSize;
         const startX = (width - gridAreaSize) / 2 + cellSize / 2;
         const startY = 160 + cellSize / 2;

@@ -149,7 +149,7 @@ export default class MemoryMatchScene extends BaseCognitiveScene {
         const height = this.scale.height;
 
         // Grid sizing details
-        const gridAreaSize = 380;
+        const gridAreaSize = Math.min(380, width - 40);
         const spacing = 12;
         const totalSpacing = spacing * (this.gridSize - 1);
         const cellSize = (gridAreaSize - totalSpacing) / this.gridSize;

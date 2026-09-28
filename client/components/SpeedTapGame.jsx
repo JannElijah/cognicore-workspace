@@ -96,8 +96,8 @@ export default function SpeedTapGame({ username = 'default_player', apiUrl = API
                 mode: Phaser.Scale.FIT,
                 autoCenter: Phaser.Scale.CENTER_BOTH,
                 // Mobile-responsive: use viewport width on portrait phones, fixed 800x600 on desktop
-                width: window.innerWidth < 768 ? window.innerWidth : 800,
-                height: window.innerWidth < 768 ? Math.round(window.innerWidth * 0.75) : 600,
+                width: 800,
+                height: 600,
             },
             physics: {
                 default: 'arcade',

@@ -180,7 +180,7 @@ updateTimer() {
         const height = this.scale.height;
 
         // Sizing logic
-        const gridAreaSize = 360;
+        const gridAreaSize = Math.min(360, width - 40);
         const spacing = 12;
         const totalSpacing = spacing * (this.gridSize - 1);
         const cellSize = (gridAreaSize - totalSpacing) / this.gridSize;

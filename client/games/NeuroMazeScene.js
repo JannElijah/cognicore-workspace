@@ -220,7 +220,7 @@ updateTimer() {
         const width = this.scale.width;
 
         // Maze sizing & centering
-        const gridAreaSize = 360;
+        const gridAreaSize = Math.min(360, width - 40);
         const cellSize = gridAreaSize / this.gridSize;
         const startX = (width - gridAreaSize) / 2 + cellSize / 2;
         const startY = 160 + cellSize / 2;

@@ -159,8 +159,8 @@ export default class MatrixRecallScene extends BaseCognitiveScene {
         const height = this.scale.height;
 
         // Grid sizing details
-        const gridAreaWidth = 380;
-        const gridAreaHeight = 380;
+        const gridAreaWidth = Math.min(380, width - 40);
+        const gridAreaHeight = Math.min(380, width - 40);
         const spacing = 10;
         
         const totalSpacingX = spacing * (this.gridCols - 1);
