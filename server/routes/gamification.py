@@ -61,7 +61,7 @@ def get_daily_quests(current_user_id, current_username):
 @gamification_bp.route('/api/quests/claim/<int:quest_id>', methods=['POST'])
 @token_required
 def claim_quest(current_user_id, current_username, quest_id):
-    quest = DailyTask.query.filter_by(id=quest_id, user_id=current_user_id).first()
+    quest = DailyTask.query.filter_by(id=quest_id, user_id=current_user_id).with_for_update().first()
     
     if not quest:
         return jsonify({"status": "error", "message": "Quest not found"}), 404

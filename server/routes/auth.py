@@ -53,7 +53,7 @@ def sync_user(current_user_id, current_username):
     user_id = current_user_id
     today = date.today()
     
-    streak = UserStreak.query.filter_by(user_id=user_id).first()
+    streak = UserStreak.query.filter_by(user_id=user_id).with_for_update().first()
     daily_reward = {"granted": False, "streak": 1, "coins": 0}
     
     def add_coins(amount):

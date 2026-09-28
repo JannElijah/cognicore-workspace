@@ -115,8 +115,8 @@ def get_model_clusters():
                 history_acc.append(avg_acc)
                 history_rt.append(avg_rt)
 
-                acc_slope = calculate_ols_slope(history_acc)
-                rt_slope = calculate_ols_slope(history_rt)
+                acc_slope = calculate_ols_slope(history_acc[-20:])
+                rt_slope = calculate_ols_slope(history_rt[-20:])
 
                 avg_hes = s["avg_hes"] if s["avg_hes"] is not None else 0.0
                 avg_spam = s["avg_spam"] if s["avg_spam"] is not None else 0.0
