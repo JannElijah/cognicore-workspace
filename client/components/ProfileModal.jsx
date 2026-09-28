@@ -1,5 +1,5 @@
 import { API_BASE } from '../utils/apiClient.js';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import useCogniStore from '../store/useCogniStore';
 import cogniFX from '../utils/cogniFX';
 import { Radar, Line, Scatter } from 'react-chartjs-2';
@@ -149,7 +149,7 @@ const ProfileModal = ({ onClose }) => {
   };
   const headerBg = equippedBanner && bannerBackgrounds[equippedBanner] ? bannerBackgrounds[equippedBanner] : 'transparent';
 
-  const radarData = {
+  const radarData = useMemo(() => ({
     labels: domainStats.map(d => (d.cognitive_domain || '').split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')),
     datasets: [{
       label: 'Accuracy %',
@@ -159,10 +159,10 @@ const ProfileModal = ({ onClose }) => {
       borderWidth: 2,
       pointBackgroundColor: 'rgba(var(--rgb-primary), 1)',
     }]
-  };
+  }), [domainStats]);
   const radarOptions = { scales: { r: { angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, pointLabels: { color: '#e2e8f0', font: { size: 11 } }, ticks: { backdropColor: 'transparent', color: '#94a3b8', min: 0, max: 100 } } }, plugins: { legend: { display: false } }, maintainAspectRatio: false };
 
-  const lineData = {
+  const lineData = useMemo(() => ({
     labels: timelineStats.map(d => {
       const dateObj = new Date(d.day);
       return isNaN(dateObj.getTime()) ? d.day : dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -175,10 +175,10 @@ const ProfileModal = ({ onClose }) => {
       fill: true, 
       tension: 0.4 
     }]
-  };
+  }), [timelineStats, metricToggle]);
   const lineOptions = { scales: { x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } }, y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' }, min: metricToggle === 'accuracy' ? 0 : undefined, max: metricToggle === 'accuracy' ? 100 : undefined } }, plugins: { legend: { display: false } }, maintainAspectRatio: false };
 
-  const scatterData = {
+  const scatterData = useMemo(() => ({
     datasets: [
       {
         label: 'Fast Learner Core',
@@ -217,7 +217,7 @@ const ProfileModal = ({ onClose }) => {
         pointStyle: 'circle'
       }
     ]
-  };
+  }), [timelineStats, kpis]);
 
   const scatterOptions = {
     scales: {
@@ -285,7 +285,17 @@ const ProfileModal = ({ onClose }) => {
 
         <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
           {loading ? (
-            <div style={{ color: '#94a3b8', textAlign: 'center', padding: '2rem' }}>Loading profile data...</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', opacity: 0.7 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                <div className="skeleton-box" style={{ height: '80px', borderRadius: '12px' }}></div>
+                <div className="skeleton-box" style={{ height: '80px', borderRadius: '12px' }}></div>
+                <div className="skeleton-box" style={{ height: '80px', borderRadius: '12px' }}></div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
+                <div className="skeleton-box" style={{ height: '300px', borderRadius: '12px' }}></div>
+                <div className="skeleton-box" style={{ height: '300px', borderRadius: '12px' }}></div>
+              </div>
+            </div>
           ) : (
             <>
               {activeTab === 'overview' && (
