@@ -729,6 +729,7 @@ svg circle:hover {
   .pause-overlay {
     user-select: none;
     -webkit-user-select: none;
+    -webkit-touch-callout: none;
   }
 
   .pause-card {

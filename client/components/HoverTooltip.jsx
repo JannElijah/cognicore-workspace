@@ -19,6 +19,8 @@ export default function HoverTooltip({ content, children, delay = 200, style = {
       style={{ position: 'relative', display: 'inline-block', ...style }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onTouchStart={handleMouseEnter}
+      onTouchEnd={handleMouseLeave}
     >
       {children}
       {isHovered && content && (
