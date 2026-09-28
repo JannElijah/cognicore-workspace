@@ -1,4 +1,8 @@
-import React, { useState } from 'react';
+﻿import os
+
+filepath = r'd:\cognicore-workspace\client\components\KnowledgeBase.jsx'
+
+jsx_content = '''import React, { useState } from 'react';
 import HoverTooltip from './HoverTooltip';
 
 const KNOWLEDGE_DATA = [
@@ -18,7 +22,7 @@ const KNOWLEDGE_DATA = [
     color: 'var(--color-primary)',
     content: (
       <p style={{ color: '#e2e8f0', lineHeight: '1.6', margin: 0 }}>
-        Our scoring algorithms are aligned with standard clinical neuropsychological baselines. Your score isn\'t just about speed — accuracy is heavily weighted. We also track <HoverTooltip content="Rapid, inaccurate tapping used to artificially inflate speed metrics."><strong style={{color: 'var(--color-primary)', cursor:'pointer', borderBottom:'1px dashed rgba(var(--rgb-primary),0.6)'}}>'spam clicking'</strong></HoverTooltip> and 'latency' to measure your decision-making methodicalness versus impulsivity. This creates a holistic view of your cognitive playstyle.
+        Our scoring algorithms are aligned with standard clinical neuropsychological baselines. Your score isn\\'t just about speed — accuracy is heavily weighted. We also track <HoverTooltip content="Rapid, inaccurate tapping used to artificially inflate speed metrics."><strong style={{color: 'var(--color-primary)', cursor:'pointer', borderBottom:'1px dashed rgba(var(--rgb-primary),0.6)'}}>'spam clicking'</strong></HoverTooltip> and 'latency' to measure your decision-making methodicalness versus impulsivity. This creates a holistic view of your cognitive playstyle.
       </p>
     )
   },
@@ -186,3 +190,9 @@ export default function KnowledgeBase() {
     </div>
   );
 }
+'''
+
+with open(filepath, 'w', encoding='utf-8') as f:
+    f.write(jsx_content)
+
+print("Replaced KnowledgeBase.jsx successfully.")
