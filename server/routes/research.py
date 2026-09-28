@@ -9,12 +9,7 @@ import io
 
 logger = logging.getLogger(__name__)
 
-def get_db_connection():
-    import psycopg2
-    from psycopg2.extras import RealDictCursor
-    import os
-    DATABASE_URL = os.environ.get("DATABASE_URL")
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+
 
 research_bp = Blueprint('research_bp', __name__)
 

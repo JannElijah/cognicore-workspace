@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from auth import token_required
-from database import db
+from database import db, get_db_connection
 import logging
 from sqlalchemy import text
 from game_utils import safe_float, safe_int
@@ -61,12 +61,7 @@ def calculate_approx_t_p_value(t_stat, df):
 
 logger = logging.getLogger(__name__)
 
-def get_db_connection():
-    import psycopg2
-    from psycopg2.extras import RealDictCursor
-    import os
-    DATABASE_URL = os.environ.get("DATABASE_URL")
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+
 
 analytics_bp = Blueprint('analytics_bp', __name__)
 

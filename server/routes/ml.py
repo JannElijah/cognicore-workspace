@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from auth import token_required
-from database import db
+from database import db, get_db_connection
 import logging
 import threading
 from sqlalchemy import text
@@ -17,12 +17,7 @@ model_training_state = {
 }
 
 
-def get_db_connection():
-    import psycopg2
-    from psycopg2.extras import RealDictCursor
-    import os
-    DATABASE_URL = os.environ.get("DATABASE_URL")
-    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+
 
 ml_bp = Blueprint('ml_bp', __name__)
 

@@ -28,7 +28,7 @@ class User(db.Model):
 class GameSession(db.Model):
     __tablename__ = 'game_sessions'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), index=True)
     game_type = db.Column(db.String(255), nullable=False)
     game_mode = db.Column(db.String(50), default='timed')
     current_smooth_difficulty = db.Column(db.Float, default=1.0)
@@ -39,7 +39,7 @@ class GameSession(db.Model):
 class PerformanceMetric(db.Model):
     __tablename__ = 'performance_metrics'
     id = db.Column(db.Integer, primary_key=True)
-    session_id = db.Column(db.Integer, db.ForeignKey('game_sessions.id', ondelete='CASCADE'))
+    session_id = db.Column(db.Integer, db.ForeignKey('game_sessions.id', ondelete='CASCADE'), index=True)
     reaction_time = db.Column(db.Float)
     accuracy_rate = db.Column(db.Float)
     difficulty_level = db.Column(db.Integer)
@@ -50,12 +50,12 @@ class PerformanceMetric(db.Model):
     spam_click_count = db.Column(db.Integer, default=0)
     rule_shift_latency_ms = db.Column(db.Float)
     path_efficiency = db.Column(db.Float)
-    recorded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    recorded_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
 class CognitiveProfile(db.Model):
     __tablename__ = 'cognitive_profiles'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), index=True)
     archetype_name = db.Column(db.String(255))
     confidence_score = db.Column(db.Float)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -73,7 +73,7 @@ class IsoEvaluation(db.Model):
 class CognitiveAssessment(db.Model):
     __tablename__ = 'cognitive_assessments'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     assessment_type = db.Column(db.String(50))
     spatial_visual_score = db.Column(db.Float, nullable=False)
     logical_math_score = db.Column(db.Float, nullable=False)
@@ -86,16 +86,16 @@ class CognitiveAssessment(db.Model):
 class ArchetypeHistory(db.Model):
     __tablename__ = 'archetype_history'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    session_id = db.Column(db.Integer, db.ForeignKey('game_sessions.id', ondelete='CASCADE'))
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    session_id = db.Column(db.Integer, db.ForeignKey('game_sessions.id', ondelete='CASCADE'), index=True)
     archetype_name = db.Column(db.String(255), nullable=False)
     confidence_score = db.Column(db.Float, nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
 class TrainingGoal(db.Model):
     __tablename__ = 'training_goals'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     domain = db.Column(db.String(255), nullable=False)
     metric_type = db.Column(db.String(255), nullable=False)
     target_value = db.Column(db.Float, nullable=False)
@@ -117,7 +117,7 @@ class UserProfile(db.Model):
 class UserInventory(db.Model):
     __tablename__ = 'user_inventory'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     item_type = db.Column(db.String(50), nullable=False)
     item_id = db.Column(db.String(255), nullable=False)
     acquired_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -125,18 +125,18 @@ class UserInventory(db.Model):
 class DailyTask(db.Model):
     __tablename__ = 'daily_tasks'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     task_description = db.Column(db.Text, nullable=False)
     target_amount = db.Column(db.Integer, nullable=False)
     current_amount = db.Column(db.Integer, default=0)
     is_completed = db.Column(db.Boolean, default=False)
     reward_coins = db.Column(db.Integer, default=100)
-    created_at = db.Column(db.Date, default=datetime.utcnow)
+    created_at = db.Column(db.Date, default=datetime.utcnow, index=True)
 
 class UserAchievement(db.Model):
     __tablename__ = 'user_achievements'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     achievement_id = db.Column(db.String(255), nullable=False)
     current_amount = db.Column(db.Integer, default=0)
     is_completed = db.Column(db.Integer, default=0)
