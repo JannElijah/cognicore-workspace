@@ -1,4 +1,8 @@
-import React, { useState } from 'react';
+﻿import os
+
+filepath = r'd:\cognicore-workspace\client\components\KnowledgeBase.jsx'
+
+jsx_content = """import React, { useState } from 'react';
 import HoverTooltip from './HoverTooltip';
 
 const KNOWLEDGE_DATA = [
@@ -186,3 +190,9 @@ export default function KnowledgeBase() {
     </div>
   );
 }
+"""
+
+with open(filepath, 'w', encoding='utf-8') as f:
+    f.write(jsx_content)
+
+print("Replaced KnowledgeBase.jsx cleanly.")
