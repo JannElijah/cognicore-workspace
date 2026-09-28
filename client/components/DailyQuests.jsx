@@ -56,7 +56,11 @@ const DailyQuests = () => {
       </h3>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
         {loading ? (
-          <div style={{ color: '#94a3b8', padding: '1rem' }}>Loading quests...</div>
+          <>
+            <div className="skeleton-box" style={{ height: '110px', borderRadius: '12px' }}></div>
+            <div className="skeleton-box" style={{ height: '110px', borderRadius: '12px' }}></div>
+            <div className="skeleton-box" style={{ height: '110px', borderRadius: '12px' }}></div>
+          </>
         ) : quests.length === 0 ? (
           <div style={{ color: '#94a3b8', padding: '1rem' }}>No quests available today.</div>
         ) : (
