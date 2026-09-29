@@ -1,5 +1,5 @@
 import { API_BASE } from './utils/apiClient.js';
-import React, { useState, useEffect, useRef, useCallback, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Suspense, lazy, useMemo } from 'react';
 import {
   Chart as ChartJS,
   RadialLinearScale,
