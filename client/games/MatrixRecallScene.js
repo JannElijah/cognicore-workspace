@@ -297,10 +297,10 @@ updateTimer() {
 
         // Flash targets (Gold/Cyan) and decoys (Coral/Red) simultaneously
         this.targets.forEach(index => {
-            this.highlightCell(index, 0x38bdf8, 0xffffff, this.flashDuration); // Cyan target glow
+            this.highlightCell(index, 0xef4444, 0xfca5a5, this.flashDuration); // Red target glow
         });
         this.decoyTargets.forEach(index => {
-            this.highlightCell(index, 0xef4444, 0xfca5a5, this.flashDuration); // Red decoy glow
+            this.highlightCell(index, 0x38bdf8, 0xffffff, this.flashDuration); // Cyan decoy glow
         });
 
         // Transition to recall phase after the flash duration ends
@@ -362,6 +362,11 @@ updateTimer() {
         }
 
         this.playerSelections.push(index);
+
+        const clickedCell = this.gridCells.find(c => c.index === index);
+        if (clickedCell && clickedCell.hoverGlow) {
+            clickedCell.hoverGlow.setVisible(false);
+        }
 
         if (this.targets.includes(index)) {
             // Correct cell clicked
