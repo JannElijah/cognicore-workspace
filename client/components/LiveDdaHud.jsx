@@ -6,7 +6,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
     const [showDevStats, setShowDevStats] = useState(false);
 
     // Determine archetype details
-    const archetype = cognitiveProfile?.archetype || 'Plateauing';
+    const archetype = cognitiveProfile?.archetype || 'Steady Focus';
     const confidence = cognitiveProfile?.confidence_score !== undefined ? Math.round(cognitiveProfile.confidence_score * 100) : 75;
     
     // Calculate real-time Cognitive Load state
@@ -131,7 +131,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-glass)', paddingBottom: '0.75rem' }}>
                 <div>
                     <h2 style={{ fontSize: '1.1rem', fontFamily: 'var(--font-title)', fontWeight: '800', letterSpacing: '-0.02em', margin: 0, background: 'linear-gradient(to right, var(--color-primary), var(--color-secondary))', WebkitBackgroundClip: 'text', backgroundClip: 'text', WebkitTextFillColor: 'transparent', color: 'transparent' }}>DDA ENGINE HUD</h2>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.15rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.15rem', whiteSpace: 'nowrap' }}>
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>GAME: {gameType.toUpperCase()}</span>
                         <button 
                             onClick={handleToggleMute}
@@ -230,7 +230,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
             <div style={{
                 background: 'rgba(255, 255, 255, 0.02)',
                 border: '1px solid var(--border-glass)',
-                borderRadius: '12px',
+                borderRadius: '12px', width: '100%', boxSizing: 'border-box',
                 padding: '0.85rem',
                 display: 'flex',
                 flexDirection: 'column',
@@ -274,7 +274,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
             <div style={{
                 background: 'rgba(59, 130, 246, 0.05)',
                 border: '1px solid rgba(59, 130, 246, 0.15)',
-                borderRadius: '12px',
+                borderRadius: '12px', width: '100%', boxSizing: 'border-box',
                 padding: '0.85rem',
                 display: 'flex',
                 gap: '0.75rem',
@@ -313,7 +313,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
             <div style={{
                 background: 'rgba(139, 92, 246, 0.05)',
                 border: '1px solid rgba(139, 92, 246, 0.15)',
-                borderRadius: '12px',
+                borderRadius: '12px', width: '100%', boxSizing: 'border-box',
                 padding: '0.85rem',
                 textAlign: 'center'
             }}>
@@ -332,11 +332,13 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
             {/* Slopes */}
             <div>
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600', display: 'block', marginBottom: '0.5rem' }}>LONGITUDINAL PROGRESS SLOPES</span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
                     <div style={{
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
+                        width: '100%',
+                        boxSizing: 'border-box',
                         background: 'rgba(255, 255, 255, 0.02)',
                         border: '1px solid var(--border-glass)',
                         borderRadius: '8px',
@@ -356,6 +358,8 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
+                        width: '100%',
+                        boxSizing: 'border-box',
                         background: 'rgba(255, 255, 255, 0.02)',
                         border: '1px solid var(--border-glass)',
                         borderRadius: '8px',
