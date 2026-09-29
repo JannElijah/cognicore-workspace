@@ -322,6 +322,7 @@ export default class SpeedTapScene extends BaseCognitiveScene {
             this.registerMiss();
             this.showFloatingText(container.x, container.y, 'FALSE ALARM!', '#ef4444');
             this.cameras.main.shake(100, 0.005); // Subtle camera shake on error
+            this.tweens.killTweensOf(container);
             this.removeTarget(container);
         } else {
             // Successful Hit
@@ -356,7 +357,8 @@ export default class SpeedTapScene extends BaseCognitiveScene {
                 alpha: 0,
                 duration: 150,
                 onComplete: () => {
-                    this.removeTarget(container);
+                    this.tweens.killTweensOf(container);
+            this.removeTarget(container);
                 }
             });
 
@@ -373,7 +375,7 @@ export default class SpeedTapScene extends BaseCognitiveScene {
         this.activeTargets = this.activeTargets.filter(t => t !== sprite);
         
         // --- OBJECT POOLING: Recycle instead of destroying ---
-        this.tweens.killTweensOf(sprite);
+        // (Do NOT call killTweensOf here, as calling it from a tween's onComplete crashes the clock)
         this.targetPool.killAndHide(sprite);
         sprite.disableInteractive();
     }

@@ -111,7 +111,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
 
     return (
         <div className="telemetry-hud-container" style={{
-            width: '340px',
+            minWidth: '380px', maxWidth: '460px', flex: 1,
             background: 'var(--bg-card)',
             backdropFilter: 'blur(16px)',
             borderRadius: '16px',
@@ -190,85 +190,116 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
                 </div>
             )}
 
-            {/* Level Gauge */}
-            <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.35rem' }}>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>⚡ CHALLENGE LEVEL</span>
-                    <span style={{ fontSize: '1.25rem', color: 'var(--color-secondary)', fontWeight: '900', fontFamily: 'var(--font-title)' }}>Lvl {diffLevel} <span style={{fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '500'}}>/ 5</span></span>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', width: '100%' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {/* Level Gauge */}
+                <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.35rem' }}>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>⚡ CHALLENGE LEVEL</span>
+                        <span style={{ fontSize: '1.25rem', color: 'var(--color-secondary)', fontWeight: '900', fontFamily: 'var(--font-title)' }}>Lvl {diffLevel} <span style={{fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '500'}}>/ 5</span></span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '6px', width: '100%', height: '8px' }}>
+                        {[1, 2, 3, 4, 5].map((lvl) => (
+                            <div key={lvl} style={{
+                                flex: 1,
+                                borderRadius: '999px',
+                                background: lvl <= diffLevel ? 'linear-gradient(to right, var(--color-secondary), #a78bfa)' : 'rgba(255, 255, 255, 0.05)',
+                                boxShadow: lvl <= diffLevel ? '0 0 10px rgba(139, 92, 246, 0.4)' : 'none',
+                                transition: 'all 0.3s ease'
+                            }} />
+                        ))}
+                    </div>
                 </div>
-                <div style={{ display: 'flex', gap: '6px', width: '100%', height: '8px' }}>
-                    {[1, 2, 3, 4, 5].map((lvl) => (
-                        <div key={lvl} style={{
+
+                {/* Cognitive Load Indicator */}
+                <div style={{
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    borderRadius: '12px', width: '100%', boxSizing: 'border-box',
+                    padding: '0.85rem',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.5rem',
+                    flex: 1
+                }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>🧠 COGNITIVE LOAD</span>
+                        <span style={{ fontSize: '0.9rem', color: loadColor, fontWeight: 'bold', textShadow: `0 0 8px ${loadColor}40` }}>{loadLabel}</span>
+                    </div>
+                    
+                    {/* 3-segment visual bar */}
+                    <div style={{ display: 'flex', gap: '6px', width: '100%', height: '6px' }}>
+                        <div style={{
                             flex: 1,
                             borderRadius: '999px',
-                            background: lvl <= diffLevel ? 'linear-gradient(to right, var(--color-secondary), #a78bfa)' : 'rgba(255, 255, 255, 0.05)',
-                            boxShadow: lvl <= diffLevel ? '0 0 10px rgba(139, 92, 246, 0.4)' : 'none',
+                            backgroundColor: 'var(--color-success)',
+                            opacity: cognitiveLoad === 'Optimal' ? 1.0 : 0.2,
+                            boxShadow: cognitiveLoad === 'Optimal' ? '0 0 10px rgba(16, 185, 129, 0.6)' : 'none',
                             transition: 'all 0.3s ease'
+                        }} title="Flow Zone" />
+                        <div style={{
+                            flex: 1,
+                            borderRadius: '999px',
+                            backgroundColor: '#fbbf24',
+                            opacity: cognitiveLoad === 'Moderate' ? 1.0 : 0.2,
+                            boxShadow: cognitiveLoad === 'Moderate' ? '0 0 10px rgba(251, 191, 36, 0.6)' : 'none',
+                            transition: 'all 0.3s ease'
+                        }} title="Methodical Focus" />
+                        <div style={{
+                            flex: 1,
+                            borderRadius: '999px',
+                            backgroundColor: 'var(--color-danger)',
+                            opacity: cognitiveLoad === 'High' ? 1.0 : 0.2,
+                            boxShadow: cognitiveLoad === 'High' ? '0 0 10px rgba(239, 68, 68, 0.6)' : 'none',
+                            transition: 'all 0.3s ease'
+                        }} title="Cognitive Friction" />
+                    </div>
+                </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {/* Confidence Visualizer */}
+                <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.35rem' }}>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>🎯 DECISION CONFIDENCE</span>
+                        <span style={{ fontSize: '1.05rem', color: 'var(--color-primary)', fontWeight: '900', fontFamily: 'var(--font-title)' }}>{confidence}%</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '4px', width: '100%', height: '8px', position: 'relative', overflow: 'hidden', borderRadius: '999px', background: 'rgba(255,255,255,0.05)' }}>
+                        <div style={{
+                            position: 'absolute', top: 0, left: 0, height: '100%',
+                            width: `${confidence}%`,
+                            background: 'linear-gradient(90deg, rgba(59, 130, 246, 0.5), var(--color-primary))',
+                            transition: 'width 0.5s ease-out',
+                            boxShadow: '0 0 10px rgba(59, 130, 246, 0.4)'
                         }} />
-                    ))}
+                    </div>
+                </div>
+
+                {/* Cognitive Profile */}
+                <div style={{
+                    background: 'rgba(139, 92, 246, 0.05)',
+                    borderRadius: '12px', width: '100%', boxSizing: 'border-box',
+                    padding: '0.85rem',
+                    textAlign: 'center',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    flex: 1
+                }}>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', fontWeight: '600', marginBottom: '0.25rem' }}>✨ COGNITIVE ARCHETYPE</span>
+                    <span style={{
+                        fontSize: '1.2rem',
+                        fontWeight: '800',
+                        fontFamily: 'var(--font-title)',
+                        color: archetype === 'Fast Learner' ? 'var(--color-success)' : archetype === 'High Fatigue' ? 'var(--color-danger)' : 'var(--color-secondary)',
+                        display: 'block',
+                        textShadow: archetype === 'Fast Learner' ? '0 0 12px rgba(16, 185, 129, 0.3)' : archetype === 'High Fatigue' ? '0 0 12px rgba(239, 68, 68, 0.3)' : '0 0 12px rgba(139, 92, 246, 0.3)'
+                    }}>{archetype}</span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem' }}>CONFIDENCE: {confidence}%</span>
                 </div>
             </div>
+        </div>
 
-            {/* Confidence Visualizer */}
-            <div style={{ marginBottom: '0.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.35rem' }}>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>🎯 DECISION CONFIDENCE</span>
-                    <span style={{ fontSize: '1.05rem', color: 'var(--color-primary)', fontWeight: '900', fontFamily: 'var(--font-title)' }}>{confidence}%</span>
-                </div>
-                <div style={{ display: 'flex', gap: '4px', width: '100%', height: '8px', position: 'relative', overflow: 'hidden', borderRadius: '999px', background: 'rgba(255,255,255,0.05)' }}>
-                    <div style={{
-                        position: 'absolute', top: 0, left: 0, height: '100%',
-                        width: `${confidence}%`,
-                        background: 'linear-gradient(90deg, rgba(59, 130, 246, 0.5), var(--color-primary))',
-                        transition: 'width 0.5s ease-out',
-                        boxShadow: '0 0 10px rgba(59, 130, 246, 0.4)'
-                    }} />
-                </div>
-            </div>
-
-            {/* Cognitive Load Indicator */}
-            <div style={{
-                background: 'rgba(255, 255, 255, 0.03)',
-                borderRadius: '12px', width: '100%', boxSizing: 'border-box',
-                padding: '0.85rem',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.5rem'
-            }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>🧠 COGNITIVE LOAD</span>
-                    <span style={{ fontSize: '0.9rem', color: loadColor, fontWeight: 'bold', textShadow: `0 0 8px ${loadColor}40` }}>{loadLabel}</span>
-                </div>
-                
-                {/* 3-segment visual bar */}
-                <div style={{ display: 'flex', gap: '6px', width: '100%', height: '6px' }}>
-                    <div style={{
-                        flex: 1,
-                        borderRadius: '999px',
-                        backgroundColor: 'var(--color-success)',
-                        opacity: cognitiveLoad === 'Optimal' ? 1.0 : 0.2,
-                        boxShadow: cognitiveLoad === 'Optimal' ? '0 0 10px rgba(16, 185, 129, 0.6)' : 'none',
-                        transition: 'all 0.3s ease'
-                    }} title="Flow Zone" />
-                    <div style={{
-                        flex: 1,
-                        borderRadius: '999px',
-                        backgroundColor: '#fbbf24',
-                        opacity: cognitiveLoad === 'Moderate' ? 1.0 : 0.2,
-                        boxShadow: cognitiveLoad === 'Moderate' ? '0 0 10px rgba(251, 191, 36, 0.6)' : 'none',
-                        transition: 'all 0.3s ease'
-                    }} title="Methodical Focus" />
-                    <div style={{
-                        flex: 1,
-                        borderRadius: '999px',
-                        backgroundColor: 'var(--color-danger)',
-                        opacity: cognitiveLoad === 'High' ? 1.0 : 0.2,
-                        boxShadow: cognitiveLoad === 'High' ? '0 0 10px rgba(239, 68, 68, 0.6)' : 'none',
-                        transition: 'all 0.3s ease'
-                    }} title="Cognitive Friction" />
-                </div>
-            </div>
-
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', width: '100%', marginTop: '0.5rem' }}>
             {/* Focus Coach Chatbox */}
             <div style={{
                 background: 'rgba(59, 130, 246, 0.05)',
@@ -305,25 +336,6 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
                         "{coachMessage}"
                     </p>
                 </div>
-            </div>
-
-            {/* Cognitive Profile */}
-            <div style={{
-                background: 'rgba(139, 92, 246, 0.05)',
-                borderRadius: '12px', width: '100%', boxSizing: 'border-box',
-                padding: '0.85rem',
-                textAlign: 'center'
-            }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', fontWeight: '600', marginBottom: '0.25rem' }}>✨ COGNITIVE ARCHETYPE</span>
-                <span style={{
-                    fontSize: '1.2rem',
-                    fontWeight: '800',
-                    fontFamily: 'var(--font-title)',
-                    color: archetype === 'Fast Learner' ? 'var(--color-success)' : archetype === 'High Fatigue' ? 'var(--color-danger)' : 'var(--color-secondary)',
-                    display: 'block',
-                    textShadow: archetype === 'Fast Learner' ? '0 0 12px rgba(16, 185, 129, 0.3)' : archetype === 'High Fatigue' ? '0 0 12px rgba(239, 68, 68, 0.3)' : '0 0 12px rgba(139, 92, 246, 0.3)'
-                }}>{archetype}</span>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem' }}>CONFIDENCE: {confidence}%</span>
             </div>
 
             {/* Slopes */}
@@ -373,6 +385,8 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
                     </div>
                 </div>
             </div>
+
+        </div>
 
             {/* Developer Toggle */}
             <button 
