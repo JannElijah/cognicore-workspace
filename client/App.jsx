@@ -1563,7 +1563,7 @@ export default function App() {
   });
 
   const lineChartData = useMemo(() => ({
-    labels: latestSessionMetrics.map((_, index) => R),
+    labels: latestSessionMetrics.map((_, index) => `Round ${index + 1}`),
     datasets: [
       {
         label: 'Reaction Time (ms)',
