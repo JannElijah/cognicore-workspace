@@ -18,8 +18,8 @@ export function createTutorialOverlay(scene, { title, domain, instructions, them
 
     // 2. Glassmorphic Modal Box Card
     const modal = scene.add.graphics();
-    const modalW = 550;
-    const modalH = 400;
+    const modalW = 620;
+    const modalH = 500;
     const modalX = (width - modalW) / 2;
     const modalY = (height - modalH) / 2;
 
