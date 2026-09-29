@@ -139,7 +139,7 @@ export default function PriorityQueueGame({
         overlay: {
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center',
-            width: '100%', maxWidth: '800px', minHeight: 'auto',
+            width: '100%', maxWidth: '1200px', minHeight: 'auto',
             background: 'linear-gradient(135deg, #020209 0%, #041208 50%, #020a04 100%)',
             color: '#f8fafc', fontFamily: 'system-ui, -apple-system, sans-serif',
             borderRadius: '12px',
@@ -202,7 +202,7 @@ export default function PriorityQueueGame({
             fontSize: '0.85rem', marginBottom: '1.25rem'
         },
         canvasWrapper: {
-            width: '100%', maxWidth: '800px', aspectRatio: '4/3',
+            width: '100%', maxWidth: '1200px', aspectRatio: '4/3',
             borderRadius: '14px', overflow: 'hidden',
             border: '1px solid rgba(34,197,94,0.18)',
             boxShadow: '0 20px 40px rgba(0,0,0,0.5), 0 0 60px rgba(34,197,94,0.04)'
@@ -266,7 +266,7 @@ export default function PriorityQueueGame({
     );
 
     if (gameState === 'PLAYING') return (
-        <div style={{ position: 'relative', width: '100%', maxWidth: '800px', margin: '0 auto' }}>
+        <div style={{ position: 'relative', width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
             <div style={S.canvasWrapper} ref={gameContainerRef} className="game-canvas-wrapper" />
             <PauseOverlay isPaused={isPaused} onTogglePause={() => setIsPaused(false)} onPauseRequest={() => setIsPaused(true)} />
         </div>

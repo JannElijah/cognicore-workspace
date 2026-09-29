@@ -192,7 +192,7 @@ const handleRestart = () => {
             alignItems: 'center',
             justifyContent: 'center',
             width: '100%',
-            maxWidth: '800px',
+            maxWidth: '1200px',
             minHeight: 'auto',
             height: 'auto',
             background: 'linear-gradient(135deg, #09090b 0%, #1e1b4b 100%)',
@@ -269,7 +269,7 @@ const handleRestart = () => {
         },
         canvasWrapper: {
             width: '100%',
-            maxWidth: '800px',
+            maxWidth: '1200px',
             aspectRatio: '4/3',
             borderRadius: '12px',
             overflow: 'hidden',
@@ -360,7 +360,7 @@ const handleRestart = () => {
 
     if (gameState === 'PLAYING') {
         return (
-            <div style={{ position: 'relative', width: '100%', maxWidth: '800px', margin: '0 auto' }}>
+            <div style={{ position: 'relative', width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
                 <div style={styles.canvasWrapper} ref={gameContainerRef} className="game-canvas-wrapper" />
                 <PauseOverlay isPaused={isPaused} onTogglePause={() => setIsPaused(false)} onPauseRequest={() => setIsPaused(true)} />
             </div>
