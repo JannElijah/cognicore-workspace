@@ -26,6 +26,7 @@ export default class NeuroMazeScene extends BaseCognitiveScene {
         this.gridSize = dda.grid_size || 4;
         this.blockedRatio = dda.blocked_ratio || 0.25;
         this.maxMoves = dda.max_moves || (this.gridSize * 1.5 + 2);
+        this.speedMultiplier = dda.speed_multiplier || 1.0;
 
         // Session Stats
         this.score = 0;

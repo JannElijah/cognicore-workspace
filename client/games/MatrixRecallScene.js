@@ -297,7 +297,7 @@ updateTimer() {
 
         // Flash targets (Gold/Cyan) and decoys (Coral/Red) simultaneously
         this.targets.forEach(index => {
-            this.highlightCell(index, parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16), 0xffffff, this.flashDuration); // Cyan target glow
+            this.highlightCell(index, 0x38bdf8, 0xffffff, this.flashDuration); // Cyan target glow
         });
         this.decoyTargets.forEach(index => {
             this.highlightCell(index, 0xef4444, 0xfca5a5, this.flashDuration); // Red decoy glow

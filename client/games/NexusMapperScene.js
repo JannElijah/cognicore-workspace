@@ -263,8 +263,8 @@ updateTimer() {
                     });
                 });
                 this.gamePhase = 'RECALL';
-                this.recallTargets = [...this.layout];
-                Phaser.Utils.Array.Shuffle(this.recallTargets);
+                // Players expect alphabetical sequence. Reverse layout so pop() returns A -> B -> C
+                this.recallTargets = [...this.layout].reverse();
                 this.promptNextRecall();
             }
         });
@@ -341,7 +341,6 @@ updateTimer() {
             
             // Re-queue the target to try again
             this.recallTargets.push(this.currentRecallTarget);
-            Phaser.Utils.Array.Shuffle(this.recallTargets);
             this.promptNextRecall();
         }
 

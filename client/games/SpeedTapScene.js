@@ -235,6 +235,7 @@ export default class SpeedTapScene extends BaseCognitiveScene {
         if (!sprite) return; // Pool is exhausted
 
         sprite.setActive(true).setVisible(true);
+        sprite.setAlpha(1);
         sprite.setTexture(textureKey);
         sprite.setPosition(x, y);
         // Scale sprite so it matches DDA-controlled targetScale
