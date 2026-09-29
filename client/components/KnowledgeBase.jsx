@@ -99,7 +99,7 @@ export default function KnowledgeBase() {
         <p style={{ color: '#94a3b8', fontSize: '1.1rem' }}>Documentation and reference guides for CogniCore training modules.</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem', alignItems: 'start' }}>
+      <div className="kb-grid" style={{ display: 'grid', gap: '2rem', alignItems: 'start' }}>
         
         {/* Main Content Area */}
         <div style={{ flex: 1, gridColumn: '1 / -1' }} className="kb-main-col">
@@ -178,8 +178,10 @@ export default function KnowledgeBase() {
       </div>
 
       <style dangerouslySetInnerHTML={{__html: `
+        .kb-grid { grid-template-columns: 1fr; }
         @media (min-width: 1024px) {
-          .kb-main-col { grid-column: 1 !important; flex: none !important; width: 700px; }
+          .kb-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) !important; }
+          .kb-main-col { grid-column: 1 !important; flex: none !important; width: auto !important; }
           .kb-sidebar { display: block !important; }
         }
       `}} />
