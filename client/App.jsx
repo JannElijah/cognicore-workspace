@@ -2077,7 +2077,7 @@ export default function App() {
       />
 
       {/* Main Container */}
-      <main className="portal-main" key={activeGame ? 'game' : showDashboard ? 'dash' : portalView === 'researcher' ? 'research' : 'select'}>
+      <main className="portal-main" style={{ maxWidth: activeGame ? 'none' : '1400px' }} key={activeGame ? 'game' : showDashboard ? 'dash' : portalView === 'researcher' ? 'research' : 'select'}>
         {showSoundTuner && (
           <div className="game-card" style={{
             padding: '1.5rem',
