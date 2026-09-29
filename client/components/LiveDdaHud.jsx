@@ -111,7 +111,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
 
     return (
         <div className="telemetry-hud-container" style={{
-            minWidth: '380px', maxWidth: '460px', flex: 1,
+            minWidth: '480px', maxWidth: '620px', flex: 1,
             background: 'var(--bg-card)',
             backdropFilter: 'blur(16px)',
             borderRadius: '16px',
@@ -194,7 +194,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {/* Level Gauge */}
                 <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.35rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>⚡ CHALLENGE LEVEL</span>
                         <span style={{ fontSize: '1.25rem', color: 'var(--color-secondary)', fontWeight: '900', fontFamily: 'var(--font-title)' }}>Lvl {diffLevel} <span style={{fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '500'}}>/ 5</span></span>
                     </div>
@@ -221,7 +221,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
                     gap: '0.5rem',
                     flex: 1
                 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginBottom: '0.3rem' }}>
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>🧠 COGNITIVE LOAD</span>
                         <span style={{ fontSize: '0.9rem', color: loadColor, fontWeight: 'bold', textShadow: `0 0 8px ${loadColor}40` }}>{loadLabel}</span>
                     </div>
@@ -259,7 +259,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {/* Confidence Visualizer */}
                 <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.35rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>🎯 DECISION CONFIDENCE</span>
                         <span style={{ fontSize: '1.05rem', color: 'var(--color-primary)', fontWeight: '900', fontFamily: 'var(--font-title)' }}>{confidence}%</span>
                     </div>
@@ -280,6 +280,9 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
                     borderRadius: '12px', width: '100%', boxSizing: 'border-box',
                     padding: '0.85rem',
                     textAlign: 'center',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'center',
