@@ -193,7 +193,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
             {/* Level Gauge */}
             <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.35rem' }}>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>CHALLENGE LEVEL</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>⚡ CHALLENGE LEVEL</span>
                     <span style={{ fontSize: '1.25rem', color: 'var(--color-secondary)', fontWeight: '900', fontFamily: 'var(--font-title)' }}>Lvl {diffLevel} <span style={{fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '500'}}>/ 5</span></span>
                 </div>
                 <div style={{ display: 'flex', gap: '6px', width: '100%', height: '8px' }}>
@@ -212,7 +212,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
             {/* Confidence Visualizer */}
             <div style={{ marginBottom: '0.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.35rem' }}>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>DECISION CONFIDENCE</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>🎯 DECISION CONFIDENCE</span>
                     <span style={{ fontSize: '1.05rem', color: 'var(--color-primary)', fontWeight: '900', fontFamily: 'var(--font-title)' }}>{confidence}%</span>
                 </div>
                 <div style={{ display: 'flex', gap: '4px', width: '100%', height: '8px', position: 'relative', overflow: 'hidden', borderRadius: '999px', background: 'rgba(255,255,255,0.05)' }}>
@@ -228,8 +228,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
 
             {/* Cognitive Load Indicator */}
             <div style={{
-                background: 'rgba(255, 255, 255, 0.02)',
-                border: '1px solid var(--border-glass)',
+                background: 'rgba(255, 255, 255, 0.03)',
                 borderRadius: '12px', width: '100%', boxSizing: 'border-box',
                 padding: '0.85rem',
                 display: 'flex',
@@ -237,7 +236,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
                 gap: '0.5rem'
             }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>COGNITIVE LOAD</span>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>🧠 COGNITIVE LOAD</span>
                     <span style={{ fontSize: '0.9rem', color: loadColor, fontWeight: 'bold', textShadow: `0 0 8px ${loadColor}40` }}>{loadLabel}</span>
                 </div>
                 
@@ -273,7 +272,6 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
             {/* Focus Coach Chatbox */}
             <div style={{
                 background: 'rgba(59, 130, 246, 0.05)',
-                border: '1px solid rgba(59, 130, 246, 0.15)',
                 borderRadius: '12px', width: '100%', boxSizing: 'border-box',
                 padding: '0.85rem',
                 display: 'flex',
@@ -312,12 +310,11 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
             {/* Cognitive Profile */}
             <div style={{
                 background: 'rgba(139, 92, 246, 0.05)',
-                border: '1px solid rgba(139, 92, 246, 0.15)',
                 borderRadius: '12px', width: '100%', boxSizing: 'border-box',
                 padding: '0.85rem',
                 textAlign: 'center'
             }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', fontWeight: '600', marginBottom: '0.25rem' }}>COGNITIVE ARCHETYPE</span>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', fontWeight: '600', marginBottom: '0.25rem' }}>✨ COGNITIVE ARCHETYPE</span>
                 <span style={{
                     fontSize: '1.2rem',
                     fontWeight: '800',
@@ -344,7 +341,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
                         borderRadius: '8px',
                         padding: '0.5rem 0.75rem'
                     }}>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-main)', fontWeight: '500' }}>Accuracy Slope</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-main)', fontWeight: '500' }}>🎯 Accuracy Slope</span>
                         <span style={{
                             fontSize: '0.85rem',
                             fontWeight: 'bold',
@@ -365,7 +362,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
                         borderRadius: '8px',
                         padding: '0.5rem 0.75rem'
                     }}>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-main)', fontWeight: '500' }}>Latency Slope</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-main)', fontWeight: '500' }}>⏱️ Latency Slope</span>
                         <span style={{
                             fontSize: '0.85rem',
                             fontWeight: 'bold',

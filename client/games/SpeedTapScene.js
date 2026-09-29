@@ -498,22 +498,23 @@ export default class SpeedTapScene extends BaseCognitiveScene {
                     updateMlHud(this);
                 }
 
-                // Update real-time loop variables on the fly
-                this.spawnDelay = params.spawn_delay;
-                this.targetLifespan = params.target_lifespan;
-                this.targetScale = params.target_scale;
-                this.distractorRatio = params.distractor_ratio;
-                this.maxConcurrentObjects = params.object_count;
+                // Update real-time loop variables on the fly with safe fallbacks
+                this.spawnDelay = params.spawn_delay || this.spawnDelay || 1000;
+                this.targetLifespan = params.target_lifespan || this.targetLifespan || 2000;
+                this.targetScale = params.target_scale || this.targetScale || 1.0;
+                this.distractorRatio = params.distractor_ratio !== undefined ? params.distractor_ratio : this.distractorRatio;
+                this.maxConcurrentObjects = params.object_count || this.maxConcurrentObjects || 3;
 
-                // Dynamically update the spawn timer event interval
+                // Dynamically update the spawn timer event interval safely
                 if (this.spawnTimerEvent) {
-                    this.spawnTimerEvent.reset({
-                        delay: this.spawnDelay,
-                        callback: this.spawnObject,
-                        callbackScope: this,
-                        loop: true
-                    });
+                    this.spawnTimerEvent.remove();
                 }
+                this.spawnTimerEvent = this.time.addEvent({
+                    delay: this.spawnDelay,
+                    callback: this.spawnObject,
+                    callbackScope: this,
+                    loop: true
+                });
                 
                 console.log('[DDA Bridge] New Gameplay config applied:', params);
             }
