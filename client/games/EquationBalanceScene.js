@@ -643,11 +643,11 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
                     const params = data.dda_parameters;
                     const diffChanged = (this.difficultyLevel !== params.difficulty_level);
 
-                    this.difficultyLevel = params.difficulty_level;
-                    this.numRange = params.num_range;
-                    this.operators = params.operators;
-                    this.missingType = params.missing_type;
-                    this.roundTimeLimit = params.time_limit;
+                    this.difficultyLevel = params.difficulty_level !== undefined ? params.difficulty_level : this.difficultyLevel;
+                    this.numRange = params.num_range !== undefined ? params.num_range : this.numRange;
+                    this.operators = params.operators !== undefined ? params.operators : this.operators;
+                    this.missingType = params.missing_type !== undefined ? params.missing_type : this.missingType;
+                    this.roundTimeLimit = params.time_limit !== undefined ? params.time_limit : this.roundTimeLimit;
 
                     this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);
                     if (data.cognitive_profile) {

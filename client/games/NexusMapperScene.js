@@ -420,10 +420,10 @@ updateTimer() {
                     const params = data.dda_parameters;
                     const diffChanged = this.difficultyLevel !== params.difficulty_level;
 
-                    this.difficultyLevel = params.difficulty_level;
-                    this.gridSize = params.grid_size;
-                    this.targetCount = params.target_count;
-                    this.flashDuration = params.flash_duration;
+                    this.difficultyLevel = params.difficulty_level !== undefined ? params.difficulty_level : this.difficultyLevel;
+                    this.gridSize = params.grid_size !== undefined ? params.grid_size : this.gridSize;
+                    this.targetCount = params.target_count !== undefined ? params.target_count : this.targetCount;
+                    this.flashDuration = params.flash_duration !== undefined ? params.flash_duration : this.flashDuration;
 
                     this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);
                     if (data.cognitive_profile) {

@@ -622,10 +622,10 @@ updateTimer() {
                     const params = data.dda_parameters;
                     const difficultyChanged = this.difficultyLevel !== params.difficulty_level;
 
-                    this.difficultyLevel = params.difficulty_level;
-                    this.gridSize = params.grid_size;
-                    this.maxMoves = params.max_moves;
-                    this.blockedRatio = params.blocked_ratio;
+                    this.difficultyLevel = params.difficulty_level !== undefined ? params.difficulty_level : this.difficultyLevel;
+                    this.gridSize = params.grid_size !== undefined ? params.grid_size : this.gridSize;
+                    this.maxMoves = params.max_moves !== undefined ? params.max_moves : this.maxMoves;
+                    this.blockedRatio = params.blocked_ratio !== undefined ? params.blocked_ratio : this.blockedRatio;
                     this.speedMultiplier = params.speed_multiplier || 1.0;
 
                     this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);

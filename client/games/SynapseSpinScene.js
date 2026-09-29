@@ -412,9 +412,9 @@ updateTimer() {
                     const params = data.dda_parameters;
                     const diffChanged = this.difficultyLevel !== params.difficulty_level;
 
-                    this.difficultyLevel = params.difficulty_level;
-                    this.verticesCount = params.vertices;
-                    this.rotationStep = params.rotation_step;
+                    this.difficultyLevel = params.difficulty_level !== undefined ? params.difficulty_level : this.difficultyLevel;
+                    this.verticesCount = params.vertices !== undefined ? params.vertices : this.verticesCount;
+                    this.rotationStep = params.rotation_step !== undefined ? params.rotation_step : this.rotationStep;
 
                     this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);
                     if (data.cognitive_profile) {

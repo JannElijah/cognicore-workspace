@@ -510,19 +510,19 @@ export default class StroopShiftScene extends BaseCognitiveScene {
                 
                 // Adjust level and flash notifications
                 if (this.difficultyLevel !== params.difficulty_level) {
-                    this.difficultyLevel = params.difficulty_level;
+                    this.difficultyLevel = params.difficulty_level !== undefined ? params.difficulty_level : this.difficultyLevel;
                     this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);
                     
                     const direction = params.difficulty_level > this.difficultyLevel ? 'UPGRADED' : 'ADJUSTED';
                     this.showFloatingText(this.scale.width / 2, this.scale.height / 2, `DIFFICULTY ${direction}!`, '#a855f7');
                 }
 
-                // Update gameplay parameters
-                this.spawnDelay = params.spawn_delay;
-                this.conflictProbability = params.conflict_probability;
-                this.staticTextRotation = params.static_text_rotation;
-                this.dynamicTextSpin = params.dynamic_text_spin;
-                this.distractorFlashes = params.distractor_flashes;
+                // Update gameplay parameters with safe fallbacks
+                this.spawnDelay = params.spawn_delay || this.spawnDelay || 2500;
+                this.conflictProbability = params.conflict_probability !== undefined ? params.conflict_probability : this.conflictProbability;
+                this.staticTextRotation = params.static_text_rotation !== undefined ? params.static_text_rotation : this.staticTextRotation;
+                this.dynamicTextSpin = params.dynamic_text_spin !== undefined ? params.dynamic_text_spin : this.dynamicTextSpin;
+                this.distractorFlashes = params.distractor_flashes !== undefined ? params.distractor_flashes : this.distractorFlashes;
                 
                 if (data.cognitive_profile) {
                     this.archetype = data.cognitive_profile.archetype || this.archetype;

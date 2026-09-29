@@ -556,11 +556,11 @@ updateTimer() {
                     const difficultyChanged = this.difficultyLevel !== params.difficulty_level;
                     const gridChanged = this.gridCols !== params.grid_cols || this.gridRows !== params.grid_rows;
 
-                    this.difficultyLevel = params.difficulty_level;
-                    this.gridCols = params.grid_cols;
-                    this.gridRows = params.grid_rows;
-                    this.targetCount = params.target_count;
-                    this.flashDuration = params.flash_duration;
+                    this.difficultyLevel = params.difficulty_level !== undefined ? params.difficulty_level : this.difficultyLevel;
+                    this.gridCols = params.grid_cols !== undefined ? params.grid_cols : this.gridCols;
+                    this.gridRows = params.grid_rows !== undefined ? params.grid_rows : this.gridRows;
+                    this.targetCount = params.target_count !== undefined ? params.target_count : this.targetCount;
+                    this.flashDuration = params.flash_duration !== undefined ? params.flash_duration : this.flashDuration;
 
                     this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);
                     if (data.cognitive_profile) {

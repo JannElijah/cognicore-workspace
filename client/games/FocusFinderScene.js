@@ -784,10 +784,10 @@ updateTimer() {
                     const params = data.dda_parameters;
                     const difficultyChanged = this.difficultyLevel !== params.difficulty_level;
 
-                    this.difficultyLevel = params.difficulty_level;
-                    this.distractorCount = params.distractors;
-                    this.movementSpeed = params.speed;
-                    this.visualSimilarity = params.similarity;
+                    this.difficultyLevel = params.difficulty_level !== undefined ? params.difficulty_level : this.difficultyLevel;
+                    this.distractorCount = params.distractors !== undefined ? params.distractors : this.distractorCount;
+                    this.movementSpeed = params.speed !== undefined ? params.speed : this.movementSpeed;
+                    this.visualSimilarity = params.similarity !== undefined ? params.similarity : this.visualSimilarity;
 
                     this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);
                     if (data.cognitive_profile) {

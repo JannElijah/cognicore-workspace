@@ -715,11 +715,11 @@ export default class MentalFlexScene extends BaseCognitiveScene {
                     const diffChanged = this.difficultyLevel !== params.difficulty_level;
                     const oldDifficulty = this.difficultyLevel;
 
-                    this.difficultyLevel = params.difficulty_level;
-                    this.choicesCount = params.choices_count;
-                    this.timeLimit = params.time_limit;
-                    this.ruleShiftFrequency = params.rule_shift_frequency;
-                    this.rulesPool = params.rules_pool;
+                    this.difficultyLevel = params.difficulty_level !== undefined ? params.difficulty_level : this.difficultyLevel;
+                    this.choicesCount = params.choices_count !== undefined ? params.choices_count : this.choicesCount;
+                    this.timeLimit = params.time_limit !== undefined ? params.time_limit : this.timeLimit;
+                    this.ruleShiftFrequency = params.rule_shift_frequency !== undefined ? params.rule_shift_frequency : this.ruleShiftFrequency;
+                    this.rulesPool = params.rules_pool !== undefined ? params.rules_pool : this.rulesPool;
 
                     this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);
                     if (data.cognitive_profile) {
