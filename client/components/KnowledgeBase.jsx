@@ -102,7 +102,7 @@ export default function KnowledgeBase() {
       <div className="kb-grid" style={{ display: 'grid', gap: '2rem', alignItems: 'start' }}>
         
         {/* Main Content Area */}
-        <div style={{ flex: 1, gridColumn: '1 / -1' }} className="kb-main-col">
+        <div style={{ flex: 1 }} className="kb-main-col">
           
           {/* Sticky Search Bar */}
           <div style={{ position: 'sticky', top: '10px', zIndex: 10, marginBottom: '2rem' }}>
@@ -180,9 +180,9 @@ export default function KnowledgeBase() {
       <style dangerouslySetInnerHTML={{__html: `
         .kb-grid { grid-template-columns: 1fr; }
         @media (min-width: 1024px) {
-          .kb-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) !important; }
-          .kb-main-col { grid-column: 1 !important; flex: none !important; width: auto !important; }
-          .kb-sidebar { display: block !important; }
+          .kb-grid { grid-template-columns: 2fr 1fr !important; }
+          .kb-main-col { grid-column: 1 !important; }
+          .kb-sidebar { display: block !important; grid-column: 2 !important; }
         }
       `}} />
     </div>
