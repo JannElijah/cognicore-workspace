@@ -2244,7 +2244,7 @@ export default function App() {
               justifyContent: 'center',
               flexWrap: 'wrap'
             }}>
-              <div style={{ flex: '1', display: 'flex', justifyContent: 'center', minWidth: '280px', width: '100%' }}>
+              <div style={{ flex: '1 1 0%', minWidth: '280px', width: '100%' }}>
                 <ErrorBoundary onReset={handleBackToLobby}>
                   <Suspense fallback={
                     <div style={{
