@@ -70,11 +70,11 @@ export default function SequenceDecoderGame({ username = 'default_player', apiUr
                 batchSize: 4096
             },
             scale: {
-                mode: Phaser.Scale.FIT,
+                mode: Phaser.Scale.RESIZE,
                 autoCenter: Phaser.Scale.CENTER_BOTH,
                 // Mobile-responsive: use viewport width on portrait phones, fixed 800x600 on desktop
-                width: 800,
-                height: 600,
+                width: '100%',
+                height: '100%',
             },
             scene: [SequenceDecoderScene]
         };
@@ -308,8 +308,8 @@ const handleRestart = () => {
         },
         canvasWrapper: {
             width: '100%',
-            maxWidth: 'min(100%, calc(80vh * 4 / 3))',
-            aspectRatio: '4/3',
+            height: '85vh',
+            
             borderRadius: '14px',
             overflow: 'hidden',
             border: '1px solid rgba(6,182,212,0.2)',
@@ -416,7 +416,7 @@ const handleRestart = () => {
     // ── PLAYING screen
     if (gameState === 'PLAYING') {
         return (
-            <div style={{ position: 'relative', width: '100%', maxWidth: 'min(100%, calc(80vh * 4 / 3))', margin: '0 auto' }}>
+            <div style={{ position: 'relative', width: '100%', height: '85vh', margin: '0 auto' }}>
                 <div style={styles.canvasWrapper} ref={gameContainerRef} className="game-canvas-wrapper" />
                 <PauseOverlay isPaused={isPaused} onTogglePause={() => setIsPaused(false)} onPauseRequest={() => setIsPaused(true)} />
             </div>

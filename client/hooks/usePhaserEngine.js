@@ -28,10 +28,10 @@ export function usePhaserEngine(containerRef, gameState, sceneClass, sceneKey, s
             parent: containerRef.current,
             backgroundColor: '#09090b',
             scale: {
-                mode: Phaser.Scale.FIT,
+                mode: Phaser.Scale.RESIZE,
                 autoCenter: Phaser.Scale.CENTER_BOTH,
-                width: window.innerWidth < 768 ? window.innerWidth : 800,
-                height: window.innerWidth < 768 ? Math.round(window.innerWidth * 0.75) : 600,
+                width: '100%',
+                height: '100%',
             },
             scene: [BootScene, sceneClass]
         };

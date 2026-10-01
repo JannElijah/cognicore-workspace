@@ -66,9 +66,9 @@ export default function RouteOptimizerGame({
                 batchSize: 4096
             },
             scale: {
-                mode: Phaser.Scale.FIT,
+                mode: Phaser.Scale.RESIZE,
                 autoCenter: Phaser.Scale.CENTER_BOTH,
-                width: 800, height: 600
+                width: '100%', height: 600
             },
             scene: [RouteOptimizerScene]
         };
@@ -239,7 +239,7 @@ export default function RouteOptimizerGame({
             fontSize: '0.85rem', marginBottom: '1.25rem'
         },
         canvasWrapper: {
-            width: '100%', maxWidth: 'min(100%, calc(80vh * 4 / 3))', aspectRatio: '4/3',
+            width: '100%', height: '85vh', 
             borderRadius: '14px', overflow: 'hidden',
             border: '1px solid rgba(34,197,94,0.18)',
             boxShadow: '0 20px 40px rgba(0,0,0,0.5), 0 0 60px rgba(34,197,94,0.05)'
@@ -333,7 +333,7 @@ export default function RouteOptimizerGame({
     // ── PLAYING ─────────────────────────────────────────
     if (gameState === 'PLAYING') {
         return (
-            <div style={{ position: 'relative', width: '100%', maxWidth: 'min(100%, calc(80vh * 4 / 3))', margin: '0 auto' }}>
+            <div style={{ position: 'relative', width: '100%', height: '85vh', margin: '0 auto' }}>
                 <div style={S.canvasWrapper} ref={gameContainerRef} className="game-canvas-wrapper" />
                 <PauseOverlay isPaused={isPaused} onTogglePause={() => setIsPaused(false)} onPauseRequest={() => setIsPaused(true)} />
             </div>
