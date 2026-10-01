@@ -2451,7 +2451,9 @@ export default function App() {
                 borderRadius: '16px',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '1.5rem',
+                gap: '1rem',
+                  maxHeight: '90vh',
+                  overflowY: 'auto',
                 animation: 'fadeIn 0.3s ease-out'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '1rem', gap: '1rem' }}>
@@ -2550,7 +2552,7 @@ export default function App() {
                         {/* Pre vs Post Averages */}
                         <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
                           <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Standardized Test Mean</span>
-                          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem' }}>
+                          <div style={{ fontSize: '1.35rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem' }}>
                             {evaluationReport.mean_pretest} <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>→</span> <span style={{ color: '#4ade80' }}>{evaluationReport.mean_posttest}</span>
                           </div>
                           <div style={{ fontSize: '0.75rem', color: '#4ade80', marginTop: '0.25rem', fontWeight: 'bold' }}>
@@ -2561,7 +2563,7 @@ export default function App() {
                         {/* T-Statistic */}
                         <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
                           <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Paired t-Statistic</span>
-                          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem' }}>
+                          <div style={{ fontSize: '1.35rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem' }}>
                             t = {evaluationReport.t_statistic}
                           </div>
                           <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem' }}>
@@ -2572,7 +2574,7 @@ export default function App() {
                         {/* Cohen's d / Effect Size */}
                         <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
                           <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Cohen's d Effect Size</span>
-                          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem', textTransform: 'capitalize' }}>
+                          <div style={{ fontSize: '1.35rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem', textTransform: 'capitalize' }}>
                             {evaluationReport.cohens_d} <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>({evaluationReport.effect_size_magnitude})</span>
                           </div>
                           <div style={{ fontSize: '0.75rem', color: evaluationReport.statistically_significant ? '#4ade80' : '#f87171', marginTop: '0.25rem', fontWeight: 'bold' }}>
@@ -2592,7 +2594,9 @@ export default function App() {
                         {evaluationReport.domain_improvements && (
                           <div style={{ marginTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.75rem' }}>
                             <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold' }}>Domain Score Margin Changes:</span>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', marginTop: '0.5rem' }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem',
+                  maxHeight: '90vh',
+                  overflowY: 'auto', marginTop: '0.5rem' }}>
                               {Object.entries(evaluationReport.domain_improvements).map(([dom, margin]) => (
                                 <div key={dom} style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>
                                   <span style={{ textTransform: 'capitalize', color: '#94a3b8' }}>{dom.replace(/_/g, ' ')}:</span>{' '}
@@ -2624,7 +2628,7 @@ export default function App() {
                         {/* Sample Size */}
                         <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
                           <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Study Cohort Size (n)</span>
-                          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem' }}>
+                          <div style={{ fontSize: '1.35rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem' }}>
                             {cohortAnalytics.sample_size} subjects
                           </div>
                           <div style={{ fontSize: '0.75rem', color: 'var(--color-primary)', marginTop: '0.25rem', fontWeight: 'bold' }}>
@@ -2635,7 +2639,7 @@ export default function App() {
                         {/* Overall Improvement Margin */}
                         <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
                           <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Cohort Improvement Margin</span>
-                          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#4ade80', marginTop: '0.5rem' }}>
+                          <div style={{ fontSize: '1.35rem', fontWeight: '900', color: '#4ade80', marginTop: '0.5rem' }}>
                             +{cohortAnalytics.overall_improvement_rate_pct}%
                           </div>
                           <div style={{ fontSize: '0.75rem', color: '#cbd5e1', marginTop: '0.25rem' }}>
@@ -2646,7 +2650,7 @@ export default function App() {
                         {/* p-value metric card */}
                         <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
                           <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Cohort Significance Level</span>
-                          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: cohortAnalytics.statistically_significant ? '#4ade80' : '#f87171', marginTop: '0.5rem' }}>
+                          <div style={{ fontSize: '1.35rem', fontWeight: '900', color: cohortAnalytics.statistically_significant ? '#4ade80' : '#f87171', marginTop: '0.5rem' }}>
                             p = {cohortAnalytics.cohort_p_value}
                           </div>
                           <div style={{ fontSize: '0.75rem', color: '#cbd5e1', marginTop: '0.25rem' }}>
@@ -2657,7 +2661,7 @@ export default function App() {
                         {/* Global Cohen's d Effect Size */}
                         <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
                           <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Global Cohen's d</span>
-                          <div style={{ fontSize: '1.75rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem', textTransform: 'capitalize' }}>
+                          <div style={{ fontSize: '1.35rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem', textTransform: 'capitalize' }}>
                             d = {cohortAnalytics.cohort_cohens_d}
                           </div>
                           <div style={{ fontSize: '0.75rem', color: '#4ade80', marginTop: '0.25rem', fontWeight: 'bold' }}>
@@ -3177,20 +3181,22 @@ export default function App() {
                 background: 'rgba(15, 23, 42, 0.95)',
                 border: `2px solid ${DOMAIN_THEMES[pendingGameToLaunch.themeClass]?.color || '#ffffff'}`,
                 borderRadius: '16px',
-                padding: '2.5rem',
+                padding: '1.5rem',
                 width: '90%',
                 maxWidth: '700px',
                 boxShadow: `0 0 45px ${DOMAIN_THEMES[pendingGameToLaunch.themeClass]?.glow || 'rgba(255,255,255,0.1)'}`,
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '1.5rem',
+                gap: '1rem',
+                  maxHeight: '90vh',
+                  overflowY: 'auto',
                 position: 'relative'
               }} className="game-mode-modal-card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <span style={{ fontSize: '2.25rem' }}>{pendingGameToLaunch.icon}</span>
+                    <span style={{ fontSize: '1.75rem' }}>{pendingGameToLaunch.icon}</span>
                     <div>
-                      <h2 style={{ margin: 0, fontSize: '1.75rem', color: '#ffffff' }}>
+                      <h2 style={{ margin: 0, fontSize: '1.35rem', color: '#ffffff' }}>
                         Launch {pendingGameToLaunch.title}
                       </h2>
                       <span style={{ fontSize: '0.75rem', color: DOMAIN_THEMES[pendingGameToLaunch.themeClass]?.color, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -3249,7 +3255,7 @@ export default function App() {
                             border: isSelected ? `2px solid ${themeColor}` : '1.5px solid rgba(255, 255, 255, 0.08)',
                             borderRadius: '8px',
                             color: isSelected ? themeColor : '#e2e8f0',
-                            padding: '0.85rem',
+                            padding: '0.6rem',
                             cursor: 'pointer',
                             transition: 'all 0.2s',
                             textAlign: 'left',
@@ -3276,7 +3282,7 @@ export default function App() {
                   background: 'rgba(9, 9, 11, 0.5)',
                   border: `1.5px solid ${(DOMAIN_THEMES[pendingGameToLaunch.themeClass]?.color || '#ffffff')}33`,
                   borderRadius: '10px',
-                  padding: '1.25rem',
+                  padding: '0.75rem',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '0.5rem',
