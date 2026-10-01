@@ -307,7 +307,7 @@ export default function App() {
     }
   }, [researchMode]);
 
-  const handleCheckUserStatus = async (username, course = null, age = null, gender = null, pwdStatus = null) => {
+  const handleCheckUserStatus = async (username, course = null, age = null, gender = null, pwdStatus = null, password = null, isSignUp = false) => {
     if (!username || !username.trim()) {
       setAssessmentError("Please enter a valid username.");
       return;
@@ -316,24 +316,40 @@ export default function App() {
     setAssessmentError(null);
     try {
       const trimmedName = username.trim();
-      
       const email = `${trimmedName}@cognicore.com`.toLowerCase();
-      const password = `cogni-core-default-pw-123`;
       
-      // Try Supabase Sign In
-      let { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password });
-      
-      if (authError && authError.message.includes('Invalid login credentials')) {
-          // If user doesn't exist, sign them up
-          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ 
+      let authData;
+      if (password) {
+          if (isSignUp) {
+              const { data, error } = await supabase.auth.signUp({ 
+                  email, 
+                  password,
+                  options: { data: { username: trimmedName, course, age, gender, pwd_status: pwdStatus } }
+              });
+              if (error) throw new Error(error.message);
+              if (!data.session) {
+                  // Sometimes Supabase requires login after signup if auto-confirm is off, but for our setup it should return session.
+                  // Try logging in just in case:
+                  const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
+                  if (signInErr) throw new Error("Account created, but could not sign in automatically.");
+                  authData = signInData;
+              } else {
+                  authData = data;
+              }
+          } else {
+              const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+              if (error) throw new Error("Invalid username or password.");
+              authData = data;
+          }
+      } else {
+          const anonPassword = 'cogni-core-default-pw-123';
+          const { data, error } = await supabase.auth.signUp({ 
               email, 
-              password,
+              password: anonPassword,
               options: { data: { username: trimmedName, course, age, gender, pwd_status: pwdStatus } }
           });
-          if (signUpError) throw new Error(signUpError.message);
-          authData = signUpData;
-      } else if (authError) {
-          throw new Error(authError.message);
+          if (error) throw new Error(error.message);
+          authData = data;
       }
       
       const token = authData.session.access_token;

@@ -9,6 +9,8 @@ export default function LoginFlow({
 }) {
   const [agreed, setAgreed] = useState(false);
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
   const [course, setCourse] = useState('');
   const [age, setAge] = useState('');
   const [gender, setGender] = useState('');
@@ -25,9 +27,13 @@ export default function LoginFlow({
       }
       const guestId = 'Anon_' + Math.random().toString(36).substring(2, 6).toUpperCase();
       setUsernameInput(guestId);
-      handleCheckUserStatus(guestId, course, age, gender, pwdStatus);
+      handleCheckUserStatus(guestId, course, age, gender, pwdStatus, null, false);
     } else {
-      handleCheckUserStatus(usernameInput);
+      if (!passwordInput) {
+        setFormError("Password is required.");
+        return;
+      }
+      handleCheckUserStatus(usernameInput, null, null, null, null, passwordInput, isSignUp);
     }
   };
 
@@ -51,20 +57,43 @@ export default function LoginFlow({
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         {!isAnonymous ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-            <label style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Subject Username</label>
-            <input 
-              type="text" 
-              value={usernameInput} 
-              onChange={(e) => setUsernameInput(e.target.value)} 
-              placeholder="e.g. subject_01" 
-              style={{ minHeight: '44px', background: '#09090b', border: '1.5px solid rgba(var(--rgb-secondary), 0.4)', borderRadius: '8px', color: '#ffffff', padding: '0.75rem', fontSize: '1rem', outline: 'none', width: '100%', boxSizing: 'border-box' }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !assessmentLoading && agreed) {
-                  submitLogin();
-                }
-              }}
-            />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', padding: '0.3rem' }}>
+              <button 
+                onClick={() => setIsSignUp(false)}
+                style={{ flex: 1, padding: '0.5rem', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', background: !isSignUp ? 'rgba(255,255,255,0.1)' : 'transparent', color: !isSignUp ? '#fff' : '#94a3b8' }}
+              >Log In</button>
+              <button 
+                onClick={() => setIsSignUp(true)}
+                style={{ flex: 1, padding: '0.5rem', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', background: isSignUp ? 'rgba(255,255,255,0.1)' : 'transparent', color: isSignUp ? '#fff' : '#94a3b8' }}
+              >Create Account</button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+              <label style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Subject Username</label>
+              <input 
+                type="text" 
+                value={usernameInput} 
+                onChange={(e) => setUsernameInput(e.target.value)} 
+                placeholder="e.g. subject_01" 
+                style={{ minHeight: '44px', background: '#09090b', border: '1.5px solid rgba(var(--rgb-secondary), 0.4)', borderRadius: '8px', color: '#ffffff', padding: '0.75rem', fontSize: '1rem', outline: 'none', width: '100%', boxSizing: 'border-box' }}
+              />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+              <label style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Password</label>
+              <input 
+                type="password" 
+                value={passwordInput} 
+                onChange={(e) => setPasswordInput(e.target.value)} 
+                placeholder="Enter password" 
+                style={{ minHeight: '44px', background: '#09090b', border: '1.5px solid rgba(var(--rgb-secondary), 0.4)', borderRadius: '8px', color: '#ffffff', padding: '0.75rem', fontSize: '1rem', outline: 'none', width: '100%', boxSizing: 'border-box' }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !assessmentLoading && agreed) {
+                    submitLogin();
+                  }
+                }}
+              />
+            </div>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -123,7 +152,7 @@ export default function LoginFlow({
           onMouseOver={(e) => { if(agreed) e.target.style.filter = 'brightness(1.15)' }}
           onMouseOut={(e) => { if(agreed) e.target.style.filter = 'brightness(1.0)' }}
         >
-          {assessmentLoading ? 'Verifying Profile...' : 'Begin Cognitive Evaluation'}
+          {assessmentLoading ? 'Verifying Profile...' : (isAnonymous || isSignUp ? 'Create Account & Begin' : 'Log In & Begin')}
         </button>
       </div>
     </div>
