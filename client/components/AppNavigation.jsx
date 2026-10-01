@@ -1,4 +1,5 @@
 import React, { memo, useState } from 'react';
+import { supabase } from '../utils/supabaseClient';
 
 const AppNavigation = memo(function AppNavigation({
   currentUser, portalView, setPortalView, setShowProfileModal, activeGame,
@@ -430,7 +431,7 @@ const AppNavigation = memo(function AppNavigation({
 
         <button
           className="mobile-nav-item"
-          onClick={() => { localStorage.clear(); window.location.reload(); }}
+          onClick={async () => { await supabase.auth.signOut(); localStorage.clear(); window.location.reload(); }}
           style={{ color: '#ef4444' }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 17l5-5-5-5M21 12H9" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="#ef4444" strokeWidth="2" strokeLinecap="round"/></svg>

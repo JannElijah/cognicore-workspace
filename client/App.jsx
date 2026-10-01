@@ -256,6 +256,7 @@ export default function App() {
   });
   const [assessmentLoading, setAssessmentLoading] = useState(false);
   const [assessmentError, setAssessmentError] = useState(null);
+  const [authSuccessMessage, setAuthSuccessMessage] = useState(null);
 
   const [researchMode, setResearchMode] = useState('individual'); // 'individual' | 'aggregate'
   const [cohortAnalytics, setCohortAnalytics] = useState(null);
@@ -307,6 +308,71 @@ export default function App() {
     }
   }, [researchMode]);
 
+  // Session Persistence on Refresh
+  useEffect(() => {
+    const restoreSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data && data.session && data.session.user) {
+        const user = data.session.user;
+        const username = user.user_metadata?.username || user.email.split('@')[0];
+        const token = data.session.access_token;
+        
+        try {
+            const syncRes = await fetch(API_BASE + '/api/sync-user', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': Bearer 
+                }
+            });
+            if (syncRes.ok) {
+                const syncData = await syncRes.json();
+                if (syncData.status === 'success') {
+                    useCogniStore.getState().login(syncData.user, token);
+                    useCogniStore.getState().fetchInventory();
+                }
+            }
+            
+            const res = await fetch(${API_BASE}/api/assessment-status/);
+            if (res.ok) {
+                const asmtData = await res.json();
+                if (asmtData.status === 'success') {
+                    setCurrentUser(username);
+                    setActiveDashboardUser(username);
+                    
+                    if (asmtData.exists && asmtData.pre_test) {
+                        setPreTestScores(asmtData.pre_test);
+                        setWeakestDomain(asmtData.weakest_domain);
+                        setPrescribedGame(asmtData.prescribed_game);
+                        setPersonalizedReport(asmtData.personalized_report);
+                        
+                        if (asmtData.post_test) {
+                            setPostTestScores(asmtData.post_test);
+                            setAiFeedback(asmtData.ai_feedback);
+                            setAssessmentStage('completed');
+                            fetchEvaluationReport(username);
+                        } else {
+                            setAssessmentStage('none');
+                            const historyRes = await fetch(${API_BASE}/api/user-session-history/);
+                            if (historyRes.ok) {
+                                const histData = await historyRes.json();
+                                const played = (histData.sessions || []).some(s => s.game_type === asmtData.prescribed_game);
+                                setHasPlayedPrescribed(played);
+                            }
+                        }
+                    } else {
+                        setAssessmentStage('pre-test');
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("Session restore failed", e);
+        }
+      }
+    };
+    restoreSession();
+  }, []);
+
   const handleCheckUserStatus = async (username, course = null, age = null, gender = null, pwdStatus = null, password = null, isSignUp = false) => {
     if (!username || !username.trim()) {
       setAssessmentError("Please enter a valid username.");
@@ -314,6 +380,7 @@ export default function App() {
     }
     setAssessmentLoading(true);
     setAssessmentError(null);
+    setAuthSuccessMessage(null);
     try {
       const trimmedName = username.trim();
       const email = `${trimmedName}@cognicore.com`.toLowerCase();
@@ -352,6 +419,16 @@ export default function App() {
           authData = data;
       }
       
+      if (password && isSignUp) {
+        setAuthSuccessMessage("Account created successfully! Preparing your profile...");
+      } else if (password && !isSignUp) {
+        setAuthSuccessMessage("Login successful! Loading dashboard...");
+      } else {
+        setAuthSuccessMessage("Anonymous session prepared! Entering portal...");
+      }
+      // Brief delay to let the user see the success message
+      await new Promise(resolve => setTimeout(resolve, 1200));
+
       const token = authData.session.access_token;
       
       // Sync user with backend to trigger daily rewards and streak
@@ -432,6 +509,7 @@ export default function App() {
   const handleSubmitAssessment = async (resultsPayload) => {
     setAssessmentLoading(true);
     setAssessmentError(null);
+    setAuthSuccessMessage(null);
     try {
       const type = assessmentStage === 'pre-test' ? 'pre-test' : 'post-test';
       
@@ -2230,6 +2308,7 @@ export default function App() {
             usernameInput={usernameInput}
             setUsernameInput={setUsernameInput}
             assessmentError={assessmentError}
+              authSuccessMessage={authSuccessMessage}
             assessmentLoading={assessmentLoading}
             handleCheckUserStatus={handleCheckUserStatus}
           />
@@ -2240,6 +2319,7 @@ export default function App() {
             setAssessmentAnswers={setAssessmentAnswers}
             handleSubmitAssessment={handleSubmitAssessment}
             assessmentError={assessmentError}
+              authSuccessMessage={authSuccessMessage}
             currentUser={currentUser}
             assessmentLoading={assessmentLoading}
           />

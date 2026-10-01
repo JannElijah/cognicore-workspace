@@ -44,6 +44,39 @@ def verify_pin(current_user_id, current_username):
     else:
         return jsonify({"status": "error", "message": "Incorrect PIN"}), 401
 
+@auth_bp.route('/api/auth/profile', methods=['GET'])
+@token_required
+def get_profile(current_user_id, current_username):
+    user = User.query.get(current_user_id)
+    if not user:
+        return jsonify({"status": "error", "message": "User not found"}), 404
+        
+    return jsonify({
+        "status": "success",
+        "profile": {
+            "course": user.course or "",
+            "age": user.age or "",
+            "gender": user.gender or "",
+            "pwd_status": user.pwd_status or ""
+        }
+    })
+
+@auth_bp.route('/api/auth/update-profile', methods=['POST'])
+@token_required
+def update_profile(current_user_id, current_username):
+    data = request.get_json()
+    user = User.query.get(current_user_id)
+    if not user:
+        return jsonify({"status": "error", "message": "User not found"}), 404
+        
+    if "course" in data: user.course = data["course"]
+    if "age" in data: user.age = data["age"]
+    if "gender" in data: user.gender = data["gender"]
+    if "pwd_status" in data: user.pwd_status = data["pwd_status"]
+    
+    db.session.commit()
+    return jsonify({"status": "success", "message": "Profile updated successfully"})
+
 from datetime import date, timedelta
 from models import UserProfile, UserStreak
 
