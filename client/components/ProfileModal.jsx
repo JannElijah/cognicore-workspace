@@ -45,8 +45,8 @@ const ProfileModal = ({ onClose }) => {
 
   useEffect(() => {
     if (activeTab === 'account' && !demoLoaded) {
-      fetch(${API_BASE}/api/auth/profile, {
-        headers: { 'Authorization': Bearer  }
+      fetch(`${API_BASE}/api/auth/profile`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       })
       .then(res => res.json())
       .then(data => {
@@ -64,11 +64,11 @@ const ProfileModal = ({ onClose }) => {
   const handleUpdateProfile = async () => {
     setAccountMsg({ text: 'Saving...', type: 'info' });
     try {
-      const res = await fetch(${API_BASE}/api/auth/update-profile, {
+      const res = await fetch(`${API_BASE}/api/auth/update-profile`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': Bearer  
+          'Authorization': `Bearer ${token}` 
         },
         body: JSON.stringify({ course, age, gender, pwd_status: pwdStatus })
       });
@@ -122,17 +122,17 @@ const ProfileModal = ({ onClose }) => {
   };
 
   const achievementMeta = {
-    'first_steps': { title: 'First Steps', icon: '👣', description: 'Complete your first cognitive training game.', reward: '100 Coins', target: 1, rarity: 'common' },
-    'consistency': { title: 'Consistent Trainer', icon: '🔥', description: 'Complete 50 cognitive training games.', reward: '500 Coins', target: 50, rarity: 'rare' },
-    'sharpshooter': { title: 'Sharpshooter', icon: '🏹', description: 'Achieve 90%+ accuracy 20 times.', reward: '500 Coins', target: 20, rarity: 'rare' },
-    'versatile_mind': { title: 'Versatile Mind', icon: '🎮', description: 'Play all 5 different game types.', reward: '400 Coins', target: 5, rarity: 'rare' },
-    'on_fire': { title: 'On Fire', icon: '🔥', description: 'Achieve a 7-day login streak.', reward: '750 Coins', target: 7, rarity: 'rare' },
-    'speed_demon': { title: 'Speed Demon', icon: '⚡', description: 'Achieve a reaction time under 400ms 10 times.', reward: 'Exclusive Avatar', target: 10, rarity: 'epic' },
-    'scholar': { title: 'Scholar', icon: '🎓', description: 'Reach Level 10.', reward: 'Exclusive Banner', target: 1, rarity: 'epic' },
-    'lightning_reflexes': { title: 'Lightning Reflexes', icon: '⚡', description: 'Achieve a reaction time under 300ms.', reward: '200 Coins + Exclusive Banner', target: 1, rarity: 'epic' },
-    'brain_marathon': { title: 'Brain Marathon', icon: '🧠', description: 'Complete 10 cognitive games in a single day.', reward: '300 Coins', target: 10, rarity: 'epic' },
-    'accuracy_master': { title: 'Accuracy Master', icon: '🎯', description: 'Achieve a perfect 100% accuracy score 5 times.', reward: '1,000 Coins', target: 5, rarity: 'legendary' },
-    'peak_performer': { title: 'Peak Performer', icon: '🏔️', description: 'Reach maximum difficulty level 5.', reward: '1,000 Coins', target: 1, rarity: 'legendary' },
+    'first_steps': { title: 'First Steps', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>, description: 'Complete your first cognitive training game.', reward: '100 Coins', target: 1, rarity: 'common' },
+    'consistency': { title: 'Consistent Trainer', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2c0 0-4.5 5.5-4.5 9.5a4.5 4.5 0 0 0 9 0C16.5 7.5 12 2 12 2z"/><path d="M12 11c-1 0-2 1-2 2a2 2 0 0 0 4 0c0-1-1-2-2-2z"/></svg>, description: 'Complete 50 cognitive training games.', reward: '500 Coins', target: 50, rarity: 'rare' },
+    'sharpshooter': { title: 'Sharpshooter', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>, description: 'Achieve 90%+ accuracy 20 times.', reward: '500 Coins', target: 20, rarity: 'rare' },
+    'versatile_mind': { title: 'Versatile Mind', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 11V7a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v4"/><rect x="3" y="11" width="18" height="4" rx="2"/></svg>, description: 'Play all 5 different game types.', reward: '400 Coins', target: 5, rarity: 'rare' },
+    'on_fire': { title: 'On Fire', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2c0 0-4.5 5.5-4.5 9.5a4.5 4.5 0 0 0 9 0C16.5 7.5 12 2 12 2z"/><path d="M12 11c-1 0-2 1-2 2a2 2 0 0 0 4 0c0-1-1-2-2-2z"/></svg>, description: 'Achieve a 7-day login streak.', reward: '750 Coins', target: 7, rarity: 'rare' },
+    'speed_demon': { title: 'Speed Demon', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>, description: 'Achieve a reaction time under 400ms 10 times.', reward: 'Exclusive Avatar', target: 10, rarity: 'epic' },
+    'scholar': { title: 'Scholar', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 10l10-5 10 5-10 5z"/><path d="M22 10v6M6 12v5c3 3 9 3 12 0v-5"/></svg>, description: 'Reach Level 10.', reward: 'Exclusive Banner', target: 1, rarity: 'epic' },
+    'lightning_reflexes': { title: 'Lightning Reflexes', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>, description: 'Achieve a reaction time under 300ms.', reward: '200 Coins + Exclusive Banner', target: 1, rarity: 'epic' },
+    'brain_marathon': { title: 'Brain Marathon', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.5 2A2.5 2.5 0 0 0 7 4.5v1A2.5 2.5 0 0 0 4.5 8H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h.5a2.5 2.5 0 0 0 2.5 2.5v1a2.5 2.5 0 0 0 5 0v-1a2.5 2.5 0 0 0 2.5-2.5h.5a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-.5A2.5 2.5 0 0 0 17 5.5v-1A2.5 2.5 0 0 0 14.5 2h-5z"/></svg>, description: 'Complete 10 cognitive games in a single day.', reward: '300 Coins', target: 10, rarity: 'epic' },
+    'accuracy_master': { title: 'Accuracy Master', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>, description: 'Achieve a perfect 100% accuracy score 5 times.', reward: '1,000 Coins', target: 5, rarity: 'legendary' },
+    'peak_performer': { title: 'Peak Performer', icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 22h20L12 2z"/><path d="M12 2v20"/></svg>, description: 'Reach maximum difficulty level 5.', reward: '1,000 Coins', target: 1, rarity: 'legendary' },
   };
 
   useEffect(() => {
@@ -297,10 +297,10 @@ const ProfileModal = ({ onClose }) => {
 
   const getArchetypeTheme = (name) => {
     switch (name) {
-      case 'Fast Learner': return { color: 'var(--color-primary)', icon: '⚡', gradient: 'rgba(var(--rgb-primary), 0.15)' };
-      case 'High Fatigue': return { color: '#f59e0b', icon: '🔋', gradient: 'rgba(245, 158, 11, 0.15)' };
-      case 'Plateauing': return { color: '#c084fc', icon: '📈', gradient: 'rgba(192, 132, 252, 0.15)' };
-      default: return { color: '#94a3b8', icon: '🧠', gradient: 'rgba(148, 163, 184, 0.15)' };
+      case 'Fast Learner': return { color: 'var(--color-primary)', icon: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>, gradient: 'rgba(var(--rgb-primary), 0.15)' };
+      case 'High Fatigue': return { color: '#f59e0b', icon: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="16" height="10" rx="2" ry="2"/><line x1="22" y1="11" x2="22" y2="13"/><line x1="6" y1="11" x2="6" y2="13"/></svg>, gradient: 'rgba(245, 158, 11, 0.15)' };
+      case 'Plateauing': return { color: '#c084fc', icon: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>, gradient: 'rgba(192, 132, 252, 0.15)' };
+      default: return { color: '#94a3b8', icon: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.5 2A2.5 2.5 0 0 0 7 4.5v1A2.5 2.5 0 0 0 4.5 8H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h.5a2.5 2.5 0 0 0 2.5 2.5v1a2.5 2.5 0 0 0 5 0v-1a2.5 2.5 0 0 0 2.5-2.5h.5a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-.5A2.5 2.5 0 0 0 17 5.5v-1A2.5 2.5 0 0 0 14.5 2h-5z"/></svg>, gradient: 'rgba(148, 163, 184, 0.15)' };
     }
   };
 
@@ -384,7 +384,7 @@ const ProfileModal = ({ onClose }) => {
                     
                     <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(var(--rgb-primary), 0.2)' }}>
                       <h3 style={{ margin: '0 0 1rem 0', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{color: 'var(--color-primary)'}}>🎯</span> Current Active Goal
+                        <span style={{color: 'var(--color-primary)', display: 'flex'}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span> Current Active Goal
                       </h3>
                       {activeGoals.length > 0 ? (
                         <div>
@@ -410,7 +410,7 @@ const ProfileModal = ({ onClose }) => {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                         <h3 style={{ margin: 0, color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Training Consistency</h3>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fbbf24', fontWeight: 'bold', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
-                          🔥 {timelineStats.length > 0 ? timelineStats.length : 0} Days
+                          <span style={{ display: 'flex', marginRight: '4px' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2c0 0-4.5 5.5-4.5 9.5a4.5 4.5 0 0 0 9 0C16.5 7.5 12 2 12 2z"/><path d="M12 11c-1 0-2 1-2 2a2 2 0 0 0 4 0c0-1-1-2-2-2z"/></svg></span> {timelineStats.length > 0 ? timelineStats.length : 0} Days
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '0.5rem' }}>
@@ -506,7 +506,7 @@ const ProfileModal = ({ onClose }) => {
                         <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '0.75rem 1rem', borderRadius: '8px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                             <div style={{ width: '36px', height: '36px', background: '#1e293b', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
-                              {session.game_type.includes('Speed') ? '⚡' : session.game_type.includes('Memory') ? '🧠' : '🎮'}
+                              {session.game_type.includes('Speed') ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> : session.game_type.includes('Memory') ? <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-secondary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg> : <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="15" y1="13" x2="15.01" y2="13"/><line x1="18" y1="11" x2="18.01" y2="11"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg>}
                             </div>
                             <div>
                               <div style={{ color: '#e2e8f0', fontWeight: 'bold' }}>{session.game_type}</div>
@@ -641,7 +641,7 @@ const ProfileModal = ({ onClose }) => {
                         <HoverTooltip text="Personalized coaching tips generated dynamically using AI based on your gameplay data." delay={200}>
                         <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', borderLeft: '4px solid var(--color-primary)', position: 'relative' }}>
                           <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--color-primary)', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <span>🤖</span> AI Coaching Insight
+                            <span style={{ display: 'flex' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg></span> AI Coaching Insight
                           </h4>
                           <p style={{ margin: 0, color: '#e2e8f0', lineHeight: '1.6', fontSize: '1.05rem', fontStyle: 'italic' }}>
                             "{cognitiveProfile.insight_text}"
@@ -652,13 +652,13 @@ const ProfileModal = ({ onClose }) => {
                         {/* Strengths & Bottlenecks */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                           <div style={{ background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '1.5rem', borderRadius: '12px' }}>
-                            <div style={{ fontSize: '0.85rem', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span>⭐</span> Top Strength</div>
+                            <div style={{ fontSize: '0.85rem', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span style={{ display: 'flex' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span> Top Strength</div>
                             <div style={{ color: '#f8fafc', fontSize: '1.2rem', fontWeight: 'bold' }}>
                               {cognitiveProfile.top_strength ? cognitiveProfile.top_strength.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'N/A'}
                             </div>
                           </div>
                           <div style={{ background: 'rgba(245, 158, 11, 0.05)', border: '1px solid rgba(245, 158, 11, 0.2)', padding: '1.5rem', borderRadius: '12px' }}>
-                            <div style={{ fontSize: '0.85rem', color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span>🚧</span> Primary Bottleneck</div>
+                            <div style={{ fontSize: '0.85rem', color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span style={{ display: 'flex' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span> Primary Bottleneck</div>
                             <div style={{ color: '#f8fafc', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
                               {cognitiveProfile.primary_bottleneck ? cognitiveProfile.primary_bottleneck.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'N/A'}
                             </div>
@@ -739,7 +739,7 @@ const ProfileModal = ({ onClose }) => {
 
                         <div>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                            <span style={{ fontSize: '0.8rem', color: completed ? '#fbbf24' : '#64748b', fontWeight: 'bold' }}>🎁 {meta.reward}</span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', color: completed ? '#fbbf24' : '#64748b', fontWeight: 'bold' }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg> {meta.reward}</span>
                             <span style={{ fontSize: '0.8rem', color: completed ? rarity.labelColor : '#64748b', fontWeight: 'bold' }}>
                               {completed ? 'COMPLETED' : `${progress} / ${meta.target}`}
                             </span>

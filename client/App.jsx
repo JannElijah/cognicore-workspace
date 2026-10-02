@@ -333,7 +333,7 @@ export default function App() {
                 }
             }
             
-            const res = await fetch(${API_BASE}/api/assessment-status/);
+            const res = await fetch(`${API_BASE}/api/assessment-status/`);
             if (res.ok) {
                 const asmtData = await res.json();
                 if (asmtData.status === 'success') {
@@ -353,7 +353,7 @@ export default function App() {
                             fetchEvaluationReport(username);
                         } else {
                             setAssessmentStage('none');
-                            const historyRes = await fetch(${API_BASE}/api/user-session-history/);
+                            const historyRes = await fetch(`${API_BASE}/api/user-session-history/`);
                             if (historyRes.ok) {
                                 const histData = await historyRes.json();
                                 const played = (histData.sessions || []).some(s => s.game_type === asmtData.prescribed_game);
