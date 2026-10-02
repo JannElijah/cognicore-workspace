@@ -152,10 +152,10 @@ const PretestResults = ({
                     <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.25rem' }}>
                             <span>Growth Potential</span>
-                            <span>High ({(personalizedReport.confidence_score * 100).toFixed(0)}%)</span>
+                            <span>High ({((personalizedReport.confidence_score || 0.85) * 100).toFixed(0)}%)</span>
                         </div>
                         <div style={{ width: '100%', height: '6px', background: 'rgba(0,0,0,0.4)', borderRadius: '3px', overflow: 'hidden' }}>
-                            <div style={{ width: `${personalizedReport.confidence_score * 100}%`, height: '100%', background: 'linear-gradient(90deg, var(--color-primary), #818cf8)' }} />
+                            <div style={{ width: `${(personalizedReport.confidence_score || 0.85) * 100}%`, height: '100%', background: 'linear-gradient(90deg, var(--color-primary), #818cf8)' }} />
                         </div>
                     </div>
                 </div>
@@ -180,7 +180,7 @@ const PretestResults = ({
             Here's a simplified look at your cognitive performance across 4 key areas. Higher is better!
           </p>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', flexGrow: 1, justifyContent: 'center' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {Object.entries(preTestScores).map(([domain, score]) => {
               const theme = getDomainInfo(domain);
               const scorePercent = Math.min(100, Math.max(0, (score / 100) * 100));
