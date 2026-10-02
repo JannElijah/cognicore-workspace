@@ -357,8 +357,7 @@ export default class SpeedTapScene extends BaseCognitiveScene {
                 alpha: 0,
                 duration: 150,
                 onComplete: () => {
-                    this.tweens.killTweensOf(container);
-            this.removeTarget(container);
+                    this.removeTarget(container);
                 }
             });
 
