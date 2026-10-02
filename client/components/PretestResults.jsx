@@ -70,7 +70,7 @@ const PretestResults = ({
       borderRadius: '24px',
       padding: '2.5rem',
       border: '1px solid rgba(51, 65, 85, 0.5)',
-      maxWidth: '900px',
+      maxWidth: '1200px',
       margin: '0 auto',
       boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
       position: 'relative',
@@ -110,7 +110,7 @@ const PretestResults = ({
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem', marginBottom: '3rem', position: 'relative', zIndex: 1 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem', marginBottom: '3rem', position: 'relative', zIndex: 1, alignItems: 'start' }}>
         
         {/* Personalized AI Report (Left side) */}
         <div style={{ background: 'rgba(15, 23, 42, 0.6)', borderRadius: '16px', padding: '2rem', border: '1px solid rgba(51, 65, 85, 0.4)' }}>
@@ -127,7 +127,7 @@ const PretestResults = ({
           </div>
           
           {personalizedReport ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
               <div style={{ background: 'rgba(20, 83, 45, 0.15)', borderLeft: '4px solid #22c55e', borderRadius: '4px 12px 12px 4px', padding: '1.25rem' }}>
                 <h4 style={{ color: '#4ade80', fontWeight: '700', marginBottom: '0.75rem', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <SvgIcon name='🌟' color='#4ade80' /> Your Strengths
@@ -180,7 +180,7 @@ const PretestResults = ({
             Here's a simplified look at your cognitive performance across 4 key areas. Higher is better!
           </p>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
             {Object.entries(preTestScores).map(([domain, score]) => {
               const theme = getDomainInfo(domain);
               const scorePercent = Math.min(100, Math.max(0, (score / 100) * 100));
@@ -198,7 +198,7 @@ const PretestResults = ({
                     </div>
                     <span style={{ color: isWeakest ? theme.color : '#cbd5e1', fontWeight: '700', fontSize: '1.2rem' }}>{Math.round(score)}</span>
                   </div>
-                  <div style={{ width: '100%', background: 'rgba(0,0,0,0.4)', borderRadius: '9999px', height: '12px', overflow: 'hidden', border: '1px solid rgba(51, 65, 85, 0.5)' }}>
+                  <div style={{ width: '100%', background: 'rgba(0,0,0,0.4)', borderRadius: '9999px', height: '14px', overflow: 'hidden', border: '1px solid rgba(51, 65, 85, 0.5)' }}>
                     <div 
                       style={{ 
                         height: '100%',
