@@ -2152,6 +2152,7 @@ export default function App() {
         portalView={portalView}
         setPortalView={setPortalView}
         setShowProfileModal={setShowProfileModal}
+          setShowLeaderboard={setShowLeaderboard}
         activeGame={activeGame}
         setActiveGame={setActiveGame}
         showDashboard={showDashboard}

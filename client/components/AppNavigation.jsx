@@ -6,7 +6,7 @@ const AppNavigation = memo(function AppNavigation({
   showDashboard, setShowDashboard, coins, totalXp, level, inventory,
   setActiveGame, currentLevel, dailyRewardData, xpPercent,
   globalMuted, setGlobalMuted, audioDda,
-  setShowShop, showSoundTuner, setShowSoundTuner
+  setShowShop, showSoundTuner, setShowSoundTuner, setShowLeaderboard
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [portalDropdownOpen, setPortalDropdownOpen] = useState(false);
