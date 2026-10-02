@@ -280,12 +280,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
                     borderRadius: '12px', width: '100%', boxSizing: 'border-box',
                     padding: '0.85rem',
                     textAlign: 'center',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
+                    display: 'flex', flexDirection: 'column', justifyContent: 'center',
                     flex: 1
                 }}>
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', fontWeight: '600', marginBottom: '0.25rem' }}>✨ COGNITIVE ARCHETYPE</span>

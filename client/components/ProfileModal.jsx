@@ -97,7 +97,7 @@ const ProfileModal = ({ onClose }) => {
         return;
       }
 
-      const email = ${username}@cognicore.com;
+      const email = `${username}@cognicore.com`;
       const { error: signInError } = await supabase.auth.signInWithPassword({ email, password: oldPassword });
       
       if (signInError) {
