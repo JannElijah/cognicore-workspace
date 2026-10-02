@@ -1407,6 +1407,13 @@ export default function App() {
   }, [portalView, sandboxVar1, sandboxVar2, sandboxCohort, activeDashboardUser, activeResearcherTab]);
 
   // Cognitive Goal Tracker Methods (Option C)
+  const getGoalProgress = (goal) => {
+    if (!goal || !goal.target_value) return 0;
+    return goal.metric_type === 'reaction_time' 
+      ? (goal.target_value / Math.max(goal.current_value, 1))
+      : (goal.current_value / goal.target_value);
+  };
+
   const fetchGoals = async (username = activeDashboardUser) => {
     setGoalsLoading(true);
     setGoalsError(null);
