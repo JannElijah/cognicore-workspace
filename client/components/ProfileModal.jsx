@@ -1,5 +1,6 @@
 import { API_BASE } from '../utils/apiClient.js';
 import React, { useState, useEffect, useMemo } from 'react';
+import ErrorBoundary from './ErrorBoundary';
 import useCogniStore from '../store/useCogniStore';
 import cogniFX from '../utils/cogniFX';
 import { supabase } from '../utils/supabaseClient';
@@ -693,7 +694,8 @@ const ProfileModal = ({ onClose }) => {
               )}
 
               {activeTab === 'badges' && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+<ErrorBoundary name="BadgesTab">
+<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
                   {Object.keys(achievementMeta).map(id => {
                     const meta = achievementMeta[id];
                     const serverData = achievements.find(a => a.achievement_id === id);
@@ -763,8 +765,9 @@ const ProfileModal = ({ onClose }) => {
                       </div>
                     );
                   })}
-                </div>
-              )}
+</div>
+</ErrorBoundary>
+)}
 
                             {activeTab === 'account' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', animation: 'fadeIn 0.3s ease-out' }}>
