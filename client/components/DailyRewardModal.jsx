@@ -37,7 +37,7 @@ export default function DailyRewardModal({ rewardData, onClose }) {
           marginBottom: '1rem',
           animation: 'pulseGlow 2s infinite'
         }}>
-          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 10px rgba(249,115,22,0.9))',marginBottom:'0.5rem'}} xmlns="http://www.w3.org/2000/svg"><path d="M12 2c0 0-1 4-3.5 6.5C6 11 5 13.5 5 16a7 7 0 0014 0c0-2.5-1-5-3.5-7.5C14 6 12 2 12 2z" fill="#f97316"/><path d="M12 8c0 0-.5 2-1.5 3.5C9.5 13 9 14.5 9 16a3 3 0 006 0c0-1.5-.5-3-1.5-4.5C12.5 10 12 8 12 8z" fill="#facc15"/></svg>
+          <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{filter:'drop-shadow(0 0 10px rgba(249,115,22,0.6))', marginBottom:'0.5rem'}}><path d="M12 2c0 0-4.5 5.5-4.5 9.5a4.5 4.5 0 0 0 9 0C16.5 7.5 12 2 12 2z"/><path d="M12 11c-1 0-2 1-2 2a2 2 0 0 0 4 0c0-1-1-2-2-2z"/></svg>
         </div>
         <h2 style={{
           fontSize: '2rem',
@@ -67,7 +67,7 @@ export default function DailyRewardModal({ rewardData, onClose }) {
           <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Daily Reward</div>
           <div style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--color-warning)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
             <span>+{rewardData.coins}</span>
-            <svg width="36" height="36" viewBox="0 0 24 24" style={{ filter: 'drop-shadow(0 0 8px rgba(251,191,36,0.9))', flexShrink: 0 }} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="11" fill="#fbbf24"/><circle cx="12" cy="12" r="8" fill="#f59e0b"/><text x="12" y="16.5" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#78350f" fontFamily="Arial">C</text></svg>
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 8px rgba(251,191,36,0.6))', flexShrink: 0 }}><circle cx="12" cy="12" r="10"/><path d="M14 16H10c-1.1 0-2-.9-2-2v-4c0-1.1.9-2 2-2h4"/></svg>
           </div>
         </div>
 
