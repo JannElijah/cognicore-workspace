@@ -2977,9 +2977,13 @@ export default function App() {
                       ⚠️ Error loading goals: {goalsError}
                     </div>
                   ) : goals.filter(g => !g.is_completed).length === 0 ? (
-                    <div style={{ color: '#64748b', fontSize: '0.85rem', textAlign: 'center', padding: '2rem 0' }}>
-                      No active goals set. Click "Create New Target" above to define your next neuro-training milestone!
-                    </div>
+                    <div style={{ color: '#94a3b8', fontSize: '0.9rem', textAlign: 'center', padding: '3rem 1rem', background: 'rgba(255, 255, 255, 0.02)', border: '1.5px dashed rgba(255, 255, 255, 0.1)', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.5, marginBottom: '0.5rem' }}>
+                          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        <strong style={{ color: '#e2e8f0' }}>No Active Targets</strong>
+                        <span style={{ fontSize: '0.8rem' }}>Click "Create New Target" above to define your next neuro-training milestone!</span>
+                      </div>
                   ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
                       {goals.filter(g => !g.is_completed).map(goal => {
@@ -3066,9 +3070,14 @@ export default function App() {
                       Loading completed milestones...
                     </div>
                   ) : goals.filter(g => g.is_completed).length === 0 ? (
-                    <div style={{ color: '#64748b', fontSize: '0.85rem', textAlign: 'center', padding: '2rem 0' }}>
-                      No completed milestones yet. Complete training targets during gameplay to unlock permanent achievement badges!
-                    </div>
+                    <div style={{ color: '#94a3b8', fontSize: '0.9rem', textAlign: 'center', padding: '3rem 1rem', background: 'rgba(255, 255, 255, 0.02)', border: '1.5px dashed rgba(255, 255, 255, 0.1)', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.5, marginBottom: '0.5rem' }}>
+                          <path d="M12 15l-2 5l9-5-7-5z" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <circle cx="12" cy="8" r="5" stroke="#fbbf24" strokeWidth="2"/>
+                        </svg>
+                        <strong style={{ color: '#e2e8f0' }}>No Completed Milestones</strong>
+                        <span style={{ fontSize: '0.8rem' }}>Complete training targets during gameplay to unlock permanent achievement badges!</span>
+                      </div>
                   ) : (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
                       {goals.filter(g => g.is_completed).map(goal => {

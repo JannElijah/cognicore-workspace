@@ -42,7 +42,8 @@ const ProfileModal = ({ onClose }) => {
   const [pwdStatus, setPwdStatus] = useState('');
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [accountMsg, setAccountMsg] = useState({ text: '', type: '' });
+  const [demoMsg, setDemoMsg] = useState({ text: '', type: '' });
+  const [securityMsg, setSecurityMsg] = useState({ text: '', type: '' });
 
   useEffect(() => {
     if (activeTab === 'account' && !demoLoaded) {
@@ -63,7 +64,7 @@ const ProfileModal = ({ onClose }) => {
   }, [activeTab, demoLoaded, token]);
 
   const handleUpdateProfile = async () => {
-    setAccountMsg({ text: 'Saving...', type: 'info' });
+    setDemoMsg({ text: 'Saving...', type: 'info' });
     try {
       const res = await fetch(`${API_BASE}/api/auth/update-profile`, {
         method: 'POST',
@@ -75,25 +76,25 @@ const ProfileModal = ({ onClose }) => {
       });
       const data = await res.json();
       if (data.status === 'success') {
-        setAccountMsg({ text: 'Profile updated successfully!', type: 'success' });
+        setDemoMsg({ text: 'Profile updated successfully!', type: 'success' });
       } else {
-        setAccountMsg({ text: data.message, type: 'error' });
+        setDemoMsg({ text: data.message, type: 'error' });
       }
     } catch(e) {
-      setAccountMsg({ text: 'Network Error: Please check your internet connection or try again later.', type: 'error' });
+      setDemoMsg({ text: 'Network Error: Please check your connection.', type: 'error' });
     }
-    setTimeout(() => setAccountMsg({ text: '', type: '' }), 3000);
+    setTimeout(() => setDemoMsg({ text: '', type: '' }), 4000);
   };
 
   const handleUpdatePassword = async () => {
       if (!oldPassword) {
-        setAccountMsg({ text: 'Please enter your current password to verify identity.', type: 'error' });
-        setTimeout(() => setAccountMsg({ text: '', type: '' }), 4000);
+        setSecurityMsg({ text: 'Please enter your current password to verify identity.', type: 'error' });
+        setTimeout(() => setSecurityMsg({ text: '', type: '' }), 4000);
         return;
       }
       if (newPassword.length < 6) {
-        setAccountMsg({ text: 'New password must be at least 6 characters.', type: 'error' });
-        setTimeout(() => setAccountMsg({ text: '', type: '' }), 4000);
+        setSecurityMsg({ text: 'New password must be at least 6 characters.', type: 'error' });
+        setTimeout(() => setSecurityMsg({ text: '', type: '' }), 4000);
         return;
       }
 
@@ -101,20 +102,20 @@ const ProfileModal = ({ onClose }) => {
       const { error: signInError } = await supabase.auth.signInWithPassword({ email, password: oldPassword });
       
       if (signInError) {
-        setAccountMsg({ text: 'Incorrect current password.', type: 'error' });
-        setTimeout(() => setAccountMsg({ text: '', type: '' }), 4000);
+        setSecurityMsg({ text: 'Incorrect current password.', type: 'error' });
+        setTimeout(() => setSecurityMsg({ text: '', type: '' }), 4000);
         return;
       }
 
       const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
       if (updateError) {
-        setAccountMsg({ text: updateError.message, type: 'error' });
+        setSecurityMsg({ text: updateError.message, type: 'error' });
       } else {
-        setAccountMsg({ text: 'Password updated successfully!', type: 'success' });
+        setSecurityMsg({ text: 'Password updated successfully!', type: 'success' });
         setOldPassword('');
         setNewPassword('');
       }
-      setTimeout(() => setAccountMsg({ text: '', type: '' }), 4000);
+      setTimeout(() => setSecurityMsg({ text: '', type: '' }), 4000);
     };
 
   const handleVolumeChange = (e) => {
@@ -805,6 +806,11 @@ const ProfileModal = ({ onClose }) => {
                         <option value="Prefer not to say">Prefer not to say</option>
                       </select>
                       <button onClick={handleUpdateProfile} style={{ background: 'var(--color-primary)', color: '#fff', border: 'none', padding: '0.75rem', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '0.5rem' }}>Save Demographics</button>
+                      {demoMsg.text && (
+                        <div style={{ background: demoMsg.type === 'error' ? 'rgba(239,68,68,0.1)' : 'rgba(74,222,128,0.1)', color: demoMsg.type === 'error' ? '#fca5a5' : '#4ade80', padding: '0.75rem', borderRadius: '8px', textAlign: 'center', fontSize: '0.85rem' }}>
+                          {demoMsg.text}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -815,6 +821,11 @@ const ProfileModal = ({ onClose }) => {
                       <input type="password" placeholder="Old Password (Current)" value={oldPassword} onChange={e=>setOldPassword(e.target.value)} style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem', width: '100%', boxSizing: 'border-box', marginBottom: '0.5rem' }} />
                       <input type="password" placeholder="New Password (min 6 characters)" value={newPassword} onChange={e=>setNewPassword(e.target.value)} style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem', width: '100%', boxSizing: 'border-box' }} />
                       <button onClick={handleUpdatePassword} style={{ background: 'var(--color-secondary)', color: '#fff', border: 'none', padding: '0.75rem', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '0.5rem' }}>Update Password</button>
+                      {securityMsg.text && (
+                        <div style={{ background: securityMsg.type === 'error' ? 'rgba(239,68,68,0.1)' : 'rgba(74,222,128,0.1)', color: securityMsg.type === 'error' ? '#fca5a5' : '#4ade80', padding: '0.75rem', borderRadius: '8px', textAlign: 'center', fontSize: '0.85rem' }}>
+                          {securityMsg.text}
+                        </div>
+                      )}
                     </div>
                   </div>
 

@@ -11,7 +11,7 @@ redis_client = None
 if redis_url != "memory://":
     try:
         import redis
-        redis_client = redis.from_url(redis_url)
+        redis_client = redis.from_url(redis_url, socket_timeout=1, socket_connect_timeout=1)
     except Exception as e:
         print("Failed to connect to Redis for leaderboard:", e)
 
