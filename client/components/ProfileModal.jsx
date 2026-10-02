@@ -40,6 +40,7 @@ const ProfileModal = ({ onClose }) => {
   const [age, setAge] = useState('');
   const [gender, setGender] = useState('');
   const [pwdStatus, setPwdStatus] = useState('');
+  const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [accountMsg, setAccountMsg] = useState({ text: '', type: '' });
 
@@ -79,26 +80,42 @@ const ProfileModal = ({ onClose }) => {
         setAccountMsg({ text: data.message, type: 'error' });
       }
     } catch(e) {
-      setAccountMsg({ text: 'Network error.', type: 'error' });
+      setAccountMsg({ text: 'Network Error: Please check your internet connection or try again later.', type: 'error' });
     }
     setTimeout(() => setAccountMsg({ text: '', type: '' }), 3000);
   };
 
   const handleUpdatePassword = async () => {
-    if (!newPassword || newPassword.length < 6) {
-      setAccountMsg({ text: 'Password must be at least 6 characters.', type: 'error' });
-      return;
-    }
-    setAccountMsg({ text: 'Updating password...', type: 'info' });
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    if (error) {
-      setAccountMsg({ text: error.message, type: 'error' });
-    } else {
-      setAccountMsg({ text: 'Password updated successfully!', type: 'success' });
-      setNewPassword('');
-    }
-    setTimeout(() => setAccountMsg({ text: '', type: '' }), 3000);
-  };
+      if (!oldPassword) {
+        setAccountMsg({ text: 'Please enter your current password to verify identity.', type: 'error' });
+        setTimeout(() => setAccountMsg({ text: '', type: '' }), 4000);
+        return;
+      }
+      if (newPassword.length < 6) {
+        setAccountMsg({ text: 'New password must be at least 6 characters.', type: 'error' });
+        setTimeout(() => setAccountMsg({ text: '', type: '' }), 4000);
+        return;
+      }
+
+      const email = ${username}@cognicore.com;
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password: oldPassword });
+      
+      if (signInError) {
+        setAccountMsg({ text: 'Incorrect current password.', type: 'error' });
+        setTimeout(() => setAccountMsg({ text: '', type: '' }), 4000);
+        return;
+      }
+
+      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+      if (updateError) {
+        setAccountMsg({ text: updateError.message, type: 'error' });
+      } else {
+        setAccountMsg({ text: 'Password updated successfully!', type: 'success' });
+        setOldPassword('');
+        setNewPassword('');
+      }
+      setTimeout(() => setAccountMsg({ text: '', type: '' }), 4000);
+    };
 
   const handleVolumeChange = (e) => {
     const vol = parseFloat(e.target.value);
@@ -142,45 +159,47 @@ const ProfileModal = ({ onClose }) => {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      // 1. Fetch Leaderboard to find own profile data (XP, Level, etc)
-      const lbRes = await fetch(API_BASE + '/api/leaderboard');
-      if (lbRes.ok) {
-        const lbData = await lbRes.json();
-        const me = lbData.leaderboard.find(p => p.username === username);
-        if (me) setProfileData(me);
-      }
 
-      const anRes = await fetch(`${API_BASE}/api/user-analytics/${username}`, { headers: { 'Authorization': `Bearer ${token}` } });
-      if (anRes.ok) {
-        const anData = await anRes.json();
-        if (anData.status === 'success') {
-          setTimelineStats(anData.timeline_stats || []);
-          setDomainStats(anData.domain_stats || []);
-          if (anData.cognitive_profile) {
-            setCognitiveProfile(anData.cognitive_profile);
-          }
-          if (anData.recent_activity) {
-            setRecentActivity(anData.recent_activity);
-          }
-          if (anData.kpis) {
-            setKpis(anData.kpis);
+        const [lbRes, anRes, achRes, goalRes] = await Promise.all([
+            fetch(API_BASE + '/api/leaderboard'),
+            fetch(${API_BASE}/api/user-analytics/, { headers: { 'Authorization': Bearer  } }),
+            fetch(API_BASE + '/api/achievements', { headers: { 'Authorization': Bearer  } }),
+            fetch(${API_BASE}/api/training-goals/, { headers: { 'Authorization': Bearer  } })
+        ]);
+
+        if (lbRes.ok) {
+          const lbData = await lbRes.json();
+          const me = lbData.leaderboard.find(p => p.username === username);
+          if (me) setProfileData(me);
+        }
+  
+        if (anRes.ok) {
+          const anData = await anRes.json();
+          if (anData.status === 'success') {
+            setTimelineStats(anData.timeline_stats || []);
+            setDomainStats(anData.domain_stats || []);
+            if (anData.cognitive_profile) {
+              setCognitiveProfile(anData.cognitive_profile);
+            }
+            if (anData.recent_activity) {
+              setRecentActivity(anData.recent_activity);
+            }
+            if (anData.kpis) {
+              setKpis(anData.kpis);
+            }
           }
         }
-      }
-
-      const achRes = await fetch(API_BASE + '/api/achievements', { headers: { 'Authorization': `Bearer ${token}` } });
-      if (achRes.ok) {
-        const achData = await achRes.json();
-        setAchievements(achData.achievements || []);
-      }
-
-      const goalRes = await fetch(`${API_BASE}/api/training-goals/${username}`, { headers: { 'Authorization': `Bearer ${token}` } });
-      if (goalRes.ok) {
-        const goalData = await goalRes.json();
-        setActiveGoals(goalData.goals?.filter(g => !g.is_completed) || []);
-      }
-
-    } catch (e) {
+  
+        if (achRes.ok) {
+          const achData = await achRes.json();
+          setAchievements(achData.achievements || []);
+        }
+  
+        if (goalRes.ok) {
+          const goalData = await goalRes.json();
+          setActiveGoals(goalData.goals?.filter(g => !g.is_completed) || []);
+        }
+} catch (e) {
       console.error('Failed fetching profile data', e);
     } finally {
       setLoading(false);
@@ -793,6 +812,7 @@ const ProfileModal = ({ onClose }) => {
                     <h3 style={{ color: '#f8fafc', margin: '0 0 1rem 0' }}>Security</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                       <label style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Change Password</label>
+                      <input type="password" placeholder="Old Password (Current)" value={oldPassword} onChange={e=>setOldPassword(e.target.value)} style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem', width: '100%', boxSizing: 'border-box', marginBottom: '0.5rem' }} />
                       <input type="password" placeholder="New Password (min 6 characters)" value={newPassword} onChange={e=>setNewPassword(e.target.value)} style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem', width: '100%', boxSizing: 'border-box' }} />
                       <button onClick={handleUpdatePassword} style={{ background: 'var(--color-secondary)', color: '#fff', border: 'none', padding: '0.75rem', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '0.5rem' }}>Update Password</button>
                     </div>

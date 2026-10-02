@@ -70,12 +70,20 @@ def update_profile(current_user_id, current_username):
         return jsonify({"status": "error", "message": "User not found"}), 404
         
     if "course" in data: user.course = data["course"]
-    if "age" in data: user.age = data["age"]
+    if "age" in data:
+        try:
+            user.age = int(data["age"]) if data["age"] else None
+        except ValueError:
+            user.age = None
     if "gender" in data: user.gender = data["gender"]
     if "pwd_status" in data: user.pwd_status = data["pwd_status"]
     
-    db.session.commit()
-    return jsonify({"status": "success", "message": "Profile updated successfully"})
+    try:
+        db.session.commit()
+        return jsonify({"status": "success", "message": "Profile updated successfully"})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 from datetime import date, timedelta
 from models import UserProfile, UserStreak

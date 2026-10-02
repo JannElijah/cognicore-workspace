@@ -200,7 +200,7 @@ const AppNavigation = memo(function AppNavigation({
                 className="dashboard-toggle-btn" 
                 title="Detailed History"
                 onClick={() => {
-                  setShowDashboard(true);
+                  setShowDashboard(!showDashboard);
                   setActiveGame(null);
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}

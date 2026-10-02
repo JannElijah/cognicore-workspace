@@ -2887,13 +2887,7 @@ export default function App() {
                         value={goalDomain}
                         onChange={(e) => setGoalDomain(e.target.value)}
                         style={{
-                          background: '#09090b',
-                          border: '1.5px solid rgba(255, 255, 255, 0.1)',
-                          borderRadius: '6px',
-                          color: '#ffffff',
-                          padding: '0.5rem',
-                          fontSize: '0.875rem',
-                          outline: 'none'
+                          background: 'rgba(9, 9, 11, 0.7)', border: '1.5px solid rgba(var(--rgb-primary), 0.3)', borderRadius: '8px', color: '#ffffff', padding: '0.65rem 1rem', fontSize: '0.9rem', outline: 'none', transition: 'all 0.2s'
                         }}
                       >
                         <option value="reflexes_and_focus">⚡ Reflexes & Focus</option>
@@ -2915,13 +2909,7 @@ export default function App() {
                           else if (e.target.value === 'difficulty') setGoalTarget('3');
                         }}
                         style={{
-                          background: '#09090b',
-                          border: '1.5px solid rgba(255, 255, 255, 0.1)',
-                          borderRadius: '6px',
-                          color: '#ffffff',
-                          padding: '0.5rem',
-                          fontSize: '0.875rem',
-                          outline: 'none'
+                          background: 'rgba(9, 9, 11, 0.7)', border: '1.5px solid rgba(var(--rgb-primary), 0.3)', borderRadius: '8px', color: '#ffffff', padding: '0.65rem 1rem', fontSize: '0.9rem', outline: 'none', transition: 'all 0.2s'
                         }}
                       >
                         <option value="accuracy">Accuracy Rate (%)</option>
@@ -2943,13 +2931,7 @@ export default function App() {
                         value={goalTarget}
                         onChange={(e) => setGoalTarget(e.target.value)}
                         style={{
-                          background: '#09090b',
-                          border: '1.5px solid rgba(255, 255, 255, 0.1)',
-                          borderRadius: '6px',
-                          color: '#ffffff',
-                          padding: '0.5rem',
-                          fontSize: '0.875rem',
-                          outline: 'none'
+                          background: 'rgba(9, 9, 11, 0.7)', border: '1.5px solid rgba(var(--rgb-primary), 0.3)', borderRadius: '8px', color: '#ffffff', padding: '0.65rem 1rem', fontSize: '0.9rem', outline: 'none', transition: 'all 0.2s'
                         }}
                       />
                     </div>
