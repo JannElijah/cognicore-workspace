@@ -162,9 +162,9 @@ const ProfileModal = ({ onClose }) => {
 
         const [lbRes, anRes, achRes, goalRes] = await Promise.all([
             fetch(API_BASE + '/api/leaderboard'),
-            fetch(${API_BASE}/api/user-analytics/, { headers: { 'Authorization': Bearer  } }),
-            fetch(API_BASE + '/api/achievements', { headers: { 'Authorization': Bearer  } }),
-            fetch(${API_BASE}/api/training-goals/, { headers: { 'Authorization': Bearer  } })
+            fetch(`${API_BASE}/api/user-analytics/${username}`, { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(API_BASE + '/api/achievements', { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch(`${API_BASE}/api/training-goals/${username}`, { headers: { 'Authorization': `Bearer ${token}` } })
         ]);
 
         if (lbRes.ok) {
