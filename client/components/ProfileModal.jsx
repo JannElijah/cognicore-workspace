@@ -159,52 +159,39 @@ const ProfileModal = ({ onClose }) => {
 
   const fetchAllData = async () => {
     setLoading(true);
-    try {
 
-        const [lbRes, anRes, achRes, goalRes] = await Promise.all([
-            fetch(API_BASE + '/api/leaderboard'),
-            fetch(`${API_BASE}/api/user-analytics/${username}`, { headers: { 'Authorization': `Bearer ${token}` } }),
-            fetch(API_BASE + '/api/achievements', { headers: { 'Authorization': `Bearer ${token}` } }),
-            fetch(`${API_BASE}/api/training-goals/${username}`, { headers: { 'Authorization': `Bearer ${token}` } })
-        ]);
+    fetch(API_BASE + '/api/leaderboard')
+      .then(res => res.json())
+      .then(lbData => {
+         const me = lbData.leaderboard?.find(p => p.username === username);
+         if (me) setProfileData(me);
+      }).catch(e => console.error(e));
 
-        if (lbRes.ok) {
-          const lbData = await lbRes.json();
-          const me = lbData.leaderboard.find(p => p.username === username);
-          if (me) setProfileData(me);
-        }
-  
-        if (anRes.ok) {
-          const anData = await anRes.json();
-          if (anData.status === 'success') {
-            setTimelineStats(anData.timeline_stats || []);
-            setDomainStats(anData.domain_stats || []);
-            if (anData.cognitive_profile) {
-              setCognitiveProfile(anData.cognitive_profile);
-            }
-            if (anData.recent_activity) {
-              setRecentActivity(anData.recent_activity);
-            }
-            if (anData.kpis) {
-              setKpis(anData.kpis);
-            }
-          }
-        }
-  
-        if (achRes.ok) {
-          const achData = await achRes.json();
-          setAchievements(achData.achievements || []);
-        }
-  
-        if (goalRes.ok) {
-          const goalData = await goalRes.json();
-          setActiveGoals(goalData.goals?.filter(g => !g.is_completed) || []);
-        }
-} catch (e) {
-      console.error('Failed fetching profile data', e);
-    } finally {
-      setLoading(false);
-    }
+    fetch(`${API_BASE}/api/user-analytics/${username}`, { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(res => res.json())
+      .then(anData => {
+         if (anData.status === 'success') {
+           setTimelineStats(anData.timeline_stats || []);
+           setDomainStats(anData.domain_stats || []);
+           if (anData.cognitive_profile) setCognitiveProfile(anData.cognitive_profile);
+           if (anData.recent_activity) setActivityLog(anData.recent_activity);
+         }
+      }).catch(e => console.error(e));
+
+    fetch(API_BASE + '/api/achievements', { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(res => res.json())
+      .then(achData => {
+         if (achData.status === 'success') setAchievements(achData.achievements || []);
+      }).catch(e => console.error(e));
+
+    fetch(`${API_BASE}/api/training-goals/${username}`, { headers: { 'Authorization': `Bearer ${token}` } })
+      .then(res => res.json())
+      .then(goalData => {
+         if (goalData.status === 'success') setGoals(goalData.goals || []);
+      }).catch(e => console.error(e));
+
+    // Remove the blocking skeleton immediately so the modal opens fast
+    setTimeout(() => setLoading(false), 300);
   };
 
   const handleToggleFlashes = async () => {
