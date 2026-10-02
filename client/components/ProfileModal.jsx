@@ -818,12 +818,6 @@ const ProfileModal = ({ onClose }) => {
                       )}
                     </div>
                   </div>
-
-                  {accountMsg.text && (
-                    <div style={{ background: accountMsg.type === 'error' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(74, 222, 128, 0.1)', color: accountMsg.type === 'error' ? '#fca5a5' : '#4ade80', padding: '1rem', borderRadius: '8px', textAlign: 'center', border: accountMsg.type === 'error' ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(74, 222, 128, 0.3)' }}>
-                      {accountMsg.text}
-                    </div>
-                  )}
                 </div>
               )}
 

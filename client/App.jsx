@@ -3487,7 +3487,7 @@ export default function App() {
       </footer>
       
       {showShop && <Shop onClose={() => setShowShop(false)} />}
-      {showProfileModal && <ProfileModal onClose={() => setShowProfileModal(false)} />}
+      {showProfileModal && <ErrorBoundary name="ProfileModal"><ProfileModal onClose={() => setShowProfileModal(false)} /></ErrorBoundary>}
       {dailyRewardData && dailyRewardData.granted && <DailyRewardModal rewardData={dailyRewardData} onClose={() => { setDailyRewardData({...dailyRewardData, granted: false}); fetchInventory(); }} />}
       {showLeaderboard && <LeaderboardModal onClose={handleCloseLeaderboard} />}
       {gameRewardsModal && <RewardModal rewards={gameRewardsModal} onClose={() => { setGameRewardsModal(null); fetchInventory(); }} />}
