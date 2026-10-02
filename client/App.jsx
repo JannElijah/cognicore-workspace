@@ -2891,9 +2891,9 @@ export default function App() {
                         }}
                       >
                         <option value="reflexes_and_focus">⚡ Reflexes & Focus</option>
-                        <option value="spatial_visual_memory">Memory & Recall</option>
-                        <option value="logical_mathematical">Logical Reasoning</option>
-                        <option value="executive_strategy">Executive Strategy</option>
+                        <option value="spatial_visual_memory">?? Memory & Recall</option>
+                        <option value="logical_mathematical">?? Logical Reasoning</option>
+                        <option value="executive_strategy">?? Executive Strategy</option>
                       </select>
                     </div>
 
@@ -2912,7 +2912,7 @@ export default function App() {
                           background: 'rgba(9, 9, 11, 0.7)', border: '1.5px solid rgba(var(--rgb-primary), 0.3)', borderRadius: '8px', color: '#ffffff', padding: '0.65rem 1rem', fontSize: '0.9rem', outline: 'none', transition: 'all 0.2s'
                         }}
                       >
-                        <option value="accuracy">Accuracy Rate (%)</option>
+                        <option value="accuracy">?? Accuracy Rate (%)</option>
                         <option value="reaction_time">Average Response Latency (ms)</option>
                         <option value="difficulty">Challenge Level (1-5)</option>
                       </select>

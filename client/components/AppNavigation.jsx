@@ -168,6 +168,28 @@ const AppNavigation = memo(function AppNavigation({
           {activeGame === null && portalView === 'participant' && (
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button 
+                  className="dashboard-toggle-btn" 
+                  title="Leaderboard"
+                  onClick={() => setShowLeaderboard(true)}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    color: '#38bdf8',
+                    border: '1px solid rgba(56, 189, 248, 0.2)',
+                    padding: '0.5rem',
+                    borderRadius: '8px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '38px',
+                    height: '38px'
+                  }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 20V10" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M12 20V4" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 20v-6" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+                <button 
                 className="dashboard-toggle-btn" 
                 title="Store"
                 onClick={() => setShowShop(true)}
@@ -412,6 +434,14 @@ const AppNavigation = memo(function AppNavigation({
           Dashboard
         </button>
         <button
+            className="mobile-nav-item"
+            onClick={() => { setShowLeaderboard(true); closeDrawer(); }}
+            style={{ color: '#38bdf8' }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 20V10" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M12 20V4" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M6 20v-6" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            Leaderboard
+          </button>
+          <button
           className="mobile-nav-item"
           onClick={() => { setShowShop(true); closeDrawer(); }}
           style={{ color: '#fbbf24' }}
