@@ -12,6 +12,7 @@ export default function LoginFlow({
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
+  const [confirmPasswordInput, setConfirmPasswordInput] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [course, setCourse] = useState('');
   const [age, setAge] = useState('');
@@ -33,6 +34,10 @@ export default function LoginFlow({
     } else {
       if (!passwordInput) {
         setFormError("Password is required.");
+        return;
+      }
+      if (isSignUp && passwordInput !== confirmPasswordInput) {
+        setFormError("Passwords do not match.");
         return;
       }
       handleCheckUserStatus(usernameInput, null, null, null, null, passwordInput, isSignUp);
@@ -110,6 +115,26 @@ export default function LoginFlow({
                 </button>
               </div>
             </div>
+            
+            {isSignUp && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <label style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase' }}>Confirm Password</label>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '100%' }}>
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    value={confirmPasswordInput} 
+                    onChange={(e) => setConfirmPasswordInput(e.target.value)} 
+                    placeholder="Confirm password" 
+                    style={{ minHeight: '44px', background: '#09090b', border: '1.5px solid rgba(var(--rgb-secondary), 0.4)', borderRadius: '8px', color: '#ffffff', padding: '0.75rem', fontSize: '1rem', outline: 'none', width: '100%', boxSizing: 'border-box' }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !assessmentLoading && agreed) {
+                        submitLogin();
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
