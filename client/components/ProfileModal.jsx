@@ -404,7 +404,7 @@ const ProfileModal = ({ onClose }) => {
                             <span>{activeGoals[0].current_value.toFixed(1)} / {activeGoals[0].target_value}</span>
                           </div>
                           <div style={{ width: '100%', height: '8px', background: '#1e293b', borderRadius: '4px', overflow: 'hidden' }}>
-                            <div style={{ width: `${Math.min(100, (activeGoals[0].current_value / activeGoals[0].target_value) * 100)}%`, height: '100%', background: 'var(--color-primary)' }} />
+                            <div style={{ width: `${Math.min(100, (activeGoals[0].current_value === 0 ? 0 : activeGoals[0].metric_type === 'reaction_time' ? (activeGoals[0].target_value / activeGoals[0].current_value) * 100 : (activeGoals[0].current_value / activeGoals[0].target_value) * 100))}%`, height: '100%', background: 'var(--color-primary)' }} />
                           </div>
                         </div>
                       ) : (

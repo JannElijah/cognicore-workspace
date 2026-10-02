@@ -1409,8 +1409,9 @@ export default function App() {
   // Cognitive Goal Tracker Methods (Option C)
   const getGoalProgress = (goal) => {
     if (!goal || !goal.target_value) return 0;
+    if (goal.current_value === 0) return 0;
     return goal.metric_type === 'reaction_time' 
-      ? (goal.target_value / Math.max(goal.current_value, 1))
+      ? (goal.target_value / goal.current_value)
       : (goal.current_value / goal.target_value);
   };
 
