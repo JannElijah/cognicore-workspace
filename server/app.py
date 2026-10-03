@@ -544,21 +544,22 @@ def get_metrics():
         
 
         # Total sessions
-        cursor.execute("SELECT COUNT(*) FROM game_sessions")
-        total_sessions = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) as cnt FROM game_sessions")
+        total_sessions = cursor.fetchone()["cnt"]
 
         # Total Users
-        cursor.execute("SELECT COUNT(*) FROM users")
-        total_registered_users = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) as cnt FROM users")
+        total_registered_users = cursor.fetchone()["cnt"]
 
         # Active Users (last 7 days)
-        cursor.execute("SELECT COUNT(*) FROM user_streaks WHERE last_login_date >= CURRENT_DATE - INTERVAL '7 days'")
-        active_users = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) as cnt FROM user_streaks WHERE last_login_date >= CURRENT_DATE - INTERVAL \'7 days\'")
+        active_users = cursor.fetchone()["cnt"]
 
         
         # Average score (based on accuracy rate * 100)
-        cursor.execute("SELECT AVG(accuracy_rate) FROM performance_metrics")
-        avg_acc = cursor.fetchone()[0]
+        cursor.execute("SELECT AVG(accuracy_rate) as avg_val FROM performance_metrics")
+        row = cursor.fetchone()
+        avg_acc = row["avg_val"] if row else None
         average_score = round(avg_acc * 100, 2) if avg_acc is not None else 0.0
         
         # Domain breakdown (average score per domain)
