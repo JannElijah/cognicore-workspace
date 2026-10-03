@@ -18,7 +18,7 @@ export default function AdminDashboard() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [playerData, setPlayerData] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
-  const fetchWithAuth = useApiInterceptor();
+  
 
   useEffect(() => {
     fetchMetrics();
@@ -40,7 +40,7 @@ export default function AdminDashboard() {
   const fetchUsers = async (searchQuery = '') => {
     setLoading(true);
     try {
-      const res = await fetchWithAuth(`${API_BASE}/api/admin/users?search=${searchQuery}`);
+      const res = await fetch(`${API_BASE}/api/admin/users?search=${searchQuery}`);
       const data = await res.json();
       if (data.status === 'success') {
         setUsers(data.users);
@@ -66,7 +66,7 @@ export default function AdminDashboard() {
     setSelectedUser(username);
     setModalLoading(true);
     try {
-      const res = await fetchWithAuth(`${API_BASE}/api/admin/users/${username}`);
+      const res = await fetch(`${API_BASE}/api/admin/users/${username}`);
       const data = await res.json();
       if (data.status === 'success') {
         setPlayerData(data);
@@ -100,7 +100,7 @@ export default function AdminDashboard() {
 
   const suspendUser = async (username) => {
     try {
-      const res = await fetchWithAuth(`${API_BASE}/api/admin/users/${username}/status`, {
+      const res = await fetch(`${API_BASE}/api/admin/users/${username}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'suspended' })
