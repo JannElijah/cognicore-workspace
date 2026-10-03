@@ -1,4 +1,4 @@
-import { API_BASE } from './utils/apiClient.js';
+﻿import { API_BASE } from './utils/apiClient.js';
 import React, { useState, useEffect, useRef, useCallback, Suspense, lazy, useMemo } from 'react';
 import {
   Chart as ChartJS,
@@ -136,7 +136,7 @@ const OfflineCacheWarningBanner = ({ isVisible, onClose }) => {
       boxShadow: '0 0 30px rgba(239, 68, 68, 0.5), 0 20px 40px rgba(0,0,0,0.4)',
       backdropFilter: 'blur(12px)', animation: 'achieveSlideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
     }}>
-      <div style={{ fontSize: '1.8rem', animation: 'achievePulse 2s infinite' }}>⚠️</div>
+      <div style={{ fontSize: '1.8rem', animation: 'achievePulse 2s infinite' }}>âš ï¸</div>
       <div>
         <div style={{ color: '#fff', fontSize: '1.05rem', fontWeight: 'bold' }}>Offline Storage Full!</div>
         <div style={{ color: '#fee2e2', fontSize: '0.85rem', marginTop: '0.2rem' }}>
@@ -146,7 +146,7 @@ const OfflineCacheWarningBanner = ({ isVisible, onClose }) => {
       <button onClick={onClose} style={{
         background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', 
         borderRadius: '8px', padding: '0.5rem', cursor: 'pointer', marginLeft: '0.5rem'
-      }}>✕</button>
+      }}>âœ•</button>
     </div>
   );
 };
@@ -1813,7 +1813,7 @@ export default function App() {
     }
   };
 
-  // ─── GAME TYPE → DOMAIN HELPER ────────────────────────────────────────────
+  // â”€â”€â”€ GAME TYPE â†’ DOMAIN HELPER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const GAME_DOMAIN_MAP = {
     SpeedTap: 'Reflexes', FocusFinder: 'Reflexes', StroopShift: 'Reflexes',
     MemoryMatch: 'Memory', MatrixRecall: 'Memory',
@@ -1822,7 +1822,7 @@ export default function App() {
     MazeEscape: 'Strategy', PriorityQueue: 'Strategy', MentalFlex: 'Strategy', NeuroMaze: 'Strategy'
   };
 
-  // ─── 1. MULTI-SESSION REACTION TIME TREND ─────────────────────────────────
+  // â”€â”€â”€ 1. MULTI-SESSION REACTION TIME TREND â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const validSessions = sessionHistory.filter(s => s.avg_rt > 0 && s.rounds_count > 0);
   const reversedSessions = [...validSessions].reverse();
   const trendLabels = reversedSessions.map((_, i) => `S${i + 1}`);
@@ -1871,7 +1871,7 @@ export default function App() {
           title: (items) => {
             const idx = items[0]?.dataIndex;
             const s = reversedSessions[idx];
-            return s ? `${s.game_type} — ${s.game_mode}` : `Session ${idx + 1}`;
+            return s ? `${s.game_type} â€” ${s.game_mode}` : `Session ${idx + 1}`;
           },
           label: (item) => ` ${item.dataset.label}: ${item.raw} ms`
         },
@@ -1890,7 +1890,7 @@ export default function App() {
     }
   };
 
-  // ─── 2. PER-DOMAIN ACCURACY HORIZONTAL BAR CHART ──────────────────────────
+  // â”€â”€â”€ 2. PER-DOMAIN ACCURACY HORIZONTAL BAR CHART â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const domainAccMap_d = { Reflexes: [], Memory: [], Logic: [], Strategy: [] };
   sessionHistory.slice(0, 20).forEach(s => {
     const domain = GAME_DOMAIN_MAP[s.game_type];
@@ -1926,7 +1926,7 @@ export default function App() {
     }
   };
 
-  // ─── 3. PER-GAME SCORE BREAKDOWN ──────────────────────────────────────────
+  // â”€â”€â”€ 3. PER-GAME SCORE BREAKDOWN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const gameScoreMap = {};
   sessionHistory.forEach(s => {
     if (!s.game_type) return;
@@ -1963,7 +1963,7 @@ export default function App() {
     }
   };
 
-  // ─── 4. ACCURACY vs REACTION TIME SCATTER ─────────────────────────────────
+  // â”€â”€â”€ 4. ACCURACY vs REACTION TIME SCATTER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const DIFF_PALETTE = ['#22c55e','#86efac','#f59e0b','#f97316','#ef4444'];
   const scatterByDiff = [1,2,3,4,5].map(level => ({
     label: `Level ${level}`,
@@ -1998,7 +1998,7 @@ export default function App() {
     }
   };
 
-  // ─── RADAR UPGRADED: archetype baseline ghost overlay ────────────────────
+  // â”€â”€â”€ RADAR UPGRADED: archetype baseline ghost overlay â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const ARCHETYPE_BASELINES = {
     'Advanced':        [88, 85, 90, 83],
     'Standard':        [65, 62, 68, 60],
@@ -2031,7 +2031,7 @@ export default function App() {
     };
   }, [cognitiveProfile, skills]);
 
-  // ─── DOMAIN DELTAS FOR SCORE CARDS ─────────────────────────────────────────
+  // â”€â”€â”€ DOMAIN DELTAS FOR SCORE CARDS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const domainDeltas = {
     spatial_visual_memory: 0,
     logical_mathematical: 0,
@@ -2115,7 +2115,7 @@ export default function App() {
           gap: '0.75rem',
           animation: 'slideDownFadeIn 0.5s ease-out'
         }}>
-          <span style={{ fontSize: '1.5rem' }}>🏆</span>
+          <span style={{ fontSize: '1.5rem' }}>ðŸ†</span>
           <span>{milestoneNotification}</span>
         </div>
       )}
@@ -2138,7 +2138,7 @@ export default function App() {
           gap: '0.5rem'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
-            <span style={{ fontSize: '1.25rem' }}>🧠</span>
+            <span style={{ fontSize: '1.25rem' }}>ðŸ§ </span>
             <strong style={{ fontSize: '0.9rem', color: '#c084fc', letterSpacing: '0.05em' }}>DDA ADVISOR REPORT</strong>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.8rem', fontWeight: 'bold' }}>
@@ -2241,7 +2241,7 @@ export default function App() {
                         textTransform: 'uppercase'
                       }}
                     >
-                      {type === 'sine' ? '🔵 Sine' : type === 'triangle' ? '🔺 Triangle' : '⬛ Square'}
+                      {type === 'sine' ? 'ðŸ”µ Sine' : type === 'triangle' ? 'ðŸ”º Triangle' : 'â¬› Square'}
                     </button>
                   ))}
                 </div>
@@ -2336,7 +2336,7 @@ export default function App() {
 
           <div className="game-screen-wrapper">
             <button className="back-btn" onClick={handleBackToLobby}>
-              ← Back to Training Hub
+              â† Back to Training Hub
             </button>
             <div style={{
               display: 'flex',
@@ -2367,7 +2367,7 @@ export default function App() {
                       border: '1px solid rgba(255, 255, 255, 0.08)',
                       color: '#94a3b8'
                     }}>
-                      <div style={{ fontSize: '2.5rem', marginBottom: '1.5rem', animation: 'pulse 1.5s infinite ease-in-out' }}>🧠</div>
+                      <div style={{ fontSize: '2.5rem', marginBottom: '1.5rem', animation: 'pulse 1.5s infinite ease-in-out' }}>ðŸ§ </div>
                       <div style={{ fontWeight: 'bold', fontSize: '1.1rem', letterSpacing: '0.05em', color: 'var(--color-primary)' }}>LOADING NEURAL WORKSPACE...</div>
                     </div>
                   }>
@@ -2519,7 +2519,7 @@ export default function App() {
             {weakestDomain && DOMAINS_LIST.find(d => d.id === weakestDomain) && (
               <div style={{ marginBottom: '3.5rem' }}>
                 <h2 className="section-title" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 5px rgba(192,132,252,0.7))',verticalAlign:'middle',marginRight:'6px',flexShrink:0}} xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="7" rx="7" ry="5" stroke="#c084fc" strokeWidth="2"/><path d="M5 10c0 3 3 6 7 6s7-3 7-6" stroke="#c084fc" strokeWidth="2" strokeLinecap="round"/><line x1="9" y1="13" x2="9" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/><line x1="15" y1="13" x2="15" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/><line x1="7" y1="19" x2="17" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/></svg> Daily Personalized Workout <span style={{ fontSize: '1rem', color: 'var(--color-secondary)', fontWeight: 'normal', marginLeft: '0.5rem' }}>— Target: {DOMAINS_LIST.find(d => d.id === weakestDomain).title}</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 5px rgba(192,132,252,0.7))',verticalAlign:'middle',marginRight:'6px',flexShrink:0}} xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="7" rx="7" ry="5" stroke="#c084fc" strokeWidth="2"/><path d="M5 10c0 3 3 6 7 6s7-3 7-6" stroke="#c084fc" strokeWidth="2" strokeLinecap="round"/><line x1="9" y1="13" x2="9" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/><line x1="15" y1="13" x2="15" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/><line x1="7" y1="19" x2="17" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/></svg> Daily Personalized Workout <span style={{ fontSize: '1rem', color: 'var(--color-secondary)', fontWeight: 'normal', marginLeft: '0.5rem' }}>â€” Target: {DOMAINS_LIST.find(d => d.id === weakestDomain).title}</span>
                 </h2>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
                   {DOMAINS_LIST.find(d => d.id === weakestDomain).games.slice(0, 3).map((game) => (
@@ -2579,7 +2579,7 @@ export default function App() {
                         onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(74, 222, 128, 0.2)'; e.currentTarget.style.transform = 'scale(1.05)'; }}
                         onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(74, 222, 128, 0.1)'; e.currentTarget.style.transform = 'scale(1)'; }}
                       >
-                        ↻ Take Follow-up Evaluation
+                        â†» Take Follow-up Evaluation
                       </span>
                     ) : hasPlayedPrescribed ? (
                       <button
@@ -2658,7 +2658,7 @@ export default function App() {
                         <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
                           <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Standardized Test Mean</span>
                           <div style={{ fontSize: '1.35rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem' }}>
-                            {evaluationReport.mean_pretest} <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>→</span> <span style={{ color: '#4ade80' }}>{evaluationReport.mean_posttest}</span>
+                            {evaluationReport.mean_pretest} <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>â†’</span> <span style={{ color: '#4ade80' }}>{evaluationReport.mean_posttest}</span>
                           </div>
                           <div style={{ fontSize: '0.75rem', color: '#4ade80', marginTop: '0.25rem', fontWeight: 'bold' }}>
                             +{evaluationReport.overall_improvement_rate_pct}% Improvement Rate
@@ -2717,14 +2717,14 @@ export default function App() {
                     </div>
                   ) : (
                     <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8' }}>
-                      ⌛ Once you complete both Pre-Test and Post-Test questionnaires, this dashboard will compute dynamic empirical analytics (paired t-tests and Cohen's d effect sizes) to validate cognitive skill improvements.
+                      âŒ› Once you complete both Pre-Test and Post-Test questionnaires, this dashboard will compute dynamic empirical analytics (paired t-tests and Cohen's d effect sizes) to validate cognitive skill improvements.
                     </div>
                   )
                 ) : (
                   // AGGREGATE COHORT STUDY VIEW
                   cohortLoading ? (
                     <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-primary)', fontSize: '0.9rem', fontWeight: 'bold' }}>
-                      ⚡ Accessing Research Database & Running Paired t-tests...
+                      âš¡ Accessing Research Database & Running Paired t-tests...
                     </div>
                   ) : cohortAnalytics ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -2748,7 +2748,7 @@ export default function App() {
                             +{cohortAnalytics.overall_improvement_rate_pct}%
                           </div>
                           <div style={{ fontSize: '0.75rem', color: '#cbd5e1', marginTop: '0.25rem' }}>
-                            {cohortAnalytics.overall_pre_mean} Pre → {cohortAnalytics.overall_post_mean} Post
+                            {cohortAnalytics.overall_pre_mean} Pre â†’ {cohortAnalytics.overall_post_mean} Post
                           </div>
                         </div>
 
@@ -2785,7 +2785,7 @@ export default function App() {
                         
                         {cohortAnalytics.domains && (
                           <div style={{ marginTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.75rem' }}>
-                            <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold' }}>Group-Wide Domain Comparisons (Mean ± SD):</span>
+                            <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold' }}>Group-Wide Domain Comparisons (Mean Â± SD):</span>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginTop: '0.5rem' }}>
                               {Object.entries(cohortAnalytics.domains).map(([dom, dStats]) => (
                                 <div key={dom} style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', borderRadius: '8px', fontSize: '0.8rem', color: '#cbd5e1' }}>
@@ -2794,11 +2794,11 @@ export default function App() {
                                   </strong>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0.15rem 0' }}>
                                     <span>Pre-Test:</span>
-                                    <strong>{dStats.pre_mean} ± {dStats.pre_std}</strong>
+                                    <strong>{dStats.pre_mean} Â± {dStats.pre_std}</strong>
                                   </div>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0.15rem 0' }}>
                                     <span>Post-Test:</span>
-                                    <strong>{dStats.post_mean} ± {dStats.post_std}</strong>
+                                    <strong>{dStats.post_mean} Â± {dStats.post_std}</strong>
                                   </div>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0.15rem 0', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.15rem', color: '#4ade80', fontWeight: 'bold' }}>
                                     <span>Improvement:</span>
@@ -2839,7 +2839,7 @@ export default function App() {
                     </div>
                   ) : (
                     <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8' }}>
-                      ⌛ No research cohort statistics returned. Check backend.
+                      âŒ› No research cohort statistics returned. Check backend.
                     </div>
                   )
                 )}
@@ -2868,7 +2868,7 @@ export default function App() {
                   onMouseOver={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.1)'}
                   onMouseOut={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.05)'}
                 >
-                  {showGoalForm ? 'Close Target Creator' : '➕ Create New Target'}
+                  {showGoalForm ? 'Close Target Creator' : 'âž• Create New Target'}
                 </button>
               </div>
 
@@ -2898,10 +2898,10 @@ export default function App() {
                           background: 'rgba(9, 9, 11, 0.7)', border: '1.5px solid rgba(var(--rgb-primary), 0.3)', borderRadius: '8px', color: '#ffffff', padding: '0.65rem 1rem', fontSize: '0.9rem', outline: 'none', transition: 'all 0.2s'
                         }}
                       >
-                        <option value="reflexes_and_focus">⚡ Reflexes & Focus</option>
-                        <option value="spatial_visual_memory">🧠 Memory & Recall</option>
-                        <option value="logical_mathematical">📊 Logical Reasoning</option>
-                        <option value="executive_strategy">🎯 Executive Strategy</option>
+                        <option value="reflexes_and_focus">âš¡ Reflexes & Focus</option>
+                        <option value="spatial_visual_memory">ðŸ§  Memory & Recall</option>
+                        <option value="logical_mathematical">ðŸ“Š Logical Reasoning</option>
+                        <option value="executive_strategy">ðŸŽ¯ Executive Strategy</option>
                       </select>
                     </div>
 
@@ -2920,7 +2920,7 @@ export default function App() {
                           background: 'rgba(9, 9, 11, 0.7)', border: '1.5px solid rgba(var(--rgb-primary), 0.3)', borderRadius: '8px', color: '#ffffff', padding: '0.65rem 1rem', fontSize: '0.9rem', outline: 'none', transition: 'all 0.2s'
                         }}
                       >
-                        <option value="accuracy">🎯 Accuracy Rate (%)</option>
+                        <option value="accuracy">ðŸŽ¯ Accuracy Rate (%)</option>
                         <option value="reaction_time">Average Response Latency (ms)</option>
                         <option value="difficulty">Challenge Level (1-5)</option>
                       </select>
@@ -2982,7 +2982,7 @@ export default function App() {
                     </div>
                   ) : goalsError ? (
                     <div style={{ color: '#f87171', fontSize: '0.875rem', textAlign: 'center', padding: '2rem 0' }}>
-                      ⚠️ Error loading goals: {goalsError}
+                      âš ï¸ Error loading goals: {goalsError}
                     </div>
                   ) : goals.filter(g => !g.is_completed).length === 0 ? (
                     <div style={{ color: '#94a3b8', fontSize: '0.9rem', textAlign: 'center', padding: '3rem 1rem', background: 'rgba(255, 255, 255, 0.02)', border: '1.5px dashed rgba(255, 255, 255, 0.1)', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
@@ -3060,7 +3060,7 @@ export default function App() {
                               onMouseOut={(e) => e.target.style.color = '#64748b'}
                               title="Delete goal"
                             >
-                              ×
+                              Ã—
                             </button>
                           </div>
                         );
@@ -3144,7 +3144,7 @@ export default function App() {
                               onMouseOut={(e) => e.target.style.color = 'rgba(255,255,255,0.3)'}
                               title="Delete milestone"
                             >
-                              ×
+                              Ã—
                             </button>
                           </div>
                         );
@@ -3224,23 +3224,27 @@ export default function App() {
                           <div className="card-section-label">How it helps us</div>
                           <div className="card-benefit-box" style={{ fontSize: '0.8rem', padding: '0.5rem 0.75rem', borderLeft: `3px solid ${theme.color}`, marginBottom: '0.75rem' }}>{game.benefit}</div>
 
-                          <div className="card-section-label" style={{ color: '#94a3b8' }}>🔬 Scientific Validity</div>
-                          <div className="card-benefit-box" style={{ fontSize: '0.75rem', padding: '0.5rem', background: 'rgba(0,0,0,0.2)', fontStyle: 'italic', marginBottom: '1rem', color: '#cbd5e1' }}>
-                            {game.id === 'SpeedTap' && "Based on research by Hadjiaros et al. (2021), rapid reaction-time tasks effectively measure visuospatial attention and processing speed."}
-                            {game.id === 'FocusFinder' && "Knobel et al. (2021) demonstrated that visual search tasks effectively measure selective attention and cognitive control."}
-                            {game.id === 'StroopShift' && "According to Müller et al. (2024), Stroop-based activities effectively measure selective attention, cognitive flexibility, and inhibitory control."}
-                            {game.id === 'MemoryMatch' && "Bhargava et al. (2024) found that game-based memory tasks effectively evaluate working memory and executive functions."}
-                            {game.id === 'MatrixRecall' && "Vasconcelos et al. (2024) reported that interactive cognitive games provide reliable measures of spatial memory retention."}
-                            {game.id === 'SynapseSpin' && "Cognitive assessment mechanisms inspired by standard visuospatial transformation tasks."}
-                            {game.id === 'NexusMapper' && "Evaluates visuospatial memory recall and spatial navigation networks."}
-                            {game.id === 'LogicLink' && "Pedersen et al. (2020) demonstrated that game-based pattern recognition reliably predicts reasoning and decision-making abilities."}
-                            {game.id === 'EquationBalance' && "According to Wang et al. (2022), arithmetic challenges effectively measure cognitive processing speed and deductive reasoning."}
-                            {game.id === 'SequenceDecoder' && "Schubert et al. (2023) established that sequence-based cognitive tasks evaluate abstract reasoning and rule discovery abilities."}
-                            {game.id === 'RouteOptimizer' && "Nogueira et al. (2021) found that pathfinding and optimization games effectively measure executive planning and combinatorial logic."}
-                            {game.id === 'PriorityQueue' && "Assesses executive triage, working memory capacity, and processing speed under increasing pressure."}
-                            {game.id === 'NeuroMaze' && "Chiotaki et al. (2023) emphasized that adaptive maze learning systems enhance problem-solving and cognitive flexibility."}
-                            {game.id === 'MentalFlex' && "Measures task-switching adaptability and cognitive flexibility under shifting rule constraints."}
-                          </div>
+                          <details style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '6px', marginBottom: '1rem', cursor: 'pointer' }}>
+                            <summary style={{ padding: '0.6rem 0.75rem', fontSize: '0.75rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em', outline: 'none' }}>
+                              🔬 View Scientific Validity
+                            </summary>
+                            <div style={{ padding: '0 0.75rem 0.75rem 0.75rem', fontSize: '0.75rem', color: '#cbd5e1', fontStyle: 'italic', lineHeight: '1.5' }}>
+                              {game.id === 'SpeedTap' && "Based on research by Hadjiaros et al. (2021), game-based cognitive assessments that incorporate reaction-time tasks can effectively measure visuospatial attention and response speed. Their study validated gamified cognitive tasks and found that participants exhibited performance patterns comparable to traditional clinical cognitive assessments."}
+                              {game.id === 'FocusFinder' && "Knobel et al. (2021) developed a visual search task within an immersive game environment to assess attention. Their research, alongside Park and Zhang (2021), revealed that adaptive visual search activities effectively evaluate selective attention, cognitive control, and distractor resistance while maintaining high user engagement."}
+                              {game.id === 'StroopShift' && "According to Müller et al. (2024), Stroop-based activities remain highly effective tools for measuring selective attention, cognitive flexibility, and inhibitory control. The study highlighted the ability of Stroop tasks to evaluate how individuals manage conflicting information and suppress automatic responses."}
+                              {game.id === 'MemoryMatch' && "Bhargava et al. (2024) validated game-based cognitive assessments against traditional tests like ACE-III. They found that interactive environments effectively evaluate working memory, attention, and executive functions while maintaining high user engagement and immersion."}
+                              {game.id === 'MatrixRecall' && "A systematic review by Vasconcelos et al. (2024) concluded that interactive cognitive games provide reliable measures of spatial memory, attention, and navigation skills. Game-based systems significantly improve user engagement compared to traditional spatial assessment methods."}
+                              {game.id === 'SynapseSpin' && "Jonson et al. (2021) found that digital and virtual environments can effectively assess spatial memory and visuospatial skills. Cognitive assessment mechanisms involving mental rotation accurately measure environmental awareness."}
+                              {game.id === 'NexusMapper' && "Jonson et al. (2021) determined that complex interactive environments effectively measure spatial memory retention, recall networks, and visuospatial navigation abilities."}
+                              {game.id === 'LogicLink' && "Pedersen et al. (2020) validated game-based assessments on over 10,000 participants. Their study demonstrated that in-game behavioral data from pattern recognition tasks can reliably predict reasoning and decision-making abilities with accuracy comparable to traditional clinical assessments."}
+                              {game.id === 'EquationBalance' && "According to Wang et al. (2022), game-based arithmetic challenges can effectively measure cognitive processing speed, analytical thinking, and deductive reasoning performance in an engaging format."}
+                              {game.id === 'SequenceDecoder' && "Schubert et al. (2023) established that sequence-based cognitive tasks effectively evaluate abstract reasoning and rule discovery abilities. Identifying hidden patterns improves assessment accuracy for high-level analytical thinking skills."}
+                              {game.id === 'RouteOptimizer' && "Nogueira et al. (2021) found that pathfinding and route optimization games can effectively measure executive planning, resource allocation, and combinatorial problem-solving skills, supporting strategic reasoning assessment."}
+                              {game.id === 'PriorityQueue' && "Chiotaki et al. (2023) emphasized that adaptive game-based systems requiring rapid prioritization enhance problem-solving skills, strategic planning, and working memory capacity under increasing pressure."}
+                              {game.id === 'NeuroMaze' && "According to Chiotaki et al. (2023), adaptive maze learning systems effectively enhance problem-solving skills, strategic thinking, and cognitive flexibility by dynamically adjusting challenges based on real-time user performance."}
+                              {game.id === 'MentalFlex' && "Chiotaki et al. (2023) conducted a systematic review showing that game-based learning improves cognitive flexibility. Tasks requiring rapid adaptation to changing rules actively evaluate executive strategy and task-switching adaptability."}
+                            </div>
+                          </details>
  
                           <button 
                             className="play-btn" 
@@ -3333,7 +3337,7 @@ export default function App() {
                       transition: 'color 0.2s'
                     }}
                   >
-                    ✕
+                    âœ•
                   </button>
                 </div>
 
