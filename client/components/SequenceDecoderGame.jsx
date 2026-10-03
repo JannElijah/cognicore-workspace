@@ -8,7 +8,6 @@ import { usePhaserEngine } from '../hooks/usePhaserEngine';
 
 export default function SequenceDecoderGame({ username = 'default_player', apiUrl = API_BASE, onGameFinished }) {
     const gameContainerRef   = useRef(null);
-    const phaserInstanceRef  = useRef(null);
 
     const [sessionId,       setSessionId]       = useState(null);
     const [ddaParameters,   setDdaParameters]   = useState(null);
