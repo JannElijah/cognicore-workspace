@@ -581,6 +581,20 @@ def get_metrics():
                 "total_records": cnt
             }
             
+        # Archetype Distribution
+        cursor.execute("""
+            SELECT archetype_name, COUNT(*) as cnt 
+            FROM (
+                SELECT DISTINCT ON (user_id) archetype_name 
+                FROM cognitive_profiles 
+                ORDER BY user_id, updated_at DESC
+            ) sub 
+            WHERE archetype_name IS NOT NULL
+            GROUP BY archetype_name
+        """)
+        archetype_rows = cursor.fetchall()
+        archetype_distribution = {row['archetype_name']: row['cnt'] for row in archetype_rows}
+            
         response_data = {
             "status": "success",
             "total_sessions": total_sessions,
@@ -589,6 +603,7 @@ def get_metrics():
             "system_health": "Online",
             "average_score": average_score,
             "domain_breakdown": domain_breakdown,
+            "archetype_distribution": archetype_distribution,
             "cached": False
         }
         

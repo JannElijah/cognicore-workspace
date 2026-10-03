@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { CSVLink } from 'react-csv';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import {
+  Chart as ChartJS, RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend, ArcElement, CategoryScale, LinearScale, BarElement
+} from 'chart.js';
+import { Radar, Bar, Doughnut, Line } from 'react-chartjs-2';
+
+ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend, ArcElement, CategoryScale, LinearScale, BarElement);
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -13,78 +19,55 @@ export default function AdminDashboard() {
 
   const [selectedUser, setSelectedUser] = useState(null);
   const [playerData, setPlayerData] = useState(null);
+  const [playerHistory, setPlayerHistory] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
-
-  const fetchMetrics = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/metrics`);
-      const data = await res.json();
-      if (data.status === 'success') {
-        setMetrics(data);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const fetchUsers = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/api/admin/users?search=${searchQuery}`);
-      const data = await res.json();
-      if (data.status === 'success') {
-        setUsers(data.users);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  useEffect(() => {
-    fetchMetrics();
-    fetchUsers();
-  }, []);
-
-  useEffect(() => {
-    const delay = setTimeout(() => {
-      fetchUsers();
-    }, 300);
-    return () => clearTimeout(delay);
-  }, [searchQuery]);
-
-  const suspendUser = async (username) => {
-    try {
-      const res = await fetch(`${API_BASE}/api/admin/users/${username}/suspend`, { method: 'POST' });
-      const data = await res.json();
-      if (data.status === 'success') {
-        fetchUsers();
-        if (selectedUser === username) {
-          setPlayerData(prev => ({ ...prev, user: { ...prev.user, status: data.new_status }}));
-        }
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const openPlayerCard = async (username) => {
-    setSelectedUser(username);
-    setModalLoading(true);
-    try {
-      const res = await fetch(`${API_BASE}/api/admin/users/${username}`);
-      const data = await res.json();
-      if (data.status === 'success') {
-        setPlayerData(data.data);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setModalLoading(false);
+  const [cohortAnalytics, setCohortAnalytics] = useState(null);
     }
   };
 
   const closePlayerCard = () => {
     setSelectedUser(null);
     setPlayerData(null);
+  };
+
+  const exportRawTelemetry = async () => {
+    try {
+      const token = localStorage.getItem('token') || '';
+      const res = await fetch(`${API_BASE}/api/admin/export-telemetry`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await res.json();
+      if (data.status === 'success' && data.telemetry?.length > 0) {
+        const headers = Object.keys(data.telemetry[0]).join(',');
+        const rows = data.telemetry.map(row => Object.values(row).join(','));
+        const csvContent = 'data:text/csv;charset=utf-8,' + headers + '\n' + rows.join('\n');
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', 'raw_telemetry_export.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else { alert('Failed to export telemetry.'); }
+    } catch (e) { console.error('Export error:', e); }
+  };
+
+  const exportSubjectTelemetry = async () => {
+    try {
+      const token = localStorage.getItem('token') || '';
+      const res = await fetch(`${API_BASE}/api/admin/export-telemetry/${selectedUser}`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await res.json();
+      if (data.status === 'success' && data.telemetry?.length > 0) {
+        const headers = Object.keys(data.telemetry[0]).join(',');
+        const rows = data.telemetry.map(row => Object.values(row).join(','));
+        const csvContent = 'data:text/csv;charset=utf-8,' + headers + '\n' + rows.join('\n');
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', `${selectedUser}_telemetry.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else { alert('Failed to export telemetry.'); }
+    } catch (e) { console.error('Export error:', e); }
   };
 
   const exportPdf = () => {
@@ -153,6 +136,78 @@ export default function AdminDashboard() {
           <p style={{...metricStyle, color: metrics ? '#10b981' : '#f59e0b'}}>
             {metrics ? 'Online' : 'Checking...'}
           </p>
+        </div>
+      </div>
+
+            {/* MACRO VIEW: COHORT ANALYTICS */}
+      <div style={{ marginBottom: '4rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h2 style={{ margin: 0, fontSize: '1.8rem', color: '#f8fafc' }}>Macro View: Cohort Analytics</h2>
+          <button onClick={exportRawTelemetry} style={{ background: 'linear-gradient(to right, #10b981, #059669)', color: '#fff', border: 'none', padding: '0.8rem 1.5rem', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 4px 6px rgba(16, 185, 129, 0.25)' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Export Raw Telemetry (.CSV)
+          </button>
+        </div>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.5rem' }}>
+          {/* Radar Chart */}
+          <div style={cardStyle}>
+            <h3 style={cardLabelStyle}>Cohort Cognitive Profile</h3>
+            {metrics?.domain_breakdown ? (
+              <div style={{ width: '100%', height: '250px' }}>
+                <Radar 
+                  data={{
+                    labels: Object.keys(metrics.domain_breakdown).map(d => d.replace('_', ' ').toUpperCase()),
+                    datasets: [{
+                      label: 'Avg Accuracy (%)',
+                      data: Object.values(metrics.domain_breakdown).map(d => d.average_accuracy),
+                      backgroundColor: 'rgba(56, 189, 248, 0.2)',
+                      borderColor: '#38bdf8',
+                      pointBackgroundColor: '#c084fc',
+                      borderWidth: 2,
+                    }]
+                  }}
+                  options={{ maintainAspectRatio: false, scales: { r: { ticks: { color: '#94a3b8', backdropColor: 'transparent' }, grid: { color: '#334155' }, angleLines: { color: '#334155' }, pointLabels: { color: '#cbd5e1' } } }, plugins: { legend: { display: false } } }}
+                />
+              </div>
+            ) : <p style={{color: '#64748b'}}>Loading...</p>}
+          </div>
+
+          {/* Pre vs Post Bar Chart */}
+          <div style={cardStyle}>
+            <h3 style={cardLabelStyle}>Pre-test vs Post-test (T-Test)</h3>
+            {cohortAnalytics ? (
+              <div style={{ width: '100%', height: '220px', display: 'flex', flexDirection: 'column' }}>
+                <Bar 
+                  data={{
+                    labels: ['Baseline (Pre)', 'Final (Post)'],
+                    datasets: [{ label: 'Overall Mean Score', data: [cohortAnalytics.overall_pre_mean, cohortAnalytics.overall_post_mean], backgroundColor: ['#475569', '#10b981'], borderRadius: 6 }]
+                  }}
+                  options={{ maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } }, plugins: { legend: { display: false } } }}
+                />
+                <div style={{ marginTop: '1rem', padding: '0.8rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '6px', borderLeft: '4px solid #10b981' }}>
+                  <p style={{margin: 0, fontSize: '0.85rem', color: '#6ee7b7', fontWeight: 'bold'}}>{cohortAnalytics.hypothesis_verdict}</p>
+                  <p style={{margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: '#94a3b8'}}>p-value: {cohortAnalytics.cohort_p_value} | Cohen\'s d: {cohortAnalytics.cohort_cohens_d}</p>
+                </div>
+              </div>
+            ) : <p style={{color: '#64748b'}}>Calculating...</p>}
+          </div>
+
+          {/* Archetype Doughnut */}
+          <div style={cardStyle}>
+            <h3 style={cardLabelStyle}>Archetype Distribution</h3>
+            {metrics?.archetype_distribution ? (
+              <div style={{ width: '100%', height: '250px' }}>
+                <Doughnut 
+                  data={{
+                    labels: Object.keys(metrics.archetype_distribution),
+                    datasets: [{ data: Object.values(metrics.archetype_distribution), backgroundColor: ['#38bdf8', '#c084fc', '#f59e0b', '#ef4444', '#10b981'], borderColor: '#1e293b', borderWidth: 2 }]
+                  }}
+                  options={{ maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#cbd5e1', padding: 20 } } }, cutout: '65%' }}
+                />
+              </div>
+            ) : <p style={{color: '#64748b'}}>Analyzing...</p>}
+          </div>
         </div>
       </div>
 
@@ -310,7 +365,11 @@ export default function AdminDashboard() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '1rem' }}>
-                <button onClick={exportPdf} style={{ background: 'var(--color-secondary)', color: '#fff', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <button onClick={exportSubjectTelemetry} style={{ background: 'linear-gradient(to right, #10b981, #059669)', color: '#fff', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  Export CSV
+                </button>
+                <button onClick={exportPdf} style={{ background: 'var(--color-secondary)', color: '#fff', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>', color: '#fff', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                   Export PDF
                 </button>
@@ -344,9 +403,48 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
+                  {/* Micro View: Longitudinal Chart */}
+                  {playerHistory && playerHistory.length > 0 && (
+                    <div style={{ background: '#0f172a', padding: '1.5rem', borderRadius: '8px', border: '1px solid #1e293b', marginBottom: '2rem' }}>
+                      <h4 style={{ margin: '0 0 1rem 0', color: '#f8fafc', fontSize: '1.1rem' }}>Longitudinal Learning Curve</h4>
+                      <div style={{ width: '100%', height: '220px' }}>
+                        <Line 
+                          data={{
+                            labels: playerHistory.map((_, i) => 'S' + (i + 1)),
+                            datasets: [
+                              {
+                                label: 'Avg Accuracy (%)',
+                                data: playerHistory.map(s => s.avg_acc * 100),
+                                borderColor: '#10b981',
+                                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                yAxisID: 'y'
+                              },
+                              {
+                                label: 'Reaction Time (ms)',
+                                data: playerHistory.map(s => s.avg_rt),
+                                borderColor: '#38bdf8',
+                                backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                                yAxisID: 'y1'
+                              }
+                            ]
+                          }}
+                          options={{
+                            maintainAspectRatio: false,
+                            scales: {
+                              x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
+                              y: { type: 'linear', position: 'left', min: 0, max: 100, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+                              y1: { type: 'linear', position: 'right', grid: { display: false }, ticks: { color: '#94a3b8' } }
+                            },
+                            plugins: { legend: { labels: { color: '#cbd5e1' } } }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   <h4 style={{ margin: '0 0 1rem 0', color: '#f8fafc', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>
-                    Module Performance Breakdown
+                    Behavioral Micro-Metrics & Performance Breakdown
                   </h4>
                   
                   <div style={{ border: '1px solid #334155', borderRadius: '8px', overflow: 'hidden' }}>
@@ -356,7 +454,9 @@ export default function AdminDashboard() {
                           <th style={thStyle}>Game Module</th>
                           <th style={thStyle}>Sessions</th>
                           <th style={thStyle}>Avg Accuracy</th>
-                          <th style={thStyle}>Max Diff Reached</th>
+                          <th style={thStyle}>Avg Reaction</th>
+                          <th style={thStyle}>Avg Hesitation</th>
+                          <th style={thStyle}>Panic Clicks</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -365,26 +465,20 @@ export default function AdminDashboard() {
                             <td style={{...tdStyle, fontWeight: 'bold'}}>{g.game_type}</td>
                             <td style={tdStyle}>{g.plays}</td>
                             <td style={tdStyle}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                                <div style={{ flex: 1, background: '#1e293b', height: '10px', borderRadius: '5px', overflow: 'hidden' }}>
-                                  <div style={{ 
-                                    width: `${(g.avg_acc || 0)*100}%`, 
-                                    background: (g.avg_acc > 0.8) ? 'linear-gradient(90deg, #10b981, #34d399)' : (g.avg_acc > 0.5) ? 'linear-gradient(90deg, #f59e0b, #fbbf24)' : 'linear-gradient(90deg, #ef4444, #f87171)', 
-                                    height: '100%', 
-                                    borderRadius: '5px' 
-                                  }}></div>
-                                </div>
-                                <span style={{ width: '45px', fontWeight: 'bold', color: '#cbd5e1' }}>{Math.round((g.avg_acc || 0)*100)}%</span>
-                              </div>
+                              <span style={{ color: g.avg_acc > 0.8 ? '#10b981' : g.avg_acc > 0.5 ? '#f59e0b' : '#ef4444', fontWeight: 'bold' }}>
+                                {Math.round((g.avg_acc || 0)*100)}%
+                              </span>
                             </td>
+                            <td style={tdStyle}>{Math.round(g.avg_rt || 0)} ms</td>
+                            <td style={tdStyle}>{Math.round(g.avg_hesitation || 0)} ms</td>
                             <td style={tdStyle}>
-                              <span style={{ background: '#1e293b', padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.9rem', color: '#38bdf8', fontWeight: 'bold' }}>
-                                Level {Math.round(g.avg_diff || 1)}
+                              <span style={{ color: (g.avg_spam_clicks > 5) ? '#ef4444' : '#94a3b8' }}>
+                                {Math.round(g.avg_spam_clicks || 0)}
                               </span>
                             </td>
                           </tr>
                         ))}
-                        {playerData.game_breakdown.length === 0 && <tr><td colSpan="4" style={{...tdStyle, textAlign: 'center', color: '#64748b', padding: '2rem'}}>No gameplay telemetry available.</td></tr>}
+                        {playerData.game_breakdown.length === 0 && <tr><td colSpan="6" style={{...tdStyle, textAlign: 'center', color: '#64748b', padding: '2rem'}}>No gameplay telemetry available.</td></tr>}
                       </tbody>
                     </table>
                   </div>
