@@ -245,13 +245,21 @@ export default function AdminDashboard() {
           <p style={{...metricStyle, color: '#10b981'}}>{metrics?.total_sessions || 0}</p>
         </div>
         <div style={cardStyle}>
-          <div style={cardIconStyle}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div style={cardIconStyle}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+              </div>
+              <h3 style={cardLabelStyle}>ML Pipeline</h3>
+              <p style={{...metricStyle, fontSize: '1.8rem', color: retrainStatus === 'Failed' || retrainStatus === 'Error' ? '#ef4444' : retrainStatus === 'Success' ? '#10b981' : '#f8fafc'}}>
+                {retrainStatus === 'Idle' ? 'Active' : retrainStatus}
+              </p>
+              {retrainMessage && <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: '0.5rem 0 0 0' }}>{retrainMessage}</p>}
+            </div>
+            <button onClick={triggerRetrain} disabled={retrainStatus === 'Training...'} style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.2)', padding: '0.5rem 1rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem', transition: 'all 0.2s' }}>
+              {retrainStatus === 'Training...' ? 'Processing...' : 'Force Retrain'}
+            </button>
           </div>
-          <h3 style={cardLabelStyle}>System Health</h3>
-          <p style={{...metricStyle, color: metrics ? '#10b981' : '#f59e0b'}}>
-            {metrics ? 'Online' : 'Checking...'}
-          </p>
         </div>
       </div>
 
@@ -332,7 +340,10 @@ export default function AdminDashboard() {
                   options={{ maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#cbd5e1', padding: 20 } } }, cutout: '65%' }}
                 />
               </div>
-            ) : <p style={{color: '#64748b'}}>Analyzing...</p>}
+            ) : <div style={{ height: '250px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="1" style={{ marginBottom: '1rem', opacity: 0.5 }}><circle cx="12" cy="12" r="10"></circle><path d="M12 2v20"></path></svg>
+                  <p style={{color: '#64748b', textAlign: 'center'}}>Insufficient data to compute<br/>Archetype Distribution.</p>
+                </div>}
           </div>
         </div>
       </div>
@@ -363,7 +374,7 @@ export default function AdminDashboard() {
                 type="text" 
                 placeholder="Search username..." 
                 value={searchQuery} 
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                 style={{ 
                   background: '#0f172a', 
                   border: '1px solid #475569', 
@@ -371,11 +382,23 @@ export default function AdminDashboard() {
                   padding: '0.6rem 1rem 0.6rem 2.5rem',
                   borderRadius: '6px',
                   outline: 'none',
-                  width: '250px',
+                  width: '200px',
                   transition: 'border-color 0.2s'
                 }}
               />
             </div>
+            <select 
+              value={archetypeFilter}
+              onChange={(e) => { setArchetypeFilter(e.target.value); setCurrentPage(1); }}
+              style={{ background: '#0f172a', border: '1px solid #475569', color: '#fff', padding: '0.6rem 1rem', borderRadius: '6px', outline: 'none' }}
+            >
+              <option value="All">All Archetypes</option>
+              <option value="Fast Learner">Fast Learner</option>
+              <option value="Steady Improver">Steady Improver</option>
+              <option value="Plateauing">Plateauing</option>
+              <option value="Fatigue Prone">Fatigue Prone</option>
+              <option value="Unknown">Unknown</option>
+            </select>
             <CSVLink 
               data={users} 
               filename="cognicore_users.csv"
