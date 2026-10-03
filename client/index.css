@@ -1319,3 +1319,5 @@ button:hover {
 .premium-button:active {
     transform: translateY(1px);
 }
+
+@media (max-width: 768px) { .hide-on-mobile { display: none; } }

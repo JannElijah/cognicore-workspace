@@ -250,7 +250,7 @@ def start_session(current_user_id, current_username):
         
         initial_difficulty = last_metric.difficulty_level if last_metric else 1
         
-        if game_mode == 'daily_challenge':
+        if game_mode in ('daily_challenge', 'pre-test', 'post-test'):
             initial_difficulty = 3
             
         session_obj.current_smooth_difficulty = float(initial_difficulty)
@@ -297,11 +297,12 @@ def dda(current_user_id, current_username):
             return jsonify({"status": "error", "message": "Invalid session_id"}), 404
             
         game_mode = session_obj.game_mode
-        if game_mode == 'daily_challenge':
+        if game_mode in ('daily_challenge', 'pre-test', 'post-test'):
             return jsonify({
                 "status": "success", "new_difficulty": 3,
                 "is_level_up": False, "is_level_down": False,
-                "classification": None, "advisor_message": None
+                "classification": None, "advisor_message": None,
+                "dda_parameters": calculate_dda_parameters(3, session_obj.game_type)
             })
             
         game_type = session_obj.game_type
