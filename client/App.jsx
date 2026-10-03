@@ -34,7 +34,6 @@ import SeizureDisclaimerModal from './components/SeizureDisclaimerModal';
 import AccessibilityMenu from './components/AccessibilityMenu';
 import LoginFlow from './components/LoginFlow';
 import AssessmentFlow from './components/AssessmentFlow';
-import AdminPanel from './components/AdminPanel';
 import AdminDashboard from './components/AdminDashboard';
 import Dashboard from './components/Dashboard';
 import KnowledgeBase from './components/KnowledgeBase';
@@ -236,7 +235,7 @@ export default function App() {
   const [gameRewardsModal, setGameRewardsModal] = useState(null);
   const sessionRewardsRef = useRef({ xp: 0, coins: 0, leveled_up: false });
   const [lastGameStats, setLastGameStats] = useState(null);
-  const [portalView, setPortalView] = useState('participant'); // 'participant' | 'researcher'
+  const [portalView, setPortalView] = useState('participant'); // 'participant' | 'admin' | 'knowledge'
 
   // Quasi-Experimental Research Pipeline States
   const [currentUser, setCurrentUser] = useState('');
@@ -1397,16 +1396,6 @@ export default function App() {
     return centroids;
   };
 
-  // Run ISO & Sandbox fetch when switching to researcher view
-  useEffect(() => {
-    if (portalView === 'researcher') {
-      fetchIsoSummary();
-      fetchSandboxData(sandboxVar1, sandboxVar2, sandboxCohort);
-      fetchModelStatus();
-      fetchClusterPoints();
-    }
-  }, [portalView, sandboxVar1, sandboxVar2, sandboxCohort, activeDashboardUser, activeResearcherTab]);
-
   // Cognitive Goal Tracker Methods (Option C)
   const getGoalProgress = (goal) => {
     if (!goal || !goal.target_value) return 0;
@@ -2181,7 +2170,7 @@ export default function App() {
       />
 
       {/* Main Container */}
-      <main className="portal-main" style={{ maxWidth: activeGame ? 'none' : '1400px' }} key={activeGame ? 'game' : showDashboard ? 'dash' : portalView === 'researcher' ? 'research' : 'select'}>
+      <main className="portal-main" style={{ maxWidth: activeGame ? 'none' : '1400px' }} key={activeGame ? 'game' : showDashboard ? 'dash' : portalView === 'admin' ? 'admin' : 'select'}>
         {showSoundTuner && (
           <div className="game-card" style={{
             padding: '1.5rem',
