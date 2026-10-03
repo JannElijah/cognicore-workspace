@@ -257,14 +257,16 @@ export default function AdminDashboard() {
           <div style={cardStyle}>
             <h3 style={cardLabelStyle}>Pre-test vs Post-test (T-Test)</h3>
             {cohortAnalytics ? (
-              <div style={{ width: '100%', height: '220px', display: 'flex', flexDirection: 'column' }}>
-                <Bar 
-                  data={{
-                    labels: ['Baseline (Pre)', 'Final (Post)'],
-                    datasets: [{ label: 'Overall Mean Score', data: [cohortAnalytics.overall_pre_mean, cohortAnalytics.overall_post_mean], backgroundColor: ['#475569', '#10b981'], borderRadius: 6 }]
-                  }}
-                  options={{ maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } }, plugins: { legend: { display: false } } }}
-                />
+              <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ flex: 1, minHeight: '180px', position: 'relative' }}>
+                  <Bar 
+                    data={{
+                      labels: ['Baseline (Pre)', 'Final (Post)'],
+                      datasets: [{ label: 'Overall Mean Score', data: [cohortAnalytics.overall_pre_mean, cohortAnalytics.overall_post_mean], backgroundColor: ['#475569', '#10b981'], borderRadius: 6 }]
+                    }}
+                    options={{ maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } }, plugins: { legend: { display: false } } }}
+                  />
+                </div>
                 <div style={{ marginTop: '1rem', padding: '0.8rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '6px', borderLeft: '4px solid #10b981' }}>
                   <p style={{margin: 0, fontSize: '0.85rem', color: '#6ee7b7', fontWeight: 'bold'}}>{cohortAnalytics.hypothesis_verdict}</p>
                   <p style={{margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: '#94a3b8'}}>p-value: {cohortAnalytics.cohort_p_value} | Cohen\'s d: {cohortAnalytics.cohort_cohens_d}</p>
@@ -276,7 +278,7 @@ export default function AdminDashboard() {
           {/* Archetype Doughnut */}
           <div style={cardStyle}>
             <h3 style={cardLabelStyle}>Archetype Distribution</h3>
-            {metrics?.archetype_distribution ? (
+            {metrics?.archetype_distribution && Object.keys(metrics.archetype_distribution).length > 0 ? (
               <div style={{ width: '100%', height: '250px' }}>
                 <Doughnut 
                   data={{

@@ -532,7 +532,7 @@ def get_metrics():
     if redis_url != "memory://":
         try:
             redis_client = redis.from_url(redis_url)
-            cached_metrics = redis_client.get("cognicore:global_metrics")
+            cached_metrics = redis_client.get("cognicore:global_metrics_v2")
             if cached_metrics:
                 return jsonify(json.loads(cached_metrics)), 200
         except Exception:
@@ -610,7 +610,7 @@ def get_metrics():
         if redis_client:
             try:
                 # Cache for 5 minutes
-                redis_client.setex("cognicore:global_metrics", 300, json.dumps(response_data))
+                redis_client.setex("cognicore:global_metrics_v2", 300, json.dumps(response_data))
             except Exception:
                 pass
                 
