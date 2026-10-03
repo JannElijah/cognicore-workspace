@@ -2336,7 +2336,7 @@ export default function App() {
 
           <div className="game-screen-wrapper">
             <button className="back-btn" onClick={handleBackToLobby}>
-              â† Back to Training Hub
+              &larr; Back to Training Hub
             </button>
             <div style={{
               display: 'flex',
