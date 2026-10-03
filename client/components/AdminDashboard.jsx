@@ -1,29 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { API_BASE } from '../utils/apiClient.js';
-import useApiInterceptor from '../hooks/useApiInterceptor';
 import { CSVLink } from 'react-csv';
-import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export default function AdminDashboard() {
-  const [users, setUsers] = useState([]);
-  const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  
-  // Platform metrics
   const [metrics, setMetrics] = useState(null);
-  
-  // Player Card Modal
+  const [users, setUsers] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+
   const [selectedUser, setSelectedUser] = useState(null);
   const [playerData, setPlayerData] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
-  
-
-  useEffect(() => {
-    fetchMetrics();
-    fetchUsers();
-  }, []);
 
   const fetchMetrics = async () => {
     try {
@@ -37,29 +27,43 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchUsers = async (searchQuery = '') => {
-    setLoading(true);
+  const fetchUsers = async () => {
     try {
       const res = await fetch(`${API_BASE}/api/admin/users?search=${searchQuery}`);
       const data = await res.json();
       if (data.status === 'success') {
         setUsers(data.users);
-      } else {
-        setError(data.message);
       }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    } catch (e) {
+      console.error(e);
     }
   };
 
-  const handleSearch = (e) => {
-    setSearch(e.target.value);
-    // basic debounce
-    setTimeout(() => {
-      fetchUsers(e.target.value);
+  useEffect(() => {
+    fetchMetrics();
+    fetchUsers();
+  }, []);
+
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      fetchUsers();
     }, 300);
+    return () => clearTimeout(delay);
+  }, [searchQuery]);
+
+  const suspendUser = async (username) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/admin/users/${username}/suspend`, { method: 'POST' });
+      const data = await res.json();
+      if (data.status === 'success') {
+        fetchUsers();
+        if (selectedUser === username) {
+          setPlayerData(prev => ({ ...prev, user: { ...prev.user, status: data.new_status }}));
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const openPlayerCard = async (username) => {
@@ -69,10 +73,10 @@ export default function AdminDashboard() {
       const res = await fetch(`${API_BASE}/api/admin/users/${username}`);
       const data = await res.json();
       if (data.status === 'success') {
-        setPlayerData(data);
+        setPlayerData(data.data);
       }
-    } catch (err) {
-      console.error(err);
+    } catch (e) {
+      console.error(e);
     } finally {
       setModalLoading(false);
     }
@@ -86,86 +90,138 @@ export default function AdminDashboard() {
   const exportPdf = () => {
     const input = document.getElementById('player-card-content');
     if (!input) return;
-    
-    html2canvas(input, { backgroundColor: '#1e293b' }).then((canvas) => {
+    html2canvas(input, { backgroundColor: '#0f172a' }).then((canvas) => {
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`${selectedUser}_Cognitive_Profile.pdf`);
+      pdf.save(`player_card_${selectedUser}.pdf`);
     });
   };
 
-  const suspendUser = async (username) => {
-    try {
-      const res = await fetch(`${API_BASE}/api/admin/users/${username}/status`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'suspended' })
-      });
-      if (res.ok) {
-        fetchUsers(search);
-        if (selectedUser === username && playerData) {
-          setPlayerData({...playerData, user: {...playerData.user, status: 'suspended'}});
-        }
-      }
-    } catch(e) {
-      console.error(e);
-    }
-  };
-
   return (
-    <div style={{ padding: '2rem', color: '#e2e8f0', minHeight: '100vh', background: 'var(--color-bg)' }}>
-      <h1 style={{ marginBottom: '1.5rem', borderBottom: '2px solid var(--color-primary)', paddingBottom: '0.5rem' }}>Global Platform Overview</h1>
+    <div style={{ padding: '2rem', maxWidth: '1400px', margin: '0 auto', fontFamily: '"Inter", sans-serif' }}>
       
-      {/* 1. Dashboard Metrics */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+      {/* HEADER */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2.5rem' }}>
+        <h1 style={{ 
+          margin: 0, 
+          fontSize: '2.5rem', 
+          background: 'linear-gradient(to right, #c084fc, #38bdf8)', 
+          WebkitBackgroundClip: 'text', 
+          WebkitTextFillColor: 'transparent',
+          textShadow: '0px 0px 20px rgba(192, 132, 252, 0.3)'
+        }}>
+          Global Platform Overview
+        </h1>
+      </div>
+
+      {/* 1. METRICS GRID */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', 
+        gap: '1.5rem', 
+        marginBottom: '4rem' 
+      }}>
         <div style={cardStyle}>
-          <h3>Total Users</h3>
-          <p style={metricStyle}>{metrics?.total_registered_users || 0}</p>
+          <div style={cardIconStyle}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          </div>
+          <h3 style={cardLabelStyle}>Total Users</h3>
+          <p style={{...metricStyle, color: '#38bdf8'}}>{metrics?.total_registered_users || 0}</p>
         </div>
         <div style={cardStyle}>
-          <h3>Active Users (7d)</h3>
-          <p style={metricStyle}>{metrics?.active_users || 0}</p>
+          <div style={cardIconStyle}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          </div>
+          <h3 style={cardLabelStyle}>Active Users (7d)</h3>
+          <p style={{...metricStyle, color: '#c084fc'}}>{metrics?.active_users || 0}</p>
         </div>
         <div style={cardStyle}>
-          <h3>Total Games Played</h3>
-          <p style={metricStyle}>{metrics?.total_sessions || 0}</p>
+          <div style={cardIconStyle}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="6" width="20" height="12" rx="2"></rect><path d="M12 12h.01M17 12h.01M7 12h.01"></path></svg>
+          </div>
+          <h3 style={cardLabelStyle}>Total Games Played</h3>
+          <p style={{...metricStyle, color: '#10b981'}}>{metrics?.total_sessions || 0}</p>
         </div>
         <div style={cardStyle}>
-          <h3>System Health</h3>
-          <p style={{ ...metricStyle, color: '#10b981' }}>{metrics?.system_health || 'Checking...'}</p>
+          <div style={cardIconStyle}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+          </div>
+          <h3 style={cardLabelStyle}>System Health</h3>
+          <p style={{...metricStyle, color: metrics ? '#10b981' : '#f59e0b'}}>
+            {metrics ? 'Online' : 'Checking...'}
+          </p>
         </div>
       </div>
 
-      {/* 2. User Management Roster */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-        <h2>User Management & Roster</h2>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <input 
-            type="text" 
-            placeholder="Search username..." 
-            value={search}
-            onChange={handleSearch}
-            style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid #475569', background: '#1e293b', color: '#fff' }}
-          />
-          <CSVLink 
-            data={users} 
-            filename="cognicore_users.csv"
-            style={{ padding: '0.5rem 1rem', background: 'var(--color-secondary)', color: '#fff', borderRadius: '4px', textDecoration: 'none', fontWeight: 'bold' }}
-          >
-            Export CSV
-          </CSVLink>
+      {/* 2. USER MANAGEMENT SECTION */}
+      <div style={{ 
+        background: '#1e293b', 
+        borderRadius: '12px', 
+        border: '1px solid #334155',
+        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+        overflow: 'hidden'
+      }}>
+        <div style={{ 
+          padding: '1.5rem 2rem', 
+          borderBottom: '1px solid #334155', 
+          display: 'flex', 
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1rem'
+        }}>
+          <h2 style={{ margin: 0, fontSize: '1.5rem', color: '#f8fafc' }}>User Management & Roster</h2>
+          
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <div style={{ position: 'relative' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }}><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+              <input 
+                type="text" 
+                placeholder="Search username..." 
+                value={searchQuery} 
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={{ 
+                  background: '#0f172a', 
+                  border: '1px solid #475569', 
+                  color: '#fff', 
+                  padding: '0.6rem 1rem 0.6rem 2.5rem',
+                  borderRadius: '6px',
+                  outline: 'none',
+                  width: '250px',
+                  transition: 'border-color 0.2s'
+                }}
+              />
+            </div>
+            <CSVLink 
+              data={users} 
+              filename="cognicore_users.csv"
+              style={{
+                background: 'linear-gradient(to right, #c084fc, #a855f7)',
+                color: '#fff',
+                textDecoration: 'none',
+                padding: '0.6rem 1.2rem',
+                borderRadius: '6px',
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                boxShadow: '0 4px 6px rgba(168, 85, 247, 0.25)',
+                transition: 'transform 0.1s'
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              Export CSV
+            </CSVLink>
+          </div>
         </div>
-      </div>
-
-      {loading ? <p>Loading users...</p> : error ? <p style={{color: '#ef4444'}}>{error}</p> : (
-        <div style={{ overflowX: 'auto', background: '#1e293b', borderRadius: '8px', border: '1px solid #334155' }}>
+        
+        <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
-              <tr style={{ background: '#0f172a', borderBottom: '2px solid #334155' }}>
+              <tr style={{ background: '#0f172a' }}>
                 <th style={thStyle}>ID</th>
                 <th style={thStyle}>Username</th>
                 <th style={thStyle}>Date Joined</th>
@@ -176,110 +232,209 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {users.map(u => (
-                <tr key={u.id} style={{ borderBottom: '1px solid #334155' }}>
+              {users.map((u, i) => (
+                <tr key={u.id} style={{ 
+                  background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)',
+                  borderTop: '1px solid #334155',
+                  transition: 'background 0.2s'
+                }} className="table-row-hover">
                   <td style={tdStyle}>{u.id}</td>
-                  <td style={{...tdStyle, color: 'var(--color-primary)', cursor: 'pointer', fontWeight: 'bold'}} onClick={() => openPlayerCard(u.username)}>
+                  <td style={{...tdStyle, color: '#38bdf8', cursor: 'pointer', fontWeight: 'bold'}} onClick={() => openPlayerCard(u.username)}>
                     {u.username}
                   </td>
-                  <td style={tdStyle}>{new Date(u.created_at).toLocaleDateString()}</td>
-                  <td style={tdStyle}>{u.level || 1}</td>
-                  <td style={tdStyle}>{u.xp || 0} XP / {u.coins || 0} 🪙</td>
+                  <td style={tdStyle}>{new Date(u.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</td>
                   <td style={tdStyle}>
-                    <span style={{ color: u.status === 'suspended' ? '#ef4444' : '#10b981' }}>{u.status || 'active'}</span>
+                    <span style={{ background: '#334155', padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.9rem' }}>Lv. {u.level || 1}</span>
+                  </td>
+                  <td style={tdStyle}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ color: '#10b981', fontWeight: 'bold' }}>{u.xp || 0} XP</span>
+                      <span style={{ color: '#475569' }}>|</span>
+                      <span style={{ color: '#f59e0b', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"></circle></svg>
+                        {u.coins || 0}
+                      </span>
+                    </div>
+                  </td>
+                  <td style={tdStyle}>
+                    <span style={{ 
+                      background: u.status === 'suspended' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)',
+                      color: u.status === 'suspended' ? '#fca5a5' : '#6ee7b7',
+                      padding: '0.3rem 0.6rem',
+                      borderRadius: '12px',
+                      fontSize: '0.85rem',
+                      fontWeight: 'bold',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px'
+                    }}>
+                      {u.status || 'active'}
+                    </span>
                   </td>
                   <td style={tdStyle}>
                     <button 
                       onClick={() => suspendUser(u.username)}
-                      style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '0.3rem 0.6rem', borderRadius: '4px', cursor: 'pointer' }}
+                      style={{ 
+                        background: u.status === 'suspended' ? '#334155' : 'rgba(239, 68, 68, 0.1)', 
+                        color: u.status === 'suspended' ? '#f8fafc' : '#ef4444', 
+                        border: u.status === 'suspended' ? '1px solid #475569' : '1px solid rgba(239, 68, 68, 0.3)', 
+                        padding: '0.4rem 0.8rem', 
+                        borderRadius: '6px', 
+                        cursor: 'pointer',
+                        fontWeight: 'bold',
+                        transition: 'all 0.2s'
+                      }}
                     >
-                      Suspend
+                      {u.status === 'suspended' ? 'Restore' : 'Suspend'}
                     </button>
                   </td>
                 </tr>
               ))}
-              {users.length === 0 && <tr><td colSpan="7" style={{padding: '1rem', textAlign: 'center'}}>No users found.</td></tr>}
+              {users.length === 0 && <tr><td colSpan="7" style={{padding: '3rem', textAlign: 'center', color: '#94a3b8'}}>No users found matching your search.</td></tr>}
             </tbody>
           </table>
         </div>
-      )}
+      </div>
 
       {/* 3. Player Card Modal */}
       {selectedUser && (
         <div style={modalOverlayStyle}>
           <div style={modalContentStyle}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-              <h2>Player Card: {selectedUser}</h2>
-              <div>
-                <button onClick={exportPdf} style={{ marginRight: '1rem', background: 'var(--color-secondary)', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>Export PDF</button>
-                <button onClick={closePlayerCard} style={{ background: 'transparent', color: '#94a3b8', border: 'none', fontSize: '1.5rem', cursor: 'pointer' }}>&times;</button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #334155', paddingBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg, #38bdf8, #c084fc)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', fontWeight: 'bold', color: '#fff' }}>
+                  {selectedUser.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h2 style={{ margin: 0, fontSize: '1.8rem', color: '#f8fafc' }}>{selectedUser}</h2>
+                  <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>CogniCore Subject Data</span>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button onClick={exportPdf} style={{ background: 'var(--color-secondary)', color: '#fff', border: 'none', padding: '0.6rem 1.2rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                  Export PDF
+                </button>
+                <button onClick={closePlayerCard} style={{ background: '#334155', color: '#f8fafc', border: 'none', width: '40px', height: '40px', borderRadius: '50%', fontSize: '1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>&times;</button>
               </div>
             </div>
 
-            <div id="player-card-content" style={{ padding: '1rem', background: '#0f172a', borderRadius: '8px' }}>
-              {modalLoading ? <p>Loading player data...</p> : playerData ? (
+            <div id="player-card-content" style={{ padding: '0.5rem' }}>
+              {modalLoading ? (
+                <div style={{ padding: '3rem', textAlign: 'center', color: '#38bdf8' }}>
+                  <svg className="animate-spin" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: 'spin 1s linear infinite', margin: '0 auto 1rem auto', display: 'block' }}><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+                  Loading telemetry...
+                </div>
+              ) : playerData ? (
                 <>
-                  <div style={{ display: 'flex', gap: '2rem', marginBottom: '1.5rem' }}>
-                    <div>
-                      <p style={{ margin: 0, color: '#94a3b8' }}>Cognitive Archetype</p>
-                      <h3 style={{ margin: 0, color: 'var(--color-primary)', fontSize: '1.5rem' }}>{playerData.archetype}</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
+                    <div style={{ background: '#0f172a', padding: '1.5rem', borderRadius: '8px', border: '1px solid #1e293b' }}>
+                      <p style={{ margin: '0 0 0.5rem 0', color: '#94a3b8', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Cognitive Archetype</p>
+                      <h3 style={{ margin: 0, color: '#c084fc', fontSize: '1.5rem' }}>{playerData.archetype}</h3>
                     </div>
-                    <div>
-                      <p style={{ margin: 0, color: '#94a3b8' }}>Training Streak</p>
-                      <h3 style={{ margin: 0, color: '#f59e0b', fontSize: '1.5rem' }}>{playerData.streak} Days 🔥</h3>
+                    <div style={{ background: '#0f172a', padding: '1.5rem', borderRadius: '8px', border: '1px solid #1e293b' }}>
+                      <p style={{ margin: '0 0 0.5rem 0', color: '#94a3b8', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Training Streak</p>
+                      <h3 style={{ margin: 0, color: '#f59e0b', fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" color="#f59e0b"><path d="M17.5 19c-1.9 0-3.5-1.6-3.5-3.5 0-2.3 2.5-5.9 3.1-6.8.2-.2.5-.2.7 0 .6.9 3.1 4.5 3.1 6.8 0 1.9-1.6 3.5-3.5 3.5z"></path><path d="M11 21c-3.9 0-7-3.1-7-7 0-4.7 5.1-11.7 6.2-13.3.4-.6 1.3-.6 1.7 0 1.1 1.6 6.2 8.6 6.2 13.3 0 3.9-3.1 7-7 7z"></path></svg>
+                        {playerData.streak} Days
+                      </h3>
                     </div>
-                    <div>
-                      <p style={{ margin: 0, color: '#94a3b8' }}>Total XP</p>
+                    <div style={{ background: '#0f172a', padding: '1.5rem', borderRadius: '8px', border: '1px solid #1e293b' }}>
+                      <p style={{ margin: '0 0 0.5rem 0', color: '#94a3b8', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Total XP Earned</p>
                       <h3 style={{ margin: 0, color: '#10b981', fontSize: '1.5rem' }}>{playerData.user.xp || 0} XP</h3>
                     </div>
                   </div>
 
-                  <h4 style={{ borderBottom: '1px solid #334155', paddingBottom: '0.5rem', marginBottom: '1rem' }}>Game-by-Game Breakdown</h4>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', background: '#1e293b', borderRadius: '4px', overflow: 'hidden' }}>
-                    <thead>
-                      <tr style={{ background: '#334155' }}>
-                        <th style={thStyle}>Game Module</th>
-                        <th style={thStyle}>Plays</th>
-                        <th style={thStyle}>Avg Accuracy</th>
-                        <th style={thStyle}>Avg Difficulty Reached</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {playerData.game_breakdown.map((g, i) => (
-                        <tr key={i} style={{ borderBottom: '1px solid #334155' }}>
-                          <td style={tdStyle}>{g.game_type}</td>
-                          <td style={tdStyle}>{g.plays}</td>
-                          <td style={tdStyle}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                              <div style={{ flex: 1, background: '#0f172a', height: '8px', borderRadius: '4px' }}>
-                                <div style={{ width: `${(g.avg_acc || 0)*100}%`, background: (g.avg_acc > 0.8) ? '#10b981' : (g.avg_acc > 0.5) ? '#f59e0b' : '#ef4444', height: '100%', borderRadius: '4px' }}></div>
-                              </div>
-                              <span style={{ width: '40px' }}>{Math.round((g.avg_acc || 0)*100)}%</span>
-                            </div>
-                          </td>
-                          <td style={tdStyle}>Level {Math.round(g.avg_diff || 1)}</td>
-                        </tr>
-                      ))}
-                      {playerData.game_breakdown.length === 0 && <tr><td colSpan="4" style={tdStyle}>No gameplay data yet.</td></tr>}
-                    </tbody>
-                  </table>
+                  <h4 style={{ margin: '0 0 1rem 0', color: '#f8fafc', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>
+                    Module Performance Breakdown
+                  </h4>
                   
-                  <div style={{ marginTop: '1.5rem', background: 'rgba(239, 68, 68, 0.1)', padding: '1rem', borderRadius: '4px', borderLeft: '4px solid #ef4444' }}>
-                    <h4 style={{ margin: '0 0 0.5rem 0', color: '#ef4444' }}>Moderation Tools</h4>
-                    <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: '#cbd5e1' }}>Warning: Changing status affects user login immediately.</p>
-                    <button 
-                      onClick={() => suspendUser(selectedUser)}
-                      style={{ background: playerData.user.status === 'suspended' ? '#10b981' : '#ef4444', color: '#fff', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-                    >
-                      {playerData.user.status === 'suspended' ? 'Unsuspend User' : 'Suspend User'}
-                    </button>
+                  <div style={{ border: '1px solid #334155', borderRadius: '8px', overflow: 'hidden' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', background: '#0f172a' }}>
+                      <thead>
+                        <tr style={{ background: '#1e293b' }}>
+                          <th style={thStyle}>Game Module</th>
+                          <th style={thStyle}>Sessions</th>
+                          <th style={thStyle}>Avg Accuracy</th>
+                          <th style={thStyle}>Max Diff Reached</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {playerData.game_breakdown.map((g, i) => (
+                          <tr key={i} style={{ borderTop: '1px solid #1e293b' }}>
+                            <td style={{...tdStyle, fontWeight: 'bold'}}>{g.game_type}</td>
+                            <td style={tdStyle}>{g.plays}</td>
+                            <td style={tdStyle}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                                <div style={{ flex: 1, background: '#1e293b', height: '10px', borderRadius: '5px', overflow: 'hidden' }}>
+                                  <div style={{ 
+                                    width: `${(g.avg_acc || 0)*100}%`, 
+                                    background: (g.avg_acc > 0.8) ? 'linear-gradient(90deg, #10b981, #34d399)' : (g.avg_acc > 0.5) ? 'linear-gradient(90deg, #f59e0b, #fbbf24)' : 'linear-gradient(90deg, #ef4444, #f87171)', 
+                                    height: '100%', 
+                                    borderRadius: '5px' 
+                                  }}></div>
+                                </div>
+                                <span style={{ width: '45px', fontWeight: 'bold', color: '#cbd5e1' }}>{Math.round((g.avg_acc || 0)*100)}%</span>
+                              </div>
+                            </td>
+                            <td style={tdStyle}>
+                              <span style={{ background: '#1e293b', padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.9rem', color: '#38bdf8', fontWeight: 'bold' }}>
+                                Level {Math.round(g.avg_diff || 1)}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                        {playerData.game_breakdown.length === 0 && <tr><td colSpan="4" style={{...tdStyle, textAlign: 'center', color: '#64748b', padding: '2rem'}}>No gameplay telemetry available.</td></tr>}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  <div style={{ marginTop: '2.5rem', background: 'rgba(239, 68, 68, 0.05)', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)', borderLeft: '4px solid #ef4444' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <h4 style={{ margin: '0 0 0.2rem 0', color: '#fca5a5', fontSize: '1.1rem' }}>Moderation & Control</h4>
+                        <p style={{ margin: 0, fontSize: '0.9rem', color: '#94a3b8' }}>Restrict or restore this subject's access to the training platform.</p>
+                      </div>
+                      <button 
+                        onClick={() => suspendUser(selectedUser)}
+                        style={{ 
+                          background: playerData.user.status === 'suspended' ? '#10b981' : '#ef4444', 
+                          color: '#fff', 
+                          border: 'none', 
+                          padding: '0.6rem 1.2rem', 
+                          borderRadius: '6px', 
+                          cursor: 'pointer', 
+                          fontWeight: 'bold',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          boxShadow: playerData.user.status === 'suspended' ? '0 4px 10px rgba(16, 185, 129, 0.3)' : '0 4px 10px rgba(239, 68, 68, 0.3)'
+                        }}
+                      >
+                        {playerData.user.status === 'suspended' ? (
+                          <><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Restore Access</>
+                        ) : (
+                          <><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg> Suspend Subject</>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </>
-              ) : <p>Error loading data.</p>}
+              ) : <p style={{ color: '#ef4444', padding: '2rem', textAlign: 'center' }}>Failed to retrieve telemetry profile.</p>}
             </div>
           </div>
         </div>
       )}
+      
+      <style>{`
+        .table-row-hover:hover {
+          background: rgba(56, 189, 248, 0.05) !important;
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
@@ -287,48 +442,72 @@ export default function AdminDashboard() {
 const cardStyle = {
   background: '#1e293b',
   padding: '1.5rem',
-  borderRadius: '8px',
+  borderRadius: '12px',
   border: '1px solid #334155',
-  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+  position: 'relative',
+  overflow: 'hidden',
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center'
+};
+
+const cardIconStyle = {
+  position: 'absolute',
+  top: '1.5rem',
+  right: '1.5rem',
+  color: '#475569',
+  opacity: 0.5
+};
+
+const cardLabelStyle = {
+  margin: '0 0 0.5rem 0',
+  color: '#94a3b8',
+  fontSize: '1rem',
+  fontWeight: '500'
 };
 
 const metricStyle = {
-  fontSize: '2rem',
-  fontWeight: 'bold',
-  color: 'var(--color-primary)',
-  margin: '0.5rem 0 0 0'
+  fontSize: '2.5rem',
+  fontWeight: '800',
+  margin: 0,
+  letterSpacing: '-1px'
 };
 
 const thStyle = {
-  padding: '1rem',
+  padding: '1.2rem 1.5rem',
   color: '#94a3b8',
-  fontWeight: '600'
+  fontWeight: '600',
+  fontSize: '0.9rem',
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px'
 };
 
 const tdStyle = {
-  padding: '1rem',
-  color: '#e2e8f0'
+  padding: '1.2rem 1.5rem',
+  color: '#e2e8f0',
+  fontSize: '0.95rem'
 };
 
 const modalOverlayStyle = {
   position: 'fixed',
   top: 0, left: 0, right: 0, bottom: 0,
-  background: 'rgba(0,0,0,0.7)',
+  background: 'rgba(15, 23, 42, 0.85)',
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
   zIndex: 9999,
-  backdropFilter: 'blur(4px)'
+  backdropFilter: 'blur(8px)'
 };
 
 const modalContentStyle = {
   background: '#1e293b',
-  padding: '2rem',
-  borderRadius: '12px',
-  width: '90%',
-  maxWidth: '800px',
+  padding: '0',
+  borderRadius: '16px',
+  width: '95%',
+  maxWidth: '900px',
   maxHeight: '90vh',
   overflowY: 'auto',
-  border: '1px solid #475569',
-  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+  border: '1px solid #334155',
+  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255,255,255,0.05) inset'
 };
