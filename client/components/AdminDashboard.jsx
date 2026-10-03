@@ -279,17 +279,33 @@ export default function AdminDashboard() {
               <div style={{ width: '100%', height: '250px' }}>
                 <Radar 
                   data={{
-                    labels: Object.keys(metrics.domain_breakdown).map(d => d.replace('_', ' ').toUpperCase()),
+                    labels: Object.keys(metrics.domain_breakdown).map(d => d.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())),
                     datasets: [{
                       label: 'Avg Accuracy (%)',
                       data: Object.values(metrics.domain_breakdown).map(d => d.average_accuracy),
-                      backgroundColor: 'rgba(56, 189, 248, 0.2)',
+                      backgroundColor: 'rgba(56, 189, 248, 0.25)',
                       borderColor: '#38bdf8',
                       pointBackgroundColor: '#c084fc',
+                      pointBorderColor: '#fff',
+                      pointHoverBackgroundColor: '#fff',
+                      pointHoverBorderColor: '#c084fc',
                       borderWidth: 2,
                     }]
                   }}
-                  options={{ maintainAspectRatio: false, scales: { r: { ticks: { color: '#94a3b8', backdropColor: 'transparent' }, grid: { color: '#334155' }, angleLines: { color: '#334155' }, pointLabels: { color: '#cbd5e1' } } }, plugins: { legend: { display: false } } }}
+                  options={{ 
+                    maintainAspectRatio: false, 
+                    scales: { 
+                      r: { 
+                        min: 0, 
+                        max: 100,
+                        ticks: { color: '#94a3b8', backdropColor: 'transparent', stepSize: 20 }, 
+                        grid: { color: 'rgba(51, 65, 85, 0.5)' }, 
+                        angleLines: { color: 'rgba(51, 65, 85, 0.5)' }, 
+                        pointLabels: { color: '#cbd5e1', font: { size: 11, family: 'Inter, sans-serif', weight: '600' } } 
+                      } 
+                    }, 
+                    plugins: { legend: { display: false } } 
+                  }}
                 />
               </div>
             ) : <p style={{color: '#64748b'}}>Loading...</p>}
@@ -304,9 +320,32 @@ export default function AdminDashboard() {
                   <Bar 
                     data={{
                       labels: ['Baseline (Pre)', 'Final (Post)'],
-                      datasets: [{ label: 'Overall Mean Score', data: [cohortAnalytics.overall_pre_mean, cohortAnalytics.overall_post_mean], backgroundColor: ['#475569', '#10b981'], borderRadius: 6 }]
+                      datasets: [{ 
+                        label: 'Overall Mean Score', 
+                        data: [cohortAnalytics.overall_pre_mean, cohortAnalytics.overall_post_mean], 
+                        backgroundColor: ['rgba(148, 163, 184, 0.8)', 'rgba(16, 185, 129, 0.9)'], 
+                        borderColor: ['#94a3b8', '#10b981'],
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        maxBarThickness: 60
+                      }]
                     }}
-                    options={{ maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } }, plugins: { legend: { display: false } } }}
+                    options={{ 
+                      maintainAspectRatio: false, 
+                      scales: { 
+                        y: { 
+                          beginAtZero: true, 
+                          title: { display: true, text: 'Cognitive Score', color: '#64748b', font: { weight: 'bold' } },
+                          grid: { color: 'rgba(51, 65, 85, 0.3)' }, 
+                          ticks: { color: '#94a3b8' } 
+                        }, 
+                        x: { 
+                          grid: { display: false }, 
+                          ticks: { color: '#94a3b8', font: { weight: 'bold' } } 
+                        } 
+                      }, 
+                      plugins: { legend: { display: false } } 
+                    }}
                   />
                 </div>
                 {(() => {
