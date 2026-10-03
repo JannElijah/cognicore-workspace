@@ -83,6 +83,8 @@ def create_app(test_config=None):
     app.register_blueprint(game_bp)
     app.register_blueprint(analytics_bp)
     app.register_blueprint(research_bp)
+    from routes.admin import admin_bp
+    app.register_blueprint(admin_bp)
     app.register_blueprint(ml_bp)
 
     @app.route('/api/health', methods=['GET'])
@@ -438,6 +440,58 @@ def init_db():
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_performance_metrics_domain ON performance_metrics (cognitive_domain)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_performance_metrics_recorded ON performance_metrics (recorded_at)")
 
+    
+    # Admin Panel Migrations
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN status VARCHAR(50) DEFAULT 'active'")
+        cursor.execute("ALTER TABLE users ADD COLUMN role VARCHAR(50) DEFAULT 'student'")
+        print("[DB Migration] Added status and role columns to users")
+    except psycopg2.Error:
+        pass
+
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS system_config (
+            id SERIAL PRIMARY KEY,
+            config_key VARCHAR(255) NOT NULL UNIQUE,
+            config_value VARCHAR(255) NOT NULL,
+            description TEXT,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS system_announcements (
+            id SERIAL PRIMARY KEY,
+            message TEXT NOT NULL,
+            is_active BOOLEAN DEFAULT TRUE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS audit_logs (
+            id SERIAL PRIMARY KEY,
+            admin_username VARCHAR(255) NOT NULL,
+            action_taken VARCHAR(255) NOT NULL,
+            target_user VARCHAR(255),
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS bug_reports (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            message TEXT NOT NULL,
+            status VARCHAR(50) DEFAULT 'open',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS game_module_config (
+            id SERIAL PRIMARY KEY,
+            game_type VARCHAR(255) NOT NULL UNIQUE,
+            is_active BOOLEAN DEFAULT TRUE
+        )
+    ''')
+
     conn.commit()
     conn.close()
 
@@ -488,9 +542,19 @@ def get_metrics():
     try:
         cursor = conn.cursor()
         
+
         # Total sessions
         cursor.execute("SELECT COUNT(*) FROM game_sessions")
         total_sessions = cursor.fetchone()[0]
+
+        # Total Users
+        cursor.execute("SELECT COUNT(*) FROM users")
+        total_registered_users = cursor.fetchone()[0]
+
+        # Active Users (last 7 days)
+        cursor.execute("SELECT COUNT(*) FROM user_streaks WHERE last_login_date >= CURRENT_DATE - INTERVAL '7 days'")
+        active_users = cursor.fetchone()[0]
+
         
         # Average score (based on accuracy rate * 100)
         cursor.execute("SELECT AVG(accuracy_rate) FROM performance_metrics")
@@ -519,6 +583,9 @@ def get_metrics():
         response_data = {
             "status": "success",
             "total_sessions": total_sessions,
+            "total_registered_users": total_registered_users,
+            "active_users": active_users,
+            "system_health": "Online",
             "average_score": average_score,
             "domain_breakdown": domain_breakdown,
             "cached": False

@@ -35,6 +35,7 @@ import AccessibilityMenu from './components/AccessibilityMenu';
 import LoginFlow from './components/LoginFlow';
 import AssessmentFlow from './components/AssessmentFlow';
 import AdminPanel from './components/AdminPanel';
+import AdminDashboard from './components/AdminDashboard';
 import Dashboard from './components/Dashboard';
 import KnowledgeBase from './components/KnowledgeBase';
 import AppNavigation from './components/AppNavigation';

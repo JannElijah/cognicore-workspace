@@ -12,6 +12,8 @@ class User(db.Model):
     age = db.Column(db.Integer)
     gender = db.Column(db.String(50))
     pwd_status = db.Column(db.String(255))
+    status = db.Column(db.String(50), default='active')
+    role = db.Column(db.String(50), default='student')
 
     # Relationships
     profile = db.relationship('UserProfile', backref='user', uselist=False, cascade='all, delete')
@@ -148,3 +150,41 @@ class UserStreak(db.Model):
     last_login_date = db.Column(db.Date)
     current_streak = db.Column(db.Integer, default=1)
     longest_streak = db.Column(db.Integer, default=1)
+
+
+class SystemConfig(db.Model):
+    __tablename__ = 'system_config'
+    id = db.Column(db.Integer, primary_key=True)
+    config_key = db.Column(db.String(255), nullable=False, unique=True)
+    config_value = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class SystemAnnouncement(db.Model):
+    __tablename__ = 'system_announcements'
+    id = db.Column(db.Integer, primary_key=True)
+    message = db.Column(db.Text, nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class AuditLog(db.Model):
+    __tablename__ = 'audit_logs'
+    id = db.Column(db.Integer, primary_key=True)
+    admin_username = db.Column(db.String(255), nullable=False)
+    action_taken = db.Column(db.String(255), nullable=False)
+    target_user = db.Column(db.String(255))
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+class BugReport(db.Model):
+    __tablename__ = 'bug_reports'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    message = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(50), default='open')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class GameModuleConfig(db.Model):
+    __tablename__ = 'game_module_config'
+    id = db.Column(db.Integer, primary_key=True)
+    game_type = db.Column(db.String(255), nullable=False, unique=True)
+    is_active = db.Column(db.Boolean, default=True)
