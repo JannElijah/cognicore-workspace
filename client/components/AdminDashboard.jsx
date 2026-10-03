@@ -431,7 +431,7 @@ export default function AdminDashboard() {
             >
               <option value="All">All Archetypes</option>
               <option value="Fast Learner">Fast Learner</option>
-              <option value="Plateauing">Plateauing</option>
+              <option value="Steady Improver">Steady Improver</option>
               <option value="High Fatigue">High Fatigue</option>
               <option value="Beginner">Beginner</option>
               <option value="Standard">Standard</option>
@@ -506,8 +506,8 @@ export default function AdminDashboard() {
                   </td>
                   <td style={tdStyle}>
                     <span style={{ 
-                      background: u.cognitive_archetype === 'Fast Learner' ? 'rgba(56, 189, 248, 0.2)' : u.cognitive_archetype === 'Plateauing' ? 'rgba(245, 158, 11, 0.2)' : u.cognitive_archetype === 'High Fatigue' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(148, 163, 184, 0.2)',
-                      color: u.cognitive_archetype === 'Fast Learner' ? '#7dd3fc' : u.cognitive_archetype === 'Plateauing' ? '#fcd34d' : u.cognitive_archetype === 'High Fatigue' ? '#fca5a5' : '#cbd5e1',
+                      background: u.cognitive_archetype === 'Fast Learner' ? 'rgba(56, 189, 248, 0.2)' : u.cognitive_archetype === 'Steady Improver' ? 'rgba(245, 158, 11, 0.2)' : u.cognitive_archetype === 'High Fatigue' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(148, 163, 184, 0.2)',
+                      color: u.cognitive_archetype === 'Fast Learner' ? '#7dd3fc' : u.cognitive_archetype === 'Steady Improver' ? '#fcd34d' : u.cognitive_archetype === 'High Fatigue' ? '#fca5a5' : '#cbd5e1',
                       padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 'bold' 
                     }}>
                       {u.cognitive_archetype || 'Unknown'}

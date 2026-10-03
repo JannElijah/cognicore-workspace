@@ -71,10 +71,10 @@ def run_tuning_tests():
     assert res_fatigue["archetype"] == "High Fatigue"
     assert "confidence_score" in res_fatigue
     
-    # 3. Test Plateauing metrics
+    # 3. Test Steady Improver metrics
     res_plat = archetype_classifier.predict(0.50, 1000.0, 0.0, 0.0)
-    print(f"  Plateauing prediction output: {res_plat}")
-    assert res_plat["archetype"] == "Plateauing"
+    print(f"  Steady Improver prediction output: {res_plat}")
+    assert res_plat["archetype"] == "Steady Improver"
     assert "confidence_score" in res_plat
     
     print("\n=== SUCCESS: Model retraining, serialization, and deserialization verified perfectly! ===")

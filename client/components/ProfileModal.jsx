@@ -264,7 +264,7 @@ const ProfileModal = ({ onClose }) => {
         pointHoverRadius: 40
       },
       {
-        label: 'Plateauing Core',
+        label: 'Steady Improver Core',
         data: [{ x: 1200, y: 65 }],
         backgroundColor: 'rgba(192, 132, 252, 0.1)',
         borderColor: 'rgba(192, 132, 252, 0.4)',
@@ -307,7 +307,7 @@ const ProfileModal = ({ onClose }) => {
     switch (name) {
       case 'Fast Learner': return { color: 'var(--color-primary)', icon: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>, gradient: 'rgba(var(--rgb-primary), 0.15)' };
       case 'High Fatigue': return { color: '#f59e0b', icon: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="16" height="10" rx="2" ry="2"/><line x1="22" y1="11" x2="22" y2="13"/><line x1="6" y1="11" x2="6" y2="13"/></svg>, gradient: 'rgba(245, 158, 11, 0.15)' };
-      case 'Plateauing': return { color: '#c084fc', icon: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>, gradient: 'rgba(192, 132, 252, 0.15)' };
+      case 'Steady Improver': return { color: '#c084fc', icon: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>, gradient: 'rgba(192, 132, 252, 0.15)' };
       default: return { color: '#94a3b8', icon: <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.5 2A2.5 2.5 0 0 0 7 4.5v1A2.5 2.5 0 0 0 4.5 8H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h.5a2.5 2.5 0 0 0 2.5 2.5v1a2.5 2.5 0 0 0 5 0v-1a2.5 2.5 0 0 0 2.5-2.5h.5a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-.5A2.5 2.5 0 0 0 17 5.5v-1A2.5 2.5 0 0 0 14.5 2h-5z"/></svg>, gradient: 'rgba(148, 163, 184, 0.15)' };
     }
   };

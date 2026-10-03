@@ -155,7 +155,7 @@ def get_model_clusters():
 
             cluster_mapping = {
                 cluster_scores[0][1]: "High Fatigue",
-                cluster_scores[1][1]: "Plateauing",
+                cluster_scores[1][1]: "Steady Improver",
                 cluster_scores[2][1]: "Fast Learner"
             }
 
@@ -170,7 +170,7 @@ def get_model_clusters():
                 elif acc_slope < -0.01 and rt_slope > 10.0:
                     dp["cluster"] = "High Fatigue"
                 else:
-                    dp["cluster"] = "Plateauing"
+                    dp["cluster"] = "Steady Improver"
 
         return jsonify({
             "status": "success",

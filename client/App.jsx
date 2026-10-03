@@ -1268,7 +1268,7 @@ export default function App() {
       };
       if (p.cluster === 'Fast Learner') {
         fastLearnerPoints.push(pt);
-      } else if (p.cluster === 'Plateauing') {
+      } else if (p.cluster === 'Steady Improver') {
         plateauingPoints.push(pt);
       } else if (p.cluster === 'High Fatigue') {
         highFatiguePoints.push(pt);
@@ -1288,7 +1288,7 @@ export default function App() {
           type: 'scatter'
         },
         {
-          label: 'Plateauing',
+          label: 'Steady Improver',
           data: plateauingPoints,
           backgroundColor: '#f59e0b', // amber/yellow
           borderColor: 'rgba(245, 158, 11, 0.4)',
@@ -1360,7 +1360,7 @@ export default function App() {
   };
 
   const getCalculatedCentroids = () => {
-    const archetypes = ["Fast Learner", "Plateauing", "High Fatigue"];
+    const archetypes = ["Fast Learner", "Steady Improver", "High Fatigue"];
     const features = ["accuracy", "reaction_time", "hesitation", "spam_clicks", "path_efficiency"];
     const sums = {};
     const counts = {};

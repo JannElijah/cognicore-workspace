@@ -158,13 +158,13 @@ def train_retargeted_classifier():
         
     # Sort clusters by score ascending:
     # 1. Lowest score: High Fatigue (Beginner)
-    # 2. Middle score: Plateauing (Standard)
+    # 2. Middle score: Steady Improver (Standard)
     # 3. Highest score: Fast Learner (Advanced)
     cluster_scores.sort()
     
     cluster_mapping = {
         cluster_scores[0][1]: "High Fatigue",
-        cluster_scores[1][1]: "Plateauing",
+        cluster_scores[1][1]: "Steady Improver",
         cluster_scores[2][1]: "Fast Learner"
     }
     

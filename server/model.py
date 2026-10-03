@@ -76,7 +76,7 @@ class ArchetypeModel:
                 X_cluster.append([accuracy, rt, acc_slope, rt_slope, hes, spam, pe])
                 y.append("Fast Learner")
 
-            # 2. Plateauing (Steady accuracy, steady RT)
+            # 2. Steady Improver (Steady accuracy, steady RT)
             for _ in range(60):
                 accuracy = np.random.uniform(0.70, 0.90)
                 rt = np.random.uniform(400.0, 800.0)
@@ -86,7 +86,7 @@ class ArchetypeModel:
                 spam = float(np.random.poisson(1.2))
                 pe = np.random.uniform(0.70, 0.90)
                 X_cluster.append([accuracy, rt, acc_slope, rt_slope, hes, spam, pe])
-                y.append("Plateauing")
+                y.append("Steady Improver")
 
             # 3. High Fatigue (Declining accuracy, increasing RT/getting slower)
             for _ in range(60):
@@ -208,7 +208,7 @@ class ArchetypeModel:
         elif acc_slope < -0.01 and rt_slope > 10.0:
             return {"archetype": "High Fatigue", "confidence_score": 0.80}
         else:
-            return {"archetype": "Plateauing", "confidence_score": 0.75}
+            return {"archetype": "Steady Improver", "confidence_score": 0.75}
 
     def detect_fatigue(self, avg_accuracy, avg_rt_ms, acc_slope, rt_slope, avg_hesitation=0.0, avg_spam=0.0, avg_path_eff=1.0):
         """
