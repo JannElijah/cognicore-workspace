@@ -23,6 +23,14 @@ export default function AdminDashboard() {
   const [modalLoading, setModalLoading] = useState(false);
   const [cohortAnalytics, setCohortAnalytics] = useState(null);
 
+  const getArchetypeColor = (arch) => {
+    if (!arch || arch === 'Unknown') return '#64748b';
+    if (arch.toLowerCase().includes('fast')) return '#38bdf8';
+    if (arch.toLowerCase().includes('fatigue') || arch.toLowerCase().includes('plateau')) return '#f59e0b';
+    return '#c084fc';
+  };
+
+
   const fetchMetrics = async () => {
     try {
       const res = await fetch(`${API_BASE}/metrics`);
@@ -267,10 +275,18 @@ export default function AdminDashboard() {
                     options={{ maintainAspectRatio: false, scales: { y: { beginAtZero: true, grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }, x: { grid: { display: false }, ticks: { color: '#94a3b8' } } }, plugins: { legend: { display: false } } }}
                   />
                 </div>
-                <div style={{ marginTop: '1rem', padding: '0.8rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '6px', borderLeft: '4px solid #10b981' }}>
-                  <p style={{margin: 0, fontSize: '0.85rem', color: '#6ee7b7', fontWeight: 'bold'}}>{cohortAnalytics.hypothesis_verdict}</p>
-                  <p style={{margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: '#94a3b8'}}>p-value: {cohortAnalytics.cohort_p_value} | Cohen\'s d: {cohortAnalytics.cohort_cohens_d}</p>
-                </div>
+                {(() => {
+                  const isSig = cohortAnalytics.cohort_p_value < 0.05;
+                  const bg = isSig ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)';
+                  const border = isSig ? '#10b981' : '#f59e0b';
+                  const text = isSig ? '#6ee7b7' : '#fcd34d';
+                  return (
+                    <div style={{ marginTop: '1rem', padding: '0.8rem', background: bg, borderRadius: '6px', borderLeft: `4px solid ${border}` }}>
+                      <p style={{margin: 0, fontSize: '0.85rem', color: text, fontWeight: 'bold'}}>{cohortAnalytics.hypothesis_verdict}</p>
+                      <p style={{margin: '0.2rem 0 0 0', fontSize: '0.8rem', color: '#94a3b8'}}>p-value: {cohortAnalytics.cohort_p_value} | Cohen\'s d: {cohortAnalytics.cohort_cohens_d}</p>
+                    </div>
+                  );
+                })()}
               </div>
             ) : <p style={{color: '#64748b'}}>Calculating...</p>}
           </div>
@@ -470,7 +486,7 @@ export default function AdminDashboard() {
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
                     <div style={{ background: '#0f172a', padding: '1.5rem', borderRadius: '8px', border: '1px solid #1e293b' }}>
                       <p style={{ margin: '0 0 0.5rem 0', color: '#94a3b8', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Cognitive Archetype</p>
-                      <h3 style={{ margin: 0, color: '#c084fc', fontSize: '1.5rem' }}>{playerData.archetype}</h3>
+                      <h3 style={{ margin: 0, color: getArchetypeColor(playerData.archetype), fontSize: '1.2rem', background: `${getArchetypeColor(playerData.archetype)}22`, padding: '0.4rem 0.8rem', borderRadius: '6px', display: 'inline-block' }}>{playerData.archetype}</h3>
                     </div>
                     <div style={{ background: '#0f172a', padding: '1.5rem', borderRadius: '8px', border: '1px solid #1e293b' }}>
                       <p style={{ margin: '0 0 0.5rem 0', color: '#94a3b8', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Training Streak</p>
@@ -486,6 +502,13 @@ export default function AdminDashboard() {
                   </div>
 
                   {/* Micro View: Longitudinal Chart */}
+                  {playerHistory && playerHistory.length === 0 && (
+                    <div style={{ background: '#0f172a', padding: '3rem 1.5rem', borderRadius: '8px', border: '1px dashed #334155', marginBottom: '2rem', textAlign: 'center' }}>
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="1" style={{ marginBottom: '1rem', opacity: 0.5 }}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                      <h4 style={{ margin: '0 0 0.5rem 0', color: '#94a3b8', fontSize: '1.1rem' }}>Baseline Telemetry Pending</h4>
+                      <p style={{ margin: 0, color: '#64748b', fontSize: '0.9rem', maxWidth: '400px', marginLeft: 'auto', marginRight: 'auto' }}>Subject has not completed any cognitive training modules. Longitudinal data will appear here once sessions are recorded.</p>
+                    </div>
+                  )}
                   {playerHistory && playerHistory.length > 0 && (
                     <div style={{ background: '#0f172a', padding: '1.5rem', borderRadius: '8px', border: '1px solid #1e293b', marginBottom: '2rem' }}>
                       <h4 style={{ margin: '0 0 1rem 0', color: '#f8fafc', fontSize: '1.1rem' }}>Longitudinal Learning Curve</h4>
@@ -563,6 +586,11 @@ export default function AdminDashboard() {
                         {playerData.game_breakdown.length === 0 && <tr><td colSpan="6" style={{...tdStyle, textAlign: 'center', color: '#64748b', padding: '2rem'}}>No gameplay telemetry available.</td></tr>}
                       </tbody>
                     </table>
+                  </div>
+
+                  <div style={{ marginTop: '1rem', display: 'flex', gap: '1.5rem', flexWrap: 'wrap', fontSize: '0.8rem', color: '#64748b', padding: '0 0.5rem' }}>
+                    <span><strong style={{ color: '#94a3b8' }}>Hesitation:</strong> Avg MS elapsed before first interaction.</span>
+                    <span><strong style={{ color: '#94a3b8' }}>Panic Clicks:</strong> Non-target rapid clicks indicating frustration or guessing.</span>
                   </div>
                   
                   <div style={{ marginTop: '2.5rem', background: 'rgba(239, 68, 68, 0.05)', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.2)', borderLeft: '4px solid #ef4444' }}>
