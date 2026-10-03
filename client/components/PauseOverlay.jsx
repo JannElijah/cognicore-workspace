@@ -72,7 +72,13 @@ export default function PauseOverlay({ isPaused, onTogglePause, onPauseRequest }
                             RESUME SESSION
                         </button>
                         <div style={{ marginTop: '1.5rem', fontSize: '0.85rem', color: '#64748b', fontWeight: '500', letterSpacing: '0.05em' }}>
-                            Press <kbd style={{ background: 'rgba(255,255,255,0.1)', padding: '0.2rem 0.5rem', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.2)', color: '#f8fafc', fontFamily: 'monospace' }}>P</kbd> or tap <strong style={{ color: '#94a3b8' }}>⏸</strong> to pause
+                            Press <kbd style={{ background: 'rgba(255,255,255,0.1)', padding: '0.2rem 0.5rem', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.2)', color: '#f8fafc', fontFamily: 'monospace' }}>P</kbd> or tap <strong style={{ color: '#94a3b8' }}>||</strong> to pause
+                        </div>
+                        <div style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'left' }}>
+                            <div style={{ color: '#94a3b8', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '0.25rem' }}>WHY DOES DIFFICULTY CHANGE?</div>
+                            <div style={{ color: '#cbd5e1', fontSize: '0.75rem', lineHeight: '1.5' }}>
+                                CogniCore uses Dynamic Difficulty Adjustment (DDA). Research by Moon & Seo (2020) and Chiotaki et al. (2023) shows that adapting challenges to your exact skill level maximizes cognitive flexibility, improves immersion, and eliminates test anxiety.
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -80,3 +86,4 @@ export default function PauseOverlay({ isPaused, onTogglePause, onPauseRequest }
         </>
     );
 }
+

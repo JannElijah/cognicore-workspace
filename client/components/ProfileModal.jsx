@@ -657,6 +657,16 @@ const ProfileModal = ({ onClose }) => {
                         </div>
                         </HoverTooltip>
 
+                        {/* Science Behind Your Profile */}
+                        <div style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '8px', marginTop: '0.5rem', marginBottom: '0.5rem' }}>
+                          <h4 style={{ margin: '0 0 0.5rem 0', color: '#94a3b8', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            ⚙️ The Science Behind Your Profile
+                          </h4>
+                          <p style={{ margin: 0, color: '#cbd5e1', lineHeight: '1.5', fontSize: '0.85rem' }}>
+                            Your cognitive archetype is calculated using Machine Learning. According to Ahmad et al. (2023), AI models that track behavioral gameplay patterns are highly effective at evaluating cognitive clusters beyond traditional point-scoring.
+                          </p>
+                        </div>
+
                         {/* Strengths & Bottlenecks */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
                           <div style={{ background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '1.5rem', borderRadius: '12px' }}>

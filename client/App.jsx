@@ -3222,7 +3222,25 @@ export default function App() {
                           <p style={{ margin: '0 0 0.75rem 0', fontSize: '0.82rem', color: '#cbd5e1', lineHeight: '1.4' }}>{game.objective}</p>
  
                           <div className="card-section-label">How it helps us</div>
-                          <div className="card-benefit-box" style={{ fontSize: '0.8rem', padding: '0.5rem 0.75rem', borderLeft: `3px solid ${theme.color}` }}>{game.benefit}</div>
+                          <div className="card-benefit-box" style={{ fontSize: '0.8rem', padding: '0.5rem 0.75rem', borderLeft: `3px solid ${theme.color}`, marginBottom: '0.75rem' }}>{game.benefit}</div>
+
+                          <div className="card-section-label" style={{ color: '#94a3b8' }}>🔬 Scientific Validity</div>
+                          <div className="card-benefit-box" style={{ fontSize: '0.75rem', padding: '0.5rem', background: 'rgba(0,0,0,0.2)', fontStyle: 'italic', marginBottom: '1rem', color: '#cbd5e1' }}>
+                            {game.id === 'SpeedTap' && "Based on research by Hadjiaros et al. (2021), rapid reaction-time tasks effectively measure visuospatial attention and processing speed."}
+                            {game.id === 'FocusFinder' && "Knobel et al. (2021) demonstrated that visual search tasks effectively measure selective attention and cognitive control."}
+                            {game.id === 'StroopShift' && "According to Müller et al. (2024), Stroop-based activities effectively measure selective attention, cognitive flexibility, and inhibitory control."}
+                            {game.id === 'MemoryMatch' && "Bhargava et al. (2024) found that game-based memory tasks effectively evaluate working memory and executive functions."}
+                            {game.id === 'MatrixRecall' && "Vasconcelos et al. (2024) reported that interactive cognitive games provide reliable measures of spatial memory retention."}
+                            {game.id === 'SynapseSpin' && "Cognitive assessment mechanisms inspired by standard visuospatial transformation tasks."}
+                            {game.id === 'NexusMapper' && "Evaluates visuospatial memory recall and spatial navigation networks."}
+                            {game.id === 'LogicLink' && "Pedersen et al. (2020) demonstrated that game-based pattern recognition reliably predicts reasoning and decision-making abilities."}
+                            {game.id === 'EquationBalance' && "According to Wang et al. (2022), arithmetic challenges effectively measure cognitive processing speed and deductive reasoning."}
+                            {game.id === 'SequenceDecoder' && "Schubert et al. (2023) established that sequence-based cognitive tasks evaluate abstract reasoning and rule discovery abilities."}
+                            {game.id === 'RouteOptimizer' && "Nogueira et al. (2021) found that pathfinding and optimization games effectively measure executive planning and combinatorial logic."}
+                            {game.id === 'PriorityQueue' && "Assesses executive triage, working memory capacity, and processing speed under increasing pressure."}
+                            {game.id === 'NeuroMaze' && "Chiotaki et al. (2023) emphasized that adaptive maze learning systems enhance problem-solving and cognitive flexibility."}
+                            {game.id === 'MentalFlex' && "Measures task-switching adaptability and cognitive flexibility under shifting rule constraints."}
+                          </div>
  
                           <button 
                             className="play-btn" 
