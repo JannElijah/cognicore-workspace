@@ -3224,7 +3224,7 @@ export default function App() {
                           <div className="card-section-label">How it helps us</div>
                           <div className="card-benefit-box" style={{ fontSize: '0.8rem', padding: '0.5rem 0.75rem', borderLeft: `3px solid ${theme.color}`, marginBottom: '0.75rem' }}>{game.benefit}</div>
 
-                          <details style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '6px', marginBottom: '1rem', cursor: 'pointer' }}>
+                          <details onClick={(e) => e.stopPropagation()} style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '6px', marginBottom: '1rem', cursor: 'pointer' }}>
                             <summary style={{ padding: '0.6rem 0.75rem', fontSize: '0.75rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em', outline: 'none' }}>
                               🔬 View Scientific Validity
                             </summary>
@@ -3337,7 +3337,7 @@ export default function App() {
                       transition: 'color 0.2s'
                     }}
                   >
-                    âœ•
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                   </button>
                 </div>
 
