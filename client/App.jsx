@@ -1,4 +1,4 @@
-﻿import { API_BASE } from './utils/apiClient.js';
+import { API_BASE } from './utils/apiClient.js';
 import React, { useState, useEffect, useRef, useCallback, Suspense, lazy, useMemo } from 'react';
 import {
   Chart as ChartJS,
@@ -2394,6 +2394,8 @@ export default function App() {
               )}
             </div>
           </div>
+        ) : portalView === 'admin' ? (
+          <AdminDashboard />
         ) : portalView === 'researcher' ? (
           <AdminPanel 
             portalView={portalView}
