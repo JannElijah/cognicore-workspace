@@ -93,7 +93,7 @@ export default function AdminDashboard() {
       const histData = await histRes.json();
       
       if (data.status === 'success') {
-        setPlayerData(data.data);
+        setPlayerData(data);
       }
       if (histData.status === 'success') {
         setPlayerHistory(histData.sessions.reverse());
