@@ -48,64 +48,49 @@ export default function PriorityQueueGame({
         }
     };
 
-    useEffect(() => {
-        if (gameState !== 'PLAYING' || !sessionId || !gameContainerRef.current) return;
-
-        const config = {
-            type: Phaser.AUTO,
-            parent: gameContainerRef.current,
-            backgroundColor: '#020209',
-                        render: {
-                powerPreference: 'high-performance',
-                antialias: true,
-                roundPixels: true,
-                batchSize: 4096
-            },
-            scale: {
-                mode: Phaser.Scale.RESIZE,
-                autoCenter: Phaser.Scale.CENTER_BOTH,
-                width: '100%', height: 600
-            },
-            scene: [PriorityQueueScene]
-        };
-
-        const game = new Phaser.Game(config);
-        phaserInstanceRef.current = game;
-        window.phaserGame = game;
-
-        game.scene.start('PriorityQueueScene', {
-            sessionId, apiUrl, ddaParameters, cognitiveProfile,
-            onGameOver: async (stats) => {
-                setFinalStats(stats);
-                let profileInfo = null;
-                try {
-                    const pr = await fetch(`${apiUrl}/api/dda`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${useCogniStore.getState().token}`},
-                        body: JSON.stringify({ session_id: sessionId })
-                    });
-                    if (pr.ok) {
-                        const pd = await pr.json();
-                        if (pd.status === 'success' && pd.cognitive_profile) {
-                            setCognitiveProfile(pd.cognitive_profile);
-                            profileInfo = pd.cognitive_profile;
-                        }
+    // Handle Phaser engine initialization and lifecycle via generic hook
+    const sceneData = React.useMemo(() => ({
+        sessionId: sessionId,
+        apiUrl: apiUrl,
+        ddaParameters: ddaParameters,
+        cognitiveProfile: cognitiveProfile,
+        onGameOver: async (stats) => {
+            setFinalStats(stats);
+            let profileInfo = null;
+            try {
+                const profileRes = await fetch(`${apiUrl}/api/dda`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${useCogniStore.getState().token}`},
+                    body: JSON.stringify({ session_id: sessionId })
+                });
+                if (profileRes.ok) {
+                    const profileData = await profileRes.json();
+                    if (profileData.status === 'success' && profileData.cognitive_profile) {
+                        setCognitiveProfile(profileData.cognitive_profile);
+                        profileInfo = profileData.cognitive_profile;
                     }
-                } catch (e) { /* silent */ }
-                setGameState('FINISHED');
-                if (onGameFinished) onGameFinished({ ...stats, cognitiveProfile: profileInfo });
+                }
+            } catch (e) {
+                console.warn('[React Wrapper] Failed to fetch final cognitive profile:', e);
             }
-        });
+            setGameState('FINISHED');
+            if (onGameFinished) {
+                onGameFinished({ ...stats, cognitiveProfile: profileInfo });
+            }
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }), [sessionId, apiUrl, ddaParameters]);
 
-        return () => {
-            if (phaserInstanceRef.current) {
-                phaserInstanceRef.current.destroy(true);
-                phaserInstanceRef.current = null;
-                window.phaserGame = null;
-            }
-        };
-    }, [gameState, sessionId]);
+    const phaserInstanceRef = usePhaserEngine(
+        gameContainerRef, 
+        gameState, 
+        PriorityQueueScene, 
+        'PriorityQueueScene', 
+        sceneData
+    );
+
 
     // Pause handler
     useEffect(() => {

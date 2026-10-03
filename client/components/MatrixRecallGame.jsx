@@ -69,86 +69,49 @@ export default function MatrixRecallGame({ username = 'default_player', apiUrl =
         }
     };
 
-    // Initialize Phaser game when state changes to PLAYING
-    useEffect(() => {
-        if (gameState !== 'PLAYING' || !sessionId || !gameContainerRef.current) {
-            return;
-        }
-
-        console.log('[React Matrix Recall Wrapper] Starting Phaser game instance...');
-        
-        // Phaser configuration with auto-scaling Scale Manager for responsiveness
-        const config = {
-            type: Phaser.AUTO,
-            parent: gameContainerRef.current,
-            backgroundColor: '#09090b',
-                        render: {
-                powerPreference: 'high-performance',
-                antialias: true,
-                roundPixels: true,
-                batchSize: 4096
-            },
-            scale: {
-                mode: Phaser.Scale.RESIZE,
-                autoCenter: Phaser.Scale.CENTER_BOTH,
-                // Mobile-responsive: use viewport width on portrait phones, fixed 800x600 on desktop
-                width: '100%',
-                height: '100%',
-            },
-            scene: [MatrixRecallScene]
-        };
-
-        // Instantiate Phaser
-        const game = new Phaser.Game(config);
-        phaserInstanceRef.current = game;
-
-        // Boot and pass the state objects to Phaser MatrixRecallScene
-        game.scene.start('MatrixRecallScene', {
-            sessionId: sessionId,
-            apiUrl: apiUrl,
-            ddaParameters: ddaParameters,
-            cognitiveProfile: cognitiveProfile,
-            onGameOver: async (stats) => {
-                setFinalStats(stats);
-                
-                let profileInfo = null;
-                // Fetch final cognitive profile archetype updates from the database
-                try {
-                    const profileRes = await fetch(`${apiUrl}/api/dda`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${useCogniStore.getState().token}`},
-                        body: JSON.stringify({ session_id: sessionId })
-                    });
-                    if (profileRes.ok) {
-                        const profileData = await profileRes.json();
-                        if (profileData.status === 'success' && profileData.cognitive_profile) {
-                            setCognitiveProfile(profileData.cognitive_profile);
-                            profileInfo = profileData.cognitive_profile;
-                        }
+    // Handle Phaser engine initialization and lifecycle via generic hook
+    const sceneData = React.useMemo(() => ({
+        sessionId: sessionId,
+        apiUrl: apiUrl,
+        ddaParameters: ddaParameters,
+        cognitiveProfile: cognitiveProfile,
+        onGameOver: async (stats) => {
+            setFinalStats(stats);
+            let profileInfo = null;
+            try {
+                const profileRes = await fetch(`${apiUrl}/api/dda`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${useCogniStore.getState().token}`},
+                    body: JSON.stringify({ session_id: sessionId })
+                });
+                if (profileRes.ok) {
+                    const profileData = await profileRes.json();
+                    if (profileData.status === 'success' && profileData.cognitive_profile) {
+                        setCognitiveProfile(profileData.cognitive_profile);
+                        profileInfo = profileData.cognitive_profile;
                     }
-                } catch (e) {
-                    console.warn('[React Matrix Recall Wrapper] Failed to fetch final cognitive profile:', e);
                 }
-
-                setGameState('FINISHED');
-                if (onGameFinished) {
-                    onGameFinished({ ...stats, cognitiveProfile: profileInfo });
-                }
+            } catch (e) {
+                console.warn('[React Wrapper] Failed to fetch final cognitive profile:', e);
             }
-        });
-
-        // Cleanup: destroy Phaser instance on component unmount
-        // This is critical to avoid multiple canvas tags and memory leaks!
-        return () => {
-            if (phaserInstanceRef.current) {
-                console.log('[React Matrix Recall Wrapper] Destroying Phaser instance...');
-                phaserInstanceRef.current.destroy(true);
-                phaserInstanceRef.current = null;
+            setGameState('FINISHED');
+            if (onGameFinished) {
+                onGameFinished({ ...stats, cognitiveProfile: profileInfo });
             }
-        };
-    }, [gameState, sessionId, apiUrl, ddaParameters, onGameFinished]);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }), [sessionId, apiUrl, ddaParameters]);
+
+    const phaserInstanceRef = usePhaserEngine(
+        gameContainerRef, 
+        gameState, 
+        MatrixRecallScene, 
+        'MatrixRecallScene', 
+        sceneData
+    );
+
 
     
     // Handle pause state transitions

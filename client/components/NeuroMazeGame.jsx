@@ -58,84 +58,49 @@ export default function NeuroMazeGame({ username = 'default_player', apiUrl = AP
         }
     };
 
-    // Initialize Phaser game when state changes to PLAYING
-    useEffect(() => {
-        if (gameState !== 'PLAYING' || !sessionId || !gameContainerRef.current) {
-            return;
-        }
-
-        console.log('[React NM Wrapper] Starting Phaser game instance...');
-        
-        const config = {
-            type: Phaser.AUTO,
-            parent: gameContainerRef.current,
-            backgroundColor: '#090b09',
-                        render: {
-                powerPreference: 'high-performance',
-                antialias: true,
-                roundPixels: true,
-                batchSize: 4096
-            },
-            scale: {
-                mode: Phaser.Scale.RESIZE,
-                autoCenter: Phaser.Scale.CENTER_BOTH,
-                // Mobile-responsive: use viewport width on portrait phones, fixed 800x600 on desktop
-                width: '100%',
-                height: '100%',
-            },
-            scene: [NeuroMazeScene]
-        };
-
-        const game = new Phaser.Game(config);
-        phaserInstanceRef.current = game;
-        window.phaserGame = game;
-
-        // Boot and pass the state objects to Phaser NeuroMazeScene
-        game.scene.start('NeuroMazeScene', {
-            sessionId: sessionId,
-            apiUrl: apiUrl,
-            ddaParameters: ddaParameters,
-            cognitiveProfile: cognitiveProfile,
-            onGameOver: async (stats) => {
-                setFinalStats(stats);
-                
-                let profileInfo = null;
-                try {
-                    const profileRes = await fetch(`${apiUrl}/api/dda`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${useCogniStore.getState().token}`},
-                        body: JSON.stringify({ session_id: sessionId })
-                    });
-                    if (profileRes.ok) {
-                        const profileData = await profileRes.json();
-                        if (profileData.status === 'success' && profileData.cognitive_profile) {
-                            setCognitiveProfile(profileData.cognitive_profile);
-                            profileInfo = profileData.cognitive_profile;
-                        }
+    // Handle Phaser engine initialization and lifecycle via generic hook
+    const sceneData = React.useMemo(() => ({
+        sessionId: sessionId,
+        apiUrl: apiUrl,
+        ddaParameters: ddaParameters,
+        cognitiveProfile: cognitiveProfile,
+        onGameOver: async (stats) => {
+            setFinalStats(stats);
+            let profileInfo = null;
+            try {
+                const profileRes = await fetch(`${apiUrl}/api/dda`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${useCogniStore.getState().token}`},
+                    body: JSON.stringify({ session_id: sessionId })
+                });
+                if (profileRes.ok) {
+                    const profileData = await profileRes.json();
+                    if (profileData.status === 'success' && profileData.cognitive_profile) {
+                        setCognitiveProfile(profileData.cognitive_profile);
+                        profileInfo = profileData.cognitive_profile;
                     }
-                } catch (e) {
-                    console.warn('[React NM Wrapper] Failed to fetch final cognitive profile:', e);
                 }
-
-                setGameState('FINISHED');
-                if (onGameFinished) {
-                    onGameFinished({ ...stats, cognitiveProfile: profileInfo });
-                }
+            } catch (e) {
+                console.warn('[React Wrapper] Failed to fetch final cognitive profile:', e);
             }
-        });
-
-        // Cleanup
-        return () => {
-            if (phaserInstanceRef.current) {
-                console.log('[React NM Wrapper] Destroying Phaser instance...');
-                phaserInstanceRef.current.destroy(true);
-                phaserInstanceRef.current = null;
-                window.phaserGame = null;
+            setGameState('FINISHED');
+            if (onGameFinished) {
+                onGameFinished({ ...stats, cognitiveProfile: profileInfo });
             }
-        };
-    }, [gameState, sessionId, apiUrl, ddaParameters, onGameFinished]);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }), [sessionId, apiUrl, ddaParameters]);
+
+    const phaserInstanceRef = usePhaserEngine(
+        gameContainerRef, 
+        gameState, 
+        NeuroMazeScene, 
+        'NeuroMazeScene', 
+        sceneData
+    );
+
 
     // Handle pause state transitions
     useEffect(() => {
