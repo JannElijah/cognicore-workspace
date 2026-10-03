@@ -245,21 +245,19 @@ export default function AdminDashboard() {
           <p style={{...metricStyle, color: '#10b981'}}>{metrics?.total_sessions || 0}</p>
         </div>
         <div style={cardStyle}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <div style={cardIconStyle}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-              </div>
-              <h3 style={cardLabelStyle}>ML Pipeline</h3>
-              <p style={{...metricStyle, fontSize: '1.8rem', color: retrainStatus === 'Failed' || retrainStatus === 'Error' ? '#ef4444' : retrainStatus === 'Success' ? '#10b981' : '#f8fafc'}}>
-                {retrainStatus === 'Idle' ? 'Active' : retrainStatus}
-              </p>
-              {retrainMessage && <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: '0.5rem 0 0 0' }}>{retrainMessage}</p>}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <div style={cardIconStyle}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
             </div>
-            <button onClick={triggerRetrain} disabled={retrainStatus === 'Training...'} style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.2)', padding: '0.5rem 1rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem', transition: 'all 0.2s' }}>
+            <button onClick={triggerRetrain} disabled={retrainStatus === 'Training...'} style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.2)', padding: '0.4rem 0.8rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '0.8rem', transition: 'all 0.2s', whiteSpace: 'nowrap' }}>
               {retrainStatus === 'Training...' ? 'Processing...' : 'Force Retrain'}
             </button>
           </div>
+          <h3 style={cardLabelStyle}>ML Pipeline</h3>
+          <p style={{...metricStyle, fontSize: '1.8rem', color: retrainStatus === 'Failed' || retrainStatus === 'Error' ? '#ef4444' : retrainStatus === 'Success' ? '#10b981' : '#f8fafc'}}>
+            {retrainStatus === 'Idle' ? 'Active' : retrainStatus}
+          </p>
+          {retrainMessage && <p style={{ fontSize: '0.8rem', color: '#94a3b8', margin: '0.5rem 0 0 0' }}>{retrainMessage}</p>}
         </div>
       </div>
 
@@ -394,9 +392,12 @@ export default function AdminDashboard() {
             >
               <option value="All">All Archetypes</option>
               <option value="Fast Learner">Fast Learner</option>
-              <option value="Steady Improver">Steady Improver</option>
               <option value="Plateauing">Plateauing</option>
-              <option value="Fatigue Prone">Fatigue Prone</option>
+              <option value="High Fatigue">High Fatigue</option>
+              <option value="Beginner">Beginner</option>
+              <option value="Standard">Standard</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
               <option value="Unknown">Unknown</option>
             </select>
             <CSVLink 
@@ -430,6 +431,7 @@ export default function AdminDashboard() {
                 <th style={thStyle}>Username</th>
                 <th style={thStyle}>Date Joined</th>
                 <th style={thStyle}>Level</th>
+                <th style={thStyle}>Archetype</th>
                 <th style={thStyle}>XP / Coins</th>
                 <th style={thStyle}>Status</th>
                 <th style={thStyle}>Actions</th>
@@ -447,7 +449,7 @@ export default function AdminDashboard() {
                   const startIdx = (currentPage - 1) * USERS_PER_PAGE;
                   const paginated = filtered.slice(startIdx, startIdx + USERS_PER_PAGE);
                   
-                  if (paginated.length === 0) return <tr><td colSpan="7" style={{padding: '3rem', textAlign: 'center', color: '#94a3b8'}}>No users found matching your criteria.</td></tr>;
+                  if (paginated.length === 0) return <tr><td colSpan="8" style={{padding: '3rem', textAlign: 'center', color: '#94a3b8'}}>No users found matching your criteria.</td></tr>;
 
                   return paginated.map((u, i) => (
                 <tr key={u.id} style={{ 
@@ -462,6 +464,15 @@ export default function AdminDashboard() {
                   <td style={tdStyle}>{new Date(u.created_at).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</td>
                   <td style={tdStyle}>
                     <span style={{ background: '#334155', padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.9rem' }}>Lv. {u.level || 1}</span>
+                  </td>
+                  <td style={tdStyle}>
+                    <span style={{ 
+                      background: u.cognitive_archetype === 'Fast Learner' ? 'rgba(56, 189, 248, 0.2)' : u.cognitive_archetype === 'Plateauing' ? 'rgba(245, 158, 11, 0.2)' : u.cognitive_archetype === 'High Fatigue' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(148, 163, 184, 0.2)',
+                      color: u.cognitive_archetype === 'Fast Learner' ? '#7dd3fc' : u.cognitive_archetype === 'Plateauing' ? '#fcd34d' : u.cognitive_archetype === 'High Fatigue' ? '#fca5a5' : '#cbd5e1',
+                      padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 'bold' 
+                    }}>
+                      {u.cognitive_archetype || 'Unknown'}
+                    </span>
                   </td>
                   <td style={tdStyle}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
