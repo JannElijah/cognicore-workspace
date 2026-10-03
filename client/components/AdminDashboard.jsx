@@ -15,6 +15,34 @@ export default function AdminDashboard() {
   const [metrics, setMetrics] = useState(null);
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [archetypeFilter, setArchetypeFilter] = useState('All');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [retrainStatus, setRetrainStatus] = useState('Idle');
+  const [retrainMessage, setRetrainMessage] = useState('');
+  const USERS_PER_PAGE = 10;
+
+  const triggerRetrain = async () => {
+    setRetrainStatus('Training...');
+    try {
+      const res = await fetch(`${API_BASE}/api/model/retrain`, {
+        method: 'POST',
+        headers: { 'Cron-Secret': 'capstone_cron_secret_789' }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setRetrainStatus('Success');
+        setRetrainMessage(data.message || 'Model retrained successfully');
+      } else {
+        setRetrainStatus('Failed');
+        setRetrainMessage(data.error || 'Failed to retrain');
+      }
+    } catch (err) {
+      setRetrainStatus('Error');
+      setRetrainMessage(err.toString());
+    }
+    setTimeout(() => { setRetrainStatus('Idle'); setRetrainMessage(''); }, 5000);
+  };
+
   const [loading, setLoading] = useState(true);
 
   const [selectedUser, setSelectedUser] = useState(null);
@@ -385,7 +413,20 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {users.map((u, i) => (
+              {(() => {
+                  let filtered = users;
+                  if (searchQuery) {
+                    filtered = filtered.filter(u => u.username.toLowerCase().includes(searchQuery.toLowerCase()));
+                  }
+                  if (archetypeFilter !== 'All') {
+                    filtered = filtered.filter(u => (u.cognitive_archetype || 'Unknown') === archetypeFilter);
+                  }
+                  const startIdx = (currentPage - 1) * USERS_PER_PAGE;
+                  const paginated = filtered.slice(startIdx, startIdx + USERS_PER_PAGE);
+                  
+                  if (paginated.length === 0) return <tr><td colSpan="7" style={{padding: '3rem', textAlign: 'center', color: '#94a3b8'}}>No users found matching your criteria.</td></tr>;
+
+                  return paginated.map((u, i) => (
                 <tr key={u.id} style={{ 
                   background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)',
                   borderTop: '1px solid #334155',
@@ -441,12 +482,26 @@ export default function AdminDashboard() {
                     </button>
                   </td>
                 </tr>
-              ))}
-              {users.length === 0 && <tr><td colSpan="7" style={{padding: '3rem', textAlign: 'center', color: '#94a3b8'}}>No users found matching your search.</td></tr>}
-            </tbody>
-          </table>
+              ));
+              })()}
+              </tbody>
+            </table>
+          </div>
+          
+          {/* Pagination Controls */}
+          {(() => {
+            const filtered = archetypeFilter === 'All' ? users : users.filter(u => (u.cognitive_archetype || 'Unknown') === archetypeFilter);
+            const totalPages = Math.ceil(filtered.length / USERS_PER_PAGE);
+            if (totalPages <= 1) return null;
+            return (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', marginTop: '1.5rem' }}>
+                <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} style={{ background: currentPage === 1 ? '#1e293b' : '#334155', color: currentPage === 1 ? '#475569' : '#f8fafc', border: 'none', padding: '0.5rem 1rem', borderRadius: '6px', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}>Previous</button>
+                <span style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Page {currentPage} of {totalPages}</span>
+                <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} style={{ background: currentPage === totalPages ? '#1e293b' : '#334155', color: currentPage === totalPages ? '#475569' : '#f8fafc', border: 'none', padding: '0.5rem 1rem', borderRadius: '6px', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}>Next</button>
+              </div>
+            );
+          })()}
         </div>
-      </div>
 
       {/* 3. Player Card Modal */}
       {selectedUser && (
