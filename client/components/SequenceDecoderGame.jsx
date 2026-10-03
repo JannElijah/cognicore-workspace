@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import SequenceDecoderScene from '../games/SequenceDecoderScene';
 import PauseOverlay from './PauseOverlay';
+import { usePhaserEngine } from '../hooks/usePhaserEngine';
 
 export default function SequenceDecoderGame({ username = 'default_player', apiUrl = API_BASE, onGameFinished }) {
     const gameContainerRef   = useRef(null);
@@ -54,78 +55,48 @@ export default function SequenceDecoderGame({ username = 'default_player', apiUr
         }
     };
 
-    useEffect(() => {
-        if (gameState !== 'PLAYING' || !sessionId || !gameContainerRef.current) return;
-
-        console.log('[React SD Wrapper] Starting Phaser SequenceDecoder instance...');
-
-        const config = {
-            type: Phaser.AUTO,
-            parent: gameContainerRef.current,
-            backgroundColor: '#020617',
-                        render: {
-                powerPreference: 'high-performance',
-                antialias: true,
-                roundPixels: true,
-                batchSize: 4096
-            },
-            scale: {
-                mode: Phaser.Scale.RESIZE,
-                autoCenter: Phaser.Scale.CENTER_BOTH,
-                // Mobile-responsive: use viewport width on portrait phones, fixed 800x600 on desktop
-                width: '100%',
-                height: '100%',
-            },
-            scene: [SequenceDecoderScene]
-        };
-
-        const game = new Phaser.Game(config);
-        phaserInstanceRef.current = game;
-        window.phaserGame = game;
-
-        game.scene.start('SequenceDecoderScene', {
-            sessionId,
-            apiUrl,
-            ddaParameters,
-            cognitiveProfile,
-            onGameOver: async (stats) => {
-                setFinalStats(stats);
-
-                let profileInfo = null;
-                try {
-                    const profileRes = await fetch(`${apiUrl}/api/dda`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${useCogniStore.getState().token}`},
-                        body: JSON.stringify({ session_id: sessionId })
-                    });
-                    if (profileRes.ok) {
-                        const pd = await profileRes.json();
-                        if (pd.status === 'success' && pd.cognitive_profile) {
-                            setCognitiveProfile(pd.cognitive_profile);
-                            profileInfo = pd.cognitive_profile;
-                        }
+    // Handle Phaser engine initialization and lifecycle via generic hook
+    const sceneData = React.useMemo(() => ({
+        sessionId: sessionId,
+        apiUrl: apiUrl,
+        ddaParameters: ddaParameters,
+        cognitiveProfile: cognitiveProfile,
+        onGameOver: async (stats) => {
+            setFinalStats(stats);
+            let profileInfo = null;
+            try {
+                const profileRes = await fetch(`${apiUrl}/api/dda`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${useCogniStore.getState().token}`},
+                    body: JSON.stringify({ session_id: sessionId })
+                });
+                if (profileRes.ok) {
+                    const profileData = await profileRes.json();
+                    if (profileData.status === 'success' && profileData.cognitive_profile) {
+                        setCognitiveProfile(profileData.cognitive_profile);
+                        profileInfo = profileData.cognitive_profile;
                     }
-                } catch (e) {
-                    console.warn('[React SD Wrapper] Final profile fetch failed:', e);
                 }
-
-                setGameState('FINISHED');
-                if (onGameFinished) {
-                    onGameFinished({ ...stats, cognitiveProfile: profileInfo });
-                }
+            } catch (e) {
+                console.warn('[React Wrapper] Failed to fetch final cognitive profile:', e);
             }
-        });
-
-        return () => {
-            if (phaserInstanceRef.current) {
-                console.log('[React SD Wrapper] Destroying Phaser instance...');
-                phaserInstanceRef.current.destroy(true);
-                phaserInstanceRef.current = null;
-                window.phaserGame = null;
+            setGameState('FINISHED');
+            if (onGameFinished) {
+                onGameFinished({ ...stats, cognitiveProfile: profileInfo });
             }
-        };
-    }, [gameState, sessionId, apiUrl, ddaParameters, onGameFinished]);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }), [sessionId, apiUrl, ddaParameters]);
+
+    const phaserInstanceRef = usePhaserEngine(
+        gameContainerRef, 
+        gameState, 
+        SequenceDecoderScene, 
+        'SequenceDecoderScene', 
+        sceneData
+    );
 
     
     // Handle pause state transitions

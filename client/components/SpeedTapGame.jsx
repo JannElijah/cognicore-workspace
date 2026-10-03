@@ -17,11 +17,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import SpeedTapScene from '../games/SpeedTapScene';
 import PauseOverlay from './PauseOverlay';
+import { usePhaserEngine } from '../hooks/usePhaserEngine';
 
 
 export default function SpeedTapGame({ username = 'default_player', apiUrl = API_BASE, onGameFinished }) {
     const gameContainerRef = useRef(null);
-    const phaserInstanceRef = useRef(null);
 
     const [sessionId, setSessionId] = useState(null);
     const [ddaParameters, setDdaParameters] = useState(null);

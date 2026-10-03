@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import PriorityQueueScene from '../games/PriorityQueueScene';
 import PauseOverlay from './PauseOverlay';
+import { usePhaserEngine } from '../hooks/usePhaserEngine';
 
 export default function PriorityQueueGame({
     username = 'default_player',
@@ -11,7 +12,6 @@ export default function PriorityQueueGame({
     onGameFinished
 }) {
     const gameContainerRef  = useRef(null);
-    const phaserInstanceRef = useRef(null);
 
     const [sessionId,        setSessionId]        = useState(null);
     const [ddaParameters,    setDdaParameters]    = useState(null);

@@ -4,10 +4,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import SynapseSpinScene from '../games/SynapseSpinScene';
 import PauseOverlay from './PauseOverlay';
+import { usePhaserEngine } from '../hooks/usePhaserEngine';
 
 export default function SynapseSpinGame({ username = 'default_player', apiUrl = API_BASE, onGameFinished }) {
     const gameContainerRef = useRef(null);
-    const phaserInstanceRef = useRef(null);
 
     const [sessionId, setSessionId] = useState(null);
     const [ddaParameters, setDdaParameters] = useState(null);

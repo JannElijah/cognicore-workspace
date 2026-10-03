@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Phaser from 'phaser';
 import RouteOptimizerScene from '../games/RouteOptimizerScene';
 import PauseOverlay from './PauseOverlay';
+import { usePhaserEngine } from '../hooks/usePhaserEngine';
 
 
 export default function RouteOptimizerGame({
@@ -12,7 +13,6 @@ export default function RouteOptimizerGame({
     onGameFinished
 }) {
     const gameContainerRef  = useRef(null);
-    const phaserInstanceRef = useRef(null);
 
     const [sessionId,        setSessionId]        = useState(null);
     const [ddaParameters,    setDdaParameters]    = useState(null);

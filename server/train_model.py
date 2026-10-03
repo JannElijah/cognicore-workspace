@@ -1,7 +1,8 @@
-import sqlite3
 import os
 import pickle
 import numpy as np
+import gc
+from database import get_db_connection
 
 # Try importing sklearn
 try:
@@ -14,13 +15,9 @@ try:
 except ImportError:
     SKLEARN_AVAILABLE = False
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cognicore.db')
 MODEL_OUT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cognitive_model.pkl')
 CLUSTER_OUT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'clustering_model.pkl')
 SCALER_OUT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'scaler.pkl')
-
-def get_db_connection():
-    return sqlite3.connect(DB_PATH)
 
 def calculate_ols_slope(y_vals):
     n = len(y_vals)
@@ -45,65 +42,54 @@ def train_retargeted_classifier():
         print("Error: scikit-learn is not installed. Retraining aborted.")
         return False
 
-    if not os.path.exists(DB_PATH):
-        print(f"Error: Database not found at {DB_PATH}. Run seeding first.")
-        return False
-        
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # 1. Fetch all users
-    cursor.execute("SELECT id, username FROM users")
-    users = cursor.fetchall()
-    
     raw_sessions = []
     
-    print(f"Extracting user session metrics for {len(users)} users...")
+    print("Extracting user session metrics (Batched & Memory Optimized)...")
     
-    for user_id, username in users:
-        # Fetch sessions chronologically
-        cursor.execute(
-            """
-            SELECT id 
-            FROM game_sessions 
-            WHERE user_id = ? 
-            ORDER BY start_time ASC, id ASC
-            """,
-            (user_id,)
-        )
-        sessions = cursor.fetchall()
-        session_ids = [s[0] for s in sessions]
-        
-        # Chronological averages history
-        history_acc = []
-        history_rt = []
-        
-        for s_id in session_ids:
-            # Query session averages for core + micro-behavioral metrics
-            cursor.execute(
-                """
-                SELECT 
-                    AVG(accuracy_rate), 
-                    AVG(reaction_time),
-                    AVG(hesitation_ms),
-                    AVG(spam_click_count),
-                    AVG(rule_shift_latency_ms),
-                    AVG(path_efficiency)
-                FROM performance_metrics
-                WHERE session_id = ?
-                """,
-                (s_id,)
-            )
-            stats = cursor.fetchone()
+    # 1. Fetch all aggregated data in one go, ordered by user and time to avoid N+1 queries
+    # Using fetchmany() and chunking to prevent OOM on Render
+    cursor.execute("""
+        SELECT 
+            gs.user_id,
+            gs.id as session_id,
+            AVG(pm.accuracy_rate) as avg_acc, 
+            AVG(pm.reaction_time) as avg_rt,
+            AVG(pm.hesitation_ms) as avg_hes,
+            AVG(pm.spam_click_count) as avg_spam,
+            AVG(pm.rule_shift_latency_ms) as avg_rule,
+            AVG(pm.path_efficiency) as avg_path
+        FROM game_sessions gs
+        JOIN performance_metrics pm ON gs.id = pm.session_id
+        GROUP BY gs.user_id, gs.id, gs.start_time
+        ORDER BY gs.user_id ASC, gs.start_time ASC, gs.id ASC
+    """)
+    
+    current_user = None
+    history_acc = []
+    history_rt = []
+    
+    while True:
+        rows = cursor.fetchmany(1000)
+        if not rows:
+            break
             
-            avg_acc = stats[0]
-            avg_rt = stats[1]
-            avg_hesitation = stats[2] if stats[2] is not None else 0.0
-            avg_spam = stats[3] if stats[3] is not None else 0.0
-            avg_rule_shift = stats[4] if stats[4] is not None else 0.0
-            avg_path_eff = stats[5] if stats[5] is not None else 1.0
+        for row in rows:
+            user_id = row['user_id']
+            avg_acc = row['avg_acc']
+            avg_rt = row['avg_rt']
+            avg_hesitation = row['avg_hes'] if row['avg_hes'] is not None else 0.0
+            avg_spam = row['avg_spam'] if row['avg_spam'] is not None else 0.0
+            avg_rule_shift = row['avg_rule'] if row['avg_rule'] is not None else 0.0
+            avg_path_eff = row['avg_path'] if row['avg_path'] is not None else 1.0
             
-            # If session has metrics
+            if current_user != user_id:
+                current_user = user_id
+                history_acc = []
+                history_rt = []
+                
             if avg_acc is not None and avg_rt is not None:
                 if avg_rt > 30000.0 or avg_rt < 50.0:
                     continue
@@ -132,7 +118,10 @@ def train_retargeted_classifier():
                     "cluster_features": cluster_features,
                     "classifier_features": classifier_features
                 })
-                
+        
+        # Explicit garbage collection per batch to save RAM
+        gc.collect()
+
     conn.close()
     
     n_samples = len(raw_sessions)
