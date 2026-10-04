@@ -563,7 +563,10 @@ this.statusText.setText('SYNCING ADAPTATION...').setFill('#64748b');
                     }
                 }
             }
+        } catch(e) {
+            console.warn('[DDA Bridge] Connection failed.', e);
         }
+    }
 
     async endGame() {
         if (this.countdownTimer) this.countdownTimer.remove();
