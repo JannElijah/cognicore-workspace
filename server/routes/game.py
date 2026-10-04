@@ -366,23 +366,11 @@ def dda(current_user_id, current_username):
             history_acc.append(avg_accuracy)
             history_rt.append(avg_rt)
         else:
-            recent_session_rows = db.session.query(GameSession.id).filter(
-                GameSession.user_id == current_user_id, 
-                GameSession.id <= session_id
-            ).order_by(GameSession.id.desc()).limit(20).all()
-            
-            recent_session_ids = [row.id for row in recent_session_rows]
-            
-            if recent_session_ids:
-                sessions = db.session.query(
-                    GameSession.id, 
-                    db.func.avg(PerformanceMetric.accuracy_rate).label('avg_accuracy'),
-                    db.func.avg(PerformanceMetric.reaction_time).label('avg_rt')
-                ).join(PerformanceMetric, GameSession.id == PerformanceMetric.session_id).filter(
-                    GameSession.id.in_(recent_session_ids)
-                ).group_by(GameSession.id).all()
-            else:
-                sessions = []
+            sessions = db.session.query(
+                GameSession.id, 
+                db.func.avg(PerformanceMetric.accuracy_rate).label('avg_accuracy'),
+                db.func.avg(PerformanceMetric.reaction_time).label('avg_rt')
+            ).join(PerformanceMetric).filter(GameSession.user_id == current_user_id, GameSession.id <= session_id).group_by(GameSession.id).order_by(GameSession.id.desc()).limit(20).all()
             
             sessions = sorted(sessions, key=lambda x: x.id)
             history_acc = []

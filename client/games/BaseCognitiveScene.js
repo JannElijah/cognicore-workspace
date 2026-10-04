@@ -46,9 +46,9 @@ export default class BaseCognitiveScene extends Phaser.Scene {
         // Global telemetry buffer initialization
         if (!this.telemetryBuffer) this.telemetryBuffer = [];
 
-        // Setup background telemetry batching (flush every 15000ms to reduce backend lock contention)
+        // Setup background telemetry batching (flush every 2500ms)
         this.telemetryTimer = this.time.addEvent({
-            delay: 15000,
+            delay: 2500,
             callback: this.flushGlobalTelemetry,
             callbackScope: this,
             loop: true
