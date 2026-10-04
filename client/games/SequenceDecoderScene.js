@@ -727,11 +727,8 @@ export default class SequenceDecoderScene extends BaseCognitiveScene {
 
     async adaptDifficulty() {
         if (!this.sessionId) return;
-        const ddaStartTime = this.getTime();
-
-        this.statusText.setText('ADAPTING DIFFICULTY...').setFill('#64748b');
-
-        try {
+        this.startNewPuzzle(); // Fire-and-forget: start next round immediately
+try {
             const resp = await fetch(`${this.apiUrl}/api/dda`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json',
@@ -769,9 +766,7 @@ export default class SequenceDecoderScene extends BaseCognitiveScene {
             console.warn('[DDA] Connection failed, keeping current config.', e);
         }
 
-        this.sessionStartTime += (this.getTime() - ddaStartTime);
-        this.startNewPuzzle();
-    }
+        }
 
     endGame() {
         if (this.countdownTimer) this.countdownTimer.remove();

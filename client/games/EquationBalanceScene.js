@@ -625,11 +625,8 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
 
     async adaptDifficulty() {
         if (!this.sessionId) return;
-        const ddaStartTime = this.getTime();
-
-        this.statusText.setText('SYNCING ADAPTATION...').setFill('#64748b');
-
-        try {
+        this.startNewPuzzle(); // Fire-and-forget: start next round immediately
+try {
             console.log('[DDA Bridge] Fetching Equation Balance difficulty configurations...');
             const response = await fetch(`${this.apiUrl}/api/dda`, {
                 method: 'POST',
@@ -666,9 +663,7 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
             console.warn('[DDA Bridge] Connection failed, keeping configurations.', e);
         }
 
-        this.sessionStartTime += (this.getTime() - ddaStartTime);
-        this.startNewPuzzle();
-    }
+        }
 
     endGame() {
         if (this.countdownTimer) this.countdownTimer.remove();

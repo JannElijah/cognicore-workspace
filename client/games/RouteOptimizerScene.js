@@ -770,9 +770,8 @@ export default class RouteOptimizerScene extends BaseCognitiveScene {
 
     async adaptDifficulty() {
         if (!this.sessionId) return;
-        const ddaStartTime = this.getTime();
-        this.statusText.setText('ADAPTING DIFFICULTY...').setFill('#64748b');
-        try {
+        this.startNewRound(); // Fire-and-forget: start next round immediately
+try {
             const resp = await fetch(`${this.apiUrl}/api/dda`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json',
@@ -801,9 +800,7 @@ export default class RouteOptimizerScene extends BaseCognitiveScene {
         } catch (e) {
             console.warn('[DDA] RouteOptimizer connection failed.', e);
         }
-        this.sessionStartTime += (this.getTime() - ddaStartTime);
-        this.startNewRound();
-    }
+        }
 
     endGame() {
         if (this.countdownTimer) this.countdownTimer.remove();

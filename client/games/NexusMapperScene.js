@@ -403,11 +403,8 @@ updateTimer() {
 
     async adaptDifficulty() {
         if (!this.sessionId) return;
-        const ddaStartTime = this.getTime();
-
-        this.statusText.setText('SYNCING DDA...').setFill('#64748b');
-
-        try {
+        this.startNewPuzzle(); // Fire-and-forget: start next round immediately
+try {
             const response = await fetch(`${this.apiUrl}/api/dda`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json',
@@ -442,9 +439,7 @@ updateTimer() {
             console.warn('[DDA Bridge] Connection failed', e);
         }
 
-        this.sessionStartTime += (this.getTime() - ddaStartTime);
-        this.startNewPuzzle();
-    }
+        }
 
     endGame() {
         if (this.countdownTimer) this.countdownTimer.remove();
