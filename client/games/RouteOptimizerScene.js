@@ -769,8 +769,8 @@ export default class RouteOptimizerScene extends BaseCognitiveScene {
     }
 
     async adaptDifficulty() {
-        if (!this.sessionId) return;
         this.startNewRound(); // Fire-and-forget: start next round immediately
+        if (!this.sessionId) return;
 try {
             const resp = await fetch(`${this.apiUrl}/api/dda`, {
                 method: 'POST',

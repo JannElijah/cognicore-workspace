@@ -624,8 +624,8 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
     }
 
     async adaptDifficulty() {
-        if (!this.sessionId) return;
         this.startNewPuzzle(); // Fire-and-forget: start next round immediately
+        if (!this.sessionId) return;
 try {
             console.log('[DDA Bridge] Fetching Equation Balance difficulty configurations...');
             const response = await fetch(`${this.apiUrl}/api/dda`, {

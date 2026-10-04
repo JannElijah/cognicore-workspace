@@ -764,8 +764,8 @@ updateTimer() {
     }
 
     async adaptDifficulty() {
-        if (!this.sessionId) return;
         this.generateWave(); // Fire-and-forget: start next round immediately
+        if (!this.sessionId) return;
 // Flush telemetry in batch before querying DDA updates
         await this.flushTelemetry();
 

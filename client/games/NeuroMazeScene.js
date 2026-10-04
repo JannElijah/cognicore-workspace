@@ -603,8 +603,8 @@ updateTimer() {
     }
 
     async adaptDifficulty() {
-        if (!this.sessionId) return;
         this.startNewPuzzle(); // Fire-and-forget: start next round immediately
+        if (!this.sessionId) return;
 try {
             console.log('[DDA Bridge] Checking NeuroMaze DDA adaptions...');
             const response = await fetch(`${this.apiUrl}/api/dda`, {

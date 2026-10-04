@@ -541,8 +541,8 @@ updateTimer() {
     }
 
     async adaptDifficulty() {
-        if (!this.sessionId) return;
         this.startNewRound(); // Fire-and-forget: start next round immediately
+        if (!this.sessionId) return;
 this.statusText.setText('SYNCING ADAPTATION...').setFill('#64748b');
 
         try {
