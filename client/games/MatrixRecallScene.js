@@ -542,9 +542,8 @@ updateTimer() {
 
     async adaptDifficulty() {
         if (!this.sessionId) return;
-        const ddaStartTime = this.getTime();
-
-        this.statusText.setText('SYNCING ADAPTATION...').setFill('#64748b');
+        this.startNewRound(); // Fire-and-forget: start next round immediately
+this.statusText.setText('SYNCING ADAPTATION...').setFill('#64748b');
 
         try {
             console.log('[DDA Bridge] Checking Matrix Recall scaling profiles...');
@@ -592,13 +591,7 @@ updateTimer() {
                     }
                 }
             }
-        } catch (e) {
-            console.warn('[DDA Bridge] Connection timeout, keeping current config.', e);
         }
-
-        // Start next round
-        this.startNewRound();
-    }
 
     endGame() {
         if (this.countdownTimer) this.countdownTimer.remove();

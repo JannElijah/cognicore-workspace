@@ -517,9 +517,8 @@ updateTimer() {
 
     async adaptDifficulty() {
         if (!this.sessionId) return;
-        const ddaStartTime = this.getTime();
-
-        this.statusText.setText('SYNCING ADAPTATION...').setFill('#64748b');
+        this.startNewRound(); // Fire-and-forget: start next round immediately
+this.statusText.setText('SYNCING ADAPTATION...').setFill('#64748b');
 
         // Flush telemetry in batch before querying DDA updates
         await this.flushGlobalTelemetry();
@@ -564,13 +563,7 @@ updateTimer() {
                     }
                 }
             }
-        } catch (e) {
-            console.warn('[DDA Bridge] Connection timeout, keeping current config.', e);
         }
-
-        // Start next round
-        this.startNewRound();
-    }
 
     async endGame() {
         if (this.countdownTimer) this.countdownTimer.remove();

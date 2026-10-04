@@ -765,9 +765,8 @@ updateTimer() {
 
     async adaptDifficulty() {
         if (!this.sessionId) return;
-        const ddaStartTime = this.getTime();
-
-        // Flush telemetry in batch before querying DDA updates
+        this.generateWave(); // Fire-and-forget: start next round immediately
+// Flush telemetry in batch before querying DDA updates
         await this.flushTelemetry();
 
         try {
@@ -809,13 +808,7 @@ updateTimer() {
                     }
                 }
             }
-        } catch (e) {
-            console.warn('[DDA Bridge] Connection failed, using current configurations.', e);
         }
-
-        // Generate next wave
-        this.generateWave();
-    }
 
     async endGame() {
         if (this.countdownTimer) this.countdownTimer.remove();
