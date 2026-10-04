@@ -381,6 +381,12 @@ export default function App() {
     setAssessmentLoading(true);
     setAssessmentError(null);
     setAuthSuccessMessage(null);
+    
+    // Timer to inform the user if the backend is waking up from a cold start
+    const wakeTimer = setTimeout(() => {
+        setAssessmentError("Backend server is waking up or resolving... please hold on.");
+    }, 5000);
+
     try {
       const trimmedName = username.trim();
       const email = `${trimmedName}@cognicore.com`.toLowerCase();
@@ -502,6 +508,7 @@ export default function App() {
       console.error(err);
       setAssessmentError(err.message);
     } finally {
+      clearTimeout(wakeTimer);
       setAssessmentLoading(false);
     }
   };

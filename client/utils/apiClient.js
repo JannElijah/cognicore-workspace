@@ -1,6 +1,6 @@
 import useCogniStore from '../store/useCogniStore';
 
-export const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:5000`;
+export const API_BASE = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://127.0.0.1:5000' : `https://${window.location.hostname}:5000`);
 
 export class ApiError extends Error {
   constructor(message, status, data) {
