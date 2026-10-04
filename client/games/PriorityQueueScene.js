@@ -657,6 +657,7 @@ export default class PriorityQueueScene extends BaseCognitiveScene {
     // ── DDA ──────────────────────────────────────────────────
     async adaptDifficulty() {
         if (!this.sessionId) return;
+        const ddaStartTime = this.getTime();
         try {
             const resp = await fetch(`${this.apiUrl}/api/dda`, {
                 method: 'POST',

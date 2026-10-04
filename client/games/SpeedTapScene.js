@@ -459,6 +459,7 @@ export default class SpeedTapScene extends BaseCognitiveScene {
 
     async adaptDifficulty() {
         if (!this.sessionId) return;
+        const ddaStartTime = this.getTime();
 
         try {
             console.log('[DDA Bridge] Querying DDA decision engine...');

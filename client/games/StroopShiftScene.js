@@ -489,6 +489,7 @@ export default class StroopShiftScene extends BaseCognitiveScene {
 
     async adaptDifficulty() {
         if (!this.sessionId) return;
+        const ddaStartTime = this.getTime();
 
         try {
             console.log('[DDA StroopShift] Adjusting gameplay challenge...');

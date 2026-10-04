@@ -395,6 +395,7 @@ updateTimer() {
 
     async adaptDifficulty() {
         if (!this.sessionId) return;
+        const ddaStartTime = this.getTime();
 
         this.statusText.setText('SYNCING DDA...').setFill('#64748b');
 

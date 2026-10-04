@@ -765,6 +765,7 @@ updateTimer() {
 
     async adaptDifficulty() {
         if (!this.sessionId) return;
+        const ddaStartTime = this.getTime();
 
         // Flush telemetry in batch before querying DDA updates
         await this.flushTelemetry();

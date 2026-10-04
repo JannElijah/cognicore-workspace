@@ -686,6 +686,7 @@ export default class RuleShifterScene extends BaseCognitiveScene {
 
     async adaptDifficulty() {
         if (!this.sessionId) return;
+        const ddaStartTime = this.getTime();
         this.statusText.setText('ADAPTING RULE SETTINGS...').setFill('#64748b');
         try {
             const resp = await fetch(`${this.apiUrl}/api/dda`, {

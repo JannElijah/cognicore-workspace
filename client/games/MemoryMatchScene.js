@@ -517,6 +517,7 @@ updateTimer() {
 
     async adaptDifficulty() {
         if (!this.sessionId) return;
+        const ddaStartTime = this.getTime();
 
         this.statusText.setText('SYNCING ADAPTATION...').setFill('#64748b');
 

@@ -698,6 +698,7 @@ export default class MentalFlexScene extends BaseCognitiveScene {
 
     async adaptDifficulty() {
         if (!this.sessionId) return;
+        const ddaStartTime = this.getTime();
 
         try {
             console.log('[DDA MentalFlex] Syncing difficulty with backend...');

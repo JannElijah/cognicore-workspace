@@ -194,6 +194,9 @@ class ArchetypeModel:
                 elif avg_accuracy > 0.90 and avg_rt_ms < 500.0:
                     prediction = "Fast Learner"
                     confidence = max(confidence, 0.85)
+
+                if prediction == "Plateauing":
+                    prediction = "Steady Improver"
                     
                 return {
                     "archetype": prediction,
@@ -245,7 +248,7 @@ class ArchetypeModel:
         elif rt_slope > 0.0:
             return "Your accuracy is holding up, but reaction speed is slightly slowing. Try to trust your instincts more to regain momentum."
         else:
-            return "Your performance has plateaued at an optimal baseline. Focus on reducing hesitation to push through to the next milestone."
+            return "Your performance is stabilizing at an optimal baseline. Focus on reducing hesitation to push through to the next milestone."
 
 # Instantiate the global model instance
 archetype_classifier = ArchetypeModel()

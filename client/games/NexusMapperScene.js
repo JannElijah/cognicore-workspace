@@ -403,6 +403,7 @@ updateTimer() {
 
     async adaptDifficulty() {
         if (!this.sessionId) return;
+        const ddaStartTime = this.getTime();
 
         this.statusText.setText('SYNCING DDA...').setFill('#64748b');
 
@@ -441,6 +442,7 @@ updateTimer() {
             console.warn('[DDA Bridge] Connection failed', e);
         }
 
+        this.sessionStartTime += (this.getTime() - ddaStartTime);
         this.startNewPuzzle();
     }
 

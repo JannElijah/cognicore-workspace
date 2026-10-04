@@ -625,6 +625,7 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
 
     async adaptDifficulty() {
         if (!this.sessionId) return;
+        const ddaStartTime = this.getTime();
 
         this.statusText.setText('SYNCING ADAPTATION...').setFill('#64748b');
 
@@ -665,6 +666,7 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
             console.warn('[DDA Bridge] Connection failed, keeping configurations.', e);
         }
 
+        this.sessionStartTime += (this.getTime() - ddaStartTime);
         this.startNewPuzzle();
     }
 

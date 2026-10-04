@@ -497,6 +497,7 @@ updateTimer() {
 
     async adaptDifficulty() {
         if (!this.sessionId) return;
+        const ddaStartTime = this.getTime();
 
         this.statusText.setText('SYNCING ADAPTATION...').setFill('#64748b');
 
@@ -542,6 +543,7 @@ updateTimer() {
             console.warn('[DDA Bridge] Connection failed, using current configurations.', e);
         }
 
+        this.sessionStartTime += (this.getTime() - ddaStartTime);
         this.startNewPuzzle();
     }
 
