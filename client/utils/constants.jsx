@@ -209,9 +209,10 @@ export const COGNITIVE_QUESTIONS = [
     id: 'q1',
     domain: 'spatial_visual_memory',
     difficulty: 1,
-    title: 'Spatial-Visual Memory: Air Traffic Control (1/3)',
+    title: 'Air Traffic Control',
     text: 'You are an air traffic controller. Your radar screen suddenly goes black. 3 seconds ago, you saw Flight Alpha in the top-left quadrant moving right, Flight Beta in the bottom-right moving left, and Flight Gamma in the center moving down. Assuming constant speeds, where are they now?',
     visual: <div style={{width:'100%', height:'120px', background:'rgba(74, 222, 128, 0.1)', border:'1px solid #4ade80', borderRadius:'8px', position:'relative'}}><div style={{position:'absolute', top:'10px', left:'10px', color:'#4ade80'}}>✈️ ➔</div><div style={{position:'absolute', bottom:'10px', right:'10px', color:'#4ade80'}}>⬅️ ✈️</div><div style={{position:'absolute', top:'45px', left:'50%', transform:'translateX(-50%)', color:'#4ade80'}}>✈️ ⬇️</div></div>,
+    correctAnswer: 'A',
     options: [
       { key: 'A', text: 'Alpha: Top-Center | Beta: Bottom-Center | Gamma: Bottom-Center' },
       { key: 'B', text: 'Alpha: Top-Right | Beta: Bottom-Left | Gamma: Center' },
@@ -223,9 +224,10 @@ export const COGNITIVE_QUESTIONS = [
     id: 'q2',
     domain: 'logical_mathematical',
     difficulty: 1,
-    title: 'Logical-Mathematical: Resource Allocation (1/3)',
+    title: 'Resource Allocation',
     text: 'A hospital ER is rationing 100 units of medicine. Protocol mandates Ward A gets twice as much as Ward B, and Ward C gets 10 units less than Ward A. If all units are distributed, how many units does Ward B receive?',
     visual: <div style={{display:'flex', justifyContent:'space-around', alignItems:'center', background:'rgba(245, 158, 11, 0.1)', padding:'20px', borderRadius:'8px', border:'1px solid #f59e0b'}}><span style={{color:'#f59e0b', fontWeight:'bold'}}>A = 2B</span><span style={{color:'#f59e0b', fontWeight:'bold'}}>C = A - 10</span><span style={{color:'#f59e0b', fontWeight:'bold'}}>A+B+C = 100</span></div>,
+    correctAnswer: 'B',
     options: [
       { key: 'A', text: '18 units' },
       { key: 'B', text: '22 units' },
@@ -237,9 +239,10 @@ export const COGNITIVE_QUESTIONS = [
     id: 'q3',
     domain: 'reflexes_and_focus',
     difficulty: 1,
-    title: 'Reflexes & Focus: High-Speed Driving (1/3)',
+    title: 'High-Speed Driving',
     text: 'You are driving at 60 mph on a wet road. A digital traffic sign abruptly flashes the word "STOP" but the sign\'s actual LED color is GREEN. According to your strict training to ONLY obey the light color and ignore the text, what is your immediate reflex?',
     visual: <div style={{textAlign:'center', background:'#000', padding:'30px', borderRadius:'8px', border:'2px solid #333'}}><span style={{color:'#4ade80', fontSize:'2.5rem', fontWeight:'900', fontFamily:'monospace', letterSpacing:'4px'}}>STOP</span></div>,
+    correctAnswer: 'C',
     options: [
       { key: 'A', text: 'Slam on the brakes immediately' },
       { key: 'B', text: 'Slow down cautiously' },
@@ -251,9 +254,10 @@ export const COGNITIVE_QUESTIONS = [
     id: 'q4',
     domain: 'executive_strategy',
     difficulty: 1,
-    title: 'Executive Strategy: Triage Protocol (1/3)',
+    title: 'Triage Protocol',
     text: 'You manage a server farm. Server X is critical but takes 4 hours to fix. Server Y is non-critical but takes 30 minutes to fix. Server Z is critical and takes 1 hour to fix. You have one technician. To minimize critical downtime, what is the optimal repair sequence?',
     visual: <div style={{display:'flex', flexDirection:'column', gap:'10px', background:'rgba(192, 132, 252, 0.1)', padding:'15px', borderRadius:'8px', border:'1px solid #c084fc', color:'#c084fc'}}><div>🔥 [CRITICAL] X: 4 Hrs</div><div>ℹ️ [MINOR] Y: 0.5 Hrs</div><div>🔥 [CRITICAL] Z: 1 Hr</div></div>,
+    correctAnswer: 'A',
     options: [
       { key: 'A', text: 'Fix Z first, then X, then Y' },
       { key: 'B', text: 'Fix Y first, then Z, then X' },
@@ -265,9 +269,10 @@ export const COGNITIVE_QUESTIONS = [
     id: 'q5',
     domain: 'spatial_visual_memory',
     difficulty: 2,
-    title: 'Spatial-Visual Memory: Assembly Blueprint (2/3)',
+    title: 'Assembly Blueprint',
     text: 'You are assembling a satellite array. Component 1 is an L-shaped bracket facing UP. Component 2 is an identical bracket facing RIGHT. If you mentally rotate Component 2 90 degrees counter-clockwise and overlay it on Component 1, what shape is formed?',
     visual: <div style={{display:'flex', justifyContent:'center', gap:'20px', padding:'20px', background:'rgba(74, 222, 128, 0.1)', borderRadius:'8px', border:'1px solid #4ade80'}}><div style={{width:'40px', height:'40px', borderBottom:'6px solid #4ade80', borderLeft:'6px solid #4ade80'}}></div> <span style={{color:'#4ade80', fontSize:'2rem'}}>+</span> <div style={{width:'40px', height:'40px', borderTop:'6px solid #4ade80', borderLeft:'6px solid #4ade80'}}></div></div>,
+    correctAnswer: 'D',
     options: [
       { key: 'A', text: 'A perfect square' },
       { key: 'B', text: 'A cross (+)' },
@@ -279,9 +284,10 @@ export const COGNITIVE_QUESTIONS = [
     id: 'q6',
     domain: 'logical_mathematical',
     difficulty: 2,
-    title: 'Logical-Mathematical: Cyber Cryptography (2/3)',
+    title: 'Cyber Cryptography',
     text: 'A cryptographic key increments by a specific algorithmic pattern: 1, 4, 13, 40... What is the next number required to decrypt the payload?',
     visual: <div style={{textAlign:'center', background:'rgba(245, 158, 11, 0.1)', padding:'20px', borderRadius:'8px', border:'1px solid #f59e0b', color:'#f59e0b', fontFamily:'monospace', letterSpacing:'2px', fontSize:'1.2rem'}}>1 ➔ 4 ➔ 13 ➔ 40 ➔ ?</div>,
+    correctAnswer: 'C',
     options: [
       { key: 'A', text: '80' },
       { key: 'B', text: '120' },
@@ -293,9 +299,10 @@ export const COGNITIVE_QUESTIONS = [
     id: 'q7',
     domain: 'reflexes_and_focus',
     difficulty: 2,
-    title: 'Reflexes & Focus: Security Surveillance (2/3)',
+    title: 'Security Surveillance',
     text: 'You are monitoring 4 security feeds. Your directive is to press the ALARM button ONLY if a person wearing a RED hat enters Zone A. A person wearing a red jacket and a BLUE hat enters Zone A, while a flashing RED strobe light goes off in the background. Do you press the alarm?',
     visual: <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px', background:'rgba(96, 165, 250, 0.1)', padding:'10px', borderRadius:'8px', border:'1px solid #60a5fa'}}><div style={{border:'2px dashed #60a5fa', height:'60px', display:'flex', alignItems:'center', justifyContent:'center', color:'#f87171', fontSize:'1.2rem'}}>Zone A: 🧢+🧥</div><div style={{border:'2px dashed #60a5fa', height:'60px', background:'rgba(248, 113, 113, 0.2)'}}></div></div>,
+    correctAnswer: 'B',
     options: [
       { key: 'A', text: 'Yes, the red jacket and strobe justify an alarm' },
       { key: 'B', text: 'No, the criteria (red hat) was not explicitly met' },
@@ -307,9 +314,10 @@ export const COGNITIVE_QUESTIONS = [
     id: 'q8',
     domain: 'executive_strategy',
     difficulty: 2,
-    title: 'Executive Strategy: Shifting Paradigms (2/3)',
+    title: 'Shifting Paradigms',
     text: 'During manufacturing, Rule Set Alpha dictates: Reject flawed items (Action X). Suddenly, a contamination protocol (Rule Set Beta) is triggered, overriding Alpha. Under Beta, flawed items must be quarantined (Action Y), and perfect items must be destroyed (Action Z). A perfect item arrives. What is your action?',
     visual: <div style={{textAlign:'center', background:'rgba(192, 132, 252, 0.1)', padding:'15px', borderRadius:'8px', border:'1px solid #c084fc', color:'#c084fc'}}><strong>OVERRIDE: PROTOCOL BETA ACTIVE</strong><br/><br/>Item Scan: [PERFECT CONDITION]</div>,
+    correctAnswer: 'A',
     options: [
       { key: 'A', text: 'Action Z (Destroy the perfect item)' },
       { key: 'B', text: 'Action Y (Quarantine it)' },
@@ -321,9 +329,10 @@ export const COGNITIVE_QUESTIONS = [
     id: 'q9',
     domain: 'spatial_visual_memory',
     difficulty: 3,
-    title: 'Spatial-Visual Memory: Route Traceback (3/3)',
+    title: 'Route Traceback',
     text: 'You are a taxi driver. You took a detour: North for 2 blocks, East for 3 blocks, North for 1 block. The passenger suddenly asks to return to the exact starting point. Without U-turning, what is the cardinal direction sequence to retrace your path in reverse?',
-    visual: <div style={{width:'100%', height:'100px', background:'rgba(74, 222, 128, 0.1)', border:'1px solid #4ade80', borderRadius:'8px', position:'relative'}}><svg width="100%" height="100%"><path d="M 30 80 L 30 50 L 150 50 L 150 20" fill="none" stroke="#4ade80" strokeWidth="3" strokeDasharray="5,5" /><circle cx="30" cy="80" r="6" fill="#4ade80" /><circle cx="150" cy="20" r="6" fill="#ef4444" /></svg></div>,
+    visual: <div style={{width:'100%', height:'100px', background:'rgba(74, 222, 128, 0.1)', border:'1px solid #4ade80', borderRadius:'8px', position:'relative'}}><svg width="100%" height="100%"><path d="M 30 80 L 30 50 L 150 50 L 150 20" fill="none" stroke="#4ade80" strokeWidth="3" strokeDasharray="5,5" /><circle cx="30" cy="80" r="6" fill="#4ade80" /><circle cx="150" cy="20" r="6" fill="#ef4444" /><text x="35" y="65" fill="#4ade80" fontSize="12">2 blocks N</text><text x="90" y="40" fill="#4ade80" fontSize="12">3 blocks E</text><text x="155" y="35" fill="#4ade80" fontSize="12">1 block N</text><text x="8" y="20" fill="#4ade80" fontSize="12">N▲</text></svg></div>,
+    correctAnswer: 'A',
     options: [
       { key: 'A', text: 'South 1 block, West 3 blocks, South 2 blocks' },
       { key: 'B', text: 'South 2 blocks, West 3 blocks, South 1 block' },
@@ -335,9 +344,10 @@ export const COGNITIVE_QUESTIONS = [
     id: 'q10',
     domain: 'logical_mathematical',
     difficulty: 3,
-    title: 'Logical-Mathematical: Logistics Network (3/3)',
+    title: 'Logistics Network',
     text: 'A supply chain network uses drones. Drone A can carry 5kg and takes 10 mins per trip. Drone B can carry 8kg and takes 15 mins per trip. You need to deliver 26kg in exactly 30 minutes using both drones efficiently. How many trips should Drone A and Drone B make?',
     visual: <div style={{display:'flex', justifyContent:'space-around', background:'rgba(245, 158, 11, 0.1)', padding:'15px', borderRadius:'8px', border:'1px solid #f59e0b', color:'#f59e0b'}}><div>🛸 A: 5kg / 10m</div><div>🛸 B: 8kg / 15m</div><div>📦 Target: 26kg</div></div>,
+    correctAnswer: 'B',
     options: [
       { key: 'A', text: 'Drone A: 1, Drone B: 3' },
       { key: 'B', text: 'Drone A: 2, Drone B: 2' },
@@ -349,9 +359,10 @@ export const COGNITIVE_QUESTIONS = [
     id: 'q11',
     domain: 'reflexes_and_focus',
     difficulty: 3,
-    title: 'Reflexes & Focus: Auditory-Visual Sync (3/3)',
+    title: 'Auditory-Visual Sync',
     text: 'In a noisy command center, you must click the "SYNC" button ONLY when a high-pitched tone plays while the main monitor flashes YELLOW. The monitor flashes YELLOW, but a low-pitched tone plays alongside a loud siren. What is your action?',
     visual: <div style={{textAlign:'center', background:'#facc15', padding:'20px', borderRadius:'8px', border:'2px solid #eab308', color:'#000', fontWeight:'bold', display:'flex', alignItems:'center', justifyContent:'center', gap:'20px', fontSize:'1.2rem'}}><span>⚠️ WARNING</span> <span>🔊 (Low Pitch + Siren)</span></div>,
+    correctAnswer: 'C',
     options: [
       { key: 'A', text: 'Click SYNC immediately' },
       { key: 'B', text: 'Click SYNC twice due to the siren' },
@@ -363,70 +374,15 @@ export const COGNITIVE_QUESTIONS = [
     id: 'q12',
     domain: 'executive_strategy',
     difficulty: 3,
-    title: 'Executive Strategy: PERT Optimization (3/3)',
+    title: 'PERT Optimization',
     text: 'You are managing a critical software launch. Task A (UI design) takes 3 days. Task B (Backend logic) takes 5 days. Both must finish before Task C (Integration), which takes 2 days. If you start A and B today simultaneously, what is the absolute minimum number of days until the launch is ready?',
     visual: <div style={{display:'flex', justifyContent:'center', alignItems:'center', gap:'10px', background:'rgba(192, 132, 252, 0.1)', padding:'15px', borderRadius:'8px', border:'1px solid #c084fc', color:'#c084fc'}}><div style={{display:'flex', flexDirection:'column', gap:'5px'}}><span style={{border:'1px solid #c084fc', padding:'4px 8px', borderRadius:'4px'}}>A: 3d</span><span style={{border:'1px solid #c084fc', padding:'4px 8px', borderRadius:'4px'}}>B: 5d</span></div><span style={{fontSize:'1.5rem'}}>➔</span><span style={{border:'1px solid #c084fc', padding:'4px 8px', borderRadius:'4px'}}>C: 2d</span></div>,
+    correctAnswer: 'A',
     options: [
       { key: 'A', text: '7 days' },
       { key: 'B', text: '10 days' },
       { key: 'C', text: '5 days' },
       { key: 'D', text: '8 days' }
-    ]
-  },
-  {
-    id: 'q13',
-    domain: 'spatial_visual_memory',
-    difficulty: 4,
-    title: 'Spatial-Visual Memory: Architect Blueprint (4/4)',
-    text: 'You are an architect reviewing a building blueprint. The lobby is on the ground floor facing South. The elevator bank is strictly on the North wall of the lobby. To the immediate East of the elevator bank is the stairwell. If you walk into the lobby from the South entrance and walk straight to the elevator, what direction is the stairwell relative to you?',
-    visual: <div style={{width:'100%', height:'120px', background:'rgba(74, 222, 128, 0.1)', border:'1px solid #4ade80', borderRadius:'8px', display:'flex', alignItems:'center', justifyContent:'center'}}><span style={{color:'#4ade80', fontSize:'1.2rem'}}>N ▲ | E ▶ | S ▼ | W ◀</span></div>,
-    options: [
-      { key: 'A', text: 'On your left (West)' },
-      { key: 'B', text: 'On your right (East)' },
-      { key: 'C', text: 'Directly behind you (South)' },
-      { key: 'D', text: 'Straight ahead (North)' }
-    ]
-  },
-  {
-    id: 'q14',
-    domain: 'logical_mathematical',
-    difficulty: 4,
-    title: 'Logical-Mathematical: Algorithm Efficiency (4/4)',
-    text: 'A sorting algorithm takes 5 seconds to sort 100 items. Its time complexity is O(N^2), meaning if the number of items doubles, the time quadruples. How long will it take to sort 400 items?',
-    visual: <div style={{textAlign:'center', background:'rgba(245, 158, 11, 0.1)', padding:'20px', borderRadius:'8px', border:'1px solid #f59e0b', color:'#f59e0b'}}><strong>O(N²)</strong><br/>100 items = 5s<br/>400 items = ?</div>,
-    options: [
-      { key: 'A', text: '20 seconds' },
-      { key: 'B', text: '40 seconds' },
-      { key: 'C', text: '80 seconds' },
-      { key: 'D', text: '160 seconds' }
-    ]
-  },
-  {
-    id: 'q15',
-    domain: 'reflexes_and_focus',
-    difficulty: 4,
-    title: 'Reflexes & Focus: Flight Simulator (4/4)',
-    text: 'You are a pilot in a flight simulator. A sudden wind shear warning (LOUD BEEP + RED FLASH) occurs. Standard procedure is to pitch UP. However, a secondary engine warning (BLUE LIGHT) appears simultaneously, which overrides standard procedure and requires you to pitch DOWN. Both happen at the exact same time. What do you do?',
-    visual: <div style={{display:'flex', justifyContent:'space-around', background:'#1e3a8a', padding:'15px', borderRadius:'8px', border:'2px solid #3b82f6', color:'#fff'}}><span>🔴 WIND SHEAR</span> <span>+</span> <span>🔵 ENGINE WARN</span></div>,
-    options: [
-      { key: 'A', text: 'Pitch UP' },
-      { key: 'B', text: 'Pitch DOWN' },
-      { key: 'C', text: 'Maintain current pitch' },
-      { key: 'D', text: 'Eject' }
-    ]
-  },
-  {
-    id: 'q16',
-    domain: 'executive_strategy',
-    difficulty: 4,
-    title: 'Executive Strategy: Kitchen Chaos (4/4)',
-    text: 'You are the head chef. A VIP orders a soufflé (takes 45 mins). Table 2 orders a steak (takes 15 mins). Table 3 orders a salad (takes 5 mins). All dishes must be served hot and fresh exactly 60 minutes from now. When should you start preparing the steak?',
-    visual: <div style={{display:'flex', flexDirection:'column', gap:'5px', background:'rgba(192, 132, 252, 0.1)', padding:'15px', borderRadius:'8px', border:'1px solid #c084fc', color:'#c084fc'}}><span>⏱️ T-minus 60 mins to serve ALL</span><span>Soufflé: 45m | Steak: 15m | Salad: 5m</span></div>,
-    options: [
-      { key: 'A', text: 'Immediately (0 mins in)' },
-      { key: 'B', text: '15 minutes from now' },
-      { key: 'C', text: '30 minutes from now' },
-      { key: 'D', text: '45 minutes from now' }
     ]
   }
 ];

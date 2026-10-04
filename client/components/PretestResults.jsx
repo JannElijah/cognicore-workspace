@@ -1,4 +1,5 @@
 import React from 'react';
+import { DOMAIN_INFO, DOMAINS_LIST } from '../utils/constants';
 
 
 const SvgArchetype = ({ icon, color }) => (
@@ -37,31 +38,61 @@ const PretestResults = ({
   if (!preTestScores) return null;
 
   // De-jargonized domains
-  const domainMapping = {
-    spatial_visual_memory: { color: '#4ade80', name: 'Spatial Visual Memory', icon: <SvgIcon name='🧠' color='#4ade80' />, description: 'How well you remember patterns and locations.' },
-    logical_mathematical: { color: '#f59e0b', name: 'Logical Mathematical', icon: <SvgIcon name='🧩' color='#f59e0b' />, description: 'Your ability to figure out patterns and rules.' },
-    reflexes_and_focus: { color: 'var(--color-primary)', name: 'Reflexes and Focus', icon: <SvgIcon name='⚡' color='var(--color-primary)' />, description: 'How fast you react and maintain attention.' },
-    executive_strategy: { color: 'var(--color-secondary)', name: 'Executive Strategy', icon: <SvgIcon name='🔄' color='var(--color-secondary)' />, description: 'How quickly you adjust to changing situations.' }
+  const getDomainInfo = (domain) => {
+    const info = DOMAIN_INFO[domain] || DOMAIN_INFO.reflexes_and_focus;
+    const listInfo = DOMAINS_LIST.find(d => d.id === domain) || {};
+    return { color: info.color, name: info.title, icon: info.icon, description: listInfo.description };
   };
-
-  const getDomainInfo = (domain) => domainMapping[domain] || domainMapping.reflexes_and_focus;
   const weakestTheme = getDomainInfo(weakestDomain);
 
   // Mapping archetypes to engaging personalities
   const archetypeNames = {
-    "The Architect": <><span style={{color: '#f8fafc'}}>The Architect</span><SvgArchetype icon='🏛️' color='#e2e8f0'/></>,
-    "The Strategist": <><span style={{color: '#f8fafc'}}>The Strategist</span><SvgArchetype icon='♟️' color='#e2e8f0'/></>,
-    "The Catalyst": <><span style={{color: '#f8fafc'}}>The Catalyst</span><SvgArchetype icon='⚡' color='#e2e8f0'/></>,
-    "The Analyst": <><span style={{color: '#f8fafc'}}>The Analyst</span><SvgArchetype icon='📊' color='#e2e8f0'/></>,
-    "The Guardian": <><span style={{color: '#f8fafc'}}>The Guardian</span><SvgArchetype icon='🛡️' color='#e2e8f0'/></>,
-    "The Visionary": <><span style={{color: '#f8fafc'}}>The Visionary</span><SvgArchetype icon='🌌' color='#e2e8f0'/></>,
-    "The Maestro": <><span style={{color: '#f8fafc'}}>The Maestro</span><SvgArchetype icon='🎼' color='#e2e8f0'/></>,
-    "The Vanguard": <><span style={{color: '#f8fafc'}}>The Vanguard</span><SvgArchetype icon='🚀' color='#e2e8f0'/></>
+    "Fast Learner": <><span style={{color: '#f8fafc'}}>Fast Learner</span><SvgArchetype icon='🚀' color='#4ade80'/></>,
+    "Steady Improver": <><span style={{color: '#f8fafc'}}>Steady Improver</span><SvgArchetype icon='📈' color='#f59e0b'/></>,
+    "High Fatigue": <><span style={{color: '#f8fafc'}}>High Fatigue</span><SvgArchetype icon='🔋' color='#ef4444'/></>
   };
 
   const archetypeTitle = personalizedReport?.archetype 
     ? (archetypeNames[personalizedReport.archetype] || personalizedReport.archetype) 
     : <><span style={{color: '#f8fafc'}}>The Learner</span><SvgArchetype icon='💡' color='#e2e8f0'/></>;
+
+  
+  // C7: Map game title
+  const getGameTitle = (gameId) => {
+    for (const d of DOMAINS_LIST) {
+      const g = d.games.find(x => x.id === gameId);
+      if (g) return g.title;
+    }
+    return gameId;
+  };
+  const friendlyGameName = getGameTitle(prescribedGame);
+
+  // C5: Radar Chart Setup
+  const scoresArray = [
+    preTestScores.spatial_visual_memory || 0,
+    preTestScores.logical_mathematical || 0,
+    preTestScores.reflexes_and_focus || 0,
+    preTestScores.executive_strategy || 0
+  ];
+  // Calculate max score gap (C3)
+  const maxScore = Math.max(...scoresArray);
+  const minScore = Math.min(...scoresArray);
+  const scoreGap = maxScore - minScore;
+  
+  const getRadarPoint = (val, angle) => {
+    const r = (Math.max(10, Math.min(100, val)) / 100) * 80;
+    const rad = angle * (Math.PI / 180);
+    return `${100 + r * Math.sin(rad)},${100 - r * Math.cos(rad)}`;
+  };
+  const polygonPoints = `
+    ${getRadarPoint(preTestScores.spatial_visual_memory || 0, 0)} 
+    ${getRadarPoint(preTestScores.logical_mathematical || 0, 90)} 
+    ${getRadarPoint(preTestScores.reflexes_and_focus || 0, 180)} 
+    ${getRadarPoint(preTestScores.executive_strategy || 0, 270)}
+  `;
+
+  // C2: Dynamic Prediction text
+  const dynamicPrediction = `Based on your pre-test scores (ranging from ${Math.round(minScore)} to ${Math.round(maxScore)}), our model sees the most room for rapid improvement in ${weakestTheme.name}. By focusing here, you can quickly close the ${Math.round(scoreGap)}-point gap in your cognitive profile.`;
 
   return (
     <div style={{
@@ -151,16 +182,16 @@ const PretestResults = ({
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
                     <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#94a3b8', marginBottom: '0.25rem' }}>
-                            <span>Growth Potential</span>
-                            <span>High ({((personalizedReport.confidence_score || 0.85) * 100).toFixed(0)}%)</span>
+                            <span>Performance Gap (Opportunity)</span>
+                            <span>{Math.round(scoreGap)} pts</span>
                         </div>
                         <div style={{ width: '100%', height: '6px', background: 'rgba(0,0,0,0.4)', borderRadius: '3px', overflow: 'hidden' }}>
-                            <div style={{ width: `${(personalizedReport.confidence_score || 0.85) * 100}%`, height: '100%', background: 'linear-gradient(90deg, var(--color-primary), #818cf8)' }} />
+                            <div style={{ width: `${Math.min(100, scoreGap)}%`, height: '100%', background: 'linear-gradient(90deg, var(--color-primary), #818cf8)' }} />
                         </div>
                     </div>
                 </div>
                 <p style={{ margin: 0, color: '#e2e8f0', fontSize: '0.9rem', lineHeight: '1.5' }}>
-                  Based on your initial latency and accuracy patterns, our predictive model suggests you will likely excel in <strong style={{ color: weakestTheme.color }}>{weakestTheme.name}</strong> if you train consistently. You are projected to hit the <strong>Level 3 Difficulty Milestone</strong> within your next 5 sessions.
+                  {dynamicPrediction}
                 </p>
               </div>
             </div>
@@ -179,6 +210,24 @@ const PretestResults = ({
           <p style={{ fontSize: '0.9rem', color: '#94a3b8', marginBottom: '2rem' }}>
             Here's a simplified look at your cognitive performance across 4 key areas. Higher is better!
           </p>
+
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>
+            <svg width="200" height="200" viewBox="0 0 200 200">
+              <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+              <circle cx="100" cy="100" r="60" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+              <circle cx="100" cy="100" r="40" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+              <circle cx="100" cy="100" r="20" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+              <line x1="100" y1="20" x2="100" y2="180" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+              <line x1="20" y1="100" x2="180" y2="100" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+              
+              <polygon points={polygonPoints} fill="rgba(var(--rgb-primary), 0.3)" stroke="var(--color-primary)" strokeWidth="2" style={{ transition: 'all 1s ease' }}/>
+              <circle cx={getRadarPoint(preTestScores.spatial_visual_memory || 0, 0).split(',')[0]} cy={getRadarPoint(preTestScores.spatial_visual_memory || 0, 0).split(',')[1]} r="4" fill="#4ade80"/>
+              <circle cx={getRadarPoint(preTestScores.logical_mathematical || 0, 90).split(',')[0]} cy={getRadarPoint(preTestScores.logical_mathematical || 0, 90).split(',')[1]} r="4" fill="#f59e0b"/>
+              <circle cx={getRadarPoint(preTestScores.reflexes_and_focus || 0, 180).split(',')[0]} cy={getRadarPoint(preTestScores.reflexes_and_focus || 0, 180).split(',')[1]} r="4" fill="var(--color-primary)"/>
+              <circle cx={getRadarPoint(preTestScores.executive_strategy || 0, 270).split(',')[0]} cy={getRadarPoint(preTestScores.executive_strategy || 0, 270).split(',')[1]} r="4" fill="var(--color-secondary)"/>
+            </svg>
+          </div>
+
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
             {Object.entries(preTestScores).map(([domain, score]) => {
@@ -196,9 +245,9 @@ const PretestResults = ({
                       </span>
                       <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.2rem' }}>{theme.description}</div>
                     </div>
-                    <span style={{ color: isWeakest ? theme.color : '#cbd5e1', fontWeight: '700', fontSize: '1.2rem' }}>{Math.round(score)}</span>
+                    <span style={{ color: isWeakest ? theme.color : '#cbd5e1', fontWeight: '700', fontSize: '1.2rem' }}>{Math.round(score)} <span style={{ fontSize: '0.8rem', color: '#64748b' }}>/ 100</span></span>
                   </div>
-                  <div style={{ width: '100%', background: 'rgba(0,0,0,0.4)', borderRadius: '9999px', height: '14px', overflow: 'hidden', border: '1px solid rgba(51, 65, 85, 0.5)' }}>
+                  <div style={{ width: '100%', background: 'rgba(0,0,0,0.4)', borderRadius: '9999px', height: '20px', position: 'relative', overflow: 'hidden', border: '1px solid rgba(51, 65, 85, 0.5)' }}>
                     <div 
                       style={{ 
                         height: '100%',
@@ -206,9 +255,12 @@ const PretestResults = ({
                         transition: 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1)',
                         width: `${scorePercent}%`, 
                         background: `linear-gradient(90deg, ${theme.color}aa, ${theme.color})`,
-                        boxShadow: isWeakest ? `0 0 12px ${theme.color}80` : 'none'
+                        boxShadow: isWeakest ? `0 0 12px ${theme.color}80` : 'none',
+                        position: 'relative'
                       }}
-                    />
+                    >
+                       <span style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.75rem', fontWeight: 'bold', color: 'rgba(0,0,0,0.7)' }}>{Math.round(scorePercent)}%</span>
+                    </div>
                   </div>
                 </div>
               );
@@ -230,7 +282,7 @@ const PretestResults = ({
         <h3 style={{ fontSize: '1.25rem', color: '#e2e8f0', marginBottom: '1rem', fontWeight: '600' }}>Your Personalized Training Plan</h3>
         <p style={{ fontSize: '1.05rem', color: '#cbd5e1', marginBottom: '2rem', maxWidth: '48rem', margin: '0 auto 2rem auto', lineHeight: '1.6' }}>
           Based on your profile, the best way to level up your brain is to practice <strong>{weakestTheme.name}</strong>. 
-          We recommend starting with the <strong style={{ color: weakestTheme.color, fontSize: '1.2rem' }}>{prescribedGame}</strong> exercise to build those neural pathways!
+          We recommend starting with the <strong style={{ color: weakestTheme.color, fontSize: '1.2rem' }}>{friendlyGameName}</strong> exercise to build those neural pathways!
         </p>
         <button
           onClick={onStartPrescribedGame}
@@ -257,7 +309,7 @@ const PretestResults = ({
             e.currentTarget.style.boxShadow = `0 8px 25px ${weakestTheme.color}60`;
           }}
         >
-          Start {prescribedGame} Training
+          Start {friendlyGameName} Training
         </button>
       </div>
     </div>
