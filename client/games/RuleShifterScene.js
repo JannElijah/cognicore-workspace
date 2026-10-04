@@ -718,6 +718,9 @@ export default class RuleShifterScene extends BaseCognitiveScene {
     }
 
     endGame() {
+        if (this.timerText && this.timerText.active) {
+            this.timerText.setText('00:00');
+        }
         this.gamePhase = 'FINISHED';
         this.clearCards();
         console.log('[RuleShifter] Game Over:', {

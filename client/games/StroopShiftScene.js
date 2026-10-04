@@ -538,6 +538,9 @@ export default class StroopShiftScene extends BaseCognitiveScene {
     }
 
     endGame() {
+        if (this.timerText && this.timerText.active) {
+            this.timerText.setText('00:00');
+        }
         if (this.spawnTimerEvent) this.spawnTimerEvent.remove();
         if (this.countdownTimer) this.countdownTimer.remove();
         if (this.spinTween) this.spinTween.remove();

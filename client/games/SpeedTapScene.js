@@ -548,6 +548,9 @@ export default class SpeedTapScene extends BaseCognitiveScene {
     }
 
     endGame() {
+        if (this.timerText && this.timerText.active) {
+            this.timerText.setText('00:00');
+        }
         // Clean up spawners
         if (this.spawnTimerEvent) this.spawnTimerEvent.remove();
         

@@ -366,24 +366,25 @@ def dda(current_user_id, current_username):
             history_acc.append(avg_accuracy)
             history_rt.append(avg_rt)
         else:
-            sessions = db.session.query(
-                GameSession.id, 
-                db.func.avg(PerformanceMetric.accuracy_rate).label('avg_accuracy'),
-                db.func.avg(PerformanceMetric.reaction_time).label('avg_rt')
-            ).join(PerformanceMetric).filter(GameSession.user_id == current_user_id, GameSession.id <= session_id).group_by(GameSession.id).order_by(GameSession.id.desc()).limit(20).all()
+            recent_sessions = GameSession.query.filter(
+                GameSession.user_id == current_user_id, 
+                GameSession.id <= session_id
+            ).order_by(GameSession.id.desc()).limit(20).all()
             
-            sessions = sorted(sessions, key=lambda x: x.id)
+            recent_sessions = sorted(recent_sessions, key=lambda x: x.id)
             history_acc = []
             history_rt = []
             found_current = False
-            for s in sessions:
+            for s in recent_sessions:
                 if s.id == session_id:
                     found_current = True
                     history_acc.append(avg_accuracy)
                     history_rt.append(avg_rt)
                 else:
-                    history_acc.append(s.avg_accuracy)
-                    history_rt.append(s.avg_rt)
+                    s_metrics = PerformanceMetric.query.filter_by(session_id=s.id).all()
+                    if s_metrics:
+                        history_acc.append(sum(m.accuracy_rate for m in s_metrics) / len(s_metrics))
+                        history_rt.append(sum(m.reaction_time for m in s_metrics) / len(s_metrics))
             if not found_current:
                 history_acc.append(avg_accuracy)
                 history_rt.append(avg_rt)

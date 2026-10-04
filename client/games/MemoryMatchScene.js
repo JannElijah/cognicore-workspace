@@ -569,6 +569,9 @@ this.statusText.setText('SYNCING ADAPTATION...').setFill('#64748b');
     }
 
     async endGame() {
+        if (this.timerText && this.timerText.active) {
+            this.timerText.setText('00:00');
+        }
         if (this.countdownTimer) this.countdownTimer.remove();
         if (this.roundTimer) this.roundTimer.remove();
 

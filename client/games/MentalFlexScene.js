@@ -767,6 +767,9 @@ export default class MentalFlexScene extends BaseCognitiveScene {
     }
 
     endGame() {
+        if (this.timerText && this.timerText.active) {
+            this.timerText.setText('00:00');
+        }
         if (this.countdownTimer) this.countdownTimer.remove();
         if (this.roundTicker) this.roundTicker.remove();
         cogniFX.stopNoise();

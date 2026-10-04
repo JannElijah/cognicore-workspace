@@ -697,6 +697,9 @@ export default class PriorityQueueScene extends BaseCognitiveScene {
 
     // ── Game over ────────────────────────────────────────────
     endGame() {
+        if (this.timerText && this.timerText.active) {
+            this.timerText.setText('00:00');
+        }
         if (this.gamePhase === 'FINISHED') return;
         this.gamePhase = 'FINISHED';
 
