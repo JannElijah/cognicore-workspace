@@ -257,8 +257,13 @@ def start_session(current_user_id, current_username):
         
         prof = CognitiveProfile.query.filter_by(user_id=current_user_id).first()
         if prof:
+            arch_name = prof.archetype_name
+            if arch_name == "Plateauing":
+                arch_name = "Steady Improver"
+                prof.archetype_name = "Steady Improver" # Auto-heal DB
+                
             cognitive_profile = {
-                "archetype": prof.archetype_name,
+                "archetype": arch_name,
                 "confidence_score": prof.confidence_score
             }
         else:
@@ -569,7 +574,7 @@ def get_assessment_status(username):
 def submit_metrics_batch(current_user_id, current_username):
     try:
         data = request.get_json() or {}
-        metrics_list = data.get("telemetry", [])
+        metrics_list = data.get("telemetry", data.get("metrics", []))
         
         if not metrics_list:
             return jsonify({"status": "success", "message": "No metrics"}), 201
