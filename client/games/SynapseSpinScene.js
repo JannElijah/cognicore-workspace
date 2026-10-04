@@ -135,7 +135,7 @@ export default class SynapseSpinScene extends BaseCognitiveScene {
     }
 
 updateTimer() {
-        if (!this.sessionStartTime || this.timeLeft <= 0) return;
+        if (!this.sessionStartTime || this.isGameOver) return;
         
         const elapsed = this.getTime() - this.sessionStartTime;
         this.timeLeft = Math.max(0, this.gameDuration - elapsed);

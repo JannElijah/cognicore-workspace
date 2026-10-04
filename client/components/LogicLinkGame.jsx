@@ -345,7 +345,7 @@ export default function LogicLinkGame({ username = 'default_player', apiUrl = AP
 
     if (gameState === 'PLAYING') {
         return (
-            <div style={{ position: 'relative', width: '100%', height: '85vh', margin: '0 auto' }}>
+            <div key="playing-state" style={{ position: 'relative', width: '100%', height: '85vh', margin: '0 auto' }}>
                 <div style={styles.canvasWrapper} ref={gameContainerRef} className="game-canvas-wrapper" />
                 <PauseOverlay isPaused={isPaused} onTogglePause={() => setIsPaused(false)} onPauseRequest={() => setIsPaused(true)} />
             </div>
@@ -355,7 +355,7 @@ export default function LogicLinkGame({ username = 'default_player', apiUrl = AP
 
     if (gameState === 'FINISHED') {
         return (
-            <div className='premium-overlay'>
+            <div key="finished-state" className='premium-overlay'>
                 <div className='premium-glass-card'>
                     <h1 style={{ 
                         ...styles.title, 
