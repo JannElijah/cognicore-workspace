@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Radar, Line, Bar, Scatter } from 'react-chartjs-2';
 import HoverTooltip from './HoverTooltip';
 import { API_BASE } from '../utils/apiClient.js';
-import useCogniStore from '../store/useCogniStore.js';
+import useCogniStore from '../store/useCogniStore';
 
 const ProgressRing = ({ radius, stroke, progress, color }) => {
   const normalizedRadius = radius - stroke * 2;
