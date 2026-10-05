@@ -1,6 +1,7 @@
 import useCogniStore from '../store/useCogniStore';
 import { API_BASE } from '../utils/apiClient.js';
 import React, { useState, useEffect, useRef } from 'react';
+import GameIcon from './GameIcon';
 import Phaser from 'phaser';
 import NeuroMazeScene from '../games/NeuroMazeScene';
 import PauseOverlay from './PauseOverlay';
@@ -355,7 +356,7 @@ export default function NeuroMazeGame({ username = 'default_player', apiUrl = AP
                             <span className="stat-val" style={{ color: '#4ade80'  }}>{finalStats?.score}</span>
                         </div>
                         <div className='stat-row'>
-                            <span>✅ Pathways Solved</span>
+                            <span><GameIcon name="check" inline /> Pathways Solved</span>
                             <span className='stat-val'>{finalStats?.hits}</span>
                         </div>
                         <div className='stat-row'>

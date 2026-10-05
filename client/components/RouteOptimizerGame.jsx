@@ -1,6 +1,7 @@
 import useCogniStore from '../store/useCogniStore';
 import { API_BASE } from '../utils/apiClient.js';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import GameIcon from './GameIcon';
 import Phaser from 'phaser';
 import RouteOptimizerScene from '../games/RouteOptimizerScene';
 import PauseOverlay from './PauseOverlay';
@@ -249,19 +250,19 @@ export default function RouteOptimizerGame({
                 <div style={S.card}>
                     <h1 style={S.title}>ROUTE OPTIMIZER</h1>
                     <p style={S.subtitle}>Combinatorial Network Optimization & Path Planning</p>
-                    <div style={S.badge}>🕸️ COMBINATORIAL LOGIC · NETWORK REASONING</div>
+                    <div style={S.badge}><GameIcon name="network" inline />COMBINATORIAL LOGIC · NETWORK REASONING</div>
 
                     <div style={S.featureGrid}>
                         <div style={S.featureItem}>
-                            <span style={S.featureIcon}>🗺️</span>
+                            <span style={S.featureIcon}><GameIcon name="map" /></span>
                             Weighted Graph Networks
                         </div>
                         <div style={S.featureItem}>
-                            <span style={S.featureIcon}>⚖️</span>
+                            <span style={S.featureIcon}><GameIcon name="scale" /></span>
                             Multi-Path Cost Comparison
                         </div>
                         <div style={S.featureItem}>
-                            <span style={S.featureIcon}>🎯</span>
+                            <span style={S.featureIcon}><GameIcon name="target" /></span>
                             Dijkstra Challenge
                         </div>
                         <div style={S.featureItem}>

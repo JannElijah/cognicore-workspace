@@ -1,6 +1,7 @@
 import useCogniStore from '../store/useCogniStore';
 import { API_BASE } from '../utils/apiClient.js';
 import React, { useState, useEffect, useRef } from 'react';
+import GameIcon from './GameIcon';
 import Phaser from 'phaser';
 import RuleShifterScene from '../games/RuleShifterScene';
 import PauseOverlay from './PauseOverlay';
@@ -243,15 +244,15 @@ export default function RuleShifterGame({
                 <div style={S.card}>
                     <h1 style={S.title}>RULE SHIFTER</h1>
                     <p style={S.subtitle}>Set-Shifting Strategy & Metacognitive Confidence Training</p>
-                    <div style={S.badge}>🧭 EXECUTIVE STRATEGY · RULE-SWITCHING</div>
+                    <div style={S.badge}><GameIcon name="compass" inline />EXECUTIVE STRATEGY · RULE-SWITCHING</div>
 
                     <div style={S.featureGrid}>
                         <div style={S.featureItem}>
-                            <span style={S.featureIcon}>🔄</span>
+                            <span style={S.featureIcon}><GameIcon name="refresh" /></span>
                             Wisconsin Card-Switching
                         </div>
                         <div style={S.featureItem}>
-                            <span style={S.featureIcon}>🎯</span>
+                            <span style={S.featureIcon}><GameIcon name="target" /></span>
                             Confidence-Weighted Risk
                         </div>
                         <div style={S.featureItem}>
@@ -259,7 +260,7 @@ export default function RuleShifterGame({
                             Implicit Rule Discovery
                         </div>
                         <div style={S.featureItem}>
-                            <span style={S.featureIcon}>⏱️</span>
+                            <span style={S.featureIcon}><GameIcon name="timer" /></span>
                             Adaptive Plan Shifting
                         </div>
                     </div>
@@ -333,11 +334,11 @@ export default function RuleShifterGame({
                             <span style={{ ...S.statVal, color: '#c084fc' }}>{finalStats?.score}</span>
                         </div>
                         <div style={S.statRow}>
-                            <span>✅ Correct Set Matches</span>
+                            <span><GameIcon name="check" inline /> Correct Set Matches</span>
                             <span style={{ ...S.statVal, color: '#4ade80' }}>{finalStats?.hits}</span>
                         </div>
                         <div style={S.statRow}>
-                            <span>❌ Cognitive Misses / Errors</span>
+                            <span><GameIcon name="x" inline /> Cognitive Misses / Errors</span>
                             <span style={{ ...S.statVal, color: '#ef4444' }}>{finalStats?.misses}</span>
                         </div>
                         <div style={S.statRow}>
@@ -345,7 +346,7 @@ export default function RuleShifterGame({
                             <span style={{ ...S.statVal, color: grade }}>{acc}%</span>
                         </div>
                         <div style={S.statRow}>
-                            <span>⚖️ High-Confidence Decisions</span>
+                            <span><GameIcon name="scale" inline /> High-Confidence Decisions</span>
                             <span style={{ ...S.statVal, color: 'var(--color-primary)' }}>{conf}%</span>
                         </div>
                         <div style={S.statRow}>

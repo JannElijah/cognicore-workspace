@@ -14,6 +14,7 @@ import { API_BASE } from '../utils/apiClient.js';
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import GameIcon from './GameIcon';
 import Phaser from 'phaser';
 import StroopShiftScene from '../games/StroopShiftScene';
 import PauseOverlay from './PauseOverlay';
@@ -373,7 +374,7 @@ const handleRestart = () => {
                             <span className='stat-val'>{finalStats?.hits}</span>
                         </div>
                         <div className='stat-row'>
-                            <span>❌ Errors / Timeouts</span>
+                            <span><GameIcon name="x" inline /> Errors / Timeouts</span>
                             <span className="stat-val" style={{ color: '#ef4444'  }}>{finalStats?.misses}</span>
                         </div>
                         <div className='stat-row'>

@@ -1,6 +1,7 @@
 import useCogniStore from '../store/useCogniStore';
 import { API_BASE } from '../utils/apiClient.js';
 import React, { useState, useEffect, useRef } from 'react';
+import GameIcon from './GameIcon';
 import Phaser from 'phaser';
 import SynapseSpinScene from '../games/SynapseSpinScene';
 import PauseOverlay from './PauseOverlay';
@@ -359,7 +360,7 @@ export default function SynapseSpinGame({ username = 'default_player', apiUrl = 
                             <span className='stat-val'>{finalStats?.hits}</span>
                         </div>
                         <div className='stat-row'>
-                            <span>❌ Rotation Errors</span>
+                            <span><GameIcon name="x" inline /> Rotation Errors</span>
                             <span className="stat-val" style={{ color: '#ef4444'  }}>{finalStats?.misses}</span>
                         </div>
                         <div className='stat-row'>

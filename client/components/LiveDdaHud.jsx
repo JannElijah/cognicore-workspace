@@ -1,6 +1,26 @@
 import React, { useState, memo } from 'react';
 import { audioDda } from '../utils/audioSynth';
 
+// Line-art SVG icons (replace emojis)
+const ICON_PATHS = {
+    bolt: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />,
+    target: <><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></>,
+    brain: <><path d="M9.5 2A2.5 2.5 0 0 0 7 4.5v0A2.5 2.5 0 0 0 4.5 7 3 3 0 0 0 3 9.5c0 1 .5 1.9 1.2 2.4A3 3 0 0 0 5 17a3 3 0 0 0 4 2.8 2.5 2.5 0 0 0 3 .2V4.5A2.5 2.5 0 0 0 9.5 2z" /><path d="M14.5 2A2.5 2.5 0 0 1 17 4.5 2.5 2.5 0 0 1 19.5 7 3 3 0 0 1 21 9.5c0 1-.5 1.9-1.2 2.4A3 3 0 0 1 19 17a3 3 0 0 1-4 2.8 2.5 2.5 0 0 1-3 .2" /></>,
+    sparkles: <><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z" /><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8L19 15z" /></>,
+    bot: <><rect x="4" y="8" width="16" height="12" rx="3" /><path d="M12 8V4" /><circle cx="12" cy="3" r="1" /><circle cx="9" cy="14" r="1" /><circle cx="15" cy="14" r="1" /></>,
+    timer: <><circle cx="12" cy="13" r="8" /><path d="M12 9v4l2 2" /><path d="M9 2h6" /></>,
+    warning: <><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></>,
+    volumeOn: <><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M15.5 8.5a5 5 0 0 1 0 7" /><path d="M19 5a10 10 0 0 1 0 14" /></>,
+    volumeOff: <><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" /></>,
+    up: <polyline points="18 15 12 9 6 15" />,
+    down: <polyline points="6 9 12 15 18 9" />
+};
+const Icon = ({ name, size = 14 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ verticalAlign: '-2px', marginRight: '0.3rem', flexShrink: 0 }}>
+        {ICON_PATHS[name]}
+    </svg>
+);
+
 const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, cognitiveProfile, liveMetrics = [], advisorLogs = [], isMuted = false, onToggleMute }) {
     const handleToggleMute = onToggleMute;
     const [showDevStats, setShowDevStats] = useState(false);
@@ -151,7 +171,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
                                 transition: 'color 0.2s, transform 0.2s'
                             }}
                         >
-                            {isMuted ? '🔇' : '🔊'}
+                            <span style={{ display: 'inline-flex', marginRight: '-0.3rem' }}><Icon name={isMuted ? 'volumeOff' : 'volumeOn'} size={16} /></span>
                         </button>
                     </div>
                 </div>
@@ -182,7 +202,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
                     gap: '0.5rem',
                     animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
                 }}>
-                    <span style={{ fontSize: '1.25rem' }}>⚠️</span>
+                    <span style={{ display: 'inline-flex', color: '#ef4444' }}><Icon name="warning" size={22} /></span>
                     <div>
                         <div style={{ color: '#ef4444', marginBottom: '0.2rem' }}>High Fatigue Detected</div>
                         <div style={{ fontSize: '0.75rem', color: '#f87171', fontWeight: 'normal' }}>Your reaction times and inputs are degrading. Consider resting to maintain data quality.</div>
@@ -195,7 +215,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
                 {/* Level Gauge */}
                 <div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>⚡ CHALLENGE LEVEL</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}><Icon name="bolt" />CHALLENGE LEVEL</span>
                         <span style={{ fontSize: '1.25rem', color: 'var(--color-secondary)', fontWeight: '900', fontFamily: 'var(--font-title)' }}>Lvl {diffLevel} <span style={{fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '500'}}>/ 5</span></span>
                     </div>
                     <div style={{ display: 'flex', gap: '6px', width: '100%', height: '8px' }}>
@@ -222,7 +242,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
                     flex: 1
                 }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginBottom: '0.3rem' }}>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>🧠 COGNITIVE LOAD</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}><Icon name="brain" />COGNITIVE LOAD</span>
                         <span style={{ fontSize: '0.9rem', color: loadColor, fontWeight: 'bold', textShadow: `0 0 8px ${loadColor}40` }}>{loadLabel}</span>
                     </div>
                     
@@ -260,7 +280,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
                 {/* Confidence Visualizer */}
                 <div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>🎯 DECISION CONFIDENCE</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}><Icon name="target" />DECISION CONFIDENCE</span>
                         <span style={{ fontSize: '1.05rem', color: 'var(--color-primary)', fontWeight: '900', fontFamily: 'var(--font-title)' }}>{confidence}%</span>
                     </div>
                     <div style={{ display: 'flex', gap: '4px', width: '100%', height: '8px', position: 'relative', overflow: 'hidden', borderRadius: '999px', background: 'rgba(255,255,255,0.05)' }}>
@@ -283,7 +303,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
                     display: 'flex', flexDirection: 'column', justifyContent: 'center',
                     flex: 1
                 }}>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', fontWeight: '600', marginBottom: '0.25rem' }}>✨ COGNITIVE ARCHETYPE</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', fontWeight: '600', marginBottom: '0.25rem' }}><Icon name="sparkles" />COGNITIVE ARCHETYPE</span>
                     <span style={{
                         fontSize: '1.2rem',
                         fontWeight: '800',
@@ -320,7 +340,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
                     flexShrink: 0,
                     border: '1px solid rgba(59, 130, 246, 0.2)'
                 }}>
-                    🤖
+                    <span style={{ color: 'var(--color-primary)', display: 'inline-flex' }}><Icon name="bot" size={22} /></span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem', textAlign: 'left' }}>
                     <span style={{ fontSize: '0.75rem', color: 'var(--color-primary)', fontWeight: 'bold', letterSpacing: '0.03em' }}>FOCUS COACH</span>
@@ -351,7 +371,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
                         borderRadius: '8px',
                         padding: '0.5rem 0.75rem'
                     }}>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-main)', fontWeight: '500' }}>🎯 Accuracy Slope</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-main)', fontWeight: '500' }}><Icon name="target" />Accuracy Slope</span>
                         <span style={{
                             fontSize: '0.85rem',
                             fontWeight: 'bold',
@@ -372,7 +392,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
                         borderRadius: '8px',
                         padding: '0.5rem 0.75rem'
                     }}>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-main)', fontWeight: '500' }}>⏱️ Latency Slope</span>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-main)', fontWeight: '500' }}><Icon name="timer" />Latency Slope</span>
                         <span style={{
                             fontSize: '0.85rem',
                             fontWeight: 'bold',
@@ -406,7 +426,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
                 }}
             >
                 <span>DEVELOPER TELEMETRY</span>
-                <span>{showDevStats ? '▲' : '▼'}</span>
+                <span style={{ display: 'inline-flex' }}><Icon name={showDevStats ? 'up' : 'down'} size={16} /></span>
             </button>
 
             {/* Hidden Dev Stats */}
@@ -453,7 +473,7 @@ const LiveDdaHud = memo(function LiveDdaHud({ gameType = 'Game', ddaParameters, 
                     {/* DDA Advisor Log Feed */}
                     {advisorLogs && advisorLogs.length > 0 && (
                         <div style={{ borderTop: '1px solid var(--border-glass)', paddingTop: '0.75rem' }}>
-                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600', display: 'block', marginBottom: '0.35rem' }}>🧠 DDA ADVISOR LOGS</span>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600', display: 'block', marginBottom: '0.35rem' }}><Icon name="brain" />DDA ADVISOR LOGS</span>
                             <div style={{
                                 background: 'rgba(0, 0, 0, 0.25)',
                                 border: '1px solid var(--border-glass)',

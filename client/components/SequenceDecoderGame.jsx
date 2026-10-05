@@ -1,6 +1,7 @@
 import useCogniStore from '../store/useCogniStore';
 import { API_BASE } from '../utils/apiClient.js';
 import React, { useState, useEffect, useRef } from 'react';
+import GameIcon from './GameIcon';
 import Phaser from 'phaser';
 import SequenceDecoderScene from '../games/SequenceDecoderScene';
 import PauseOverlay from './PauseOverlay';
@@ -316,23 +317,23 @@ const handleRestart = () => {
                 <div className='premium-glass-card'>
                     <h1 className='premium-title'>SEQUENCE DECODER</h1>
                     <p className='premium-subtitle'>Inductive Pattern Reasoning & Rule Abstraction Training</p>
-                    <div style={styles.badge}>🧩 LOGICAL REASONING · PATTERN INDUCTION</div>
+                    <div style={styles.badge}><GameIcon name="puzzle" inline />LOGICAL REASONING · PATTERN INDUCTION</div>
 
                     <div style={styles.featureGrid}>
                         <div style={styles.featureItem}>
-                            <span style={styles.featureIcon}>🔢</span>
+                            <span style={styles.featureIcon}><GameIcon name="hash" /></span>
                             Arithmetic & Geometric Sequences
                         </div>
                         <div style={styles.featureItem}>
-                            <span style={styles.featureIcon}>🌀</span>
+                            <span style={styles.featureIcon}><GameIcon name="spiral" /></span>
                             Dual-Rule Interleaved Patterns
                         </div>
                         <div style={styles.featureItem}>
-                            <span style={styles.featureIcon}>🌿</span>
+                            <span style={styles.featureIcon}><GameIcon name="sprout" /></span>
                             Fibonacci-Like Series
                         </div>
                         <div style={styles.featureItem}>
-                            <span style={styles.featureIcon}>🔁</span>
+                            <span style={styles.featureIcon}><GameIcon name="repeat" /></span>
                             Alternating Delta Rules
                         </div>
                     </div>
@@ -416,11 +417,11 @@ const handleRestart = () => {
                             <span className="stat-val" style={{ color: '#4ade80'  }}>{finalStats?.score}</span>
                         </div>
                         <div className='stat-row'>
-                            <span>✅ Patterns Decoded</span>
+                            <span><GameIcon name="check" inline /> Patterns Decoded</span>
                             <span className='stat-val'>{finalStats?.hits}</span>
                         </div>
                         <div className='stat-row'>
-                            <span>❌ Pattern Errors</span>
+                            <span><GameIcon name="x" inline /> Pattern Errors</span>
                             <span className="stat-val" style={{ color: '#ef4444'  }}>{finalStats?.misses}</span>
                         </div>
                         <div className='stat-row'>

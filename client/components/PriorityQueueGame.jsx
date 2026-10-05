@@ -1,6 +1,7 @@
 import useCogniStore from '../store/useCogniStore';
 import { API_BASE } from '../utils/apiClient.js';
 import React, { useState, useEffect, useRef } from 'react';
+import GameIcon from './GameIcon';
 import Phaser from 'phaser';
 import PriorityQueueScene from '../games/PriorityQueueScene';
 import PauseOverlay from './PauseOverlay';
@@ -210,12 +211,12 @@ export default function PriorityQueueGame({
             <div style={S.card}>
                 <h1 style={S.title}>PRIORITY QUEUE</h1>
                 <p style={S.subtitle}>Executive Triage &amp; Resource Allocation Under Pressure</p>
-                <div style={S.badge}>🧭 EXECUTIVE STRATEGY · TRIAGE TRAINING</div>
+                <div style={S.badge}><GameIcon name="compass" inline />EXECUTIVE STRATEGY · TRIAGE TRAINING</div>
 
                 <div style={S.featureGrid}>
-                    <div style={S.featureItem}><span style={S.featureIcon}>🏃</span>Animated conveyor belt</div>
-                    <div style={S.featureItem}><span style={S.featureIcon}>✋</span>Drag &amp; drop sorting</div>
-                    <div style={S.featureItem}><span style={S.featureIcon}>🎯</span>Eisenhower matrix logic</div>
+                    <div style={S.featureItem}><span style={S.featureIcon}><GameIcon name="run" /></span>Animated conveyor belt</div>
+                    <div style={S.featureItem}><span style={S.featureIcon}><GameIcon name="hand" /></span>Drag &amp; drop sorting</div>
+                    <div style={S.featureItem}><span style={S.featureIcon}><GameIcon name="target" /></span>Eisenhower matrix logic</div>
                     <div style={S.featureItem}><span style={S.featureIcon}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(250,204,21,0.9))'}} xmlns="http://www.w3.org/2000/svg"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="#facc15"/></svg></span>Speed-bonus scoring</div>
                 </div>
 
@@ -269,14 +270,14 @@ export default function PriorityQueueGame({
 
                     <div style={{ marginBottom: '2rem', textAlign: 'left' }}>
                         {[
-                            ['🏆 Final Score',         finalStats?.score,              '#4ade80'],
-                            ['✅ Correct Triage',      finalStats?.hits,               '#22c55e'],
-                            ['❌ Missed / Wrong Bin',  finalStats?.misses,             '#ef4444'],
-                            ['🎯 Triage Accuracy',     `${acc}%`,                      grade],
-                            ['📈 Peak DDA Level',      `Level ${finalStats?.difficultyLevel}`, '#22c55e'],
-                        ].map(([label, val, col]) => (
+                            ['trophy', 'Final Score',         finalStats?.score,              '#4ade80'],
+                            ['check',  'Correct Triage',      finalStats?.hits,               '#22c55e'],
+                            ['x',      'Missed / Wrong Bin',  finalStats?.misses,             '#ef4444'],
+                            ['target', 'Triage Accuracy',     `${acc}%`,                      grade],
+                            ['trend',  'Peak DDA Level',      `Level ${finalStats?.difficultyLevel}`, '#22c55e'],
+                        ].map(([icon, label, val, col]) => (
                             <div key={label} style={S.statRow}>
-                                <span>{label}</span>
+                                <span><GameIcon name={icon} inline /> {label}</span>
                                 <span style={{ ...S.statVal, color: col }}>{val}</span>
                             </div>
                         ))}

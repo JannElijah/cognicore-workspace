@@ -14,6 +14,7 @@ import { API_BASE } from '../utils/apiClient.js';
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import GameIcon from './GameIcon';
 import Phaser from 'phaser';
 import SpeedTapScene from '../games/SpeedTapScene';
 import PauseOverlay from './PauseOverlay';
@@ -376,7 +377,7 @@ export default function SpeedTapGame({ username = 'default_player', apiUrl = API
                             <span className='stat-val'>{finalStats?.hits}</span>
                         </div>
                         <div className='stat-row'>
-                            <span>❌ Misses / False Alarms</span>
+                            <span><GameIcon name="x" inline /> Misses / False Alarms</span>
                             <span className="stat-val" style={{ color: '#ef4444'  }}>{finalStats?.misses}</span>
                         </div>
                         <div className='stat-row'>
