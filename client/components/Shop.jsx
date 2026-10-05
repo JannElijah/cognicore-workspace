@@ -287,8 +287,24 @@ const Shop = ({ onClose }) => {
                       transition: 'transform 0.2s',
                       boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                     }}>
-                      <div style={{ marginBottom: '1rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0 0 0.5rem 0' }}>
+                        {item.type === 'avatar' && (
+                          <div style={{ height: '80px', width: '100%', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {item.id === 'default-avatar' && <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><circle cx="12" cy="8" r="5"/><path d="M3 21v-2a7 7 0 0114 0v2"/></svg>}
+                            {item.id === 'avatar-robot' && <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" strokeWidth="2"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4M8 15h.01M16 15h.01"/></svg>}
+                            {item.id === 'avatar-brain' && <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#c084fc" strokeWidth="2"><path d="M9.5 2A2.5 2.5 0 007 4.5c0 .3.1.6.2.8a4 4 0 00-1 7.6v.1A5.5 5.5 0 0012 18.5a5.5 5.5 0 005.8-5.5v-.1a4 4 0 00-1-7.6 2.5 2.5 0 002.7-3.3A2.5 2.5 0 0014.5 2 2.5 2.5 0 0012 3a2.5 2.5 0 00-2.5-1z"/></svg>}
+                            {item.id === 'avatar-hacker' && <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>}
+                          </div>
+                        )}
+                        {item.type === 'banner' && (
+                          <div style={{ height: '60px', width: '100%', borderRadius: '8px', marginBottom: '1rem', overflow: 'hidden', position: 'relative' }}>
+                            {item.id === 'default-banner' && <div style={{width:'100%',height:'100%',background:'#334155'}}></div>}
+                            {item.id === 'banner-neon' && <div style={{width:'100%',height:'100%',background:'linear-gradient(45deg, #1e1b4b, #312e81)', borderBottom: '2px solid #f43f5e'}}></div>}
+                            {item.id === 'banner-stellar' && <div style={{width:'100%',height:'100%',background:'radial-gradient(circle at center, #1e3a8a, #0f172a)'}}><div style={{position:'absolute',top:'20%',left:'20%',width:'2px',height:'2px',background:'#fff',borderRadius:'50%',boxShadow:'0 0 4px #fff'}}></div><div style={{position:'absolute',top:'70%',left:'80%',width:'3px',height:'3px',background:'#fff',borderRadius:'50%',boxShadow:'0 0 6px #fff'}}></div></div>}
+                            {item.id === 'banner-cyber' && <div style={{width:'100%',height:'100%',background:'#022c22'}}><div style={{color:'#4ade80', fontSize:'10px', opacity:0.5, padding:'2px', fontFamily:'monospace', lineHeight:'1'}}>01010<br/>10111<br/>00101</div></div>}
+                          </div>
+                        )}
+                        <div style={{ marginBottom: '1rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0 0 0.5rem 0' }}>
                           {item.id === 'theme-red' && <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 8px #ef4444' }}></div>}
                           {item.id === 'theme-blue' && <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#3b82f6', boxShadow: '0 0 8px #3b82f6' }}></div>}
                           {item.id === 'theme-purple' && <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#a855f7', boxShadow: '0 0 8px #a855f7' }}></div>}
