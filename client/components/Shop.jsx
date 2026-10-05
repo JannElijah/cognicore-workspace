@@ -22,11 +22,11 @@ const SHOP_ITEMS = [
   { id: 'default-banner', type: 'banner', name: 'No Banner', description: 'Clean default background.', price: 0, category: 'Banners' },
   { id: 'banner-neon', type: 'banner', name: 'Neon Grid', description: 'Cyberpunk synthwave background.', price: 300, category: 'Banners' },
   { id: 'banner-stellar', type: 'banner', name: 'Stellar Void', description: 'Deep space galactic background.', price: 400, category: 'Banners' },
-  { id: 'banner-cyber', type: 'banner', name: 'Cyber Matrix', description: 'Digital matrix data stream background.', price: 500, category: 'Banners' },
+  { id: 'banner-cyber', type: 'banner', name: 'Cyber Matrix', description: 'Digital matrix data stream background.', price: 500, category: 'Banners', unlockReq: { game: 'SequenceDecoder', level: 5 } },
 ];
 
 const Shop = ({ onClose }) => {
-  const { user, token, fetchInventory } = useCogniStore();
+  const { user, token, fetchInventory, stats } = useCogniStore();
   const [coins, setCoins] = useState(0);
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -265,6 +265,7 @@ const Shop = ({ onClose }) => {
                   const isDefaultItem = item.id.startsWith('default-');
                   const ownedItem = inventory.find(i => i.item_id === item.id);
                   const isOwned = isDefaultItem || !!ownedItem;
+                    const isLocked = item.unlockReq && (!stats?.max_difficulties || (stats.max_difficulties[item.unlockReq.game] || 0) < item.unlockReq.level);
                   let isEquipped = false;
                   
                   if (isDefaultItem) {

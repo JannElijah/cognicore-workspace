@@ -23,6 +23,7 @@ export interface CogniStore {
   coins: number;
   totalXp: number;
   inventory: InventoryItem[];
+  stats: any;
   reduceFlashes: boolean;
   cognitiveProfile: CognitiveProfile;
   login: (userData: User, token: string) => void;
@@ -37,6 +38,7 @@ const useCogniStore = create<CogniStore>((set, get) => ({
   coins: 0,
   totalXp: 0,
   inventory: [],
+  stats: null,
   reduceFlashes: false,
   cognitiveProfile: {
     archetype: null,
@@ -50,7 +52,8 @@ const useCogniStore = create<CogniStore>((set, get) => ({
     token: null, 
     coins: 0, 
     totalXp: 0, 
-    inventory: [], 
+    inventory: [],
+  stats: null, 
     reduceFlashes: false, 
     cognitiveProfile: { archetype: null, confidence_score: 0.0 } 
   }),
@@ -67,7 +70,7 @@ const useCogniStore = create<CogniStore>((set, get) => ({
       });
       const data = await res.json();
       if (data.status === 'success') {
-        set({ coins: data.coins, totalXp: data.total_xp, inventory: data.inventory, reduceFlashes: data.reduce_flashes });
+        set({ coins: data.coins, totalXp: data.total_xp, inventory: data.inventory, reduceFlashes: data.reduce_flashes, stats: data.stats });
       }
     } catch (e) {
       console.error('Failed to fetch inventory:', e);

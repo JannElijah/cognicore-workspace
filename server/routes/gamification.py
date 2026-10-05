@@ -115,12 +115,24 @@ def get_user_inventory(current_user_id, current_username, username):
             "is_equipped": is_equipped
         })
         
+    from models import PerformanceMetric, GameSession
+    max_diff_query = db.session.query(
+        GameSession.game_type, db.func.max(PerformanceMetric.difficulty_level)
+    ).join(PerformanceMetric, GameSession.id == PerformanceMetric.session_id).filter(
+        GameSession.user_id == current_user_id
+    ).group_by(GameSession.game_type).all()
+    
+    max_difficulties = {game_type: int(max_level) for game_type, max_level in max_diff_query if game_type and max_level}
+
     return jsonify({
         "status": "success",
         "coins": prof.coins or 0,
         "total_xp": prof.xp or 0,
         "reduce_flashes": bool(prof.reduce_flashes),
-        "inventory": inventory
+        "inventory": inventory,
+        "stats": {
+            "max_difficulties": max_difficulties
+        }
     }), 200
 
 @gamification_bp.route('/api/settings/accessibility', methods=['POST'])
@@ -163,7 +175,7 @@ def api_purchase(current_user_id, current_username):
         'avatar-hacker': {'type': 'avatar', 'price': 750},
         'banner-neon': {'type': 'banner', 'price': 300},
         'banner-stellar': {'type': 'banner', 'price': 400},
-        'banner-cyber': {'type': 'banner', 'price': 500},
+        'banner-cyber': {'type': 'banner', 'price': 500, 'req_game': 'SequenceDecoder', 'req_level': 5},
     }
     
     if item_id not in catalog:
@@ -173,6 +185,17 @@ def api_purchase(current_user_id, current_username):
     price = item_info['price']
     item_type = item_info['type']
     
+    if 'req_game' in item_info:
+        from models import PerformanceMetric, GameSession
+        max_diff = db.session.query(db.func.max(PerformanceMetric.difficulty_level)).join(
+            PerformanceMetric, GameSession.id == PerformanceMetric.session_id
+        ).filter(
+            GameSession.user_id == current_user_id,
+            GameSession.game_type == item_info['req_game']
+        ).scalar() or 0
+        if max_diff < item_info['req_level']:
+            return jsonify({"status": "error", "message": f"Requirement not met. Reach level {item_info['req_level']} in {item_info['req_game']}."}), 403
+
     prof = UserProfile.query.filter_by(user_id=current_user_id).first()
     if not prof:
         prof = UserProfile(user_id=current_user_id, coins=0)
