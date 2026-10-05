@@ -343,10 +343,10 @@ def dda(current_user_id, current_username):
         theta = current_smooth_difficulty
         discrimination = 2.0
         # Flow-state offset: we want expected accuracy to be ~80% when skill == difficulty
-        # 1 / (1 + exp(-2(0 + 1.386))) = 0.80
-        expected_accuracy = 1.0 / (1.0 + math.exp(-discrimination * (theta - float(current_difficulty) + 1.386)))
+        # 1 / (1 + exp(-2(0 + 0.693))) = 0.80
+        expected_accuracy = 1.0 / (1.0 + math.exp(-discrimination * (theta - float(current_difficulty) + 0.693)))
         
-        learning_rate = 1.5
+        learning_rate = 2.5
         theta_update = learning_rate * (avg_accuracy - expected_accuracy)
         
         if domain == "reflexes_and_focus":
