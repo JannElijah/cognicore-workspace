@@ -1,4 +1,5 @@
 import React from 'react';
+import GameIcon from '../components/GameIcon';
 
 export const SvgGameIcon = ({ name, color }) => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ filter: `drop-shadow(0 0 5px ${color}80)`, display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 }} xmlns="http://www.w3.org/2000/svg">
@@ -211,7 +212,7 @@ export const COGNITIVE_QUESTIONS = [
     difficulty: 1,
     title: 'Air Traffic Control',
     text: 'You are an air traffic controller. Your radar screen suddenly goes black. 3 seconds ago, you saw Flight Alpha in the top-left quadrant moving right, Flight Beta in the bottom-right moving left, and Flight Gamma in the center moving down. Assuming constant speeds, where are they now?',
-    visual: <div style={{width:'100%', height:'120px', background:'rgba(74, 222, 128, 0.1)', border:'1px solid #4ade80', borderRadius:'8px', position:'relative'}}><div style={{position:'absolute', top:'10px', left:'10px', color:'#4ade80'}}>✈️ ➔</div><div style={{position:'absolute', bottom:'10px', right:'10px', color:'#4ade80'}}>⬅️ ✈️</div><div style={{position:'absolute', top:'45px', left:'50%', transform:'translateX(-50%)', color:'#4ade80'}}>✈️ ⬇️</div></div>,
+    visual: <div style={{width:'100%', height:'120px', background:'rgba(74, 222, 128, 0.1)', border:'1px solid #4ade80', borderRadius:'8px', position:'relative'}}><div style={{position:'absolute', top:'10px', left:'10px', color:'#4ade80'}}><GameIcon name="plane" inline /><GameIcon name="arrowRight" inline /></div><div style={{position:'absolute', bottom:'10px', right:'10px', color:'#4ade80'}}><GameIcon name="arrowLeft" inline /><GameIcon name="plane" inline /></div><div style={{position:'absolute', top:'45px', left:'50%', transform:'translateX(-50%)', color:'#4ade80'}}><GameIcon name="plane" inline /><GameIcon name="arrowDown" inline /></div></div>,
     correctAnswer: 'A',
     options: [
       { key: 'A', text: 'Alpha: Top-Center | Beta: Bottom-Center | Gamma: Bottom-Center' },
@@ -256,7 +257,7 @@ export const COGNITIVE_QUESTIONS = [
     difficulty: 1,
     title: 'Triage Protocol',
     text: 'You manage a server farm. Server X is critical but takes 4 hours to fix. Server Y is non-critical but takes 30 minutes to fix. Server Z is critical and takes 1 hour to fix. You have one technician. To minimize critical downtime, what is the optimal repair sequence?',
-    visual: <div style={{display:'flex', flexDirection:'column', gap:'10px', background:'rgba(192, 132, 252, 0.1)', padding:'15px', borderRadius:'8px', border:'1px solid #c084fc', color:'#c084fc'}}><div>🔥 [CRITICAL] X: 4 Hrs</div><div>ℹ️ [MINOR] Y: 0.5 Hrs</div><div>🔥 [CRITICAL] Z: 1 Hr</div></div>,
+    visual: <div style={{display:'flex', flexDirection:'column', gap:'10px', background:'rgba(192, 132, 252, 0.1)', padding:'15px', borderRadius:'8px', border:'1px solid #c084fc', color:'#c084fc'}}><div><GameIcon name="fire" inline /> [CRITICAL] X: 4 Hrs</div><div><GameIcon name="info" inline /> [MINOR] Y: 0.5 Hrs</div><div><GameIcon name="fire" inline /> [CRITICAL] Z: 1 Hr</div></div>,
     correctAnswer: 'A',
     options: [
       { key: 'A', text: 'Fix Z first, then X, then Y' },
@@ -286,7 +287,7 @@ export const COGNITIVE_QUESTIONS = [
     difficulty: 2,
     title: 'Cyber Cryptography',
     text: 'A cryptographic key increments by a specific algorithmic pattern: 1, 4, 13, 40... What is the next number required to decrypt the payload?',
-    visual: <div style={{textAlign:'center', background:'rgba(245, 158, 11, 0.1)', padding:'20px', borderRadius:'8px', border:'1px solid #f59e0b', color:'#f59e0b', fontFamily:'monospace', letterSpacing:'2px', fontSize:'1.2rem'}}>1 ➔ 4 ➔ 13 ➔ 40 ➔ ?</div>,
+    visual: <div style={{textAlign:'center', background:'rgba(245, 158, 11, 0.1)', padding:'20px', borderRadius:'8px', border:'1px solid #f59e0b', color:'#f59e0b', fontFamily:'monospace', letterSpacing:'2px', fontSize:'1.2rem'}}>1 <GameIcon name="arrowRight" inline /> 4 <GameIcon name="arrowRight" inline /> 13 <GameIcon name="arrowRight" inline /> 40 <GameIcon name="arrowRight" inline /> ?</div>,
     correctAnswer: 'C',
     options: [
       { key: 'A', text: '80' },
@@ -301,7 +302,7 @@ export const COGNITIVE_QUESTIONS = [
     difficulty: 2,
     title: 'Security Surveillance',
     text: 'You are monitoring 4 security feeds. Your directive is to press the ALARM button ONLY if a person wearing a RED hat enters Zone A. A person wearing a red jacket and a BLUE hat enters Zone A, while a flashing RED strobe light goes off in the background. Do you press the alarm?',
-    visual: <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px', background:'rgba(96, 165, 250, 0.1)', padding:'10px', borderRadius:'8px', border:'1px solid #60a5fa'}}><div style={{border:'2px dashed #60a5fa', height:'60px', display:'flex', alignItems:'center', justifyContent:'center', color:'#f87171', fontSize:'1.2rem'}}>Zone A: 🧢+🧥</div><div style={{border:'2px dashed #60a5fa', height:'60px', background:'rgba(248, 113, 113, 0.2)'}}></div></div>,
+    visual: <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px', background:'rgba(96, 165, 250, 0.1)', padding:'10px', borderRadius:'8px', border:'1px solid #60a5fa'}}><div style={{border:'2px dashed #60a5fa', height:'60px', display:'flex', alignItems:'center', justifyContent:'center', color:'#f87171', fontSize:'1.2rem'}}>Zone A: <GameIcon name="cap" inline />+<GameIcon name="coat" inline /></div><div style={{border:'2px dashed #60a5fa', height:'60px', background:'rgba(248, 113, 113, 0.2)'}}></div></div>,
     correctAnswer: 'B',
     options: [
       { key: 'A', text: 'Yes, the red jacket and strobe justify an alarm' },
@@ -346,7 +347,7 @@ export const COGNITIVE_QUESTIONS = [
     difficulty: 3,
     title: 'Logistics Network',
     text: 'A supply chain network uses drones. Drone A can carry 5kg and takes 10 mins per trip. Drone B can carry 8kg and takes 15 mins per trip. You need to deliver 26kg in exactly 30 minutes using both drones efficiently. How many trips should Drone A and Drone B make?',
-    visual: <div style={{display:'flex', justifyContent:'space-around', background:'rgba(245, 158, 11, 0.1)', padding:'15px', borderRadius:'8px', border:'1px solid #f59e0b', color:'#f59e0b'}}><div>🛸 A: 5kg / 10m</div><div>🛸 B: 8kg / 15m</div><div>📦 Target: 26kg</div></div>,
+    visual: <div style={{display:'flex', justifyContent:'space-around', background:'rgba(245, 158, 11, 0.1)', padding:'15px', borderRadius:'8px', border:'1px solid #f59e0b', color:'#f59e0b'}}><div><GameIcon name="ufo" inline /> A: 5kg / 10m</div><div><GameIcon name="ufo" inline /> B: 8kg / 15m</div><div><GameIcon name="box" inline /> Target: 26kg</div></div>,
     correctAnswer: 'B',
     options: [
       { key: 'A', text: 'Drone A: 1, Drone B: 3' },
@@ -361,7 +362,7 @@ export const COGNITIVE_QUESTIONS = [
     difficulty: 3,
     title: 'Auditory-Visual Sync',
     text: 'In a noisy command center, you must click the "SYNC" button ONLY when a high-pitched tone plays while the main monitor flashes YELLOW. The monitor flashes YELLOW, but a low-pitched tone plays alongside a loud siren. What is your action?',
-    visual: <div style={{textAlign:'center', background:'#facc15', padding:'20px', borderRadius:'8px', border:'2px solid #eab308', color:'#000', fontWeight:'bold', display:'flex', alignItems:'center', justifyContent:'center', gap:'20px', fontSize:'1.2rem'}}><span>⚠️ WARNING</span> <span>🔊 (Low Pitch + Siren)</span></div>,
+    visual: <div style={{textAlign:'center', background:'#facc15', padding:'20px', borderRadius:'8px', border:'2px solid #eab308', color:'#000', fontWeight:'bold', display:'flex', alignItems:'center', justifyContent:'center', gap:'20px', fontSize:'1.2rem'}}><span><GameIcon name="warning" inline /> WARNING</span> <span><GameIcon name="sound" inline /> (Low Pitch + Siren)</span></div>,
     correctAnswer: 'C',
     options: [
       { key: 'A', text: 'Click SYNC immediately' },
@@ -376,7 +377,7 @@ export const COGNITIVE_QUESTIONS = [
     difficulty: 3,
     title: 'PERT Optimization',
     text: 'You are managing a critical software launch. Task A (UI design) takes 3 days. Task B (Backend logic) takes 5 days. Both must finish before Task C (Integration), which takes 2 days. If you start A and B today simultaneously, what is the absolute minimum number of days until the launch is ready?',
-    visual: <div style={{display:'flex', justifyContent:'center', alignItems:'center', gap:'10px', background:'rgba(192, 132, 252, 0.1)', padding:'15px', borderRadius:'8px', border:'1px solid #c084fc', color:'#c084fc'}}><div style={{display:'flex', flexDirection:'column', gap:'5px'}}><span style={{border:'1px solid #c084fc', padding:'4px 8px', borderRadius:'4px'}}>A: 3d</span><span style={{border:'1px solid #c084fc', padding:'4px 8px', borderRadius:'4px'}}>B: 5d</span></div><span style={{fontSize:'1.5rem'}}>➔</span><span style={{border:'1px solid #c084fc', padding:'4px 8px', borderRadius:'4px'}}>C: 2d</span></div>,
+    visual: <div style={{display:'flex', justifyContent:'center', alignItems:'center', gap:'10px', background:'rgba(192, 132, 252, 0.1)', padding:'15px', borderRadius:'8px', border:'1px solid #c084fc', color:'#c084fc'}}><div style={{display:'flex', flexDirection:'column', gap:'5px'}}><span style={{border:'1px solid #c084fc', padding:'4px 8px', borderRadius:'4px'}}>A: 3d</span><span style={{border:'1px solid #c084fc', padding:'4px 8px', borderRadius:'4px'}}>B: 5d</span></div><span style={{fontSize:'1.5rem'}}><GameIcon name="arrowRight" inline /></span><span style={{border:'1px solid #c084fc', padding:'4px 8px', borderRadius:'4px'}}>C: 2d</span></div>,
     correctAnswer: 'A',
     options: [
       { key: 'A', text: '7 days' },
