@@ -12,6 +12,14 @@ const AppNavigation = memo(function AppNavigation({
   const [portalDropdownOpen, setPortalDropdownOpen] = useState(false);
   const closeDrawer = () => setDrawerOpen(false);
 
+  const equippedBanner = inventory?.find(i => i.item_type === 'banner' && i.is_equipped)?.item_id;
+  const bannerBackgrounds = {
+    'banner-neon': 'linear-gradient(135deg, rgba(255, 0, 127, 0.2) 0%, rgba(121, 40, 202, 0.2) 100%)',
+    'banner-stellar': 'linear-gradient(135deg, rgba(15, 32, 39, 0.5) 0%, rgba(32, 58, 67, 0.5) 50%, rgba(44, 83, 100, 0.5) 100%)',
+    'banner-cyber': 'linear-gradient(135deg, rgba(0, 180, 219, 0.3) 0%, rgba(0, 131, 176, 0.3) 100%)',
+  };
+  const profileBg = equippedBanner && bannerBackgrounds[equippedBanner] ? bannerBackgrounds[equippedBanner] : 'rgba(255, 255, 255, 0.05)';
+
   return (
     <>
       <header className="portal-header">
