@@ -38,27 +38,27 @@ const AppNavigation = memo(function AppNavigation({
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 0 4px rgba(var(--rgb-primary),0.5))' }}><circle cx="12" cy="8" r="4" fill="var(--color-primary)"/><path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round"/></svg>
                  )}
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: '120px', position: 'relative' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.2rem' }}>
-                  <span style={{ fontWeight: 'bold', fontSize: '0.95rem', color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100px' }}>{currentUser}</span>
-                    <span style={{ position: 'absolute', bottom: '-4px', left: '14px', fontSize: '0.65rem', color: 'var(--color-primary)', fontWeight: 'bold', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>
-                        {(() => {
-                            const activeTitleId = inventory?.find(i => i.item_type === 'title' && i.is_equipped)?.item_id;
-                            if (!activeTitleId) return '';
-                            const titleMap = {
-                                'default-title': 'Participant',
-                                'title-novice': 'Novice Scholar',
-                                'title-scholar': 'Cognitive Scholar',
-                                'title-reflex-demon': 'The Reflex Demon',
-                                'title-zen-architect': 'Zen Architect',
-                                'title-logic-weaver': 'Logic Weaver',
-                                'title-strategist': 'Master Strategist'
-                            };
-                            return titleMap[activeTitleId] || activeTitleId;
-                        })()}
-                    </span>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--color-secondary)', fontWeight: 'bold', whiteSpace: 'nowrap', flexShrink: 0 }}>Lv. {currentLevel}</span>
-                </div>
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: '120px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.2rem' }}>
+                    <span style={{ fontWeight: 'bold', fontSize: '0.95rem', color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100px' }}>{currentUser}</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--color-secondary)', fontWeight: 'bold', whiteSpace: 'nowrap', flexShrink: 0 }}>Lv. {currentLevel}</span>
+                  </div>
+                  <span style={{ fontSize: '0.65rem', color: 'var(--color-primary)', fontWeight: 'bold', letterSpacing: '0.05em', whiteSpace: 'nowrap', marginTop: '-2px' }}>
+                      {(() => {
+                          const activeTitleId = inventory?.find(i => i.item_type === 'title' && i.is_equipped)?.item_id;
+                          if (!activeTitleId) return '';
+                          const titleMap = {
+                              'default-title': 'Participant',
+                              'title-novice': 'Novice Scholar',
+                              'title-scholar': 'Cognitive Scholar',
+                              'title-reflex-demon': 'The Reflex Demon',
+                              'title-zen-architect': 'Zen Architect',
+                              'title-logic-weaver': 'Logic Weaver',
+                              'title-strategist': 'Master Strategist'
+                          };
+                          return titleMap[activeTitleId] || activeTitleId;
+                      })()}
+                  </span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
                   <span style={{ fontSize: '0.75rem', color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '0.2rem', fontWeight: '600' }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="#fbbf24" style={{ filter: 'drop-shadow(0 0 4px rgba(251,191,36,0.7))', flexShrink: 0 }} xmlns="http://www.w3.org/2000/svg">
