@@ -112,7 +112,8 @@ class UserProfile(db.Model):
     coins = db.Column(db.Integer, default=0)
     equipped_avatar = db.Column(db.String(255), default='default_avatar')
     equipped_banner = db.Column(db.String(255), default='default_banner')
-    equipped_theme = db.Column(db.String(255), default='theme-blue')
+    equipped_theme = db.Column(db.String(255), default=\'theme-blue\')
+    equipped_visualizer = db.Column(db.String(255), default=\'default_visualizer\')
     reduce_flashes = db.Column(db.Boolean, default=False)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Radar, Line, Bar, Scatter } from 'react-chartjs-2';
 import HoverTooltip from './HoverTooltip';
 import { API_BASE } from '../utils/apiClient.js';
+import useCogniStore from '../store/useCogniStore.js';
 
 const ProgressRing = ({ radius, stroke, progress, color }) => {
   const normalizedRadius = radius - stroke * 2;
@@ -50,6 +51,44 @@ export default function Dashboard({
   skills, domainDeltas, rec, personalizedReport,
   lastGameStats, cognitiveProfile
 }) {
+  const { inventory } = useCogniStore();
+  const activeVisualizer = inventory?.find(i => i.item_type === 'visualizer' && i.is_equipped)?.item_id || 'default-visualizer';
+
+  let customRadarOptions = { ...radarOptions };
+  let radarContainerStyle = { position: 'relative', height: '240px' };
+  
+  if (activeVisualizer === 'vis-terminal') {
+      customRadarOptions = {
+          ...radarOptions,
+          scales: {
+              ...radarOptions.scales,
+              r: {
+                  ...radarOptions.scales.r,
+                  grid: { color: 'rgba(74, 222, 128, 0.2)' },
+                  angleLines: { color: 'rgba(74, 222, 128, 0.2)' },
+                  pointLabels: { ...radarOptions.scales.r.pointLabels, color: '#4ade80', font: { family: 'monospace', size: 10 } },
+                  ticks: { ...radarOptions.scales.r.ticks, color: '#22c55e' }
+              }
+          }
+      };
+      radarContainerStyle.filter = 'drop-shadow(0 0 4px rgba(74,222,128,0.5)) hue-rotate(90deg)';
+  } else if (activeVisualizer === 'vis-hologram') {
+      customRadarOptions = {
+          ...radarOptions,
+          scales: {
+              ...radarOptions.scales,
+              r: {
+                  ...radarOptions.scales.r,
+                  grid: { color: 'rgba(96, 165, 250, 0.4)' },
+                  angleLines: { color: 'rgba(96, 165, 250, 0.4)' },
+                  pointLabels: { ...radarOptions.scales.r.pointLabels, color: '#bfdbfe', font: { size: 12, weight: 'bold' } },
+              }
+          }
+      };
+      radarContainerStyle.filter = 'drop-shadow(0 0 10px rgba(96,165,250,0.8)) brightness(1.2)';
+      radarContainerStyle.transform = 'perspective(500px) rotateX(15deg)';
+  }
+
   const [activeTab, setActiveTab] = useState('participant');
   const [cohortData, setCohortData] = useState(null);
   const [cohortLoading, setCohortLoading] = useState(false);

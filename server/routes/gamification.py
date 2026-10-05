@@ -108,6 +108,8 @@ def get_user_inventory(current_user_id, current_username, username):
             is_equipped = True
         elif row.item_type == 'theme' and row.item_id == prof.equipped_theme:
             is_equipped = True
+        elif row.item_type == 'visualizer' and row.item_id == prof.equipped_visualizer:
+            is_equipped = True
             
         inventory.append({
             "item_type": row.item_type,
@@ -176,6 +178,8 @@ def api_purchase(current_user_id, current_username):
         'banner-neon': {'type': 'banner', 'price': 300},
         'banner-stellar': {'type': 'banner', 'price': 400},
         'banner-cyber': {'type': 'banner', 'price': 500, 'req_game': 'SequenceDecoder', 'req_level': 5},
+        'vis-terminal': {'type': 'visualizer', 'price': 1000},
+        'vis-hologram': {'type': 'visualizer', 'price': 1500, 'req_game': 'MemoryMatch', 'req_level': 5},
     }
     
     if item_id not in catalog:
@@ -273,6 +277,8 @@ def api_equip(current_user_id, current_username):
         prof.equipped_banner = item_id
     elif item_type == 'theme':
         prof.equipped_theme = item_id
+    elif item_type == 'visualizer':
+        prof.equipped_visualizer = item_id
         
     db.session.commit()
     

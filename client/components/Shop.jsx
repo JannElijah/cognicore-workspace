@@ -22,7 +22,10 @@ const SHOP_ITEMS = [
   { id: 'default-banner', type: 'banner', name: 'No Banner', description: 'Clean default background.', price: 0, category: 'Banners' },
   { id: 'banner-neon', type: 'banner', name: 'Neon Grid', description: 'Cyberpunk synthwave background.', price: 300, category: 'Banners' },
   { id: 'banner-stellar', type: 'banner', name: 'Stellar Void', description: 'Deep space galactic background.', price: 400, category: 'Banners' },
-  { id: 'banner-cyber', type: 'banner', name: 'Cyber Matrix', description: 'Digital matrix data stream background.', price: 500, category: 'Banners', unlockReq: { game: 'SequenceDecoder', level: 5 } },
+      { id: 'banner-cyber', type: 'banner', name: 'Cyber Matrix', description: 'Digital matrix data stream background.', price: 500, category: 'Banners', unlockReq: { game: 'SequenceDecoder', level: 5 } },
+    { id: 'default-visualizer', type: 'visualizer', name: 'Standard Radar', description: 'Default 2D polygon radar.', price: 0, category: 'Visualizers' },
+    { id: 'vis-terminal', type: 'visualizer', name: 'Retro Terminal', description: 'Hacker-style green phosphor chart.', price: 1000, category: 'Visualizers' },
+    { id: 'vis-hologram', type: 'visualizer', name: '3D Hologram', description: 'Glowing futuristic 3D projection.', price: 1500, category: 'Visualizers', unlockReq: { game: 'MemoryMatch', level: 5 } },
 ];
 
 const Shop = ({ onClose }) => {
@@ -227,7 +230,7 @@ const Shop = ({ onClose }) => {
 
           {/* Category Tabs */}
           <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid #1e293b', paddingBottom: '1rem' }}>
-            {['Themes', 'Avatars', 'Banners'].map(tab => (
+            {['Themes', 'Avatars', 'Banners', 'Visualizers'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -302,6 +305,13 @@ const Shop = ({ onClose }) => {
                             {item.id === 'banner-neon' && <div style={{width:'100%',height:'100%',background:'linear-gradient(45deg, #1e1b4b, #312e81)', borderBottom: '2px solid #f43f5e'}}></div>}
                             {item.id === 'banner-stellar' && <div style={{width:'100%',height:'100%',background:'radial-gradient(circle at center, #1e3a8a, #0f172a)'}}><div style={{position:'absolute',top:'20%',left:'20%',width:'2px',height:'2px',background:'#fff',borderRadius:'50%',boxShadow:'0 0 4px #fff'}}></div><div style={{position:'absolute',top:'70%',left:'80%',width:'3px',height:'3px',background:'#fff',borderRadius:'50%',boxShadow:'0 0 6px #fff'}}></div></div>}
                             {item.id === 'banner-cyber' && <div style={{width:'100%',height:'100%',background:'#022c22'}}><div style={{color:'#4ade80', fontSize:'10px', opacity:0.5, padding:'2px', fontFamily:'monospace', lineHeight:'1'}}>01010<br/>10111<br/>00101</div></div>}
+                          </div>
+                        )}
+                                                {item.type === 'visualizer' && (
+                          <div style={{ height: '80px', width: '100%', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {item.id === 'default-visualizer' && <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><polygon points="12 2 22 8 22 16 12 22 2 16 2 8"/></svg>}
+                            {item.id === 'vis-terminal' && <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>}
+                            {item.id === 'vis-hologram' && <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2" style={{ filter: 'drop-shadow(0 0 8px #60a5fa)' }}><circle cx="12" cy="12" r="10"/><ellipse cx="12" cy="12" rx="10" ry="4"/><ellipse cx="12" cy="12" rx="4" ry="10"/></svg>}
                           </div>
                         )}
                         <div style={{ marginBottom: '1rem' }}>
