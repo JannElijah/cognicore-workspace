@@ -413,6 +413,20 @@ def dda(current_user_id, current_username):
         arch_hist = ArchetypeHistory(user_id=current_user_id, session_id=session_id, archetype_name=archetype, confidence_score=confidence)
         db.session.add(arch_hist)
         
+        # Grant exclusive title based on archetype
+        archetype_title_map = {
+            "Reflexes": "title-reflex-demon",
+            "Memory": "title-zen-architect",
+            "Logic": "title-logic-weaver",
+            "Strategy": "title-strategist"
+        }
+        if archetype in archetype_title_map:
+            title_id = archetype_title_map[archetype]
+            existing_title = UserInventory.query.filter_by(user_id=current_user_id, item_type='title', item_id=title_id).first()
+            if not existing_title:
+                new_title = UserInventory(user_id=current_user_id, item_type='title', item_id=title_id)
+                db.session.add(new_title)
+        
         db.session.commit()
         
         return jsonify({

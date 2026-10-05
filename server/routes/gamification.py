@@ -110,6 +110,8 @@ def get_user_inventory(current_user_id, current_username, username):
             is_equipped = True
         elif row.item_type == 'visualizer' and row.item_id == prof.equipped_visualizer:
             is_equipped = True
+        elif row.item_type == 'title' and row.item_id == prof.equipped_title:
+            is_equipped = True
             
         inventory.append({
             "item_type": row.item_type,
@@ -125,6 +127,10 @@ def get_user_inventory(current_user_id, current_username, username):
     ).group_by(GameSession.game_type).all()
     
     max_difficulties = {game_type: int(max_level) for game_type, max_level in max_diff_query if game_type and max_level}
+    
+    from models import CognitiveProfile
+    profile = CognitiveProfile.query.filter_by(user_id=current_user_id).order_by(CognitiveProfile.id.desc()).first()
+    archetype = profile.archetype_name if profile else None
 
     return jsonify({
         "status": "success",
@@ -133,7 +139,8 @@ def get_user_inventory(current_user_id, current_username, username):
         "reduce_flashes": bool(prof.reduce_flashes),
         "inventory": inventory,
         "stats": {
-            "max_difficulties": max_difficulties
+            "max_difficulties": max_difficulties,
+            "archetype": archetype
         }
     }), 200
 
@@ -180,6 +187,12 @@ def api_purchase(current_user_id, current_username):
         'banner-cyber': {'type': 'banner', 'price': 500, 'req_game': 'SequenceDecoder', 'req_level': 5},
         'vis-terminal': {'type': 'visualizer', 'price': 1000},
         'vis-hologram': {'type': 'visualizer', 'price': 1500, 'req_game': 'MemoryMatch', 'req_level': 5},
+        'title-novice': {'type': 'title', 'price': 100},
+        'title-scholar': {'type': 'title', 'price': 300},
+        'title-reflex-demon': {'type': 'title', 'price': 0, 'req_archetype': 'Reflexes'},
+        'title-zen-architect': {'type': 'title', 'price': 0, 'req_archetype': 'Memory'},
+        'title-logic-weaver': {'type': 'title', 'price': 0, 'req_archetype': 'Logic'},
+        'title-strategist': {'type': 'title', 'price': 0, 'req_archetype': 'Strategy'},
     }
     
     if item_id not in catalog:
@@ -189,6 +202,12 @@ def api_purchase(current_user_id, current_username):
     price = item_info['price']
     item_type = item_info['type']
     
+    if 'req_archetype' in item_info:
+        from models import CognitiveProfile
+        profile = CognitiveProfile.query.filter_by(user_id=current_user_id).order_by(CognitiveProfile.id.desc()).first()
+        if not profile or profile.archetype_name != item_info['req_archetype']:
+            return jsonify({"status": "error", "message": f"Requirement not met. Requires the {item_info['req_archetype']} archetype."}), 403
+
     if 'req_game' in item_info:
         from models import PerformanceMetric, GameSession
         max_diff = db.session.query(db.func.max(PerformanceMetric.difficulty_level)).join(
@@ -279,6 +298,8 @@ def api_equip(current_user_id, current_username):
         prof.equipped_theme = item_id
     elif item_type == 'visualizer':
         prof.equipped_visualizer = item_id
+    elif item_type == 'title':
+        prof.equipped_title = item_id
         
     db.session.commit()
     

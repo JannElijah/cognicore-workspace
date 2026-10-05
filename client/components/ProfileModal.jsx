@@ -329,7 +329,25 @@ const ProfileModal = ({ onClose }) => {
                 {avatarIcon}
               </div>
               <div>
-                <h2 style={{ color: '#f8fafc', margin: '0 0 0.25rem 0', fontSize: '1.5rem' }}>{username}</h2>
+                <h2 style={{ color: '#f8fafc', margin: '0 0 0.15rem 0', fontSize: '1.5rem', display: 'flex', alignItems: 'baseline', gap: '0.5rem' }}>
+                  {username}
+                </h2>
+                <div style={{ color: 'var(--color-primary)', fontSize: '0.95rem', fontWeight: 'bold', marginBottom: '0.5rem', letterSpacing: '0.05em' }}>
+                  {(() => {
+                    const activeTitleId = inventory?.find(i => i.item_type === 'title' && i.is_equipped)?.item_id;
+                    if (!activeTitleId) return '';
+                    const titleMap = {
+                      'default-title': 'Participant',
+                      'title-novice': 'Novice Scholar',
+                      'title-scholar': 'Cognitive Scholar',
+                      'title-reflex-demon': 'The Reflex Demon',
+                      'title-zen-architect': 'Zen Architect',
+                      'title-logic-weaver': 'Logic Weaver',
+                      'title-strategist': 'Master Strategist'
+                    };
+                    return titleMap[activeTitleId] || activeTitleId;
+                  })()}
+                </div>
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                   <span style={{ color: '#fbbf24', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><svg width="16" height="16" viewBox="0 0 24 24" style={{ filter: 'drop-shadow(0 0 4px rgba(251,191,36,0.7))', flexShrink: 0 }} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="11" fill="#fbbf24"/><circle cx="12" cy="12" r="8" fill="#f59e0b"/><text x="12" y="16.5" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#78350f" fontFamily="Arial">C</text></svg> {coins} Coins</span>
                   <span style={{ color: 'var(--color-secondary)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>

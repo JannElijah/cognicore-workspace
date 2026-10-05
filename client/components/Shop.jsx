@@ -25,7 +25,14 @@ const SHOP_ITEMS = [
       { id: 'banner-cyber', type: 'banner', name: 'Cyber Matrix', description: 'Digital matrix data stream background.', price: 500, category: 'Banners', unlockReq: { game: 'SequenceDecoder', level: 5 } },
     { id: 'default-visualizer', type: 'visualizer', name: 'Standard Radar', description: 'Default 2D polygon radar.', price: 0, category: 'Visualizers' },
     { id: 'vis-terminal', type: 'visualizer', name: 'Retro Terminal', description: 'Hacker-style green phosphor chart.', price: 1000, category: 'Visualizers' },
-    { id: 'vis-hologram', type: 'visualizer', name: '3D Hologram', description: 'Glowing futuristic 3D projection.', price: 1500, category: 'Visualizers', unlockReq: { game: 'MemoryMatch', level: 5 } },
+        { id: 'vis-hologram', type: 'visualizer', name: '3D Hologram', description: 'Glowing futuristic 3D projection.', price: 1500, category: 'Visualizers', unlockReq: { game: 'MemoryMatch', level: 5 } },
+    { id: 'default-title', type: 'title', name: 'Participant', description: 'Default user title.', price: 0, category: 'Titles' },
+    { id: 'title-novice', type: 'title', name: 'Novice Scholar', description: 'Beginning the cognitive journey.', price: 100, category: 'Titles' },
+    { id: 'title-scholar', type: 'title', name: 'Cognitive Scholar', description: 'Dedicated to mental improvement.', price: 300, category: 'Titles' },
+    { id: 'title-reflex-demon', type: 'title', name: 'The Reflex Demon', description: 'Exclusive to the Reflexes archetype.', price: 0, category: 'Titles', unlockReq: { archetype: 'Reflexes' } },
+    { id: 'title-zen-architect', type: 'title', name: 'Zen Architect', description: 'Exclusive to the Memory archetype.', price: 0, category: 'Titles', unlockReq: { archetype: 'Memory' } },
+    { id: 'title-logic-weaver', type: 'title', name: 'Logic Weaver', description: 'Exclusive to the Logic archetype.', price: 0, category: 'Titles', unlockReq: { archetype: 'Logic' } },
+    { id: 'title-strategist', type: 'title', name: 'Master Strategist', description: 'Exclusive to the Strategy archetype.', price: 0, category: 'Titles', unlockReq: { archetype: 'Strategy' } },
 ];
 
 const Shop = ({ onClose }) => {
@@ -230,7 +237,7 @@ const Shop = ({ onClose }) => {
 
           {/* Category Tabs */}
           <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid #1e293b', paddingBottom: '1rem' }}>
-            {['Themes', 'Avatars', 'Banners', 'Visualizers'].map(tab => (
+            {['Themes', 'Avatars', 'Banners', 'Visualizers', 'Titles'].map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -268,7 +275,21 @@ const Shop = ({ onClose }) => {
                   const isDefaultItem = item.id.startsWith('default-');
                   const ownedItem = inventory.find(i => i.item_id === item.id);
                   const isOwned = isDefaultItem || !!ownedItem;
-                    const isLocked = item.unlockReq && (!stats?.max_difficulties || (stats.max_difficulties[item.unlockReq.game] || 0) < item.unlockReq.level);
+                    let isLocked = false;
+                    let lockReason = '';
+                    if (item.unlockReq) {
+                        if (item.unlockReq.game) {
+                            if (!stats?.max_difficulties || (stats.max_difficulties[item.unlockReq.game] || 0) < item.unlockReq.level) {
+                                isLocked = true;
+                                lockReason = `🔒 Reach Level ${item.unlockReq.level} in ${item.unlockReq.game} to unlock`;
+                            }
+                        } else if (item.unlockReq.archetype) {
+                            if (stats?.archetype !== item.unlockReq.archetype) {
+                                isLocked = true;
+                                lockReason = `🔒 Requires the ${item.unlockReq.archetype} Archetype (Currently: ${stats?.archetype || 'None'})`;
+                            }
+                        }
+                    }
                   let isEquipped = false;
                   
                   if (isDefaultItem) {
@@ -312,6 +333,13 @@ const Shop = ({ onClose }) => {
                             {item.id === 'default-visualizer' && <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><polygon points="12 2 22 8 22 16 12 22 2 16 2 8"/></svg>}
                             {item.id === 'vis-terminal' && <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>}
                             {item.id === 'vis-hologram' && <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2" style={{ filter: 'drop-shadow(0 0 8px #60a5fa)' }}><circle cx="12" cy="12" r="10"/><ellipse cx="12" cy="12" rx="10" ry="4"/><ellipse cx="12" cy="12" rx="4" ry="10"/></svg>}
+                          </div>
+                        )}
+                                                {item.type === 'title' && (
+                          <div style={{ height: '80px', width: '100%', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ padding: '0.25rem 0.75rem', borderRadius: '4px', background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#e2e8f0', fontWeight: 'bold', fontSize: '0.9rem', letterSpacing: '0.05em' }}>
+                              {item.name}
+                            </div>
                           </div>
                         )}
                         <div style={{ marginBottom: '1rem' }}>
