@@ -1,4 +1,5 @@
 import React from 'react';
+import GameIcon from './GameIcon';
 import HoverTooltip from './HoverTooltip';
 
 const RewardModal = ({ rewards, onClose }) => {
@@ -22,7 +23,7 @@ const RewardModal = ({ rewards, onClose }) => {
       }}>
         {rewards.leveled_up && (
           <div style={{ marginBottom: '1rem', color: '#fbbf24', fontSize: '3rem', animation: 'bounce 1s infinite' }}>
-            🌟
+            <GameIcon name="star" />
           </div>
         )}
         

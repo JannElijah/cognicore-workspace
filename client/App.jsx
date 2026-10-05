@@ -1,5 +1,6 @@
 import { API_BASE } from './utils/apiClient.js';
 import React, { useState, useEffect, useRef, useCallback, Suspense, lazy, useMemo } from 'react';
+import GameIcon from './components/GameIcon';
 import {
   Chart as ChartJS,
   RadialLinearScale,
@@ -3225,7 +3226,7 @@ export default function App() {
 
                           <details onClick={(e) => e.stopPropagation()} style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '6px', marginBottom: '1rem', cursor: 'pointer' }}>
                             <summary style={{ padding: '0.6rem 0.75rem', fontSize: '0.75rem', color: '#94a3b8', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em', outline: 'none' }}>
-                              🔬 View Scientific Validity
+                              <GameIcon name="microscope" inline /> View Scientific Validity
                             </summary>
                             <div style={{ padding: '0 0.75rem 0.75rem 0.75rem', fontSize: '0.75rem', color: '#cbd5e1', fontStyle: 'italic', lineHeight: '1.5' }}>
                               {game.id === 'SpeedTap' && "Based on research by Hadjiaros et al. (2021), game-based cognitive assessments that incorporate reaction-time tasks can effectively measure visuospatial attention and response speed. Their study validated gamified cognitive tasks and found that participants exhibited performance patterns comparable to traditional clinical cognitive assessments."}

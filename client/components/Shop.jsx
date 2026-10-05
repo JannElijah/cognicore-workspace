@@ -1,5 +1,6 @@
 import { API_BASE } from '../utils/apiClient.js';
 import React, { useState, useEffect, useMemo } from 'react';
+import GameIcon from './GameIcon';
 import useCogniStore from '../store/useCogniStore';
 import audioEngine from '../utils/audioEngine';
 import HoverTooltip from './HoverTooltip';
@@ -298,7 +299,7 @@ const Shop = ({ onClose }) => {
                           </div>
                         ) : (
                           <div style={{ color: '#4ade80', fontWeight: 'bold', fontSize: '0.875rem', textTransform: 'uppercase' }}>
-                            ✓ Owned
+                            <GameIcon name="check" inline /> Owned
                           </div>
                         )}
 

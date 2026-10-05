@@ -1,4 +1,5 @@
 import React from 'react';
+import GameIcon from './GameIcon';
 
 export default function PostTestResults({ preScores, postScores, aiFeedback, currentUser, onReturn }) {
   const domains = [
@@ -86,7 +87,7 @@ export default function PostTestResults({ preScores, postScores, aiFeedback, cur
         {/* D1: Stacked Delta Chart & D4: Tabular Breakdown */}
         <div>
           <h2 style={{ color: '#fff', fontSize: '1.3rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            📊 Quantitative Delta & Metrics
+            <GameIcon name="barChart" inline /> Quantitative Delta & Metrics
           </h2>
           <div style={{ background: 'rgba(0,0,0,0.3)', padding: '2rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
             
@@ -153,7 +154,7 @@ export default function PostTestResults({ preScores, postScores, aiFeedback, cur
         {/* AI Qualitative Feedback */}
         <div>
           <h2 style={{ color: '#fff', fontSize: '1.3rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            🧠 AI Qualitative Profiling
+            <GameIcon name="brain" inline /> AI Qualitative Profiling
           </h2>
           <div style={{ background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9))', padding: '2.5rem', borderRadius: '16px', border: '1px solid rgba(var(--rgb-secondary), 0.3)', boxShadow: 'inset 0 0 30px rgba(0,0,0,0.5), 0 10px 30px rgba(0,0,0,0.4)', position: 'relative' }}>
             <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: 'linear-gradient(to bottom, var(--color-primary), var(--color-secondary))' }}></div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import GameIcon from './GameIcon';
 import useCogniStore from '../store/useCogniStore';
 
 const SeizureDisclaimerModal = () => {
@@ -47,7 +48,7 @@ const SeizureDisclaimerModal = () => {
         padding: '2.5rem',
         textAlign: 'center'
       }}>
-        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
+        <div style={{ fontSize: '3rem', marginBottom: '1rem', color: '#ef4444' }}><GameIcon name="warning" /></div>
         <h2 style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#f8fafc', marginBottom: '1rem' }}>Photosensitivity Warning</h2>
         <p style={{ color: '#94a3b8', fontSize: '1rem', lineHeight: '1.6', marginBottom: '2rem' }}>
           CogniCore contains intense visual patterns, rapidly flashing colors, and animations that may trigger seizures in people with photosensitive epilepsy. 
