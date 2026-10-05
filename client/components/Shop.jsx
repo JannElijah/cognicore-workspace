@@ -98,6 +98,21 @@ const Shop = ({ onClose }) => {
   };
 
   const handleEquip = async (itemId) => {
+    const shopItem = SHOP_ITEMS.find(i => i.id === itemId);
+    if (!shopItem) return;
+
+    const previousInventory = [...inventory];
+    
+    // Optimistically update local inventory state
+    setInventory(prev => {
+      return prev.map(item => {
+        if (item.item_type === shopItem.type) {
+          return { ...item, is_equipped: item.item_id === itemId };
+        }
+        return item;
+      });
+    });
+
     try {
       const res = await fetch(`${API_BASE}/api/equip`, {
         method: 'POST',

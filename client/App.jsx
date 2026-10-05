@@ -842,6 +842,8 @@ export default function App() {
     setLiveDdaParams(null);
     setLiveCognitiveProfile(null);
     setLiveMetrics([]);
+    setDdaAdvisorMessage(null);
+    setDdaAdvisorLogs([]);
     audioDda.stop();
   };
 
