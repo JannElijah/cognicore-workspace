@@ -2136,7 +2136,7 @@ export default function App() {
           gap: '0.5rem'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
-            <span style={{ fontSize: '1.25rem' }}>ðŸ§ </span>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#c084fc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
             <strong style={{ fontSize: '0.9rem', color: '#c084fc', letterSpacing: '0.05em' }}>DDA ADVISOR REPORT</strong>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.8rem', fontWeight: 'bold' }}>
@@ -2239,7 +2239,7 @@ export default function App() {
                         textTransform: 'uppercase'
                       }}
                     >
-                      {type === 'sine' ? 'ðŸ”µ Sine' : type === 'triangle' ? 'ðŸ”º Triangle' : 'â¬› Square'}
+                      {type === 'sine' ? <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' style={{marginRight:'4px'}}><path d='M4 12c4-8 12 8 16 0'/></svg> : type === 'triangle' ? <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' style={{marginRight:'4px'}}><polygon points='12,4 4,20 20,20'/></svg> : <svg width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2' style={{marginRight:'4px'}}><rect x='4' y='4' width='16' height='16'/></svg>} {type}
                     </button>
                   ))}
                 </div>

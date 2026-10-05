@@ -22,8 +22,9 @@ export default function PauseOverlay({ isPaused, onTogglePause, onPauseRequest }
                     title="Pause (Press P)"
                     style={{
                         position: "absolute",
-                        bottom: "1.5rem",
-                        right: "1.5rem",
+                        bottom: "-3rem",
+                        left: "50%",
+                        transform: "translateX(-50%)",
                         zIndex: 9999,
                         background: "rgba(15, 23, 42, 0.4)",
                         border: "1px solid rgba(148, 163, 184, 0.2)",
