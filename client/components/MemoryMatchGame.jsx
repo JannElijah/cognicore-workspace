@@ -79,6 +79,7 @@ export default function MemoryMatchGame({ username = 'default_player', apiUrl = 
         cognitiveProfile: cognitiveProfile,
         onGameOver: async (stats) => {
             setFinalStats(stats);
+            setGameState('FINISHED');
 
             let profileInfo = null;
             try {
@@ -100,7 +101,6 @@ export default function MemoryMatchGame({ username = 'default_player', apiUrl = 
                 console.warn('[React MM Wrapper] Failed to fetch final cognitive profile:', e);
             }
 
-            setGameState('FINISHED');
             if (onGameFinished) {
                 onGameFinished({ ...stats, cognitiveProfile: profileInfo });
             }
@@ -413,3 +413,4 @@ export default function MemoryMatchGame({ username = 'default_player', apiUrl = 
 
     return null;
 }
+

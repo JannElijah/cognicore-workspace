@@ -521,7 +521,7 @@ updateTimer() {
 this.statusText.setText('SYNCING ADAPTATION...').setFill('#64748b');
 
         // Flush telemetry in batch before querying DDA updates
-        await this.flushGlobalTelemetry();
+        this.flushGlobalTelemetry();
 
         try {
             console.log('[DDA Bridge] Checking memory scaling profiles...');
@@ -578,7 +578,7 @@ this.statusText.setText('SYNCING ADAPTATION...').setFill('#64748b');
         this.gamePhase = 'GAMEOVER';
 
         // Flush remaining telemetry before closing session
-        await this.flushGlobalTelemetry();
+        this.flushGlobalTelemetry();
 
         this.gridCells.forEach(cell => {
             if (cell.bg) cell.bg.destroy();

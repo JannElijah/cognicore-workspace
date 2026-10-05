@@ -60,6 +60,7 @@ export default function RouteOptimizerGame({
         cognitiveProfile: cognitiveProfile,
         onGameOver: async (stats) => {
             setFinalStats(stats);
+            setGameState('FINISHED');
             let profileInfo = null;
             try {
                 const profileRes = await fetch(`${apiUrl}/api/dda`, {
@@ -79,7 +80,7 @@ export default function RouteOptimizerGame({
             } catch (e) {
                 console.warn('[React Wrapper] Failed to fetch final cognitive profile:', e);
             }
-            setGameState('FINISHED');
+
             if (onGameFinished) {
                 onGameFinished({ ...stats, cognitiveProfile: profileInfo });
             }
@@ -399,3 +400,4 @@ export default function RouteOptimizerGame({
 
     return null;
 }
+

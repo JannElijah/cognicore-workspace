@@ -77,6 +77,7 @@ export default function MatrixRecallGame({ username = 'default_player', apiUrl =
         cognitiveProfile: cognitiveProfile,
         onGameOver: async (stats) => {
             setFinalStats(stats);
+            setGameState('FINISHED');
             let profileInfo = null;
             try {
                 const profileRes = await fetch(`${apiUrl}/api/dda`, {
@@ -96,7 +97,7 @@ export default function MatrixRecallGame({ username = 'default_player', apiUrl =
             } catch (e) {
                 console.warn('[React Wrapper] Failed to fetch final cognitive profile:', e);
             }
-            setGameState('FINISHED');
+
             if (onGameFinished) {
                 onGameFinished({ ...stats, cognitiveProfile: profileInfo });
             }
@@ -410,3 +411,4 @@ const handleRestart = () => {
 
     return null;
 }
+

@@ -62,6 +62,7 @@ export default function SequenceDecoderGame({ username = 'default_player', apiUr
         cognitiveProfile: cognitiveProfile,
         onGameOver: async (stats) => {
             setFinalStats(stats);
+            setGameState('FINISHED');
             let profileInfo = null;
             try {
                 const profileRes = await fetch(`${apiUrl}/api/dda`, {
@@ -81,7 +82,7 @@ export default function SequenceDecoderGame({ username = 'default_player', apiUr
             } catch (e) {
                 console.warn('[React Wrapper] Failed to fetch final cognitive profile:', e);
             }
-            setGameState('FINISHED');
+
             if (onGameFinished) {
                 onGameFinished({ ...stats, cognitiveProfile: profileInfo });
             }
@@ -467,3 +468,4 @@ const handleRestart = () => {
 
     return null;
 }
+

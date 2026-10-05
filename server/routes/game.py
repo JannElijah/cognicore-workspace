@@ -47,7 +47,8 @@ def execute_gamification(uid, reaction_time, accuracy, difficulty, game_type):
     tasks = DailyTask.query.filter(DailyTask.user_id == uid, db.cast(DailyTask.created_at, db.Date) == today).with_for_update().all()
     for task in tasks:
         if task.task_description == 'Play 3 Training Games':
-            task.current_amount += 1
+            games_today = GameSession.query.filter(GameSession.user_id == uid, db.cast(GameSession.start_time, db.Date) == today).count()
+            task.current_amount = games_today
         elif task.task_description == 'Achieve 80% accuracy in any game' and accuracy >= 0.8:
             task.current_amount += 1
         elif task.task_description == 'Achieve reaction time under 800ms' and reaction_time < 800:
@@ -149,7 +150,8 @@ def execute_gamification_batch(uid, metrics_data):
     tasks = DailyTask.query.filter(DailyTask.user_id == uid, db.cast(DailyTask.created_at, db.Date) == today).with_for_update().all()
     for task in tasks:
         if task.task_description == 'Play 3 Training Games':
-            task.current_amount += len(metrics_data)
+            games_today = GameSession.query.filter(GameSession.user_id == uid, db.cast(GameSession.start_time, db.Date) == today).count()
+            task.current_amount = games_today
         elif task.task_description == 'Achieve 80% accuracy in any game':
             meets = sum(1 for m in metrics_data if m['accuracy'] >= 0.8)
             task.current_amount += meets
@@ -347,10 +349,11 @@ def dda(current_user_id, current_username):
         learning_rate = 1.5
         theta_update = learning_rate * (avg_accuracy - expected_accuracy)
         
-        if avg_rt > 1200:
-            theta_update -= 0.15
-        elif avg_rt < 400:
-            theta_update += 0.15
+        if domain == "reflexes_and_focus":
+            if avg_rt > 1200:
+                theta_update -= 0.15
+            elif avg_rt < 400:
+                theta_update += 0.15
             
         new_theta = max(1.0, min(5.0, theta + theta_update))
         new_difficulty = max(1, min(5, int(round(new_theta))))

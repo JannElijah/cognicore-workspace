@@ -33,6 +33,10 @@ const DailyQuests = () => {
   };
 
   const handleClaim = async (questId) => {
+    // Optimistic UI update
+    setQuests(prevQuests => 
+      prevQuests.map(q => q.id === questId ? { ...q, is_completed: 1 } : q)
+    );
     try {
       const res = await fetch(`${API_BASE}/api/quests/claim/${questId}`, {
         method: 'POST',
@@ -43,9 +47,13 @@ const DailyQuests = () => {
       if (res.ok) {
         fetchQuests();
         fetchInventory();
+      } else {
+        // Revert on failure
+        fetchQuests();
       }
     } catch (e) {
       console.error('Failed to claim quest', e);
+      fetchQuests();
     }
   };
 

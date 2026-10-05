@@ -81,6 +81,7 @@ export default function LogicLinkGame({ username = 'default_player', apiUrl = AP
         cognitiveProfile: cognitiveProfile,
         onGameOver: async (stats) => {
             setFinalStats(stats);
+            setGameState('FINISHED');
             let profileInfo = null;
             try {
                 const profileRes = await fetch(`${apiUrl}/api/dda`, {
@@ -100,7 +101,7 @@ export default function LogicLinkGame({ username = 'default_player', apiUrl = AP
             } catch (e) {
                 console.warn('[React Wrapper] Failed to fetch final cognitive profile:', e);
             }
-            setGameState('FINISHED');
+
             if (onGameFinished) {
                 onGameFinished({ ...stats, cognitiveProfile: profileInfo });
             }
@@ -415,3 +416,4 @@ export default function LogicLinkGame({ username = 'default_player', apiUrl = AP
 
     return null;
 }
+
