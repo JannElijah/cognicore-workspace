@@ -230,7 +230,7 @@ export default function AssessmentFlow({
   const questionText = textMatch ? textMatch[2] : '';
 
   return (
-    <div style={{ maxWidth: '800px', margin: '3rem auto', padding: '2.5rem', background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(20px)', border: '1px solid rgba(var(--rgb-secondary), 0.4)', borderRadius: '16px', boxShadow: '0 12px 40px rgba(0,0,0,0.6)', animation: 'fadeIn 0.4s ease-out', opacity: isTransitioning ? 0 : 1, transition: 'opacity 0.2s ease-in-out' }}>
+    <div className="assessment-flow-card" style={{ maxWidth: '800px', margin: '3rem auto', padding: '2.5rem', background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(20px)', border: '1px solid rgba(var(--rgb-secondary), 0.4)', borderRadius: '16px', boxShadow: '0 12px 40px rgba(0,0,0,0.6)', animation: 'fadeIn 0.4s ease-out', opacity: isTransitioning ? 0 : 1, transition: 'opacity 0.2s ease-in-out' }}>
       <div style={{ marginBottom: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
           <h2 style={{ color: '#ffffff', margin: 0, textTransform: 'uppercase', fontSize: '1.4rem', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -278,7 +278,7 @@ export default function AssessmentFlow({
           </div>
           
           {currentQ.visual && (
-            <div style={{ marginBottom: '2rem' }}>
+            <div className="assessment-question-visual" style={{ marginBottom: '2rem' }}>
               {currentQ.visual}
             </div>
           )}

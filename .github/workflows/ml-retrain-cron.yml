@@ -12,5 +12,6 @@ jobs:
     steps:
       - name: Trigger Render Backend Endpoint
         run: |
-          curl -X POST 'https://cognicore-workspace.onrender.com/api/model/retrain' \
-          -H 'X-Cron-Secret: Basta698!!!!!'
+          curl --fail-with-body --silent --show-error --request POST \
+          'https://cognicore-workspace.onrender.com/api/model/retrain' \
+          --header "X-Cron-Secret: ${{ secrets.CRON_SECRET }}"

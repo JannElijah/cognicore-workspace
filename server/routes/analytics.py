@@ -218,11 +218,14 @@ def get_user_analytics(current_user_id, current_username, username):
     }), 200
 
 @analytics_bp.route('/api/evaluate', methods=['POST'])
-def run_evaluation():
+@token_required
+def run_evaluation(current_user_id, current_username):
     data = request.json
     username = data.get('username')
     if not username:
         return jsonify({"status": "error", "message": "Username required"}), 400
+    if username != current_username:
+        return jsonify({"status": "error", "message": "Unauthorized: you can only evaluate your own assessments"}), 403
 
     conn = get_db_connection()
     try:
@@ -534,7 +537,10 @@ def get_cohort_analytics():
         conn.close()
 
 @analytics_bp.route('/api/user-session-history/<username>', methods=['GET'])
-def get_user_session_history(username):
+@token_required
+def get_user_session_history(current_user_id, current_username, username):
+    if current_username != username:
+        return jsonify({"status": "error", "message": "Unauthorized: you can only view your own session history"}), 403
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
@@ -590,13 +596,14 @@ def get_user_session_history(username):
         conn.close()
 
 @analytics_bp.route('/api/session-metrics/<int:session_id>', methods=['GET'])
-def get_session_metrics(session_id):
+@token_required
+def get_session_metrics(current_user_id, current_username, session_id):
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
         
         # Verify if session exists
-        cursor.execute("SELECT id FROM game_sessions WHERE id = %s", (session_id,))
+        cursor.execute("SELECT id FROM game_sessions WHERE id = %s AND user_id = %s", (session_id, current_user_id))
         if not cursor.fetchone():
             return jsonify({"status": "error", "message": f"Session ID {session_id} not found."}), 404
 
@@ -634,7 +641,10 @@ def get_session_metrics(session_id):
         conn.close()
 
 @analytics_bp.route('/api/cohort-comparison/<username>', methods=['GET'])
-def get_cohort_comparison(username):
+@token_required
+def get_cohort_comparison(current_user_id, current_username, username):
+    if current_username != username:
+        return jsonify({"status": "error", "message": "Unauthorized: you can only view your own cohort comparison"}), 403
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
@@ -694,7 +704,10 @@ def get_cohort_comparison(username):
         conn.close()
 
 @analytics_bp.route('/api/archetype-progression/<username>', methods=['GET'])
-def get_archetype_progression(username):
+@token_required
+def get_archetype_progression(current_user_id, current_username, username):
+    if current_username != username:
+        return jsonify({"status": "error", "message": "Unauthorized: you can only view your own archetype progression"}), 403
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
@@ -739,7 +752,10 @@ def get_archetype_progression(username):
         conn.close()
 
 @analytics_bp.route('/api/training-goals/<username>', methods=['GET'])
-def get_training_goals(username):
+@token_required
+def get_training_goals(current_user_id, current_username, username):
+    if current_username != username:
+        return jsonify({"status": "error", "message": "Unauthorized: you can only view your own training goals"}), 403
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
@@ -836,12 +852,13 @@ def get_training_goals(username):
         conn.close()
 
 @analytics_bp.route('/api/training-goals/<int:goal_id>', methods=['DELETE'])
-def delete_training_goal(goal_id):
+@token_required
+def delete_training_goal(current_user_id, current_username, goal_id):
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
         with conn:
-            cursor.execute("DELETE FROM training_goals WHERE id = %s", (goal_id,))
+            cursor.execute("DELETE FROM training_goals WHERE id = %s AND user_id = %s", (goal_id, current_user_id))
             if cursor.rowcount == 0:
                 return jsonify({"status": "error", "message": f"Training goal with ID {goal_id} not found."}), 404
         return jsonify({"status": "success", "message": "Goal deleted successfully"}), 200
@@ -852,7 +869,8 @@ def delete_training_goal(goal_id):
         conn.close()
 
 @analytics_bp.route('/api/training-goals', methods=['POST'])
-def add_training_goal():
+@token_required
+def add_training_goal(current_user_id, current_username):
     data = request.json
     username = data.get('username')
     domain = data.get('domain')
@@ -861,6 +879,8 @@ def add_training_goal():
 
     if not all([username, domain, metric_type, target_value]):
         return jsonify({"status": "error", "message": "Missing required fields"}), 400
+    if username != current_username:
+        return jsonify({"status": "error", "message": "Unauthorized: you can only create your own training goals"}), 403
 
     conn = get_db_connection()
     try:

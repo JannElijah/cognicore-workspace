@@ -10,7 +10,8 @@ jest.mock('../utils/apiClient.js', () => ({
 jest.mock('../utils/supabaseClient.js', () => ({
   supabase: {
     auth: {
-      onAuthStateChange: jest.fn(() => ({ data: { subscription: { unsubscribe: jest.fn() } } }))
+      onAuthStateChange: jest.fn(() => ({ data: { subscription: { unsubscribe: jest.fn() } } })),
+      getSession: jest.fn(() => Promise.resolve({ data: { session: null }, error: null }))
     }
   }
 }));

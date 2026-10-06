@@ -23,8 +23,7 @@ def app():
     with flask_app.app_context():
         _db.create_all()
         # Seed test database with required legacy data
-        import seed_clinical_data
-        import seed_research_cohort
+        from scripts import seed_clinical_data, seed_research_cohort
         seed_clinical_data.DB_PATH = test_db_path
         seed_research_cohort.DB_PATH = test_db_path
         seed_clinical_data.seed_clinical_data()

@@ -10,9 +10,17 @@ from game_utils import (GAME_TO_DOMAIN, calculate_dda_parameters,
 from ai_engine import generate_post_test_ai_feedback
 from utils import safe_float
 import logging
+import math
 
 game_bp = Blueprint('game_bp', __name__)
 logger = logging.getLogger(__name__)
+OPTIONAL_METRIC_FIELDS = (
+    ("error_count", True),
+    ("hesitation_ms", False),
+    ("spam_click_count", True),
+    ("rule_shift_latency_ms", False),
+    ("path_efficiency", False),
+)
 
 
 
@@ -21,6 +29,44 @@ def safe_int(val, default=0):
         return int(val) if val is not None else default
     except (ValueError, TypeError):
         return default
+
+def parse_metric_value(raw, field_name, *, integer=False, required=False):
+    if raw is None:
+        if required:
+            return None, f"{field_name} is required"
+        return None, None
+    if isinstance(raw, bool):
+        return None, f"{field_name} must be numeric"
+    try:
+        value = float(raw)
+    except (TypeError, ValueError):
+        return None, f"{field_name} must be numeric"
+    if not math.isfinite(value):
+        return None, f"{field_name} must be finite"
+    if integer:
+        if not value.is_integer():
+            return None, f"{field_name} must be an integer"
+        value = int(value)
+    return value, None
+
+def validate_metric_values(values):
+    bounds = (
+        ("reaction_time", values["reaction_time"], 0, None),
+        ("accuracy_rate", values["accuracy_rate"], 0, 1),
+        ("difficulty_level", values["difficulty"], 1, 5),
+        ("error_count", values["error_count"], 0, None),
+        ("hesitation_ms", values["hesitation_ms"], 0, None),
+        ("spam_click_count", values["spam_click_count"], 0, None),
+        ("rule_shift_latency_ms", values["rule_shift_latency_ms"], 0, None),
+        ("path_efficiency", values["path_efficiency"], 0, 1),
+    )
+    for field_name, value, minimum, maximum in bounds:
+        if value is None:
+            continue
+        if value < minimum or (maximum is not None and value > maximum):
+            upper = f" and {maximum}" if maximum is not None else ""
+            return f"{field_name} must be between {minimum}{upper}"
+    return None
 
 def execute_gamification(uid, reaction_time, accuracy, difficulty, game_type):
     xp_gained = difficulty * 15
@@ -452,14 +498,32 @@ def submit_metrics(current_user_id, current_username):
         data = request.get_json() or {}
         session_id = safe_int(data.get('session_id'))
         rt_val = data.get('reaction_time') if data.get('reaction_time') is not None else data.get('reaction_time_ms')
-        reaction_time = safe_float(rt_val)
         acc_val = data.get('accuracy_rate') if data.get('accuracy_rate') is not None else data.get('accuracy')
-        accuracy = safe_float(acc_val)
         diff_val = data.get('difficulty') if data.get('difficulty') is not None else data.get('difficulty_level')
-        difficulty = safe_int(diff_val)
-        
-        if not session_id or reaction_time is None or accuracy is None or not difficulty:
-            return jsonify({"status": "error", "message": "Missing required fields"}), 400
+        reaction_time, error = parse_metric_value(rt_val, "reaction_time", required=True)
+        if error:
+            return jsonify({"status": "error", "message": error}), 400
+        accuracy, error = parse_metric_value(acc_val, "accuracy_rate", required=True)
+        if error:
+            return jsonify({"status": "error", "message": error}), 400
+        difficulty, error = parse_metric_value(diff_val, "difficulty_level", integer=True, required=True)
+        if error:
+            return jsonify({"status": "error", "message": error}), 400
+        metric_values = {
+            "reaction_time": reaction_time,
+            "accuracy_rate": accuracy,
+            "difficulty": difficulty,
+        }
+        for field_name, integer in OPTIONAL_METRIC_FIELDS:
+            value, error = parse_metric_value(data.get(field_name), field_name, integer=integer)
+            if error:
+                return jsonify({"status": "error", "message": error}), 400
+            metric_values[field_name] = value
+        validation_error = validate_metric_values(metric_values)
+        if validation_error:
+            return jsonify({"status": "error", "message": validation_error}), 400
+        if not session_id:
+            return jsonify({"status": "error", "message": "session_id is required"}), 400
             
         session_obj = GameSession.query.get(session_id)
         game_type = data.get('game_type', session_obj.game_type if session_obj else None)
@@ -472,11 +536,11 @@ def submit_metrics(current_user_id, current_username):
             difficulty_level=difficulty,
             cognitive_domain=cognitive_domain,
             game_type=game_type,
-            error_count=safe_int(data.get('error_count'), 0),
-            hesitation_ms=safe_float(data.get('hesitation_ms'), 0.0),
-            spam_click_count=safe_int(data.get('spam_click_count'), 0),
-            rule_shift_latency_ms=safe_float(data.get('rule_shift_latency_ms')),
-            path_efficiency=safe_float(data.get('path_efficiency'))
+            error_count=metric_values["error_count"] if metric_values["error_count"] is not None else 0,
+            hesitation_ms=metric_values["hesitation_ms"] if metric_values["hesitation_ms"] is not None else 0.0,
+            spam_click_count=metric_values["spam_click_count"] if metric_values["spam_click_count"] is not None else 0,
+            rule_shift_latency_ms=metric_values["rule_shift_latency_ms"],
+            path_efficiency=metric_values["path_efficiency"]
         )
         db.session.add(pm)
         
@@ -609,18 +673,39 @@ def submit_metrics_batch(current_user_id, current_username):
         valid_metrics_data = []
         metrics_to_add = []
         
-        for item in metrics_list:
+        for index, item in enumerate(metrics_list):
             session_id = safe_int(item.get('session_id'))
-            reaction_time = safe_float(item.get('reaction_time') if item.get('reaction_time') is not None else item.get('reaction_time_ms'))
-            accuracy = safe_float(item.get('accuracy_rate') if item.get('accuracy_rate') is not None else item.get('accuracy'))
-            difficulty = safe_int(item.get('difficulty') if item.get('difficulty') is not None else item.get('difficulty_level'))
-            
-            if not session_id or reaction_time is None or accuracy is None or not difficulty:
-                continue
+            reaction_raw = item.get('reaction_time') if item.get('reaction_time') is not None else item.get('reaction_time_ms')
+            accuracy_raw = item.get('accuracy_rate') if item.get('accuracy_rate') is not None else item.get('accuracy')
+            difficulty_raw = item.get('difficulty') if item.get('difficulty') is not None else item.get('difficulty_level')
+            reaction_time, error = parse_metric_value(reaction_raw, "reaction_time", required=True)
+            if error:
+                return jsonify({"status": "error", "message": f"metrics[{index}]: {error}"}), 400
+            accuracy, error = parse_metric_value(accuracy_raw, "accuracy_rate", required=True)
+            if error:
+                return jsonify({"status": "error", "message": f"metrics[{index}]: {error}"}), 400
+            difficulty, error = parse_metric_value(difficulty_raw, "difficulty_level", integer=True, required=True)
+            if error:
+                return jsonify({"status": "error", "message": f"metrics[{index}]: {error}"}), 400
+            metric_values = {
+                "reaction_time": reaction_time,
+                "accuracy_rate": accuracy,
+                "difficulty": difficulty,
+            }
+            for field_name, integer in OPTIONAL_METRIC_FIELDS:
+                value, error = parse_metric_value(item.get(field_name), field_name, integer=integer)
+                if error:
+                    return jsonify({"status": "error", "message": f"metrics[{index}]: {error}"}), 400
+                metric_values[field_name] = value
+            validation_error = validate_metric_values(metric_values)
+            if validation_error:
+                return jsonify({"status": "error", "message": f"metrics[{index}]: {validation_error}"}), 400
+            if not session_id:
+                return jsonify({"status": "error", "message": f"metrics[{index}]: session_id is required"}), 400
                 
             session_obj = sessions_map.get(session_id)
             if not session_obj:
-                continue
+                return jsonify({"status": "error", "message": f"metrics[{index}]: invalid session_id"}), 400
                 
             game_type = item.get('game_type', session_obj.game_type)
             cognitive_domain = item.get('cognitive_domain', GAME_TO_DOMAIN.get(game_type))
@@ -632,11 +717,11 @@ def submit_metrics_batch(current_user_id, current_username):
                 difficulty_level=difficulty,
                 cognitive_domain=cognitive_domain,
                 game_type=game_type,
-                error_count=safe_int(item.get('error_count'), 0),
-                hesitation_ms=safe_float(item.get('hesitation_ms'), 0.0),
-                spam_click_count=safe_int(item.get('spam_click_count'), 0),
-                rule_shift_latency_ms=safe_float(item.get('rule_shift_latency_ms')),
-                path_efficiency=safe_float(item.get('path_efficiency'))
+                error_count=metric_values["error_count"] if metric_values["error_count"] is not None else 0,
+                hesitation_ms=metric_values["hesitation_ms"] if metric_values["hesitation_ms"] is not None else 0.0,
+                spam_click_count=metric_values["spam_click_count"] if metric_values["spam_click_count"] is not None else 0,
+                rule_shift_latency_ms=metric_values["rule_shift_latency_ms"],
+                path_efficiency=metric_values["path_efficiency"]
             )
             metrics_to_add.append(pm)
             

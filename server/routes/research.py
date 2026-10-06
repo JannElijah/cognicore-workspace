@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, make_response
 from auth import token_required
-from database import db
+from database import db, get_db_connection
 import logging
 from sqlalchemy import text
 from game_utils import safe_float, safe_int, calculate_pearson_r

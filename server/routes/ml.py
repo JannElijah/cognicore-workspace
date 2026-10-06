@@ -29,7 +29,7 @@ def model_status():
 def retrain_model():
     import os
     cron_secret = os.environ.get("CRON_SECRET")
-    provided_secret = request.headers.get("Cron-Secret")
+    provided_secret = request.headers.get("X-Cron-Secret")
     
     if not cron_secret:
         return jsonify({"status": "error", "message": "CRON_SECRET environment variable is not configured."}), 500

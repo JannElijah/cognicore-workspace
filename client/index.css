@@ -748,6 +748,19 @@ svg circle:hover {
     gap: 0.75rem !important;
   }
 
+  .assessment-flow-card {
+    width: 100%;
+    max-width: 100% !important;
+    margin: 1rem auto !important;
+    padding: 1rem !important;
+  }
+
+  .assessment-question-visual {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-wrap: anywhere;
+  }
+
   /* Override fixed widths on inline-style modals */
   div[style*="maxWidth: '800px'"],
   div[style*="maxWidth: '900px'"],
@@ -765,6 +778,15 @@ svg circle:hover {
 }
 
 @media (max-width: 480px) {
+  .assessment-flow-card {
+    padding: 0.75rem !important;
+    border-radius: 10px !important;
+  }
+
+  .assessment-question-visual {
+    margin-bottom: 1.25rem !important;
+  }
+
   .logo-glow {
     font-size: 1.1rem;
   }

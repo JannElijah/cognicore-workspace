@@ -1,6 +1,13 @@
 import useCogniStore from '../store/useCogniStore';
 
-export const API_BASE = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://127.0.0.1:5000' : `https://${window.location.hostname}:5000`);
+const configuredApiBase = import.meta.env.VITE_API_URL?.trim();
+const isLocalDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+if (import.meta.env.PROD && !configuredApiBase) {
+  throw new Error('VITE_API_URL is required in production. Configure it to point to the Render API service.');
+}
+
+export const API_BASE = configuredApiBase || (isLocalDevelopment ? 'http://127.0.0.1:5000' : '');
 
 export class ApiError extends Error {
   constructor(message, status, data) {
