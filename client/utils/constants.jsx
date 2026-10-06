@@ -212,7 +212,7 @@ export const COGNITIVE_QUESTIONS = [
     difficulty: 1,
     title: 'Focus Finder: Neon Grid',
     text: 'SECURITY PROTOCOL: You must ONLY approve entry for a RED CIRCLE. The scanner detects a shape with 4 equal sides, colored RED. Do you approve entry?',
-    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'3rem', padding:'20px'}}>🚨 🟥 🛑</div>,
+    visual: <div style={{display:'flex', justifyContent:'center', gap:'12px', fontSize:'1.5rem', padding:'20px', fontWeight:'bold'}}><span>[ALERT]</span><span style={{color:'#ef4444'}}>[RED SQUARE]</span><span>[STOP]</span></div>,
     correctAnswer: 'B',
     options: [
       {key: 'A', text: 'Yes, it is RED'},
@@ -227,7 +227,7 @@ export const COGNITIVE_QUESTIONS = [
     difficulty: 1,
     title: 'Reaction Match',
     text: 'Target is YELLOW. The sequence flashes: PURPLE, YELLOW, YELLOW. How many times did the target appear?',
-    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'3rem', padding:'20px'}}>🟪 🟨 🟨</div>,
+    visual: <div style={{display:'flex', justifyContent:'center', gap:'12px', fontSize:'1.5rem', padding:'20px', fontWeight:'bold'}}><span style={{color:'#a855f7'}}>[PURPLE]</span><span style={{color:'#facc15'}}>[YELLOW]</span><span style={{color:'#facc15'}}>[YELLOW]</span></div>,
     correctAnswer: 'C',
     options: [
       {key: 'A', text: '0'},
@@ -257,7 +257,7 @@ export const COGNITIVE_QUESTIONS = [
     difficulty: 2,
     title: 'Audio-Visual Sync',
     text: 'You hear a HIGH beep while seeing a DOWN arrow. The correct pairing is HIGH-UP or LOW-DOWN. Is the current signal valid?',
-    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'3rem', padding:'20px'}}>🔊 ⬇️</div>,
+    visual: <div style={{display:'flex', justifyContent:'center', gap:'20px', fontSize:'2rem', padding:'20px', fontWeight:'bold'}}><span>[HIGH BEEP]</span><span>DOWN</span></div>,
     correctAnswer: 'B',
     options: [
       {key: 'A', text: 'Yes, valid'},
@@ -287,7 +287,7 @@ export const COGNITIVE_QUESTIONS = [
     difficulty: 1,
     title: 'Dot Tracker',
     text: 'A dot starts in the center of a 3x3 grid. It moves: UP, LEFT, RIGHT. Where is it relative to the center?',
-    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'2rem', padding:'20px'}}>⬆️ ⬅️ ➡️</div>,
+    visual: <div style={{display:'flex', justifyContent:'center', gap:'18px', fontSize:'2rem', padding:'20px', fontWeight:'bold'}}><span>UP</span><span>LEFT</span><span>RIGHT</span></div>,
     correctAnswer: 'A',
     options: [
       {key: 'A', text: 'Top Center'},
@@ -302,7 +302,7 @@ export const COGNITIVE_QUESTIONS = [
     difficulty: 1,
     title: 'Shape Rotation',
     text: 'Imagine a letter "L". Rotate it 90 degrees clockwise. Which way does the long stem point?',
-    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'4rem', padding:'20px'}}>L 🔄</div>,
+    visual: <div style={{display:'flex', justifyContent:'center', gap:'20px', fontSize:'3rem', padding:'20px'}}>L <span style={{fontSize:'1.5rem'}}>[ROTATE]</span></div>,
     correctAnswer: 'C',
     options: [
       {key: 'A', text: 'Up'},
@@ -317,7 +317,7 @@ export const COGNITIVE_QUESTIONS = [
     difficulty: 2,
     title: 'Pathfinder',
     text: 'A mouse is in a maze. It goes Forward 2 spaces, turns Left, goes Forward 1 space, turns Right, and goes Forward 2 spaces. If it turns around (180 degrees), what is its sequence back to the start?',
-    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'2rem', padding:'20px'}}>🐭 ⬆️⬆️ ⬅️ ⬆️ ➡️ ⬆️⬆️</div>,
+    visual: <div style={{display:'flex', justifyContent:'center', gap:'10px', fontSize:'1.5rem', padding:'20px', fontWeight:'bold'}}>MOUSE: UP UP, LEFT, UP, RIGHT, UP UP</div>,
     correctAnswer: 'D',
     options: [
       {key: 'A', text: 'F2, L, F1, R, F2'},
@@ -331,14 +331,14 @@ export const COGNITIVE_QUESTIONS = [
     domain: 'spatial_visual_memory',
     difficulty: 2,
     title: 'Mirror Image',
-    text: 'Look at the pattern: 🟩 🟦 🟥. What is the exact mirror image of this sequence from right to left?',
-    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'3rem', padding:'20px'}}>🟩 🟦 🟥 🪞</div>,
+    text: 'Look at the pattern: GREEN, BLUE, RED. What is the exact mirror image of this sequence from right to left?',
+    visual: <div style={{display:'flex', justifyContent:'center', gap:'12px', fontSize:'1.5rem', padding:'20px', fontWeight:'bold'}}><span style={{color:'#22c55e'}}>[GREEN]</span><span style={{color:'#3b82f6'}}>[BLUE]</span><span style={{color:'#ef4444'}}>[RED]</span><span>[MIRROR]</span></div>,
     correctAnswer: 'B',
     options: [
-      {key: 'A', text: '🟩 🟦 🟥'},
-      {key: 'B', text: '🟥 🟦 🟩'},
-      {key: 'C', text: '🟦 🟥 🟩'},
-      {key: 'D', text: '🟥 🟩 🟦'},
+      {key: 'A', text: 'GREEN, BLUE, RED'},
+      {key: 'B', text: 'RED, BLUE, GREEN'},
+      {key: 'C', text: 'BLUE, RED, GREEN'},
+      {key: 'D', text: 'RED, GREEN, BLUE'},
     ],
   },
   {
@@ -347,7 +347,7 @@ export const COGNITIVE_QUESTIONS = [
     difficulty: 3,
     title: '3D Cube Fold',
     text: 'A cross-shaped flat net of 6 squares is folded into a cube. If the RED square is on the bottom, and the BLUE square is adjacent to it, can the BLUE square ever be on top?',
-    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'3rem', padding:'20px'}}>🧊 🔴 🔵</div>,
+    visual: <div style={{display:'flex', justifyContent:'center', gap:'16px', fontSize:'1.5rem', padding:'20px', fontWeight:'bold'}}><span>[CUBE]</span><span style={{color:'#ef4444'}}>[RED]</span><span style={{color:'#3b82f6'}}>[BLUE]</span></div>,
     correctAnswer: 'B',
     options: [
       {key: 'A', text: 'Yes, always'},
@@ -362,7 +362,7 @@ export const COGNITIVE_QUESTIONS = [
     difficulty: 1,
     title: 'Number Sequence',
     text: 'Find the missing number: 2, 5, 10, 17, ?',
-    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'2rem', padding:'20px', letterSpacing:'5px'}}>2 5 10 17 ❓</div>,
+    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'2rem', padding:'20px', letterSpacing:'5px'}}>2 5 10 17 ?</div>,
     correctAnswer: 'C',
     options: [
       {key: 'A', text: '24'},
@@ -406,8 +406,8 @@ export const COGNITIVE_QUESTIONS = [
     domain: 'logical_mathematical',
     difficulty: 2,
     title: 'Cryptarithm',
-    text: 'If 🍎 + 🍎 = 10, and 🍎 × 🍌 = 15, what is the value of 🍌?',
-    visual: <div style={{display:'flex', flexDirection:'column', alignItems:'center', fontSize:'2rem', padding:'20px'}}><div>🍎 + 🍎 = 10</div><div>🍎 × 🍌 = 15</div></div>,
+    text: 'If APPLE + APPLE = 10, and APPLE x BANANA = 15, what is the value of BANANA?',
+    visual: <div style={{display:'flex', flexDirection:'column', alignItems:'center', fontSize:'1.5rem', padding:'20px'}}><div>APPLE + APPLE = 10</div><div>APPLE x BANANA = 15</div></div>,
     correctAnswer: 'A',
     options: [
       {key: 'A', text: '3'},
@@ -422,7 +422,7 @@ export const COGNITIVE_QUESTIONS = [
     difficulty: 3,
     title: 'Network Topology',
     text: 'There are 4 computers connected in a ring. A virus spreads to adjacent nodes every 1 minute. If node 1 is infected at 0:00, when will node 3 be infected?',
-    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'3rem', padding:'20px'}}>💻 🔄 💻</div>,
+    visual: <div style={{display:'flex', justifyContent:'center', gap:'18px', fontSize:'1.5rem', padding:'20px', fontWeight:'bold'}}>COMPUTER [SYNC] COMPUTER</div>,
     correctAnswer: 'C',
     options: [
       {key: 'A', text: '1 minute'},
@@ -437,7 +437,7 @@ export const COGNITIVE_QUESTIONS = [
     difficulty: 1,
     title: 'Triage Sorting',
     text: 'You are organizing files. Rule: Docs go left, Images go right. You get a .JPG file. Where does it go?',
-    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'2rem', padding:'20px'}}>📄 ⬅️ &nbsp;|&nbsp; ➡️ 🖼️</div>,
+    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'1.5rem', padding:'20px', fontWeight:'bold'}}>DOCUMENT &lt;- | -&gt; IMAGE</div>,
     correctAnswer: 'B',
     options: [
       {key: 'A', text: 'Left'},
@@ -452,7 +452,7 @@ export const COGNITIVE_QUESTIONS = [
     difficulty: 1,
     title: 'Rule Shift',
     text: 'Rule 1: Sort by Color. Rule 2 (Override): Sort by Shape. You receive a RED SQUARE. Under the override, which bin does it go into?',
-    visual: <div style={{display:'flex', flexDirection:'column', alignItems:'center', padding:'20px', border:'2px dashed #a855f7', borderRadius:'8px', color:'#a855f7'}}><div>⚠️ OVERRIDE ACTIVE</div><div style={{fontSize:'2rem'}}>🟥</div></div>,
+    visual: <div style={{display:'flex', flexDirection:'column', alignItems:'center', padding:'20px', border:'2px dashed #a855f7', borderRadius:'8px', color:'#a855f7'}}><div>WARNING: OVERRIDE ACTIVE</div><div style={{fontSize:'2rem', color:'#ef4444'}}>[RED]</div></div>,
     correctAnswer: 'A',
     options: [
       {key: 'A', text: 'Square Bin'},
@@ -467,7 +467,7 @@ export const COGNITIVE_QUESTIONS = [
     difficulty: 2,
     title: 'Resource Allocation',
     text: 'You have $100. Task A costs $60 (High Priority). Task B costs $50 (Medium). Task C costs $30 (Low). Which combination maximizes priority without overspending?',
-    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'2rem', padding:'20px'}}>💰 $100</div>,
+    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'2rem', padding:'20px'}}>REWARD: $100</div>,
     correctAnswer: 'B',
     options: [
       {key: 'A', text: 'A and B'},
@@ -482,7 +482,7 @@ export const COGNITIVE_QUESTIONS = [
     difficulty: 2,
     title: 'Scheduling Conflict',
     text: 'Meeting X is at 2:00 PM (1 hr). Meeting Y is at 2:30 PM (30 mins). Meeting Z is at 3:00 PM (1 hr). Which meetings can you attend fully?',
-    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'2rem', padding:'20px'}}>📅 🕒</div>,
+    visual: <div style={{display:'flex', justifyContent:'center', gap:'18px', fontSize:'1.5rem', padding:'20px', fontWeight:'bold'}}>DATE + TIME</div>,
     correctAnswer: 'C',
     options: [
       {key: 'A', text: 'X and Y'},
@@ -497,7 +497,7 @@ export const COGNITIVE_QUESTIONS = [
     difficulty: 3,
     title: 'Multi-Constraint Optimization',
     text: 'Ship A needs to leave before Ship B. Ship C needs to leave after Ship B but before Ship D. What is the only valid departure sequence?',
-    visual: <div style={{display:'flex', justifyContent:'space-around', fontSize:'2rem', padding:'20px'}}>🚢 A &nbsp; 🚢 B &nbsp; 🚢 C &nbsp; 🚢 D</div>,
+    visual: <div style={{display:'flex', justifyContent:'space-around', fontSize:'1.5rem', padding:'20px', fontWeight:'bold'}}>SHIP A &nbsp; SHIP B &nbsp; SHIP C &nbsp; SHIP D</div>,
     correctAnswer: 'A',
     options: [
       {key: 'A', text: 'A, B, C, D'},
