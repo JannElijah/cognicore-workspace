@@ -566,8 +566,19 @@ const generateAdvancedQuestions = () => {
             const sortingRules = ['Sort by File Size', 'Sort by File Type', 'Sort by Date Created'];
             const currentRule = sortingRules[Math.floor(Math.random() * sortingRules.length)];
             
+            const fileNames = ['video.mp4', 'report.pdf', 'archive.zip', 'photo.jpg', 'system.log'];
+            const fileSizes = ['500MB', '2MB', '1.5GB', '450KB', '10MB'];
+            const fileDates = ['Created Today', 'Created Yesterday', 'Created Last Week', 'Created 2021'];
+            
+            const file = fileNames[Math.floor(Math.random() * fileNames.length)];
+            const size = fileSizes[Math.floor(Math.random() * fileSizes.length)];
+            const date = fileDates[Math.floor(Math.random() * fileDates.length)];
+            
+            const oldRules = ['Alphabetical Order', 'Ascending Order', 'Reverse Alphabetical'];
+            const oldRule = oldRules[Math.floor(Math.random() * oldRules.length)];
+            
             q.title = `Mental Flex L${diff}`;
-            q.text = `The system was previously sorting by Alphabetical Order. An override command has just been issued. You receive a new file: "video.mp4" (500MB, Created Today). Under the CURRENT active rule, which bin does this file go into?`;
+            q.text = `The system was previously sorting by ${oldRule}. An override command has just been issued. You receive a new file: "${file}" (${size}, ${date}). Under the CURRENT active rule, which bin does this file go into?`;
             
             q.visual = <div style={{display:'flex', flexDirection:'column', gap:'10px', background:'rgba(168, 85, 247, 0.1)', padding:'15px', borderRadius:'8px', border:'2px solid #a855f7', color:'#fff'}}><div>⚠️ SYSTEM OVERRIDE</div><div style={{fontWeight:'bold', color:'#a855f7'}}>NEW RULE: {currentRule.toUpperCase()}</div></div>;
             
@@ -585,18 +596,34 @@ const generateAdvancedQuestions = () => {
             ];
           } else {
             // Priority Queue
-            const tasks = ['Server Patch (Critical, 10m)', 'UI Update (Low, 2m)', 'DB Backup (High, 5m)'];
+            const taskPool = [
+              'Server Patch', 'UI Update', 'DB Backup', 'API Refactor', 'Security Audit', 'Cache Clear', 'User Migration', 'Log Rotation'
+            ];
+            const taskCounts = diff === 1 ? 3 : (diff === 2 ? 4 : 5);
+            const times = [15, 20, 12, 10];
+            const timeLimit = times[Math.floor(Math.random() * times.length)];
+            
+            const t1 = taskPool.splice(Math.floor(Math.random()*taskPool.length), 1)[0];
+            const t2 = taskPool.splice(Math.floor(Math.random()*taskPool.length), 1)[0];
+            const t3 = taskPool.splice(Math.floor(Math.random()*taskPool.length), 1)[0];
+            
+            const tasks = [
+              `${t1} (Critical, 10m)`,
+              `${t2} (Low, 2m)`,
+              `${t3} (High, 5m)`
+            ];
+            
             q.title = `Priority Queue L${diff}`;
-            q.text = `You have 3 pending operations. You only have 15 minutes before system lock. To maximize impact, you must complete the highest priority tasks first without exceeding the time limit. What is the optimal sequence?`;
+            q.text = `You have ${taskCounts} pending operations. You only have ${timeLimit} minutes before system lock. To maximize impact, you must complete the highest priority tasks first without exceeding the time limit. What is the optimal sequence?`;
             
             q.visual = <div style={{display:'flex', flexDirection:'column', gap:'8px', background:'rgba(168, 85, 247, 0.1)', padding:'15px', borderRadius:'8px', border:'2px solid #a855f7', color:'#cbd5e1', fontSize:'0.9rem'}}>{tasks.map((t, idx) => <div key={idx}>- {t}</div>)}</div>;
             
             q.correctAnswer = 'A';
             q.options = [
-              { key: 'A', text: 'Server Patch ➔ DB Backup' },
-              { key: 'B', text: 'UI Update ➔ DB Backup ➔ Server Patch' },
-              { key: 'C', text: 'DB Backup ➔ Server Patch ➔ UI Update' },
-              { key: 'D', text: 'Server Patch ➔ UI Update' }
+              { key: 'A', text: `${t1} ➔ ${t3}` },
+              { key: 'B', text: `${t2} ➔ ${t3} ➔ ${t1}` },
+              { key: 'C', text: `${t3} ➔ ${t1} ➔ ${t2}` },
+              { key: 'D', text: `${t1} ➔ ${t2}` }
             ];
           }
         }
