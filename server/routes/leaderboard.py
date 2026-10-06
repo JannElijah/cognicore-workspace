@@ -18,6 +18,17 @@ if redis_url != "memory://":
 LEADERBOARD_CACHE = {}
 CACHE_TTL = 60
 
+def invalidate_leaderboard_cache():
+    """Remove all leaderboard variants after score-affecting writes."""
+    LEADERBOARD_CACHE.clear()
+    if redis_client:
+        try:
+            keys = list(redis_client.scan_iter(match="cognicore:leaderboard:*"))
+            if keys:
+                redis_client.delete(*keys)
+        except Exception:
+            pass
+
 @leaderboard_bp.route('/api/leaderboard', methods=['GET'])
 def get_leaderboard():
     global LEADERBOARD_CACHE

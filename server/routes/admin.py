@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from auth import token_required
 from database import get_db_connection, db
+from routes.leaderboard import invalidate_leaderboard_cache
 from models import User, SystemConfig, SystemAnnouncement, AuditLog, BugReport, GameModuleConfig
 from datetime import datetime
 
@@ -235,6 +236,7 @@ def invalidate_score(current_user_id, current_username, session_id):
         cursor.execute("UPDATE user_profiles SET xp = GREATEST(xp - 15, 0) WHERE user_id = %s", (uid,))
         
         conn.commit()
+        invalidate_leaderboard_cache()
         log_audit(current_username, f"Invalidated session {session_id} and deducted XP", uid)
         return jsonify({"status": "success", "message": "Score invalidated successfully"}), 200
     except Exception as e:
@@ -339,4 +341,3 @@ def export_subject_telemetry(current_user_id, current_username, username):
         return jsonify({'status': 'error', 'message': str(e)}), 500
     finally:
         conn.close()
-

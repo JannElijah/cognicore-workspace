@@ -8,6 +8,7 @@ from game_utils import (GAME_TO_DOMAIN, calculate_dda_parameters,
                         calculate_ols_slope, archetype_classifier, 
                         ml_history_cache, generate_pros_cons)
 from ai_engine import generate_post_test_ai_feedback
+from routes.leaderboard import invalidate_leaderboard_cache
 from utils import safe_float
 import logging
 import math
@@ -474,6 +475,7 @@ def dda(current_user_id, current_username):
                 db.session.add(new_title)
         
         db.session.commit()
+        invalidate_leaderboard_cache()
         
         return jsonify({
             "status": "success",
