@@ -3,6 +3,7 @@ import { Radar, Line, Bar, Scatter } from 'react-chartjs-2';
 import HoverTooltip from './HoverTooltip';
 import { API_BASE } from '../utils/apiClient.js';
 import useCogniStore from '../store/useCogniStore';
+import PretestResults from './PretestResults';
 
 const ProgressRing = ({ radius, stroke, progress, color }) => {
   const normalizedRadius = radius - stroke * 2;
@@ -48,7 +49,7 @@ export default function Dashboard({
   domainAccData, domainAccOptions,
   perGameScoreData, perGameScoreOptions,
   scatterData, scatterOptions,
-  skills, domainDeltas, rec, personalizedReport,
+  skills, domainDeltas, rec, personalizedReport, preTestScores, weakestDomain,
   lastGameStats, cognitiveProfile
 }) {
   const { inventory } = useCogniStore();
@@ -128,6 +129,18 @@ export default function Dashboard({
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign: "middle", marginRight: "6px"}}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg> Research Cohort Analysis
         </button>
       </div>
+
+      {preTestScores && (
+        <div style={{ marginBottom: '3rem' }}>
+          <PretestResults
+            preTestScores={preTestScores}
+            weakestDomain={weakestDomain}
+            prescribedGame={prescribedGame}
+            personalizedReport={personalizedReport}
+            onStartPrescribedGame={() => setActiveGame(prescribedGame)}
+          />
+        </div>
+      )}
 
       {activeTab === 'participant' ? (
         <>

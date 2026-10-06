@@ -2534,6 +2534,8 @@ export default function App() {
             domainDeltas={domainDeltas}
             rec={rec}
             personalizedReport={personalizedReport}
+            preTestScores={preTestScores}
+            weakestDomain={weakestDomain}
             lastGameStats={lastGameStats}
             cognitiveProfile={cognitiveProfile}
           />
