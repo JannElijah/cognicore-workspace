@@ -11,3 +11,5 @@ CREATE INDEX IF NOT EXISTS idx_daily_tasks_userid ON daily_tasks (user_id);
 CREATE INDEX IF NOT EXISTS idx_daily_tasks_created_at ON daily_tasks (created_at);
 CREATE INDEX IF NOT EXISTS idx_user_inventory_userid ON user_inventory (user_id);
 CREATE INDEX IF NOT EXISTS idx_user_achievements_userid ON user_achievements (user_id);
+
+CREATE INDEX IF NOT EXISTS idx_perf_metrics_domain ON performance_metrics (cognitive_domain);
