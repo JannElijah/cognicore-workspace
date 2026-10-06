@@ -231,9 +231,13 @@ def init_db():
             username VARCHAR(255) NOT NULL UNIQUE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             pin_hash VARCHAR(64) DEFAULT NULL,
+            supabase_uid VARCHAR(36) DEFAULT NULL,
             course VARCHAR(255) DEFAULT NULL,
             age INTEGER DEFAULT NULL,
-            gender VARCHAR(50) DEFAULT NULL
+            gender VARCHAR(50) DEFAULT NULL,
+            pwd_status VARCHAR(255) DEFAULT NULL,
+            status VARCHAR(50) DEFAULT 'active',
+            role VARCHAR(50) DEFAULT 'student'
         )
     """)
     
@@ -242,6 +246,8 @@ def init_db():
             id SERIAL PRIMARY KEY,
             user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
             game_type VARCHAR(255) NOT NULL,
+            game_mode VARCHAR(50) DEFAULT 'timed',
+            current_smooth_difficulty REAL DEFAULT 1.0,
             start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
@@ -253,6 +259,13 @@ def init_db():
             reaction_time REAL,
             accuracy_rate REAL,
             difficulty_level INTEGER,
+            cognitive_domain VARCHAR(255),
+            game_type VARCHAR(255),
+            error_count INTEGER DEFAULT 0,
+            hesitation_ms REAL DEFAULT 0.0,
+            spam_click_count INTEGER DEFAULT 0,
+            rule_shift_latency_ms REAL,
+            path_efficiency REAL,
             recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
@@ -266,6 +279,26 @@ def init_db():
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
+
+    # Keep installations created from older revisions aligned with the ORM schema.
+    for table, column, definition in (
+        ("users", "supabase_uid", "VARCHAR(36) DEFAULT NULL"),
+        ("users", "pwd_status", "VARCHAR(255) DEFAULT NULL"),
+        ("users", "status", "VARCHAR(50) DEFAULT 'active'"),
+        ("users", "role", "VARCHAR(50) DEFAULT 'student'"),
+        ("game_sessions", "game_mode", "VARCHAR(50) DEFAULT 'timed'"),
+        ("game_sessions", "current_smooth_difficulty", "REAL DEFAULT 1.0"),
+        ("performance_metrics", "cognitive_domain", "VARCHAR(255)"),
+        ("performance_metrics", "game_type", "VARCHAR(255)"),
+        ("performance_metrics", "error_count", "INTEGER DEFAULT 0"),
+        ("performance_metrics", "hesitation_ms", "REAL DEFAULT 0.0"),
+        ("performance_metrics", "spam_click_count", "INTEGER DEFAULT 0"),
+        ("performance_metrics", "rule_shift_latency_ms", "REAL"),
+        ("performance_metrics", "path_efficiency", "REAL"),
+    ):
+        cursor.execute(
+            f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column} {definition}"
+        )
     
     # Get existing columns in performance_metrics using PostgreSQL catalog
     cursor.execute("""

@@ -2,7 +2,15 @@
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(255) NOT NULL UNIQUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    pin_hash VARCHAR(64),
+    supabase_uid VARCHAR(36),
+    course VARCHAR(255),
+    age INTEGER,
+    gender VARCHAR(50),
+    pwd_status VARCHAR(255),
+    status VARCHAR(50) DEFAULT 'active',
+    role VARCHAR(50) DEFAULT 'student'
 );
 
 CREATE TABLE IF NOT EXISTS game_sessions (
