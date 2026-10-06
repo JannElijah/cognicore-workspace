@@ -313,7 +313,10 @@ function decorateSceneClass(SceneClass) {
         }
 
         // Re-enforce these configurations in case originalInit overwrote them
-        if (this.gameMode === 'zen' || this.gameMode === 'target' || this.gameMode === 'time_attack') {
+        if (this.gameMode === 'timed') {
+            this.gameDuration = 60000;
+            this.timeLeft = this.gameDuration;
+        } else if (this.gameMode === 'zen' || this.gameMode === 'target' || this.gameMode === 'time_attack') {
             this.gameDuration = Infinity;
             this.timeLeft = Infinity;
         } else if (this.gameMode === 'endurance') {
@@ -399,6 +402,10 @@ function decorateSceneClass(SceneClass) {
     SceneClass.prototype.create = function () {
         if (originalCreate) {
             originalCreate.call(this);
+        }
+
+        if (this.gameMode === 'timed' && this.timerText?.setText) {
+            this.timerText.setText('01:00');
         }
         
         if (typeof this.setupPauseHandling === 'function') {
