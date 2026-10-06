@@ -27,6 +27,12 @@ export function usePhaserEngine(containerRef, gameState, sceneClass, sceneKey, s
             type: Phaser.AUTO,
             parent: containerRef.current,
             backgroundColor: '#09090b',
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    debug: false
+                }
+            },
             scale: {
                 mode: Phaser.Scale.FIT,
                 autoCenter: Phaser.Scale.CENTER_BOTH,

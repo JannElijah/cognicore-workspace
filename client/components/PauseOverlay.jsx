@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 /**
  * PauseOverlay Component
@@ -11,49 +12,54 @@ import React from 'react';
  * @param {function} onPauseRequest - Callback to trigger pause (used by mobile tap button).
  */
 export default function PauseOverlay({ isPaused, onTogglePause, onPauseRequest }) {
+    const [pauseTarget, setPauseTarget] = useState(null);
+
+    useEffect(() => {
+        setPauseTarget(document.getElementById('active-game-pause-slot'));
+    }, []);
+
+    const pauseButton = (
+        <button
+            className="pause-hud-indicator"
+            onClick={onPauseRequest || onTogglePause}
+            aria-label="Pause game"
+            title="Pause (Press P)"
+            style={{
+                background: "rgba(15, 23, 42, 0.4)",
+                border: "1px solid rgba(148, 163, 184, 0.2)",
+                color: "#f8fafc",
+                padding: "0.5rem 1rem",
+                borderRadius: "6px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                backdropFilter: "blur(4px)",
+                fontFamily: "monospace",
+                fontWeight: "600",
+                fontSize: "0.9rem",
+                transition: "all 0.2s ease",
+                boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
+            }}
+            onMouseOver={(e) => {
+                e.currentTarget.style.background = "rgba(15, 23, 42, 0.8)";
+                e.currentTarget.style.borderColor = "rgba(56, 189, 248, 0.5)";
+            }}
+            onMouseOut={(e) => {
+                e.currentTarget.style.background = "rgba(15, 23, 42, 0.4)";
+                e.currentTarget.style.borderColor = "rgba(148, 163, 184, 0.2)";
+            }}
+        >
+            <span style={{ fontSize: "1.1rem" }}>||</span>
+            <span className="hide-on-mobile">PAUSE (P)</span>
+        </button>
+    );
+
     return (
         <>
             {/* Floating pause button - permanently visible to inform users */}
             {!isPaused && (
-                <button
-                    className="pause-hud-indicator"
-                    onClick={onPauseRequest || onTogglePause}
-                    aria-label="Pause game"
-                    title="Pause (Press P)"
-                    style={{
-                        position: "absolute",
-                        bottom: "-3rem",
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        zIndex: 9999,
-                        background: "rgba(15, 23, 42, 0.4)",
-                        border: "1px solid rgba(148, 163, 184, 0.2)",
-                        color: "#f8fafc",
-                        padding: "0.5rem 1rem",
-                        borderRadius: "6px",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        backdropFilter: "blur(4px)",
-                        fontFamily: "monospace",
-                        fontWeight: "600",
-                        fontSize: "0.9rem",
-                        transition: "all 0.2s ease",
-                        boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
-                    }}
-                    onMouseOver={(e) => {
-                        e.currentTarget.style.background = "rgba(15, 23, 42, 0.8)";
-                        e.currentTarget.style.borderColor = "rgba(56, 189, 248, 0.5)";
-                    }}
-                    onMouseOut={(e) => {
-                        e.currentTarget.style.background = "rgba(15, 23, 42, 0.4)";
-                        e.currentTarget.style.borderColor = "rgba(148, 163, 184, 0.2)";
-                    }}
-                >
-                    <span style={{ fontSize: "1.1rem" }}>||</span> {/* Or pause symbol */}
-                    <span className="hide-on-mobile">PAUSE (P)</span>
-                </button>
+                pauseTarget ? createPortal(pauseButton, pauseTarget) : pauseButton
             )}
             {/* Full-screen pause overlay — shown when isPaused is true */}
             {isPaused && (
@@ -87,4 +93,3 @@ export default function PauseOverlay({ isPaused, onTogglePause, onPauseRequest }
         </>
     );
 }
-

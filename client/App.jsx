@@ -2314,15 +2314,18 @@ export default function App() {
               </div>
               
               {activeSessionId && (
-                <LiveDdaHud
-                  gameType={activeGame}
-                  ddaParameters={liveDdaParams}
-                  cognitiveProfile={liveCognitiveProfile}
-                  liveMetrics={liveMetrics}
-                  advisorLogs={ddaAdvisorLogs}
-                  isMuted={globalMuted}
-                  onToggleMute={handleToggleMute}
-                />
+                <div style={{ width: 'min(100%, 500px)' }}>
+                  <LiveDdaHud
+                    gameType={activeGame}
+                    ddaParameters={liveDdaParams}
+                    cognitiveProfile={liveCognitiveProfile}
+                    liveMetrics={liveMetrics}
+                    advisorLogs={ddaAdvisorLogs}
+                    isMuted={globalMuted}
+                    onToggleMute={handleToggleMute}
+                  />
+                  <div id="active-game-pause-slot" style={{ display: 'flex', justifyContent: 'center', marginTop: '1rem' }} />
+                </div>
               )}
             </div>
           </div>
