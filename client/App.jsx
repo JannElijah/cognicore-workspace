@@ -357,7 +357,10 @@ export default function App() {
                             const historyRes = await fetch(`${API_BASE}/api/user-session-history/`);
                             if (historyRes.ok) {
                                 const histData = await historyRes.json();
-                                const played = (histData.sessions || []).some(s => s.game_type === asmtData.prescribed_game);
+                                const prescribedDomain = DOMAINS_LIST.find(domain => domain.id === asmtData.weakest_domain);
+                                const played = (histData.sessions || []).some(session =>
+                                  prescribedDomain?.games.some(game => game.id === session.game_type)
+                                );
                                 setHasPlayedPrescribed(played);
                             }
                         }
@@ -484,11 +487,14 @@ export default function App() {
             fetchEvaluationReport(trimmedName);
           } else {
             setAssessmentStage('none');
-            // Fetch session history to check if they already played the prescribed game
+            // Fetch session history to check if they already played in the prescribed domain
             const historyRes = await fetch(`${API_BASE}/api/user-session-history/${trimmedName}`);
             if (historyRes.ok) {
               const histData = await historyRes.json();
-              const played = (histData.sessions || []).some(s => s.game_type === data.prescribed_game);
+              const prescribedDomain = DOMAINS_LIST.find(domain => domain.id === data.weakest_domain);
+              const played = (histData.sessions || []).some(session =>
+                prescribedDomain?.games.some(game => game.id === session.game_type)
+              );
               setHasPlayedPrescribed(played);
             }
           }
@@ -835,7 +841,9 @@ export default function App() {
     setLiveCognitiveProfile(null);
     setLiveMetrics([]);
     audioDda.stop();
-    setHasPlayedPrescribed(true);
+    const prescribedDomain = DOMAINS_LIST.find(domain => domain.id === weakestDomain);
+    const playedInPrescribedDomain = prescribedDomain?.games.some(game => game.id === activeGame) ?? false;
+    setHasPlayedPrescribed(playedInPrescribedDomain);
     
     // Check and show rewards modal if any rewards were accumulated
     if (sessionRewardsRef.current.xp > 0 || sessionRewardsRef.current.coins > 0) {
@@ -847,7 +855,7 @@ export default function App() {
       setGameRewardsModal({ ...sessionRewardsRef.current });
       sessionRewardsRef.current = { xp: 0, coins: 0, leveled_up: false };
     }
-  }, [activeGame]);
+  }, [activeGame, weakestDomain]);
 
   const handleBackToLobby = () => {
     setActiveGame(null);
@@ -2518,7 +2526,7 @@ export default function App() {
                       </button>
                     ) : (
                       <span style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: '1px solid #f59e0b', padding: '0.35rem 0.75rem', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 'bold' }}>
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'5px',filter:'drop-shadow(0 0 3px rgba(245,158,11,0.7))'}} xmlns="http://www.w3.org/2000/svg"><path d="M12 2v4M12 18v4M6 6l2 2M16 16l2 2M2 12h4M18 12h4M6 18l2-2M16 8l2-2" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round"/><circle cx="12" cy="12" r="4" stroke="#f59e0b" strokeWidth="1.5"/></svg> Play Prescribed Game to Unlock Post-Test
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{display:'inline',verticalAlign:'middle',marginRight:'5px',filter:'drop-shadow(0 0 3px rgba(245,158,11,0.7))'}} xmlns="http://www.w3.org/2000/svg"><path d="M12 2v4M12 18v4M6 6l2 2M16 16l2 2M2 12h4M18 12h4M6 18l2-2M16 8l2-2" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round"/><circle cx="12" cy="12" r="4" stroke="#f59e0b" strokeWidth="1.5"/></svg>                         Play a Game in Your Prescribed Domain to Unlock Post-Test
                       </span>
                     )}
                   </div>
