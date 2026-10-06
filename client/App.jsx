@@ -634,10 +634,7 @@ export default function App() {
   const [isoSummary, setIsoSummary] = useState(null);
 
   // Classified cognitive profile archetype
-  const [cognitiveProfile, setCognitiveProfile] = useState({
-    archetype: 'Standard',
-    confidence_score: 0.65
-  });
+  const [cognitiveProfile, setCognitiveProfile] = useState(null);
 
   // Dynamic Skill Scores mapped to 4 core academic domains
   const [skills, setSkills] = useState({
@@ -2561,6 +2558,36 @@ export default function App() {
             <div className="intro-card">
               <h1>Adaptive Neuro-Training Portal</h1>
               <p>Welcome to CogniCore. Access clinically validated serious game modules designed to assess cognitive processing speed, selective attention, and executive function. Real-time telemetry is recorded to construct your adaptive cognitive profile.</p>
+            </div>
+
+            <div className="game-card" style={{
+              marginBottom: '2.5rem',
+              padding: '1.5rem',
+              borderLeft: '4px solid var(--color-secondary)',
+              background: 'linear-gradient(135deg, rgba(var(--rgb-secondary), 0.12), rgba(var(--rgb-primary), 0.06))'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1.5rem', flexWrap: 'wrap' }}>
+                <div style={{ flex: 1, minWidth: '240px' }}>
+                  <div style={{ color: 'var(--color-secondary)', fontSize: '0.75rem', fontWeight: 'bold', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                    Adaptive Cognitive Profile
+                  </div>
+                  <h2 style={{ margin: '0.35rem 0', fontSize: '1.6rem', color: '#ffffff' }}>
+                    {cognitiveProfile?.archetype || 'Not classified yet'}
+                  </h2>
+                  <p style={{ margin: 0, color: '#cbd5e1', lineHeight: 1.5, fontSize: '0.9rem' }}>
+                    {cognitiveProfile?.insight_text || 'Complete training games to generate a profile from your accuracy, reaction time, hesitation, and adaptive difficulty history.'}
+                  </p>
+                </div>
+                <div style={{ minWidth: '180px', padding: '1rem', borderRadius: '10px', background: 'rgba(0, 0, 0, 0.2)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div style={{ color: '#94a3b8', fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 'bold' }}>Model confidence</div>
+                  <div style={{ color: 'var(--color-primary)', fontSize: '1.5rem', fontWeight: '800', marginTop: '0.3rem' }}>
+                    {cognitiveProfile ? `${Math.round((Number(cognitiveProfile.confidence_score) || 0) * 100)}%` : 'Pending'}
+                  </div>
+                  <div style={{ color: '#64748b', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                    Updated after gameplay telemetry
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Daily Personalized Workout */}
