@@ -341,6 +341,9 @@ export default class StroopShiftScene extends BaseCognitiveScene {
         this.cameras.main.shake(100, 0.005);
 
         this.updateHUD();
+        if (this.totalClicks % 5 === 0) {
+            this.adaptDifficulty();
+        }
         this.spawnWord();
     }
 
@@ -394,7 +397,7 @@ export default class StroopShiftScene extends BaseCognitiveScene {
             });
 
             // Adapt difficulty level every 5 hits
-            if (this.hits % 5 === 0) {
+            if (this.totalClicks % 5 === 0) {
                 this.adaptDifficulty();
             }
         } else {
@@ -416,6 +419,10 @@ export default class StroopShiftScene extends BaseCognitiveScene {
                     this.spawnWord();
                 }
             });
+
+            if (this.totalClicks % 5 === 0) {
+                this.adaptDifficulty();
+            }
         }
 
         this.updateHUD();
@@ -511,10 +518,10 @@ export default class StroopShiftScene extends BaseCognitiveScene {
                 
                 // Adjust level and flash notifications
                 if (this.difficultyLevel !== params.difficulty_level) {
+                    const direction = params.difficulty_level > this.difficultyLevel ? 'INCREASED' : 'DECREASED';
                     this.difficultyLevel = params.difficulty_level !== undefined ? params.difficulty_level : this.difficultyLevel;
                     this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);
                     
-                    const direction = params.difficulty_level > this.difficultyLevel ? 'UPGRADED' : 'ADJUSTED';
                     this.showFloatingText(this.scale.width / 2, this.scale.height / 2, `DIFFICULTY ${direction}!`, '#a855f7');
                 }
 

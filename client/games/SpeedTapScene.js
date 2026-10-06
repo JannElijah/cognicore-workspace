@@ -384,6 +384,9 @@ export default class SpeedTapScene extends BaseCognitiveScene {
         this.consecutiveHits = 0;
         this.totalClicks = Math.max(this.totalClicks, this.hits + this.misses);
         this.updateHUD();
+        if (this.totalClicks % 5 === 0) {
+            this.adaptDifficulty();
+        }
     }
 
     updateHUD() {
@@ -481,7 +484,7 @@ export default class SpeedTapScene extends BaseCognitiveScene {
                 
                 // Alert player if difficulty changed
                 if (this.difficultyLevel !== params.difficulty_level) {
-                    const direction = params.difficulty_level > this.difficultyLevel ? 'INCREASED' : 'ADJUSTED';
+                    const direction = params.difficulty_level > this.difficultyLevel ? 'INCREASED' : 'DECREASED';
                     this.difficultyLevel = params.difficulty_level !== undefined ? params.difficulty_level : this.difficultyLevel;
                     this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);
                     if (data.cognitive_profile) {

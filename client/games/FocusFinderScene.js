@@ -552,8 +552,8 @@ updateTimer() {
         // Dispatch telemetry
         this.dispatchMetricTelemetry(searchTime, 1.0);
 
-        // Periodically scale difficulty every 5 targets
-        if (this.hits % 5 === 0) {
+        // Evaluate difficulty from both successful and missed attempts.
+        if (this.totalClicks % 5 === 0) {
             this.adaptDifficulty();
         } else {
             this.generateWave();
@@ -576,6 +576,8 @@ updateTimer() {
         // Dispatch telemetry with 0 accuracy for distractor selection
         this.dispatchMetricTelemetry(searchTime, 0.0);
 
+        const shouldAdapt = this.totalClicks % 5 === 0;
+
         // Fade distractor out
         this.tweens.add({
             targets: container,
@@ -588,6 +590,10 @@ updateTimer() {
                 container.disableInteractive();
             }
         });
+
+        if (shouldAdapt) {
+            this.adaptDifficulty();
+        }
     }
 
     updateHUD() {
@@ -782,7 +788,8 @@ updateTimer() {
                 const data = await response.json();
                 if (data.status === 'success' && data.dda_parameters) {
                     const params = data.dda_parameters;
-                    const difficultyChanged = this.difficultyLevel !== params.difficulty_level;
+                    const previousDifficulty = this.difficultyLevel;
+                    const difficultyChanged = previousDifficulty !== params.difficulty_level;
 
                     this.difficultyLevel = params.difficulty_level !== undefined ? params.difficulty_level : this.difficultyLevel;
                     this.distractorCount = params.distractors !== undefined ? params.distractors : this.distractorCount;
@@ -797,7 +804,7 @@ updateTimer() {
                     updateMlHud(this);
 
                     if (difficultyChanged) {
-                        const direction = params.difficulty_level > this.difficultyLevel ? 'INCREASED' : 'ADJUSTED';
+                        const direction = params.difficulty_level > previousDifficulty ? 'INCREASED' : 'DECREASED';
                         this.showFloatingText(this.scale.width / 2, this.scale.height / 2, `DIFFICULTY ${direction}! LEVEL ${this.difficultyLevel}`, (getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7'));
                         
                         if (this.difficultyLevel >= 4) {

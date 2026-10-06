@@ -409,6 +409,8 @@ def dda(current_user_id, current_username):
         elif avg_accuracy < 0.45 and new_difficulty >= current_difficulty:
             new_difficulty = max(1, current_difficulty - 1)
         session_obj.current_smooth_difficulty = new_theta
+        is_level_up = new_difficulty > current_difficulty
+        is_level_down = new_difficulty < current_difficulty
         # -------------------------------------------------------------
         
         dda_params = calculate_dda_parameters(new_difficulty, game_type, user_avg_rt=avg_rt)
@@ -483,6 +485,8 @@ def dda(current_user_id, current_username):
         
         return jsonify({
             "status": "success",
+            "is_level_up": is_level_up,
+            "is_level_down": is_level_down,
             "dda_parameters": dda_params,
             "cognitive_profile": {
                 "archetype": archetype, "confidence_score": confidence,
