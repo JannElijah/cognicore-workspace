@@ -254,12 +254,12 @@ const PretestResults = ({
                         borderRadius: '9999px',
                         transition: 'all 1.5s cubic-bezier(0.4, 0, 0.2, 1)',
                         width: `${scorePercent}%`, 
-                        background: `linear-gradient(90deg, ${theme.color}aa, ${theme.color})`,
+                        background: `linear-gradient(90deg, ${theme.color}, ${theme.color})`,
                         boxShadow: isWeakest ? `0 0 12px ${theme.color}80` : 'none',
                         position: 'relative'
                       }}
                     >
-                       <span style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.75rem', fontWeight: 'bold', color: 'rgba(0,0,0,0.7)' }}>{Math.round(scorePercent)}%</span>
+                       <span style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.75rem', fontWeight: 'bold', color: '#0f172a', textShadow: '0 1px 2px rgba(255,255,255,0.25)' }}>{Math.round(scorePercent)}%</span>
                     </div>
                   </div>
                 </div>
