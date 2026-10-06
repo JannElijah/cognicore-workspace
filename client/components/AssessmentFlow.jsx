@@ -47,7 +47,12 @@ export default function AssessmentFlow({
   const getRandomQ = (domain, diff, avoidIds) => {
     let pool = COGNITIVE_QUESTIONS.filter(q => q.domain === domain && q.difficulty === diff && !avoidIds.includes(q.id));
     if (pool.length === 0) {
-      pool = COGNITIVE_QUESTIONS.filter(q => q.domain === domain && q.difficulty === diff);
+      // Fallback 1: Any difficulty that hasn't been used
+      pool = COGNITIVE_QUESTIONS.filter(q => q.domain === domain && !avoidIds.includes(q.id));
+    }
+    if (pool.length === 0) {
+      // Fallback 2: Allow repeats if somehow we completely run out
+      pool = COGNITIVE_QUESTIONS.filter(q => q.domain === domain);
     }
     pool.sort((a, b) => a.id.localeCompare(b.id)); // ensure deterministic order
     return pool.length > 0 ? pool[Math.floor(seededRandom() * pool.length)] : null;
@@ -63,10 +68,10 @@ export default function AssessmentFlow({
       }
       setExpectedTotal(20);
     } else {
-      for(let i=0; i<10; i++) {
+      for(let i=0; i<5; i++) {
         seq.push(selectedDomainFilter);
       }
-      setExpectedTotal(10);
+      setExpectedTotal(5);
     }
 
     const initialDiffs = {

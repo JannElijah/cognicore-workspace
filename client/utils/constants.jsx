@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import GameIcon from '../components/GameIcon';
 
 export const SvgGameIcon = ({ name, color }) => (
@@ -207,431 +207,203 @@ export const DOMAINS_LIST = [
 
 export const COGNITIVE_QUESTIONS = [
   {
-    id: 'q1',
-    domain: 'spatial_visual_memory',
-    difficulty: 1,
-    title: 'Grid Memory',
-    text: 'A glowing dot starts in the TOP-LEFT corner of a 3x3 grid. It moves one space RIGHT, then one space DOWN. Where is the dot now?',
-    visual: <div style={{display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:'5px', width:'100px', margin:'0 auto', background:'rgba(74, 222, 128, 0.1)', padding:'10px', borderRadius:'8px', border:'2px solid #4ade80'}}>{[...Array(9)].map((_,i) => <div key={i} style={{height:'25px', borderRadius:'4px', background: i === 4 ? '#4ade80' : 'rgba(255,255,255,0.1)', boxShadow: i === 4 ? '0 0 10px #4ade80' : 'none'}}></div>)}</div>,
-    correctAnswer: 'B',
-    options: [
-      { key: 'A', text: 'Top-Right' },
-      { key: 'B', text: 'Center' },
-      { key: 'C', text: 'Bottom-Right' },
-      { key: 'D', text: 'Bottom-Left' }
-    ]
-  },
-  {
-    id: 'q2',
-    domain: 'logical_mathematical',
-    difficulty: 1,
-    title: 'Basic Supply',
-    text: 'A spaceship has 10 energy cells total. The shields use 4 cells. The engines use 3 cells. How many energy cells are left for life support?',
-    visual: <div style={{display:'flex', justifyContent:'center', gap:'15px', alignItems:'center', background:'rgba(245, 158, 11, 0.1)', padding:'20px', borderRadius:'8px', border:'2px solid #f59e0b', color:'#f59e0b', fontSize:'1.5rem', fontWeight:'bold'}}><span>🔋 10</span> <span>- 🛡️ 4</span> <span>- 🚀 3</span> <span>= ?</span></div>,
-    correctAnswer: 'B',
-    options: [
-      { key: 'A', text: '2 cells' },
-      { key: 'B', text: '3 cells' },
-      { key: 'C', text: '4 cells' },
-      { key: 'D', text: '5 cells' }
-    ]
-  },
-  {
-    id: 'q3',
+    id: 'q_ref_1',
     domain: 'reflexes_and_focus',
     difficulty: 1,
-    title: 'Quick Reaction',
-    text: 'Your dashboard has a "LAUNCH" button. You are told to press it ONLY when the status light turns GREEN. The light currently turns RED. What should you do?',
-    visual: <div style={{textAlign:'center', background:'rgba(239, 68, 68, 0.1)', padding:'30px', borderRadius:'8px', border:'2px solid #ef4444', display:'flex', flexDirection:'column', alignItems:'center', gap:'15px'}}><div style={{width:'50px', height:'50px', borderRadius:'25px', background:'#ef4444', boxShadow:'0 0 20px #ef4444'}}></div><div style={{color:'#ef4444', fontWeight:'bold', fontSize:'1.2rem'}}>STATUS: RED</div></div>,
-    correctAnswer: 'C',
-    options: [
-      { key: 'A', text: 'Press the button immediately' },
-      { key: 'B', text: 'Press the button twice' },
-      { key: 'C', text: 'Do NOT press the button' },
-      { key: 'D', text: 'Hold the button down' }
-    ]
+    title: 'Focus Finder: Neon Grid',
+    text: 'SECURITY PROTOCOL: You must ONLY approve entry for a RED CIRCLE. The scanner detects a shape with 4 equal sides, colored RED. Do you approve entry?',
+    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'3rem', padding:'20px'}}>?? ?? ??</div>,
+    correctAnswer: 'B',
+    options: [{key:'A', text:'Yes, it is RED'}, {key:'B', text:'No, it is not a CIRCLE'}, {key:'C', text:'Yes, it has 4 sides'}, {key:'D', text:'Cannot be determined'}],
   },
   {
-    id: 'q4',
-    domain: 'executive_strategy',
+    id: 'q_ref_2',
+    domain: 'reflexes_and_focus',
     difficulty: 1,
-    title: 'Simple Triage',
-    text: 'You have a broken pipe leaking water rapidly (Urgent) and a squeaky door (Not Urgent). You can only fix one thing at a time. Which one should you fix first?',
-    visual: <div style={{display:'flex', justifyContent:'center', gap:'20px', background:'rgba(192, 132, 252, 0.1)', padding:'20px', borderRadius:'8px', border:'2px solid #c084fc', color:'#fff'}}><div style={{textAlign:'center', padding:'10px', background:'rgba(239, 68, 68, 0.2)', borderRadius:'8px', border:'1px solid #ef4444'}}>💧 Leaking Pipe</div><div style={{textAlign:'center', padding:'10px', background:'rgba(255, 255, 255, 0.1)', borderRadius:'8px', border:'1px solid #666'}}>🚪 Squeaky Door</div></div>,
-    correctAnswer: 'A',
-    options: [
-      { key: 'A', text: 'The leaking pipe' },
-      { key: 'B', text: 'The squeaky door' },
-      { key: 'C', text: 'Fix neither' },
-      { key: 'D', text: 'Take a break' }
-    ]
+    title: 'Reaction Match',
+    text: 'Target is YELLOW. The sequence flashes: PURPLE, YELLOW, YELLOW. How many times did the target appear?',
+    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'3rem', padding:'20px'}}>?? ?? ??</div>,
+    correctAnswer: 'C',
+    options: [{key:'A', text:'0'}, {key:'B', text:'1'}, {key:'C', text:'2'}, {key:'D', text:'3'}],
   },
   {
-    id: 'q5',
-    domain: 'spatial_visual_memory',
+    id: 'q_ref_3',
+    domain: 'reflexes_and_focus',
     difficulty: 2,
+    title: 'Stroop Interference: Traffic',
+    text: 'The word "GO" is written in RED ink. The rule is to obey the INK COLOR, not the word. What should you do?',
+    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'4rem', color:'#ef4444', fontWeight:'bold', padding:'20px'}}>GO</div>,
+    correctAnswer: 'B',
+    options: [{key:'A', text:'Accelerate'}, {key:'B', text:'Stop'}, {key:'C', text:'Yield'}, {key:'D', text:'Reverse'}],
+  },
+  {
+    id: 'q_ref_4',
+    domain: 'reflexes_and_focus',
+    difficulty: 2,
+    title: 'Audio-Visual Sync',
+    text: 'You hear a HIGH beep while seeing a DOWN arrow. The correct pairing is HIGH-UP or LOW-DOWN. Is the current signal valid?',
+    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'3rem', padding:'20px'}}>?? ??</div>,
+    correctAnswer: 'B',
+    options: [{key:'A', text:'Yes, valid'}, {key:'B', text:'No, invalid'}, {key:'C', text:'Need more info'}, {key:'D', text:'Warning: Signal lost'}],
+  },
+  {
+    id: 'q_ref_5',
+    domain: 'reflexes_and_focus',
+    difficulty: 3,
+    title: 'Cognitive Load: Alpha-Num',
+    text: 'If a number is EVEN, press LEFT. If a letter is a VOWEL, press RIGHT. You see: 8, E, 3, B. What is the sequence of presses for the first two items?',
+    visual: <div style={{display:'flex', justifyContent:'space-around', fontSize:'2rem', padding:'20px', background:'rgba(255,255,255,0.1)', borderRadius:'8px'}}><span>8</span><span>E</span><span>3</span><span>B</span></div>,
+    correctAnswer: 'A',
+    options: [{key:'A', text:'LEFT, RIGHT'}, {key:'B', text:'LEFT, LEFT'}, {key:'C', text:'RIGHT, LEFT'}, {key:'D', text:'RIGHT, RIGHT'}],
+  },
+  {
+    id: 'q_spat_1',
+    domain: 'spatial_visual_memory',
+    difficulty: 1,
+    title: 'Dot Tracker',
+    text: 'A dot starts in the center of a 3x3 grid. It moves: UP, LEFT, RIGHT. Where is it relative to the center?',
+    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'2rem', padding:'20px'}}>?? ?? ??</div>,
+    correctAnswer: 'A',
+    options: [{key:'A', text:'Top Center'}, {key:'B', text:'Center'}, {key:'C', text:'Top Right'}, {key:'D', text:'Top Left'}],
+  },
+  {
+    id: 'q_spat_2',
+    domain: 'spatial_visual_memory',
+    difficulty: 1,
     title: 'Shape Rotation',
-    text: 'Imagine a standard triangle pointing UP (▲). If you rotate it exactly 180 degrees (upside down), which direction is it pointing now?',
-    visual: <div style={{display:'flex', justifyContent:'center', gap:'20px', alignItems:'center', padding:'20px', background:'rgba(74, 222, 128, 0.1)', borderRadius:'8px', border:'2px solid #4ade80', color:'#4ade80', fontSize:'2rem'}}><div style={{transform:'rotate(0deg)'}}>▲</div> <span>↻ 180°</span> <span>= ?</span></div>,
-    correctAnswer: 'D',
-    options: [
-      { key: 'A', text: 'Left' },
-      { key: 'B', text: 'Right' },
-      { key: 'C', text: 'Up' },
-      { key: 'D', text: 'Down' }
-    ]
-  },
-  {
-    id: 'q6',
-    domain: 'logical_mathematical',
-    difficulty: 2,
-    title: 'Number Pattern',
-    text: 'Look at the following number sequence: 2, 4, 6, 8, ... What is the next logical number in this pattern?',
-    visual: <div style={{textAlign:'center', background:'rgba(245, 158, 11, 0.1)', padding:'20px', borderRadius:'8px', border:'2px solid #f59e0b', color:'#f59e0b', fontSize:'1.5rem', fontWeight:'bold', letterSpacing:'4px'}}>2 ➔ 4 ➔ 6 ➔ 8 ➔ ?</div>,
-    correctAnswer: 'A',
-    options: [
-      { key: 'A', text: '10' },
-      { key: 'B', text: '9' },
-      { key: 'C', text: '12' },
-      { key: 'D', text: '16' }
-    ]
-  },
-  {
-    id: 'q7',
-    domain: 'reflexes_and_focus',
-    difficulty: 2,
-    title: 'Color Focus',
-    text: 'You must sound the alarm ONLY if you see a RED CIRCLE. On the screen, you see a BLUE SQUARE, a GREEN CIRCLE, and a RED SQUARE. Do you sound the alarm?',
-    visual: <div style={{display:'flex', justifyContent:'center', gap:'20px', background:'rgba(96, 165, 250, 0.1)', padding:'20px', borderRadius:'8px', border:'2px solid #60a5fa'}}><div style={{width:'40px', height:'40px', background:'#3b82f6'}}></div><div style={{width:'40px', height:'40px', background:'#22c55e', borderRadius:'20px'}}></div><div style={{width:'40px', height:'40px', background:'#ef4444'}}></div></div>,
-    correctAnswer: 'B',
-    options: [
-      { key: 'A', text: 'Yes, because there is a red shape' },
-      { key: 'B', text: 'No, because there is no red circle' },
-      { key: 'C', text: 'Yes, because there is a circle' },
-      { key: 'D', text: 'Yes, because there are three shapes' }
-    ]
-  },
-  {
-    id: 'q8',
-    domain: 'executive_strategy',
-    difficulty: 2,
-    title: 'Rule Override',
-    text: 'Normally, you pack apples in RED boxes and bananas in YELLOW boxes. A new urgent rule is announced: "Pack ALL fruits in BLUE boxes today." You receive a banana. Which box do you use?',
-    visual: <div style={{textAlign:'center', background:'rgba(192, 132, 252, 0.1)', padding:'20px', borderRadius:'8px', border:'2px solid #c084fc', color:'#fff'}}><div style={{color:'#c084fc', fontWeight:'bold', marginBottom:'15px', fontSize:'1.1rem'}}>⚠️ NEW RULE: ALL FRUITS ➔ BLUE BOX</div><div style={{fontSize:'2rem'}}>🍌 ➔ 📦 ?</div></div>,
+    text: 'Imagine a letter "L". Rotate it 90 degrees clockwise. Which way does the long stem point?',
+    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'4rem', padding:'20px'}}>L ??</div>,
     correctAnswer: 'C',
-    options: [
-      { key: 'A', text: 'Yellow Box' },
-      { key: 'B', text: 'Red Box' },
-      { key: 'C', text: 'Blue Box' },
-      { key: 'D', text: 'Green Box' }
-    ]
+    options: [{key:'A', text:'Up'}, {key:'B', text:'Down'}, {key:'C', text:'Right'}, {key:'D', text:'Left'}],
   },
   {
-    id: 'q9',
+    id: 'q_spat_3',
+    domain: 'spatial_visual_memory',
+    difficulty: 2,
+    title: 'Pathfinder',
+    text: 'A mouse is in a maze. It goes Forward 2 spaces, turns Left, goes Forward 1 space, turns Right, and goes Forward 2 spaces. If it turns around (180 degrees), what is its sequence back to the start?',
+    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'2rem', padding:'20px'}}>?? ???? ?? ?? ?? ????</div>,
+    correctAnswer: 'D',
+    options: [{key:'A', text:'F2, L, F1, R, F2'}, {key:'B', text:'F2, R, F1, L, F2'}, {key:'C', text:'F2, L, F2, R, F1'}, {key:'D', text:'F2, L, F1, R, F2'}],
+  },
+  {
+    id: 'q_spat_4',
+    domain: 'spatial_visual_memory',
+    difficulty: 2,
+    title: 'Mirror Image',
+    text: 'Look at the pattern: ?? ?? ??. What is the exact mirror image of this sequence from right to left?',
+    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'3rem', padding:'20px'}}>?? ?? ?? ??</div>,
+    correctAnswer: 'B',
+    options: [{key:'A', text:'?? ?? ??'}, {key:'B', text:'?? ?? ??'}, {key:'C', text:'?? ?? ??'}, {key:'D', text:'?? ?? ??'}],
+  },
+  {
+    id: 'q_spat_5',
     domain: 'spatial_visual_memory',
     difficulty: 3,
-    title: 'Route Traceback',
-    text: 'You walk 3 blocks North, then 2 blocks East, then 3 blocks South. How do you get back to your starting point in the shortest straight line?',
-    visual: <div style={{width:'100%', display:'flex', justifyContent:'center', padding:'20px', background:'rgba(74, 222, 128, 0.1)', border:'2px solid #4ade80', borderRadius:'8px'}}><svg width="150" height="100"><path d="M 20 80 L 20 20 L 120 20 L 120 80" fill="none" stroke="#4ade80" strokeWidth="4" /><circle cx="20" cy="80" r="8" fill="#4ade80" /><circle cx="120" cy="80" r="8" fill="#ef4444" /><text x="50" y="50" fill="#4ade80" fontSize="14" fontWeight="bold">Path Taken</text></svg></div>,
-    correctAnswer: 'A',
-    options: [
-      { key: 'A', text: 'Walk 2 blocks West' },
-      { key: 'B', text: 'Walk 2 blocks East' },
-      { key: 'C', text: 'Walk 3 blocks North' },
-      { key: 'D', text: 'Walk 3 blocks South' }
-    ]
+    title: '3D Cube Fold',
+    text: 'A cross-shaped flat net of 6 squares is folded into a cube. If the RED square is on the bottom, and the BLUE square is adjacent to it, can the BLUE square ever be on top?',
+    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'3rem', padding:'20px'}}>?? ?? ??</div>,
+    correctAnswer: 'B',
+    options: [{key:'A', text:'Yes, always'}, {key:'B', text:'No, never'}, {key:'C', text:'Only if rotated'}, {key:'D', text:'Depends on the other colors'}],
   },
   {
-    id: 'q10',
+    id: 'q_log_1',
+    domain: 'logical_mathematical',
+    difficulty: 1,
+    title: 'Number Sequence',
+    text: 'Find the missing number: 2, 5, 10, 17, ?',
+    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'2rem', padding:'20px', letterSpacing:'5px'}}>2 5 10 17 ?</div>,
+    correctAnswer: 'C',
+    options: [{key:'A', text:'24'}, {key:'B', text:'25'}, {key:'C', text:'26'}, {key:'D', text:'27'}],
+  },
+  {
+    id: 'q_log_2',
+    domain: 'logical_mathematical',
+    difficulty: 1,
+    title: 'Basic Algebra',
+    text: 'If 3x + 5 = 20, what is the value of x?',
+    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'3rem', padding:'20px', fontFamily:'monospace'}}>3x + 5 = 20</div>,
+    correctAnswer: 'A',
+    options: [{key:'A', text:'5'}, {key:'B', text:'15'}, {key:'C', text:'25/3'}, {key:'D', text:'10'}],
+  },
+  {
+    id: 'q_log_3',
+    domain: 'logical_mathematical',
+    difficulty: 2,
+    title: 'Data Stream Sorting',
+    text: 'A server receives packets at 5 MB/s. Another sends packets at 3 MB/s. If the buffer starts empty, how much data is in the buffer after 10 seconds?',
+    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'2rem', padding:'20px'}}>?? 5 MB/s &nbsp;&nbsp; ?? 3 MB/s</div>,
+    correctAnswer: 'B',
+    options: [{key:'A', text:'80 MB'}, {key:'B', text:'20 MB'}, {key:'C', text:'15 MB'}, {key:'D', text:'50 MB'}],
+  },
+  {
+    id: 'q_log_4',
+    domain: 'logical_mathematical',
+    difficulty: 2,
+    title: 'Cryptarithm',
+    text: 'If ?? + ?? = 10, and ?? ? ?? = 15, what is the value of ???',
+    visual: <div style={{display:'flex', flexDirection:'column', alignItems:'center', fontSize:'2rem', padding:'20px'}}><div>?? + ?? = 10</div><div>?? ? ?? = 15</div></div>,
+    correctAnswer: 'A',
+    options: [{key:'A', text:'3'}, {key:'B', text:'4'}, {key:'C', text:'5'}, {key:'D', text:'6'}],
+  },
+  {
+    id: 'q_log_5',
     domain: 'logical_mathematical',
     difficulty: 3,
-    title: 'Logistics Network',
-    text: 'Drone A carries exactly 2 packages per trip. Drone B carries exactly 3 packages per trip. If you need to deliver exactly 7 packages, how many trips should each drone make?',
-    visual: <div style={{display:'flex', justifyContent:'space-around', background:'rgba(245, 158, 11, 0.1)', padding:'20px', borderRadius:'8px', border:'2px solid #f59e0b', color:'#f59e0b', fontSize:'1.2rem', fontWeight:'bold'}}><div>🚁 Drone A: 2 📦</div><div>🚁 Drone B: 3 📦</div><div>🎯 Target: 7 📦</div></div>,
-    correctAnswer: 'B',
-    options: [
-      { key: 'A', text: 'Drone A: 1 trip, Drone B: 1 trip' },
-      { key: 'B', text: 'Drone A: 2 trips, Drone B: 1 trip' },
-      { key: 'C', text: 'Drone A: 3 trips, Drone B: 1 trip' },
-      { key: 'D', text: 'Drone A: 1 trip, Drone B: 2 trips' }
-    ]
-  },
-  {
-    id: 'q11',
-    domain: 'reflexes_and_focus',
-    difficulty: 3,
-    title: 'Dual Condition Check',
-    text: 'You must approve access ONLY if the ID badge is GREEN AND the password is "123". The person standing in front of you has a GREEN badge, but their password is "XYZ". Do you approve access?',
-    visual: <div style={{textAlign:'center', background:'rgba(234, 179, 8, 0.1)', padding:'20px', borderRadius:'8px', border:'2px solid #eab308', color:'#fff', display:'flex', justifyContent:'center', gap:'20px', alignItems:'center'}}><div><div style={{padding:'10px 20px', background:'#22c55e', borderRadius:'4px', fontWeight:'bold', color:'#000'}}>GREEN BADGE</div></div><div><div style={{padding:'10px 20px', background:'rgba(0,0,0,0.5)', border:'1px solid #666', borderRadius:'4px', fontFamily:'monospace', letterSpacing:'2px'}}>PASS: XYZ</div></div></div>,
+    title: 'Network Topology',
+    text: 'There are 4 computers connected in a ring. A virus spreads to adjacent nodes every 1 minute. If node 1 is infected at 0:00, when will node 3 be infected?',
+    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'3rem', padding:'20px'}}>?? ?? ??</div>,
     correctAnswer: 'C',
-    options: [
-      { key: 'A', text: 'Yes, because the badge is green' },
-      { key: 'B', text: 'Yes, the password doesn\'t matter' },
-      { key: 'C', text: 'No, because the password is incorrect' },
-      { key: 'D', text: 'Yes, but report it later' }
-    ]
+    options: [{key:'A', text:'1 minute'}, {key:'B', text:'1.5 minutes'}, {key:'C', text:'2 minutes'}, {key:'D', text:'3 minutes'}],
   },
   {
-    id: 'q12',
+    id: 'q_exe_1',
+    domain: 'executive_strategy',
+    difficulty: 1,
+    title: 'Triage Sorting',
+    text: 'You are organizing files. Rule: Docs go left, Images go right. You get a .JPG file. Where does it go?',
+    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'2rem', padding:'20px'}}>?? ?? &nbsp;|&nbsp; ?? ???</div>,
+    correctAnswer: 'B',
+    options: [{key:'A', text:'Left'}, {key:'B', text:'Right'}, {key:'C', text:'Archive'}, {key:'D', text:'Delete'}],
+  },
+  {
+    id: 'q_exe_2',
+    domain: 'executive_strategy',
+    difficulty: 1,
+    title: 'Rule Shift',
+    text: 'Rule 1: Sort by Color. Rule 2 (Override): Sort by Shape. You receive a RED SQUARE. Under the override, which bin does it go into?',
+    visual: <div style={{display:'flex', flexDirection:'column', alignItems:'center', padding:'20px', border:'2px dashed #a855f7', borderRadius:'8px', color:'#a855f7'}}><div>?? OVERRIDE ACTIVE</div><div style={{fontSize:'2rem'}}>??</div></div>,
+    correctAnswer: 'A',
+    options: [{key:'A', text:'Square Bin'}, {key:'B', text:'Red Bin'}, {key:'C', text:'Color Bin'}, {key:'D', text:'Reject Bin'}],
+  },
+  {
+    id: 'q_exe_3',
+    domain: 'executive_strategy',
+    difficulty: 2,
+    title: 'Resource Allocation',
+    text: 'You have . Task A costs  (High Priority). Task B costs  (Medium). Task C costs  (Low). Which combination maximizes priority without overspending?',
+    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'2rem', padding:'20px'}}>?? </div>,
+    correctAnswer: 'B',
+    options: [{key:'A', text:'A and B'}, {key:'B', text:'A and C'}, {key:'C', text:'B and C'}, {key:'D', text:'Only A'}],
+  },
+  {
+    id: 'q_exe_4',
+    domain: 'executive_strategy',
+    difficulty: 2,
+    title: 'Scheduling Conflict',
+    text: 'Meeting X is at 2:00 PM (1 hr). Meeting Y is at 2:30 PM (30 mins). Meeting Z is at 3:00 PM (1 hr). Which meetings can you attend fully?',
+    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'2rem', padding:'20px'}}>?? ??</div>,
+    correctAnswer: 'C',
+    options: [{key:'A', text:'X and Y'}, {key:'B', text:'Y and Z'}, {key:'C', text:'X and Z'}, {key:'D', text:'All of them'}],
+  },
+  {
+    id: 'q_exe_5',
     domain: 'executive_strategy',
     difficulty: 3,
-    title: 'Task Priority',
-    text: 'You need to boil pasta (takes 10 mins) and make sauce (takes 5 mins). If you want them both to finish at the EXACT same time so the meal is hot, when should you start the sauce?',
-    visual: <div style={{display:'flex', justifyContent:'center', alignItems:'center', gap:'20px', background:'rgba(192, 132, 252, 0.1)', padding:'20px', borderRadius:'8px', border:'2px solid #c084fc', color:'#fff', fontWeight:'bold'}}><div>🍝 Pasta: 10m</div><div>+</div><div>🍅 Sauce: 5m</div></div>,
+    title: 'Multi-Constraint Optimization',
+    text: 'Ship A needs to leave before Ship B. Ship C needs to leave after Ship B but before Ship D. What is the only valid departure sequence?',
+    visual: <div style={{display:'flex', justifyContent:'space-around', fontSize:'2rem', padding:'20px'}}>?? A &nbsp; ?? B &nbsp; ?? C &nbsp; ?? D</div>,
     correctAnswer: 'A',
-    options: [
-      { key: 'A', text: '5 minutes after starting the pasta' },
-      { key: 'B', text: 'At the exact same time as the pasta' },
-      { key: 'C', text: '5 minutes before starting the pasta' },
-      { key: 'D', text: '10 minutes after starting the pasta' }
-    ]
-  }
+    options: [{key:'A', text:'A, B, C, D'}, {key:'B', text:'B, A, C, D'}, {key:'C', text:'A, C, B, D'}, {key:'D', text:'D, C, B, A'}],
+  },
 ];
-// Advanced procedural generation for rich, varied, and challenging cognitive questions
-const prng = (function(){ let seed = 123456789; return function() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }; })();
-const generateAdvancedQuestions = () => {
-  const domainsList = ['spatial_visual_memory', 'logical_mathematical', 'reflexes_and_focus', 'executive_strategy'];
-  
-  domainsList.forEach(domain => {
-    for (let diff = 1; diff <= 3; diff++) {
-      // Generate 12 questions per difficulty to ensure plenty of unique content
-      for (let i = 1; i <= 12; i++) {
-        let q = {
-          id: `q_adv_${domain}_d${diff}_${i}`,
-          domain: domain,
-          difficulty: diff,
-          title: '',
-          text: '',
-          visual: null,
-          correctAnswer: 'A',
-          options: []
-        };
-        
-        if (domain === 'logical_mathematical') {
-          if (i % 3 === 0) {
-            // Sequence Decoder
-            const start = Math.floor(prng() * 5) + 2;
-            const multiplier = diff === 1 ? 2 : (diff === 2 ? 3 : 4);
-            const seq = [start, start * multiplier, start * multiplier * multiplier, start * Math.pow(multiplier, 3)];
-            const ans = start * Math.pow(multiplier, 4);
-            
-            q.title = `Sequence Decoder L${diff}`;
-            q.text = `Analyze the data stream pattern. What is the next exact integer in the sequence?`;
-            q.visual = <div style={{display:'flex', justifyContent:'center', gap:'10px', background:'rgba(245, 158, 11, 0.1)', padding:'15px', borderRadius:'8px', border:'2px solid #f59e0b', color:'#f59e0b', fontSize:'1.2rem', fontWeight:'bold'}}>{seq.join(' ➔ ')} ➔ ?</div>;
-            
-            q.correctAnswer = 'A';
-            q.options = [
-              { key: 'A', text: `${ans}` },
-              { key: 'B', text: `${ans + multiplier}` },
-              { key: 'C', text: `${ans - start}` },
-              { key: 'D', text: `${ans * 2}` }
-            ];
-          } else if (i % 3 === 1) {
-            // Cryptarithm / System Logic
-            const a = Math.floor(prng() * (5 * diff)) + 3;
-            const b = Math.floor(prng() * (4 * diff)) + 2;
-            const sum = a + b;
-            const prod = a * b;
-            
-            q.title = `Logic Link L${diff}`;
-            q.text = `System variables Alpha (α) and Beta (β) satisfy two conditions. α + β = ${sum}. α × β = ${prod}. If α > β, what is the value of α?`;
-            q.visual = <div style={{display:'flex', flexDirection:'column', alignItems:'center', background:'rgba(245, 158, 11, 0.1)', padding:'15px', borderRadius:'8px', border:'1px dashed #f59e0b', color:'#fff', fontFamily:'monospace'}}><div>[SYS.COND 1] α + β = {sum}</div><div>[SYS.COND 2] α * β = {prod}</div></div>;
-            
-            q.correctAnswer = 'A';
-            q.options = [
-              { key: 'A', text: `${a}` },
-              { key: 'B', text: `${b}` },
-              { key: 'C', text: `${a + 2}` },
-              { key: 'D', text: `${b - 1}` }
-            ];
-          } else {
-            // Equation Balance
-            const leftTarget = (Math.floor(prng() * 10) + 5) * diff;
-            const rightFactor = Math.floor(prng() * 4) + 2;
-            const ans = leftTarget / rightFactor;
-            
-            q.title = `Equation Balance L${diff}`;
-            q.text = `The network payload must be perfectly balanced. The left node has a weight of ${leftTarget}. The right node is scaled by ${rightFactor}×. What must the base weight (W) be on the right?`;
-            q.visual = <div style={{display:'flex', justifyContent:'center', alignItems:'center', gap:'15px', background:'rgba(245, 158, 11, 0.1)', padding:'20px', borderRadius:'8px', border:'2px solid #f59e0b', color:'#f59e0b', fontSize:'1.5rem', fontWeight:'bold'}}><span>⚖️ {leftTarget}</span> <span>=</span> <span>{rightFactor} × W</span></div>;
-            
-            q.correctAnswer = 'A';
-            q.options = [
-              { key: 'A', text: `${ans % 1 === 0 ? ans : ans.toFixed(1)}` },
-              { key: 'B', text: `${ans + rightFactor}` },
-              { key: 'C', text: `${leftTarget - rightFactor}` },
-              { key: 'D', text: `${ans * 2}` }
-            ];
-          }
-        } else if (domain === 'spatial_visual_memory') {
-          const gridSize = diff + 2; // 3x3, 4x4, 5x5
-          const startX = Math.floor(prng() * gridSize);
-          const startY = Math.floor(prng() * gridSize);
-          
-          let curX = startX;
-          let curY = startY;
-          const moves = [];
-          const directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
-          
-          for (let m = 0; m < diff + 2; m++) {
-            const validDirs = [];
-            if (curY > 0) validDirs.push('UP');
-            if (curY < gridSize - 1) validDirs.push('DOWN');
-            if (curX > 0) validDirs.push('LEFT');
-            if (curX < gridSize - 1) validDirs.push('RIGHT');
-            
-            const dir = validDirs[Math.floor(prng() * validDirs.length)];
-            moves.push(dir);
-            if (dir === 'UP') curY--;
-            if (dir === 'DOWN') curY++;
-            if (dir === 'LEFT') curX--;
-            if (dir === 'RIGHT') curX++;
-          }
-          
-          const gridCells = [];
-          for (let row = 0; row < gridSize; row++) {
-            for (let col = 0; col < gridSize; col++) {
-              const isStart = row === startY && col === startX;
-              gridCells.push(
-                <div key={`${row}-${col}`} style={{
-                  height: '25px', borderRadius: '4px',
-                  background: isStart ? '#4ade80' : 'rgba(255,255,255,0.1)',
-                  boxShadow: isStart ? '0 0 10px #4ade80' : 'none',
-                  display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '10px'
-                }}>{isStart ? '●' : ''}</div>
-              );
-            }
-          }
-          
-          q.title = `Nexus Mapper L${diff}`;
-          q.text = `A data packet originates at the highlighted node in the ${gridSize}x${gridSize} grid. It routes: ${moves.join(' ➔ ')}. Where does the packet terminate?`;
-          q.visual = <div style={{display:'grid', gridTemplateColumns:`repeat(${gridSize}, 1fr)`, gap:'5px', width:`${gridSize * 30 + 20}px`, margin:'0 auto', background:'rgba(74, 222, 128, 0.1)', padding:'10px', borderRadius:'8px', border:'2px solid #4ade80'}}>{gridCells}</div>;
-          
-          q.correctAnswer = 'A';
-          q.options = [
-            { key: 'A', text: `Row ${curY + 1}, Col ${curX + 1}` },
-            { key: 'B', text: `Row ${startY + 1}, Col ${startX + 1}` },
-            { key: 'C', text: `Row ${Math.max(1, curY)}, Col ${Math.max(1, curX)}` },
-            { key: 'D', text: `Row ${curX + 1}, Col ${curY + 1}` }
-          ];
-        } else if (domain === 'reflexes_and_focus') {
-          if (i % 2 === 0) {
-            // Stroop Effect
-            const colorNames = ['RED', 'BLUE', 'GREEN', 'YELLOW', 'PURPLE'];
-            const hexes = { 'RED': '#ef4444', 'BLUE': '#3b82f6', 'GREEN': '#22c55e', 'YELLOW': '#eab308', 'PURPLE': '#a855f7' };
-            const word = colorNames[Math.floor(prng() * colorNames.length)];
-            let paintColor = colorNames[Math.floor(prng() * colorNames.length)];
-            
-            // Ensure mismatch for difficulty > 1
-            if (diff > 1) {
-              while (paintColor === word) paintColor = colorNames[Math.floor(prng() * colorNames.length)];
-            }
-            
-            const askForColor = prng() > 0.5;
-            
-            q.title = `Stroop Shift L${diff}`;
-            q.text = askForColor ? `Identify the physical INK COLOR of the text below, ignoring what the word says.` : `Identify what the word actually SAYS, ignoring the ink color it is painted with.`;
-            q.visual = <div style={{textAlign:'center', background:'rgba(255,255,255,0.05)', padding:'30px', borderRadius:'8px', border:'1px solid rgba(255,255,255,0.1)'}}><div style={{color: hexes[paintColor], fontSize:'3rem', fontWeight:'900', letterSpacing:'4px'}}>{word}</div></div>;
-            
-            q.correctAnswer = 'A';
-            q.options = [
-              { key: 'A', text: askForColor ? paintColor : word },
-              { key: 'B', text: askForColor ? word : paintColor },
-              { key: 'C', text: colorNames.find(c => c !== word && c !== paintColor) || 'BLACK' },
-              { key: 'D', text: colorNames.find(c => c !== word && c !== paintColor && c !== 'BLACK') || 'WHITE' }
-            ];
-          } else {
-            // Object Recognition Distraction
-            const shapes = ['Circle', 'Square', 'Triangle', 'Diamond'];
-            const colors = ['Red', 'Blue', 'Green'];
-            const targetShape = shapes[Math.floor(prng() * shapes.length)];
-            const targetColor = colors[Math.floor(prng() * colors.length)];
-            
-            q.title = `Focus Finder L${diff}`;
-            q.text = `SECURITY PROTOCOL: You must ONLY approve entry for a ${targetColor.toUpperCase()} ${targetShape.toUpperCase()}. The scanner detects a shape with 4 equal sides, colored ${targetColor.toUpperCase()}. Do you approve entry?`;
-            
-            let isMatch = (targetShape === 'Square' || targetShape === 'Diamond');
-            
-            q.visual = <div style={{textAlign:'center', background:'rgba(59, 130, 246, 0.1)', padding:'20px', borderRadius:'8px', border:'2px solid #3b82f6', color:'#fff'}}>🔍 SCANNER LOG:<br/>Object: Equilateral Quadrilateral<br/>Spectrometer: {targetColor.toUpperCase()}</div>;
-            
-            q.correctAnswer = 'A';
-            q.options = [
-              { key: 'A', text: isMatch ? 'Approve Entry' : 'Deny Entry' },
-              { key: 'B', text: isMatch ? 'Deny Entry' : 'Approve Entry' },
-              { key: 'C', text: 'Quarantine Object' },
-              { key: 'D', text: 'Request Manual Review' }
-            ];
-          }
-        } else if (domain === 'executive_strategy') {
-          if (i % 2 === 0) {
-            // Rule Shift
-            const sortingRules = ['Sort by File Size', 'Sort by File Type', 'Sort by Date Created'];
-            const currentRule = sortingRules[Math.floor(prng() * sortingRules.length)];
-            
-            const fileNames = ['video.mp4', 'report.pdf', 'archive.zip', 'photo.jpg', 'system.log'];
-            const fileSizes = ['500MB', '2MB', '1.5GB', '450KB', '10MB'];
-            const fileDates = ['Created Today', 'Created Yesterday', 'Created Last Week', 'Created 2021'];
-            
-            const file = fileNames[Math.floor(prng() * fileNames.length)];
-            const size = fileSizes[Math.floor(prng() * fileSizes.length)];
-            const date = fileDates[Math.floor(prng() * fileDates.length)];
-            
-            const oldRules = ['Alphabetical Order', 'Ascending Order', 'Reverse Alphabetical'];
-            const oldRule = oldRules[Math.floor(prng() * oldRules.length)];
-            
-            q.title = `Mental Flex L${diff}`;
-            q.text = `The system was previously sorting by ${oldRule}. An override command has just been issued. You receive a new file: "${file}" (${size}, ${date}). Under the CURRENT active rule, which bin does this file go into?`;
-            
-            q.visual = <div style={{display:'flex', flexDirection:'column', gap:'10px', background:'rgba(168, 85, 247, 0.1)', padding:'15px', borderRadius:'8px', border:'2px solid #a855f7', color:'#fff'}}><div>⚠️ SYSTEM OVERRIDE</div><div style={{fontWeight:'bold', color:'#a855f7'}}>NEW RULE: {currentRule.toUpperCase()}</div></div>;
-            
-            let correctBin = '';
-            if (currentRule.includes('Size')) correctBin = 'Large Files Bin';
-            if (currentRule.includes('Type')) correctBin = 'Media Files Bin';
-            if (currentRule.includes('Date')) correctBin = 'Recent Files Bin';
-            
-            q.correctAnswer = 'A';
-            q.options = [
-              { key: 'A', text: correctBin },
-              { key: 'B', text: 'Alphabetical Bin (V)' },
-              { key: 'C', text: 'Archived Files Bin' },
-              { key: 'D', text: 'System Files Bin' }
-            ];
-          } else {
-            // Priority Queue
-            const taskPool = [
-              'Server Patch', 'UI Update', 'DB Backup', 'API Refactor', 'Security Audit', 'Cache Clear', 'User Migration', 'Log Rotation'
-            ];
-            const taskCounts = diff === 1 ? 3 : (diff === 2 ? 4 : 5);
-            const times = [15, 20, 12, 10];
-            const timeLimit = times[Math.floor(prng() * times.length)];
-            
-            const t1 = taskPool.splice(Math.floor(prng()*taskPool.length), 1)[0];
-            const t2 = taskPool.splice(Math.floor(prng()*taskPool.length), 1)[0];
-            const t3 = taskPool.splice(Math.floor(prng()*taskPool.length), 1)[0];
-            
-            const tasks = [
-              `${t1} (Critical, 10m)`,
-              `${t2} (Low, 2m)`,
-              `${t3} (High, 5m)`
-            ];
-            
-            q.title = `Priority Queue L${diff}`;
-            q.text = `You have ${taskCounts} pending operations. You only have ${timeLimit} minutes before system lock. To maximize impact, you must complete the highest priority tasks first without exceeding the time limit. What is the optimal sequence?`;
-            
-            q.visual = <div style={{display:'flex', flexDirection:'column', gap:'8px', background:'rgba(168, 85, 247, 0.1)', padding:'15px', borderRadius:'8px', border:'2px solid #a855f7', color:'#cbd5e1', fontSize:'0.9rem'}}>{tasks.map((t, idx) => <div key={idx}>- {t}</div>)}</div>;
-            
-            q.correctAnswer = 'A';
-            q.options = [
-              { key: 'A', text: `${t1} ➔ ${t3}` },
-              { key: 'B', text: `${t2} ➔ ${t3} ➔ ${t1}` },
-              { key: 'C', text: `${t3} ➔ ${t1} ➔ ${t2}` },
-              { key: 'D', text: `${t1} ➔ ${t2}` }
-            ];
-          }
-        }
-        
-        COGNITIVE_QUESTIONS.push(q);
-      }
-    }
-  });
-};
-generateAdvancedQuestions();
