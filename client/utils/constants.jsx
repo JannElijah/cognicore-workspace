@@ -387,68 +387,218 @@ export const COGNITIVE_QUESTIONS = [
     ]
   }
 ];
-// Procedurally generate extra questions to support longer assessments
-const generateProceduralQuestions = () => {
+// Advanced procedural generation for rich, varied, and challenging cognitive questions
+const generateAdvancedQuestions = () => {
   const domainsList = ['spatial_visual_memory', 'logical_mathematical', 'reflexes_and_focus', 'executive_strategy'];
+  
   domainsList.forEach(domain => {
     for (let diff = 1; diff <= 3; diff++) {
-      // 15 questions per difficulty per domain to guarantee we never run out
-      for (let i = 1; i <= 15; i++) {
+      // Generate 12 questions per difficulty to ensure plenty of unique content
+      for (let i = 1; i <= 12; i++) {
         let q = {
-          id: `q_ext_${domain}_d${diff}_${i}`,
+          id: `q_adv_${domain}_d${diff}_${i}`,
           domain: domain,
           difficulty: diff,
           title: '',
           text: '',
+          visual: null,
           correctAnswer: 'A',
           options: []
         };
         
         if (domain === 'logical_mathematical') {
-          const a = Math.floor(Math.random() * (10 * diff)) + 2;
-          const b = Math.floor(Math.random() * (5 * diff)) + 2;
-          const c = Math.floor(Math.random() * (10 * diff)) + 1;
-          const ans = (a * b) + c;
-          q.title = `Equation Link ${i}`;
-          q.text = `Solve the system routing requirement: (${a} * ${b}) + ${c}. What is the correct value?`;
-          q.options = [
-            { key: 'A', text: `${ans}` },
-            { key: 'B', text: `${ans + Math.floor(Math.random() * 5) + 1}` },
-            { key: 'C', text: `${ans - Math.floor(Math.random() * 5) - 1}` },
-            { key: 'D', text: `${ans * 2}` }
-          ];
+          if (i % 3 === 0) {
+            // Sequence Decoder
+            const start = Math.floor(Math.random() * 5) + 2;
+            const multiplier = diff === 1 ? 2 : (diff === 2 ? 3 : 4);
+            const seq = [start, start * multiplier, start * multiplier * multiplier, start * Math.pow(multiplier, 3)];
+            const ans = start * Math.pow(multiplier, 4);
+            
+            q.title = `Sequence Decoder L${diff}`;
+            q.text = `Analyze the data stream pattern. What is the next exact integer in the sequence?`;
+            q.visual = <div style={{display:'flex', justifyContent:'center', gap:'10px', background:'rgba(245, 158, 11, 0.1)', padding:'15px', borderRadius:'8px', border:'2px solid #f59e0b', color:'#f59e0b', fontSize:'1.2rem', fontWeight:'bold'}}>{seq.join(' ➔ ')} ➔ ?</div>;
+            
+            q.correctAnswer = 'A';
+            q.options = [
+              { key: 'A', text: `${ans}` },
+              { key: 'B', text: `${ans + multiplier}` },
+              { key: 'C', text: `${ans - start}` },
+              { key: 'D', text: `${ans * 2}` }
+            ];
+          } else if (i % 3 === 1) {
+            // Cryptarithm / System Logic
+            const a = Math.floor(Math.random() * (5 * diff)) + 3;
+            const b = Math.floor(Math.random() * (4 * diff)) + 2;
+            const sum = a + b;
+            const prod = a * b;
+            
+            q.title = `Logic Link L${diff}`;
+            q.text = `System variables Alpha (α) and Beta (β) satisfy two conditions. α + β = ${sum}. α × β = ${prod}. If α > β, what is the value of α?`;
+            q.visual = <div style={{display:'flex', flexDirection:'column', alignItems:'center', background:'rgba(245, 158, 11, 0.1)', padding:'15px', borderRadius:'8px', border:'1px dashed #f59e0b', color:'#fff', fontFamily:'monospace'}}><div>[SYS.COND 1] α + β = {sum}</div><div>[SYS.COND 2] α * β = {prod}</div></div>;
+            
+            q.correctAnswer = 'A';
+            q.options = [
+              { key: 'A', text: `${a}` },
+              { key: 'B', text: `${b}` },
+              { key: 'C', text: `${a + 2}` },
+              { key: 'D', text: `${b - 1}` }
+            ];
+          } else {
+            // Equation Balance
+            const leftTarget = (Math.floor(Math.random() * 10) + 5) * diff;
+            const rightFactor = Math.floor(Math.random() * 4) + 2;
+            const ans = leftTarget / rightFactor;
+            
+            q.title = `Equation Balance L${diff}`;
+            q.text = `The network payload must be perfectly balanced. The left node has a weight of ${leftTarget}. The right node is scaled by ${rightFactor}×. What must the base weight (W) be on the right?`;
+            q.visual = <div style={{display:'flex', justifyContent:'center', alignItems:'center', gap:'15px', background:'rgba(245, 158, 11, 0.1)', padding:'20px', borderRadius:'8px', border:'2px solid #f59e0b', color:'#f59e0b', fontSize:'1.5rem', fontWeight:'bold'}}><span>⚖️ {leftTarget}</span> <span>=</span> <span>{rightFactor} × W</span></div>;
+            
+            q.correctAnswer = 'A';
+            q.options = [
+              { key: 'A', text: `${ans % 1 === 0 ? ans : ans.toFixed(1)}` },
+              { key: 'B', text: `${ans + rightFactor}` },
+              { key: 'C', text: `${leftTarget - rightFactor}` },
+              { key: 'D', text: `${ans * 2}` }
+            ];
+          }
         } else if (domain === 'spatial_visual_memory') {
-          const directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
+          const gridSize = diff + 2; // 3x3, 4x4, 5x5
+          const startX = Math.floor(Math.random() * gridSize);
+          const startY = Math.floor(Math.random() * gridSize);
+          
+          let curX = startX;
+          let curY = startY;
           const moves = [];
-          for (let m = 0; m < diff + 1; m++) moves.push(directions[Math.floor(Math.random() * 4)]);
-          q.title = `Grid Mapper ${i}`;
-          q.text = `A dot starts in the center of a grid. It moves: ${moves.join(', ')}. Where is it relative to the center?`;
+          const directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
+          
+          for (let m = 0; m < diff + 2; m++) {
+            const validDirs = [];
+            if (curY > 0) validDirs.push('UP');
+            if (curY < gridSize - 1) validDirs.push('DOWN');
+            if (curX > 0) validDirs.push('LEFT');
+            if (curX < gridSize - 1) validDirs.push('RIGHT');
+            
+            const dir = validDirs[Math.floor(Math.random() * validDirs.length)];
+            moves.push(dir);
+            if (dir === 'UP') curY--;
+            if (dir === 'DOWN') curY++;
+            if (dir === 'LEFT') curX--;
+            if (dir === 'RIGHT') curX++;
+          }
+          
+          const gridCells = [];
+          for (let row = 0; row < gridSize; row++) {
+            for (let col = 0; col < gridSize; col++) {
+              const isStart = row === startY && col === startX;
+              gridCells.push(
+                <div key={`${row}-${col}`} style={{
+                  height: '25px', borderRadius: '4px',
+                  background: isStart ? '#4ade80' : 'rgba(255,255,255,0.1)',
+                  boxShadow: isStart ? '0 0 10px #4ade80' : 'none',
+                  display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '10px'
+                }}>{isStart ? '●' : ''}</div>
+              );
+            }
+          }
+          
+          q.title = `Nexus Mapper L${diff}`;
+          q.text = `A data packet originates at the highlighted node in the ${gridSize}x${gridSize} grid. It routes: ${moves.join(' ➔ ')}. Where does the packet terminate?`;
+          q.visual = <div style={{display:'grid', gridTemplateColumns:`repeat(${gridSize}, 1fr)`, gap:'5px', width:`${gridSize * 30 + 20}px`, margin:'0 auto', background:'rgba(74, 222, 128, 0.1)', padding:'10px', borderRadius:'8px', border:'2px solid #4ade80'}}>{gridCells}</div>;
+          
+          q.correctAnswer = 'A';
           q.options = [
-            { key: 'A', text: 'Trace the path correctly' },
-            { key: 'B', text: 'Opposite of the path' },
-            { key: 'C', text: '1 step short' },
-            { key: 'D', text: 'Did not move' }
+            { key: 'A', text: `Row ${curY + 1}, Col ${curX + 1}` },
+            { key: 'B', text: `Row ${startY + 1}, Col ${startX + 1}` },
+            { key: 'C', text: `Row ${Math.max(1, curY)}, Col ${Math.max(1, curX)}` },
+            { key: 'D', text: `Row ${curX + 1}, Col ${curY + 1}` }
           ];
         } else if (domain === 'reflexes_and_focus') {
-          const colors = ['RED', 'BLUE', 'GREEN', 'YELLOW', 'PURPLE'];
-          const target = colors[Math.floor(Math.random() * colors.length)];
-          q.title = `Attention Protocol ${i}`;
-          q.text = `Your target is ${target}. The sequence flashes: ${colors[Math.floor(Math.random() * colors.length)]}, ${colors[Math.floor(Math.random() * colors.length)]}, ${target}. Did the target appear?`;
-          q.options = [
-            { key: 'A', text: 'Yes, it appeared' },
-            { key: 'B', text: 'No, it was skipped' },
-            { key: 'C', text: 'It appeared twice' },
-            { key: 'D', text: 'I am not sure' }
-          ];
+          if (i % 2 === 0) {
+            // Stroop Effect
+            const colorNames = ['RED', 'BLUE', 'GREEN', 'YELLOW', 'PURPLE'];
+            const hexes = { 'RED': '#ef4444', 'BLUE': '#3b82f6', 'GREEN': '#22c55e', 'YELLOW': '#eab308', 'PURPLE': '#a855f7' };
+            const word = colorNames[Math.floor(Math.random() * colorNames.length)];
+            let paintColor = colorNames[Math.floor(Math.random() * colorNames.length)];
+            
+            // Ensure mismatch for difficulty > 1
+            if (diff > 1) {
+              while (paintColor === word) paintColor = colorNames[Math.floor(Math.random() * colorNames.length)];
+            }
+            
+            const askForColor = Math.random() > 0.5;
+            
+            q.title = `Stroop Shift L${diff}`;
+            q.text = askForColor ? `Identify the physical INK COLOR of the text below, ignoring what the word says.` : `Identify what the word actually SAYS, ignoring the ink color it is painted with.`;
+            q.visual = <div style={{textAlign:'center', background:'rgba(255,255,255,0.05)', padding:'30px', borderRadius:'8px', border:'1px solid rgba(255,255,255,0.1)'}}><div style={{color: hexes[paintColor], fontSize:'3rem', fontWeight:'900', letterSpacing:'4px'}}>{word}</div></div>;
+            
+            q.correctAnswer = 'A';
+            q.options = [
+              { key: 'A', text: askForColor ? paintColor : word },
+              { key: 'B', text: askForColor ? word : paintColor },
+              { key: 'C', text: colorNames.find(c => c !== word && c !== paintColor) || 'BLACK' },
+              { key: 'D', text: colorNames.find(c => c !== word && c !== paintColor && c !== 'BLACK') || 'WHITE' }
+            ];
+          } else {
+            // Object Recognition Distraction
+            const shapes = ['Circle', 'Square', 'Triangle', 'Diamond'];
+            const colors = ['Red', 'Blue', 'Green'];
+            const targetShape = shapes[Math.floor(Math.random() * shapes.length)];
+            const targetColor = colors[Math.floor(Math.random() * colors.length)];
+            
+            q.title = `Focus Finder L${diff}`;
+            q.text = `SECURITY PROTOCOL: You must ONLY approve entry for a ${targetColor.toUpperCase()} ${targetShape.toUpperCase()}. The scanner detects a shape with 4 equal sides, colored ${targetColor.toUpperCase()}. Do you approve entry?`;
+            
+            let isMatch = (targetShape === 'Square' || targetShape === 'Diamond');
+            
+            q.visual = <div style={{textAlign:'center', background:'rgba(59, 130, 246, 0.1)', padding:'20px', borderRadius:'8px', border:'2px solid #3b82f6', color:'#fff'}}>🔍 SCANNER LOG:<br/>Object: Equilateral Quadrilateral<br/>Spectrometer: {targetColor.toUpperCase()}</div>;
+            
+            q.correctAnswer = 'A';
+            q.options = [
+              { key: 'A', text: isMatch ? 'Approve Entry' : 'Deny Entry' },
+              { key: 'B', text: isMatch ? 'Deny Entry' : 'Approve Entry' },
+              { key: 'C', text: 'Quarantine Object' },
+              { key: 'D', text: 'Request Manual Review' }
+            ];
+          }
         } else if (domain === 'executive_strategy') {
-          q.title = `Priority Triage ${i}`;
-          q.text = `You have ${diff + 2} active alerts. Alert A is critical but slow. Alert B is minor but fast. Alert C is moderate. Which should you handle first to stabilize the system?`;
-          q.options = [
-            { key: 'A', text: 'Handle A first' },
-            { key: 'B', text: 'Handle B first' },
-            { key: 'C', text: 'Handle C first' },
-            { key: 'D', text: 'Ignore all' }
-          ];
+          if (i % 2 === 0) {
+            // Rule Shift
+            const sortingRules = ['Sort by File Size', 'Sort by File Type', 'Sort by Date Created'];
+            const currentRule = sortingRules[Math.floor(Math.random() * sortingRules.length)];
+            
+            q.title = `Mental Flex L${diff}`;
+            q.text = `The system was previously sorting by Alphabetical Order. An override command has just been issued. You receive a new file: "video.mp4" (500MB, Created Today). Under the CURRENT active rule, which bin does this file go into?`;
+            
+            q.visual = <div style={{display:'flex', flexDirection:'column', gap:'10px', background:'rgba(168, 85, 247, 0.1)', padding:'15px', borderRadius:'8px', border:'2px solid #a855f7', color:'#fff'}}><div>⚠️ SYSTEM OVERRIDE</div><div style={{fontWeight:'bold', color:'#a855f7'}}>NEW RULE: {currentRule.toUpperCase()}</div></div>;
+            
+            let correctBin = '';
+            if (currentRule.includes('Size')) correctBin = 'Large Files Bin';
+            if (currentRule.includes('Type')) correctBin = 'Media Files Bin';
+            if (currentRule.includes('Date')) correctBin = 'Recent Files Bin';
+            
+            q.correctAnswer = 'A';
+            q.options = [
+              { key: 'A', text: correctBin },
+              { key: 'B', text: 'Alphabetical Bin (V)' },
+              { key: 'C', text: 'Archived Files Bin' },
+              { key: 'D', text: 'System Files Bin' }
+            ];
+          } else {
+            // Priority Queue
+            const tasks = ['Server Patch (Critical, 10m)', 'UI Update (Low, 2m)', 'DB Backup (High, 5m)'];
+            q.title = `Priority Queue L${diff}`;
+            q.text = `You have 3 pending operations. You only have 15 minutes before system lock. To maximize impact, you must complete the highest priority tasks first without exceeding the time limit. What is the optimal sequence?`;
+            
+            q.visual = <div style={{display:'flex', flexDirection:'column', gap:'8px', background:'rgba(168, 85, 247, 0.1)', padding:'15px', borderRadius:'8px', border:'2px solid #a855f7', color:'#cbd5e1', fontSize:'0.9rem'}}>{tasks.map((t, idx) => <div key={idx}>- {t}</div>)}</div>;
+            
+            q.correctAnswer = 'A';
+            q.options = [
+              { key: 'A', text: 'Server Patch ➔ DB Backup' },
+              { key: 'B', text: 'UI Update ➔ DB Backup ➔ Server Patch' },
+              { key: 'C', text: 'DB Backup ➔ Server Patch ➔ UI Update' },
+              { key: 'D', text: 'Server Patch ➔ UI Update' }
+            ];
+          }
         }
         
         COGNITIVE_QUESTIONS.push(q);
@@ -456,4 +606,4 @@ const generateProceduralQuestions = () => {
     }
   });
 };
-generateProceduralQuestions();
+generateAdvancedQuestions();
