@@ -207,7 +207,9 @@ const AppNavigation = memo(function AppNavigation({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    width: '38px',
+                    width: showDashboard ? 'auto' : '150px',
+                    minWidth: '38px',
+                    gap: '0.45rem',
                     height: '38px'
                   }}
                 >
@@ -268,14 +270,14 @@ const AppNavigation = memo(function AppNavigation({
                 }}
               >
                 {showDashboard
-                  ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.5))' }} xmlns="http://www.w3.org/2000/svg">
+                  ? <><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.5))' }} xmlns="http://www.w3.org/2000/svg">
                       <path d="M19 12H5M5 12l7-7M5 12l7 7" stroke="#ffffff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 0 5px rgba(var(--rgb-primary),0.7))' }} xmlns="http://www.w3.org/2000/svg">
+                    </svg><span>Back to Portal</span></>
+                  : <><svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 0 5px rgba(var(--rgb-primary),0.7))' }} xmlns="http://www.w3.org/2000/svg">
                       <rect x="3" y="12" width="4" height="9" rx="1" fill="var(--color-primary)"/>
                       <rect x="10" y="6" width="4" height="15" rx="1" fill="var(--color-primary)"/>
                       <rect x="17" y="3" width="4" height="18" rx="1" fill="var(--color-primary)" fillOpacity="0.7"/>
-                    </svg>
+                    </svg><span>Cognitive Profile</span></>
                 }
               </button>
 
