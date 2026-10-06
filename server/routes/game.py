@@ -404,6 +404,10 @@ def dda(current_user_id, current_username):
             
         new_theta = max(1.0, min(5.0, theta + theta_update))
         new_difficulty = max(1, min(5, int(round(new_theta))))
+        if avg_accuracy >= 0.70 and new_difficulty <= current_difficulty:
+            new_difficulty = min(5, current_difficulty + 1)
+        elif avg_accuracy < 0.45 and new_difficulty >= current_difficulty:
+            new_difficulty = max(1, current_difficulty - 1)
         session_obj.current_smooth_difficulty = new_theta
         # -------------------------------------------------------------
         

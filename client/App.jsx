@@ -3395,7 +3395,7 @@ export default function App() {
                   
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }} className="game-mode-grid">
                     {[
-                      { id: 'timed', label: 'Standard Timed', desc: 'Standard 2-minute timed session.' },
+                      { id: 'timed', label: 'Standard Timed', desc: 'Standard 1-minute timed session.' },
                       { id: 'zen', label: 'Zen Mode', desc: 'Unlimited time, counts up, no pressure.' },
                       { id: 'survival', label: 'Survival Mode', desc: 'Start with 3 lives. Errors deduct lives.' },
                       { id: 'target', label: 'Objective Target', desc: 'Ends after exactly 10 trials.' },
@@ -3459,7 +3459,7 @@ export default function App() {
                       timed: {
                         title: 'Standard Timed Rules',
                         explanation: 'Traditional cognitive evaluation mode.',
-                        rules: 'You have exactly 2 minutes (120 seconds) to complete as many correct trials as possible. Speed and accuracy are balanced in real-time by the DDA engine to calculate difficulty adjustments.'
+                        rules: 'You have exactly 1 minute (60 seconds) to complete as many correct trials as possible. Speed and accuracy are balanced in real-time by the DDA engine to calculate difficulty adjustments.'
                       },
                       zen: {
                         title: 'Zen Mode Rules',

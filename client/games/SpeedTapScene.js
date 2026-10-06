@@ -90,7 +90,7 @@ export default class SpeedTapScene extends BaseCognitiveScene {
         this.misses = 0;
         this.totalClicks = 0;
         this.accuracy = 1.0;
-        this.gameDuration = 30000; // 30 seconds game duration
+        this.gameDuration = 60000; // Standard Timed mode: 1 minute
         this.timeLeft = this.gameDuration;
 
         // Tracks reaction times in the current wave

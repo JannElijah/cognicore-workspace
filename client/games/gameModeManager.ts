@@ -282,6 +282,9 @@ function decorateSceneClass(SceneClass) {
             this.gameDuration = Infinity;
             this.timeLeft = Infinity;
             this.elapsedTime = 0;
+        } else if (this.gameMode === 'timed') {
+            this.gameDuration = 60000;
+            this.timeLeft = this.gameDuration;
         } else if (this.gameMode === 'survival') {
             this.lives = 3;
         } else if (this.gameMode === 'target') {
@@ -296,6 +299,9 @@ function decorateSceneClass(SceneClass) {
             this.elapsedTime = 0;
             this.correctHitGoal = 10;
             this.correctHitsCount = 0;
+        } else if (this.gameMode === 'timed') {
+            this.gameDuration = 60000;
+            this.timeLeft = 60000;
         } else if (this.gameMode === 'endurance') {
             this.gameDuration = 20000; // Start with 20 seconds
             this.timeLeft = this.gameDuration;
