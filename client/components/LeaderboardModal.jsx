@@ -131,7 +131,7 @@ const LeaderboardModal = memo(({ onClose }) => {
         </div>
 
         {/* Categories Tab */}
-        <div style={{ flexShrink: 0, padding: '1rem 1.5rem', display: 'flex', gap: '0.5rem', overflowX: 'auto', borderBottom: '1px solid rgba(148, 163, 184, 0.1)' }}>
+        <div style={{ flexShrink: 0, padding: '1rem 1.5rem', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.5rem', borderBottom: '1px solid rgba(148, 163, 184, 0.1)' }}>
           {CATEGORIES.map(cat => (
             <button
               key={cat.id}
@@ -156,28 +156,32 @@ const LeaderboardModal = memo(({ onClose }) => {
 
         {/* Domains Filter (Only show for game-specific metrics) */}
         {['accuracy', 'speed', 'difficulty'].includes(category) && (
-          <div style={{ flexShrink: 0, padding: '0.75rem 1.5rem', display: 'flex', gap: '0.5rem', overflowX: 'auto', background: 'rgba(0,0,0,0.2)' }}>
-            {DOMAINS.map(dom => (
-              <button
-                key={dom.id}
-                onClick={() => setDomain(dom.id)}
-                style={{
-                  flexShrink: 0,
-                  padding: '0.4rem 0.8rem',
-                  background: domain === dom.id ? 'rgba(255,255,255,0.2)' : 'transparent',
-                  color: domain === dom.id ? '#f8fafc' : '#64748b',
-                  border: '1px solid',
-                  borderColor: domain === dom.id ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.1)',
-                  borderRadius: '20px',
-                  cursor: 'pointer',
-                  fontSize: '0.85rem',
-                  whiteSpace: 'nowrap',
-                  transition: 'all 0.2s'
-                }}
-              >
-                {dom.label}
-              </button>
-            ))}
+          <div style={{ flexShrink: 0, padding: '0.75rem 1.5rem', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.75rem', background: 'rgba(0,0,0,0.2)' }}>
+            <label htmlFor="domain-select" style={{ color: '#94a3b8', fontSize: '0.9rem', fontWeight: 'bold' }}>
+              Domain Filter:
+            </label>
+            <select
+              id="domain-select"
+              value={domain}
+              onChange={(e) => setDomain(e.target.value)}
+              style={{
+                padding: '0.4rem 0.8rem',
+                background: 'rgba(15, 23, 42, 0.9)',
+                color: '#f8fafc',
+                border: '1px solid rgba(56, 189, 248, 0.4)',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '0.9rem',
+                outline: 'none',
+                fontWeight: 'bold'
+              }}
+            >
+              {DOMAINS.map(dom => (
+                <option key={dom.id} value={dom.id}>
+                  {dom.label}
+                </option>
+              ))}
+            </select>
           </div>
         )}
 
