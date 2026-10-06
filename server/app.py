@@ -403,19 +403,6 @@ def init_db():
         )
     """)
 
-    # Create training_goals table if it doesn't exist
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS training_goals (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-            domain VARCHAR(255) NOT NULL,
-            metric_type VARCHAR(255) NOT NULL,
-            target_value REAL NOT NULL,
-            is_completed INTEGER DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS daily_tasks (
             id SERIAL PRIMARY KEY,

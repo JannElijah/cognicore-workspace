@@ -23,7 +23,6 @@ const ProfileModal = ({ onClose }) => {
   const [cognitiveProfile, setCognitiveProfile] = useState(null);
   const [achievements, setAchievements] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
-  const [activeGoals, setActiveGoals] = useState([]);
   const [hoveredBadge, setHoveredBadge] = useState(null);
   const [metricToggle, setMetricToggle] = useState('accuracy'); // 'accuracy' or 'reactionTime'
   const [kpis, setKpis] = useState({ total_games: 0, highest_level: 1, overall_accuracy: 0 });
@@ -185,11 +184,6 @@ const ProfileModal = ({ onClose }) => {
          if (achData.status === 'success') setAchievements(achData.achievements || []);
       }).catch(e => console.error(e));
 
-    fetch(`${API_BASE}/api/training-goals/${username}`, { headers: { 'Authorization': `Bearer ${token}` } })
-      .then(res => res.json())
-      .then(goalData => {
-         if (goalData.status === 'success') setGoals(goalData.goals || []);
-      }).catch(e => console.error(e));
 
     // Remove the blocking skeleton immediately so the modal opens fast
     setTimeout(() => setLoading(false), 300);
@@ -214,7 +208,7 @@ const ProfileModal = ({ onClose }) => {
   };
 
   const equippedAvatar = (inventory || []).find(i => i.item_type === 'avatar' && i.is_equipped)?.item_id;
-  const avatarIcon = equippedAvatar === 'avatar-robot' ? '🤖' : equippedAvatar === 'avatar-brain' ? '🧠' : equippedAvatar === 'avatar-hacker' ? '👨‍💻' : <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 0 5px rgba(var(--rgb-primary),0.5))' }}><circle cx="12" cy="8" r="4" fill="var(--color-primary)"/><path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round"/></svg>;
+  const avatarIcon = equippedAvatar === 'avatar-robot' ? 'ðŸ¤–' : equippedAvatar === 'avatar-brain' ? 'ðŸ§ ' : equippedAvatar === 'avatar-hacker' ? 'ðŸ‘¨â€ðŸ’»' : <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 0 5px rgba(var(--rgb-primary),0.5))' }}><circle cx="12" cy="8" r="4" fill="var(--color-primary)"/><path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round"/></svg>;
 
   const equippedBanner = (inventory || []).find(i => i.item_type === 'banner' && i.is_equipped)?.item_id;
   const bannerBackgrounds = {
@@ -359,7 +353,7 @@ const ProfileModal = ({ onClose }) => {
                 </div>
               </div>
             </div>
-            <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '1.5rem', cursor: 'pointer' }}>✕</button>
+            <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#94a3b8', fontSize: '1.5rem', cursor: 'pointer' }}>âœ•</button>
           </div>
           
           <div style={{ display: 'flex', px: '1.5rem', background: 'rgba(0,0,0,0.2)' }}>
@@ -408,27 +402,6 @@ const ProfileModal = ({ onClose }) => {
                       </div>
                     </div>
                     
-                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(var(--rgb-primary), 0.2)' }}>
-                      <h3 style={{ margin: '0 0 1rem 0', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{color: 'var(--color-primary)', display: 'flex'}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span> Current Active Goal
-                      </h3>
-                      {activeGoals.length > 0 ? (
-                        <div>
-                          <div style={{ color: '#e2e8f0', fontWeight: 'bold', marginBottom: '0.5rem', textTransform: 'capitalize' }}>
-                            {activeGoals[0].domain.replace(/_/g, ' ')} - {activeGoals[0].metric_type}
-                          </div>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#94a3b8', fontSize: '0.85rem' }}>
-                            <span>Progress</span>
-                            <span>{activeGoals[0].current_value.toFixed(1)} / {activeGoals[0].target_value}</span>
-                          </div>
-                          <div style={{ width: '100%', height: '8px', background: '#1e293b', borderRadius: '4px', overflow: 'hidden' }}>
-                            <div style={{ width: `${Math.min(100, (activeGoals[0].current_value === 0 ? 0 : activeGoals[0].metric_type === 'reaction_time' ? (activeGoals[0].target_value / activeGoals[0].current_value) * 100 : (activeGoals[0].current_value / activeGoals[0].target_value) * 100))}%`, height: '100%', background: 'var(--color-primary)' }} />
-                          </div>
-                        </div>
-                      ) : (
-                        <div style={{ color: '#94a3b8', fontSize: '0.9rem', fontStyle: 'italic' }}>No active training goals. Play games to set one!</div>
-                      )}
-                    </div>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
@@ -678,7 +651,7 @@ const ProfileModal = ({ onClose }) => {
                         {/* Science Behind Your Profile */}
                         <div style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '8px', marginTop: '0.5rem', marginBottom: '0.5rem' }}>
                           <h4 style={{ margin: '0 0 0.5rem 0', color: '#94a3b8', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            ⚙️ The Science Behind Your Profile
+                            âš™ï¸ The Science Behind Your Profile
                           </h4>
                           <p style={{ margin: 0, color: '#cbd5e1', lineHeight: '1.5', fontSize: '0.85rem' }}>
                             Your cognitive archetype is calculated using Machine Learning. According to Ahmad et al. (2023), AI models that track behavioral gameplay patterns are highly effective at evaluating cognitive clusters beyond traditional point-scoring.

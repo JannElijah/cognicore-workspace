@@ -20,7 +20,6 @@ class User(db.Model):
     sessions = db.relationship('GameSession', backref='user', cascade='all, delete')
     assessments = db.relationship('CognitiveAssessment', backref='user', cascade='all, delete')
     archetype_history = db.relationship('ArchetypeHistory', backref='user', cascade='all, delete')
-    goals = db.relationship('TrainingGoal', backref='user', cascade='all, delete')
     inventory = db.relationship('UserInventory', backref='user', cascade='all, delete')
     tasks = db.relationship('DailyTask', backref='user', cascade='all, delete')
     cognitive_profile = db.relationship('CognitiveProfile', backref='user', uselist=False, cascade='all, delete')
@@ -93,16 +92,6 @@ class ArchetypeHistory(db.Model):
     archetype_name = db.Column(db.String(255), nullable=False)
     confidence_score = db.Column(db.Float, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow, index=True)
-
-class TrainingGoal(db.Model):
-    __tablename__ = 'training_goals'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
-    domain = db.Column(db.String(255), nullable=False)
-    metric_type = db.Column(db.String(255), nullable=False)
-    target_value = db.Column(db.Float, nullable=False)
-    is_completed = db.Column(db.Integer, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class UserProfile(db.Model):
     __tablename__ = 'user_profiles'
