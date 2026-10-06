@@ -182,28 +182,28 @@ export default function Dashboard({
 
 
             {/* Permanent Cognitive Profile */}
-            {personalizedReport && (
+            {cognitiveProfile && (
               <div className="game-card" style={{ marginBottom: '3rem', padding: '1.5rem', display: 'flex', gap: '2rem', flexWrap: 'wrap', alignItems: 'center' }}>
                 <div style={{ flex: '1', minWidth: '200px' }}>
                   <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--color-primary)' }}>Your Cognitive Archetype</h3>
                   <div style={{ fontSize: '2rem', fontWeight: '900', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '2px', textShadow: '0 0 10px rgba(255,255,255,0.3)' }}>
-                    {cognitiveProfile ? cognitiveProfile.archetype : 'Assessing...'}
+                    {cognitiveProfile.archetype || 'Unclassified'}
                   </div>
                   <p style={{ fontSize: '0.9rem', color: '#cbd5e1', marginTop: '0.5rem', lineHeight: '1.5' }}>
-                    {personalizedReport.summary_message || "Complete more sessions to generate an archetype summary."}
+                    {personalizedReport?.summary_message || cognitiveProfile.insight_text || "Complete more sessions to generate an archetype summary."}
                   </p>
                 </div>
                 <div style={{ flex: '1', minWidth: '250px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <div style={{ background: 'rgba(74, 222, 128, 0.1)', border: '1px solid rgba(74, 222, 128, 0.2)', padding: '1rem', borderRadius: '8px' }}>
-                    <h4 style={{ margin: '0 0 0.5rem 0', color: '#4ade80', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span>⭐</span> Core Strengths</h4>
+                    <h4 style={{ margin: '0 0 0.5rem 0', color: '#4ade80', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><span aria-hidden="true">+</span> Core Strengths</h4>
                     <ul style={{ margin: 0, paddingLeft: '1.25rem', color: '#e2e8f0', fontSize: '0.85rem' }}>
-                      {personalizedReport.pros && personalizedReport.pros.map((s, i) => <li key={i}>{s}</li>)}
+                      {(personalizedReport?.pros || (cognitiveProfile.top_strength ? [`Primary strength: ${cognitiveProfile.top_strength.replace(/_/g, ' ')}`] : [])).map((s, i) => <li key={i}>{s}</li>)}
                     </ul>
                   </div>
                   <div style={{ background: 'rgba(248, 113, 113, 0.1)', border: '1px solid rgba(248, 113, 113, 0.2)', padding: '1rem', borderRadius: '8px' }}>
                     <h4 style={{ margin: '0 0 0.5rem 0', color: '#f87171', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Growth Opportunities</h4>
                     <ul style={{ margin: 0, paddingLeft: '1.25rem', color: '#e2e8f0', fontSize: '0.85rem' }}>
-                      {personalizedReport.weaknesses && personalizedReport.weaknesses.map((w, i) => <li key={i}>{w}</li>)}
+                      {(personalizedReport?.weaknesses || (cognitiveProfile.primary_bottleneck ? [`Focus area: ${cognitiveProfile.primary_bottleneck.replace(/_/g, ' ')}`] : [])).map((w, i) => <li key={i}>{w}</li>)}
                     </ul>
                   </div>
                 </div>
@@ -658,7 +658,7 @@ export default function Dashboard({
 
               {/* Archetype Progression Timeline Card (Option 3) */}
               <div className="game-card" style={{ display: 'flex', flexDirection: 'column', boxSizing: 'border-box', minHeight: '320px', justifyContent: 'flex-start' }}>
-                <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>⏱️ Archetype Progression Timeline</h3>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Archetype Progression Timeline</h3>
                 
                 {chartsLoading ? (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8' }}>

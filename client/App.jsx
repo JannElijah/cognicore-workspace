@@ -137,7 +137,7 @@ const OfflineCacheWarningBanner = ({ isVisible, onClose }) => {
       boxShadow: '0 0 30px rgba(239, 68, 68, 0.5), 0 20px 40px rgba(0,0,0,0.4)',
       backdropFilter: 'blur(12px)', animation: 'achieveSlideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
     }}>
-      <div style={{ fontSize: '1.8rem', animation: 'achievePulse 2s infinite' }}>âš ï¸</div>
+      <div style={{ fontSize: '1.8rem', animation: 'achievePulse 2s infinite' }} aria-hidden="true">!</div>
       <div>
         <div style={{ color: '#fff', fontSize: '1.05rem', fontWeight: 'bold' }}>Offline Storage Full!</div>
         <div style={{ color: '#fee2e2', fontSize: '0.85rem', marginTop: '0.2rem' }}>
@@ -147,7 +147,7 @@ const OfflineCacheWarningBanner = ({ isVisible, onClose }) => {
       <button onClick={onClose} style={{
         background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', 
         borderRadius: '8px', padding: '0.5rem', cursor: 'pointer', marginLeft: '0.5rem'
-      }}>âœ•</button>
+      }}>Close</button>
     </div>
   );
 };
@@ -2141,7 +2141,7 @@ export default function App() {
           gap: '0.75rem',
           animation: 'slideDownFadeIn 0.5s ease-out'
         }}>
-          <span style={{ fontSize: '1.5rem' }}>ðŸ†</span>
+          <span style={{ fontSize: '1.5rem' }} aria-hidden="true">Award</span>
           <span>{milestoneNotification}</span>
         </div>
       )}
@@ -2627,7 +2627,7 @@ export default function App() {
                         onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(74, 222, 128, 0.2)'; e.currentTarget.style.transform = 'scale(1.05)'; }}
                         onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(74, 222, 128, 0.1)'; e.currentTarget.style.transform = 'scale(1)'; }}
                       >
-                        â†» Take Follow-up Evaluation
+                        Take Follow-up Evaluation
                       </span>
                     ) : hasPlayedPrescribed ? (
                       <button
@@ -2706,7 +2706,7 @@ export default function App() {
                         <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', textAlign: 'center' }}>
                           <span style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}>Standardized Test Mean</span>
                           <div style={{ fontSize: '1.35rem', fontWeight: '900', color: '#ffffff', marginTop: '0.5rem' }}>
-                            {evaluationReport.mean_pretest} <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>â†’</span> <span style={{ color: '#4ade80' }}>{evaluationReport.mean_posttest}</span>
+                            {evaluationReport.mean_pretest} <span style={{ fontSize: '0.85rem', color: '#94a3b8' }}>-&gt;</span> <span style={{ color: '#4ade80' }}>{evaluationReport.mean_posttest}</span>
                           </div>
                           <div style={{ fontSize: '0.75rem', color: '#4ade80', marginTop: '0.25rem', fontWeight: 'bold' }}>
                             +{evaluationReport.overall_improvement_rate_pct}% Improvement Rate
@@ -2765,14 +2765,14 @@ export default function App() {
                     </div>
                   ) : (
                     <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8' }}>
-                      âŒ› Once you complete both Pre-Test and Post-Test questionnaires, this dashboard will compute dynamic empirical analytics (paired t-tests and Cohen's d effect sizes) to validate cognitive skill improvements.
+                      Once you complete both Pre-Test and Post-Test questionnaires, this dashboard will compute dynamic empirical analytics (paired t-tests and Cohen's d effect sizes) to validate cognitive skill improvements.
                     </div>
                   )
                 ) : (
                   // AGGREGATE COHORT STUDY VIEW
                   cohortLoading ? (
                     <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-primary)', fontSize: '0.9rem', fontWeight: 'bold' }}>
-                      âš¡ Accessing Research Database & Running Paired t-tests...
+                      Accessing Research Database and running paired t-tests...
                     </div>
                   ) : cohortAnalytics ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -2796,7 +2796,7 @@ export default function App() {
                             +{cohortAnalytics.overall_improvement_rate_pct}%
                           </div>
                           <div style={{ fontSize: '0.75rem', color: '#cbd5e1', marginTop: '0.25rem' }}>
-                            {cohortAnalytics.overall_pre_mean} Pre â†’ {cohortAnalytics.overall_post_mean} Post
+                            {cohortAnalytics.overall_pre_mean} Pre -&gt; {cohortAnalytics.overall_post_mean} Post
                           </div>
                         </div>
 
@@ -2833,7 +2833,7 @@ export default function App() {
                         
                         {cohortAnalytics.domains && (
                           <div style={{ marginTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.75rem' }}>
-                            <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold' }}>Group-Wide Domain Comparisons (Mean Â± SD):</span>
+                            <span style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 'bold' }}>Group-Wide Domain Comparisons (Mean +/- SD):</span>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginTop: '0.5rem' }}>
                               {Object.entries(cohortAnalytics.domains).map(([dom, dStats]) => (
                                 <div key={dom} style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.03)', borderRadius: '8px', fontSize: '0.8rem', color: '#cbd5e1' }}>
@@ -2842,11 +2842,11 @@ export default function App() {
                                   </strong>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0.15rem 0' }}>
                                     <span>Pre-Test:</span>
-                                    <strong>{dStats.pre_mean} Â± {dStats.pre_std}</strong>
+                                    <strong>{dStats.pre_mean} +/- {dStats.pre_std}</strong>
                                   </div>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0.15rem 0' }}>
                                     <span>Post-Test:</span>
-                                    <strong>{dStats.post_mean} Â± {dStats.post_std}</strong>
+                                    <strong>{dStats.post_mean} +/- {dStats.post_std}</strong>
                                   </div>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', margin: '0.15rem 0', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '0.15rem', color: '#4ade80', fontWeight: 'bold' }}>
                                     <span>Improvement:</span>
@@ -2887,7 +2887,7 @@ export default function App() {
                     </div>
                   ) : (
                     <div style={{ padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8' }}>
-                      âŒ› No research cohort statistics returned. Check backend.
+                      No research cohort statistics returned. Check backend.
                     </div>
                   )
                 )}
@@ -2916,7 +2916,7 @@ export default function App() {
                   onMouseOver={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.1)'}
                   onMouseOut={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.05)'}
                 >
-                  {showGoalForm ? 'Close Target Creator' : 'âž• Create New Target'}
+                  {showGoalForm ? 'Close Target Creator' : '+ Create New Target'}
                 </button>
               </div>
 
@@ -3030,7 +3030,7 @@ export default function App() {
                     </div>
                   ) : goalsError ? (
                     <div style={{ color: '#f87171', fontSize: '0.875rem', textAlign: 'center', padding: '2rem 0' }}>
-                      âš ï¸ Error loading goals: {goalsError}
+                      Error loading goals: {goalsError}
                     </div>
                   ) : goals.filter(g => !g.is_completed).length === 0 ? (
                     <div style={{ color: '#94a3b8', fontSize: '0.9rem', textAlign: 'center', padding: '3rem 1rem', background: 'rgba(255, 255, 255, 0.02)', border: '1.5px dashed rgba(255, 255, 255, 0.1)', borderRadius: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
@@ -3108,7 +3108,7 @@ export default function App() {
                               onMouseOut={(e) => e.target.style.color = '#64748b'}
                               title="Delete goal"
                             >
-                              Ã—
+                              x
                             </button>
                           </div>
                         );
@@ -3192,7 +3192,7 @@ export default function App() {
                               onMouseOut={(e) => e.target.style.color = 'rgba(255,255,255,0.3)'}
                               title="Delete milestone"
                             >
-                              Ã—
+                              x
                             </button>
                           </div>
                         );
