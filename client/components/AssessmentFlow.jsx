@@ -29,12 +29,28 @@ export default function AssessmentFlow({
 
   const timerRef = useRef(null);
 
+  const seededRandom = React.useMemo(() => {
+    let seed = 0;
+    const str = currentUser || 'guest';
+    for (let i = 0; i < str.length; i++) {
+      seed = (seed << 5) - seed + str.charCodeAt(i);
+      seed |= 0; 
+    }
+    seed = Math.abs(seed) + 12345;
+    
+    return () => {
+      seed = (seed * 16807) % 2147483647;
+      return (seed - 1) / 2147483646;
+    };
+  }, [currentUser, hasStarted]);
+
   const getRandomQ = (domain, diff, avoidIds) => {
     let pool = COGNITIVE_QUESTIONS.filter(q => q.domain === domain && q.difficulty === diff && !avoidIds.includes(q.id));
     if (pool.length === 0) {
       pool = COGNITIVE_QUESTIONS.filter(q => q.domain === domain && q.difficulty === diff);
     }
-    return pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : null;
+    pool.sort((a, b) => a.id.localeCompare(b.id)); // ensure deterministic order
+    return pool.length > 0 ? pool[Math.floor(seededRandom() * pool.length)] : null;
   };
 
   const handleStart = () => {

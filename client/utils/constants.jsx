@@ -388,6 +388,7 @@ export const COGNITIVE_QUESTIONS = [
   }
 ];
 // Advanced procedural generation for rich, varied, and challenging cognitive questions
+const prng = (function(){ let seed = 123456789; return function() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }; })();
 const generateAdvancedQuestions = () => {
   const domainsList = ['spatial_visual_memory', 'logical_mathematical', 'reflexes_and_focus', 'executive_strategy'];
   
@@ -409,7 +410,7 @@ const generateAdvancedQuestions = () => {
         if (domain === 'logical_mathematical') {
           if (i % 3 === 0) {
             // Sequence Decoder
-            const start = Math.floor(Math.random() * 5) + 2;
+            const start = Math.floor(prng() * 5) + 2;
             const multiplier = diff === 1 ? 2 : (diff === 2 ? 3 : 4);
             const seq = [start, start * multiplier, start * multiplier * multiplier, start * Math.pow(multiplier, 3)];
             const ans = start * Math.pow(multiplier, 4);
@@ -427,8 +428,8 @@ const generateAdvancedQuestions = () => {
             ];
           } else if (i % 3 === 1) {
             // Cryptarithm / System Logic
-            const a = Math.floor(Math.random() * (5 * diff)) + 3;
-            const b = Math.floor(Math.random() * (4 * diff)) + 2;
+            const a = Math.floor(prng() * (5 * diff)) + 3;
+            const b = Math.floor(prng() * (4 * diff)) + 2;
             const sum = a + b;
             const prod = a * b;
             
@@ -445,8 +446,8 @@ const generateAdvancedQuestions = () => {
             ];
           } else {
             // Equation Balance
-            const leftTarget = (Math.floor(Math.random() * 10) + 5) * diff;
-            const rightFactor = Math.floor(Math.random() * 4) + 2;
+            const leftTarget = (Math.floor(prng() * 10) + 5) * diff;
+            const rightFactor = Math.floor(prng() * 4) + 2;
             const ans = leftTarget / rightFactor;
             
             q.title = `Equation Balance L${diff}`;
@@ -463,8 +464,8 @@ const generateAdvancedQuestions = () => {
           }
         } else if (domain === 'spatial_visual_memory') {
           const gridSize = diff + 2; // 3x3, 4x4, 5x5
-          const startX = Math.floor(Math.random() * gridSize);
-          const startY = Math.floor(Math.random() * gridSize);
+          const startX = Math.floor(prng() * gridSize);
+          const startY = Math.floor(prng() * gridSize);
           
           let curX = startX;
           let curY = startY;
@@ -478,7 +479,7 @@ const generateAdvancedQuestions = () => {
             if (curX > 0) validDirs.push('LEFT');
             if (curX < gridSize - 1) validDirs.push('RIGHT');
             
-            const dir = validDirs[Math.floor(Math.random() * validDirs.length)];
+            const dir = validDirs[Math.floor(prng() * validDirs.length)];
             moves.push(dir);
             if (dir === 'UP') curY--;
             if (dir === 'DOWN') curY++;
@@ -517,15 +518,15 @@ const generateAdvancedQuestions = () => {
             // Stroop Effect
             const colorNames = ['RED', 'BLUE', 'GREEN', 'YELLOW', 'PURPLE'];
             const hexes = { 'RED': '#ef4444', 'BLUE': '#3b82f6', 'GREEN': '#22c55e', 'YELLOW': '#eab308', 'PURPLE': '#a855f7' };
-            const word = colorNames[Math.floor(Math.random() * colorNames.length)];
-            let paintColor = colorNames[Math.floor(Math.random() * colorNames.length)];
+            const word = colorNames[Math.floor(prng() * colorNames.length)];
+            let paintColor = colorNames[Math.floor(prng() * colorNames.length)];
             
             // Ensure mismatch for difficulty > 1
             if (diff > 1) {
-              while (paintColor === word) paintColor = colorNames[Math.floor(Math.random() * colorNames.length)];
+              while (paintColor === word) paintColor = colorNames[Math.floor(prng() * colorNames.length)];
             }
             
-            const askForColor = Math.random() > 0.5;
+            const askForColor = prng() > 0.5;
             
             q.title = `Stroop Shift L${diff}`;
             q.text = askForColor ? `Identify the physical INK COLOR of the text below, ignoring what the word says.` : `Identify what the word actually SAYS, ignoring the ink color it is painted with.`;
@@ -542,8 +543,8 @@ const generateAdvancedQuestions = () => {
             // Object Recognition Distraction
             const shapes = ['Circle', 'Square', 'Triangle', 'Diamond'];
             const colors = ['Red', 'Blue', 'Green'];
-            const targetShape = shapes[Math.floor(Math.random() * shapes.length)];
-            const targetColor = colors[Math.floor(Math.random() * colors.length)];
+            const targetShape = shapes[Math.floor(prng() * shapes.length)];
+            const targetColor = colors[Math.floor(prng() * colors.length)];
             
             q.title = `Focus Finder L${diff}`;
             q.text = `SECURITY PROTOCOL: You must ONLY approve entry for a ${targetColor.toUpperCase()} ${targetShape.toUpperCase()}. The scanner detects a shape with 4 equal sides, colored ${targetColor.toUpperCase()}. Do you approve entry?`;
@@ -564,18 +565,18 @@ const generateAdvancedQuestions = () => {
           if (i % 2 === 0) {
             // Rule Shift
             const sortingRules = ['Sort by File Size', 'Sort by File Type', 'Sort by Date Created'];
-            const currentRule = sortingRules[Math.floor(Math.random() * sortingRules.length)];
+            const currentRule = sortingRules[Math.floor(prng() * sortingRules.length)];
             
             const fileNames = ['video.mp4', 'report.pdf', 'archive.zip', 'photo.jpg', 'system.log'];
             const fileSizes = ['500MB', '2MB', '1.5GB', '450KB', '10MB'];
             const fileDates = ['Created Today', 'Created Yesterday', 'Created Last Week', 'Created 2021'];
             
-            const file = fileNames[Math.floor(Math.random() * fileNames.length)];
-            const size = fileSizes[Math.floor(Math.random() * fileSizes.length)];
-            const date = fileDates[Math.floor(Math.random() * fileDates.length)];
+            const file = fileNames[Math.floor(prng() * fileNames.length)];
+            const size = fileSizes[Math.floor(prng() * fileSizes.length)];
+            const date = fileDates[Math.floor(prng() * fileDates.length)];
             
             const oldRules = ['Alphabetical Order', 'Ascending Order', 'Reverse Alphabetical'];
-            const oldRule = oldRules[Math.floor(Math.random() * oldRules.length)];
+            const oldRule = oldRules[Math.floor(prng() * oldRules.length)];
             
             q.title = `Mental Flex L${diff}`;
             q.text = `The system was previously sorting by ${oldRule}. An override command has just been issued. You receive a new file: "${file}" (${size}, ${date}). Under the CURRENT active rule, which bin does this file go into?`;
@@ -601,11 +602,11 @@ const generateAdvancedQuestions = () => {
             ];
             const taskCounts = diff === 1 ? 3 : (diff === 2 ? 4 : 5);
             const times = [15, 20, 12, 10];
-            const timeLimit = times[Math.floor(Math.random() * times.length)];
+            const timeLimit = times[Math.floor(prng() * times.length)];
             
-            const t1 = taskPool.splice(Math.floor(Math.random()*taskPool.length), 1)[0];
-            const t2 = taskPool.splice(Math.floor(Math.random()*taskPool.length), 1)[0];
-            const t3 = taskPool.splice(Math.floor(Math.random()*taskPool.length), 1)[0];
+            const t1 = taskPool.splice(Math.floor(prng()*taskPool.length), 1)[0];
+            const t2 = taskPool.splice(Math.floor(prng()*taskPool.length), 1)[0];
+            const t3 = taskPool.splice(Math.floor(prng()*taskPool.length), 1)[0];
             
             const tasks = [
               `${t1} (Critical, 10m)`,
