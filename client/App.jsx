@@ -1877,7 +1877,7 @@ export default function App() {
           title: (items) => {
             const idx = items[0]?.dataIndex;
             const s = reversedSessions[idx];
-            return s ? `${s.game_type} â€” ${s.game_mode}` : `Session ${idx + 1}`;
+            return s ? `${s.game_type} — ${s.game_mode}` : `Session ${idx + 1}`;
           },
           label: (item) => ` ${item.dataset.label}: ${item.raw} ms`
         },
@@ -2411,7 +2411,7 @@ export default function App() {
                       border: '1px solid rgba(255, 255, 255, 0.08)',
                       color: '#94a3b8'
                     }}>
-                      <div style={{ fontSize: '2.5rem', marginBottom: '1.5rem', animation: 'pulse 1.5s infinite ease-in-out' }}>ðŸ§ </div>
+                      <div style={{ fontSize: '2.5rem', marginBottom: '1.5rem', animation: 'pulse 1.5s infinite ease-in-out' }}><GameIcon name="brain" size="1em" /></div>
                       <div style={{ fontWeight: 'bold', fontSize: '1.1rem', letterSpacing: '0.05em', color: 'var(--color-primary)' }}>LOADING NEURAL WORKSPACE...</div>
                     </div>
                   }>
@@ -2547,7 +2547,7 @@ export default function App() {
             {weakestDomain && DOMAINS_LIST.find(d => d.id === weakestDomain) && (
               <div style={{ marginBottom: '3.5rem' }}>
                 <h2 className="section-title" style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 5px rgba(192,132,252,0.7))',verticalAlign:'middle',marginRight:'6px',flexShrink:0}} xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="7" rx="7" ry="5" stroke="#c084fc" strokeWidth="2"/><path d="M5 10c0 3 3 6 7 6s7-3 7-6" stroke="#c084fc" strokeWidth="2" strokeLinecap="round"/><line x1="9" y1="13" x2="9" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/><line x1="15" y1="13" x2="15" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/><line x1="7" y1="19" x2="17" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/></svg> Daily Personalized Workout <span style={{ fontSize: '1rem', color: 'var(--color-secondary)', fontWeight: 'normal', marginLeft: '0.5rem' }}>â€” Target: {DOMAINS_LIST.find(d => d.id === weakestDomain).title}</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 5px rgba(192,132,252,0.7))',verticalAlign:'middle',marginRight:'6px',flexShrink:0}} xmlns="http://www.w3.org/2000/svg"><ellipse cx="12" cy="7" rx="7" ry="5" stroke="#c084fc" strokeWidth="2"/><path d="M5 10c0 3 3 6 7 6s7-3 7-6" stroke="#c084fc" strokeWidth="2" strokeLinecap="round"/><line x1="9" y1="13" x2="9" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/><line x1="15" y1="13" x2="15" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/><line x1="7" y1="19" x2="17" y2="19" stroke="#c084fc" strokeWidth="1.5" strokeLinecap="round"/></svg> Daily Personalized Workout <span style={{ fontSize: '1rem', color: 'var(--color-secondary)', fontWeight: 'normal', marginLeft: '0.5rem' }}>— Target: {DOMAINS_LIST.find(d => d.id === weakestDomain).title}</span>
                 </h2>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
                   {DOMAINS_LIST.find(d => d.id === weakestDomain).games.slice(0, 3).map((game) => (
@@ -2926,10 +2926,10 @@ export default function App() {
                           background: 'rgba(9, 9, 11, 0.7)', border: '1.5px solid rgba(var(--rgb-primary), 0.3)', borderRadius: '8px', color: '#ffffff', padding: '0.65rem 1rem', fontSize: '0.9rem', outline: 'none', transition: 'all 0.2s'
                         }}
                       >
-                        <option value="reflexes_and_focus">âš¡ Reflexes & Focus</option>
-                        <option value="spatial_visual_memory">ðŸ§  Memory & Recall</option>
-                        <option value="logical_mathematical">ðŸ“Š Logical Reasoning</option>
-                        <option value="executive_strategy">ðŸŽ¯ Executive Strategy</option>
+                        <option value="reflexes_and_focus">Reflexes & Focus</option>
+                        <option value="spatial_visual_memory">Memory & Recall</option>
+                        <option value="logical_mathematical">Logical Reasoning</option>
+                        <option value="executive_strategy">Executive Strategy</option>
                       </select>
                     </div>
 
@@ -2948,7 +2948,7 @@ export default function App() {
                           background: 'rgba(9, 9, 11, 0.7)', border: '1.5px solid rgba(var(--rgb-primary), 0.3)', borderRadius: '8px', color: '#ffffff', padding: '0.65rem 1rem', fontSize: '0.9rem', outline: 'none', transition: 'all 0.2s'
                         }}
                       >
-                        <option value="accuracy">ðŸŽ¯ Accuracy Rate (%)</option>
+                        <option value="accuracy">Accuracy Rate (%)</option>
                         <option value="reaction_time">Average Response Latency (ms)</option>
                         <option value="difficulty">Challenge Level (1-5)</option>
                       </select>
