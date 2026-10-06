@@ -22,13 +22,14 @@
 ### Vercel
 
 - `VITE_API_URL` must be the HTTPS URL of the Render API service.
+- `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` must be configured.
 - Do not use a localhost URL in a production Vercel environment.
 - Redeploy after changing the variable because Vite embeds it at build time.
 
 ### Render
 
 - `DATABASE_URL` must point to the Supabase PostgreSQL database.
-- `SUPABASE_URL` and `SUPABASE_KEY` must be configured.
+- `SUPABASE_URL` and `SUPABASE_ANON_KEY` must be configured.
 - `REDIS_URL` should point to the production Redis instance.
 - `CRON_SECRET` must be a newly generated value after any exposure.
 - CORS must include the deployed Vercel origin.
