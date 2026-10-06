@@ -60,7 +60,7 @@ export default function PostTestResults({ preScores, postScores, aiFeedback, cur
       
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <h1 style={{ color: '#ffffff', fontSize: '2.5rem', margin: '0 0 1rem 0', letterSpacing: '0.02em', background: 'linear-gradient(to right, #60a5fa, #c084fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-          Clinical Assessment Complete
+          Cognitive Assessment Complete
         </h1>
         <p style={{ color: '#94a3b8', fontSize: '1.1rem' }}>Subject: <strong style={{color: '#fff'}}>{currentUser || 'Guest'}</strong> | Post-Intervention Analysis</p>
       </div>
@@ -166,14 +166,6 @@ export default function PostTestResults({ preScores, postScores, aiFeedback, cur
 
       {/* D5: CTAs */}
       <div style={{ marginTop: '4rem', display: 'flex', justifyContent: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
-        <button 
-          onClick={onReturn || (() => window.location.reload())}
-          style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '1rem 2.5rem', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', fontSize: '1rem', fontWeight: 'bold' }}
-          onMouseOver={(e) => { e.target.style.background = 'rgba(255,255,255,0.05)'; e.target.style.borderColor = 'rgba(255,255,255,0.4)'; }}
-          onMouseOut={(e) => { e.target.style.background = 'transparent'; e.target.style.borderColor = 'rgba(255,255,255,0.2)'; }}
-        >
-          Return to Dashboard
-        </button>
         <button 
           onClick={() => alert("Routing to weakest domain training module...")}
           style={{ background: 'linear-gradient(to right, var(--color-primary), var(--color-secondary))', border: 'none', color: '#fff', padding: '1rem 2.5rem', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s', fontSize: '1rem', fontWeight: 'bold', boxShadow: '0 4px 15px rgba(var(--rgb-primary), 0.4)' }}
