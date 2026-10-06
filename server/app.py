@@ -23,6 +23,7 @@ from psycopg2.extras import RealDictCursor
 from psycopg2.pool import ThreadedConnectionPool
 import os
 import time
+from sqlalchemy import text
 import bcrypt
 from utils import safe_float
 from dotenv import load_dotenv
@@ -89,8 +90,31 @@ def create_app(test_config=None):
 
     @app.route('/api/health', methods=['GET'])
     def health_check():
-        """Lightweight health probe for frontend polling."""
-        return jsonify({"status": "ok"}), 200
+        """Report application and dependency readiness without exposing internals."""
+        dependencies = {"database": "ok", "redis": "not_configured"}
+        try:
+            db.session.execute(text("SELECT 1"))
+        except Exception:
+            dependencies["database"] = "unavailable"
+            app.logger.exception("Health check database probe failed")
+        finally:
+            db.session.remove()
+
+        redis_url = os.environ.get("REDIS_URL", "memory://")
+        if redis_url != "memory://":
+            try:
+                import redis
+                redis.from_url(redis_url, socket_connect_timeout=1, socket_timeout=1).ping()
+                dependencies["redis"] = "ok"
+            except Exception:
+                dependencies["redis"] = "unavailable"
+                app.logger.exception("Health check Redis probe failed")
+
+        healthy = all(status in {"ok", "not_configured"} for status in dependencies.values())
+        return jsonify({
+            "status": "ok" if healthy else "degraded",
+            "dependencies": dependencies,
+        }), (200 if healthy else 503)
         
     return app
 
