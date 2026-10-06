@@ -132,22 +132,25 @@ export default function AssessmentFlow({
         
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem', textAlign: 'left' }}>
           {[
-            { id: 'all', title: 'Comprehensive (All Domains)', color: 'var(--color-primary)' },
-            { id: 'reflexes_and_focus', title: 'Reflexes & Focus', color: 'var(--color-secondary)' },
-            { id: 'spatial_visual_memory', title: 'Spatial-Visual Memory', color: '#4ade80' },
-            { id: 'logical_mathematical', title: 'Logical Reasoning', color: '#f59e0b' },
-            { id: 'executive_strategy', title: 'Executive Strategy', color: '#10b981' }
+            { id: 'all', title: 'Comprehensive (All Domains)', desc: 'A full baseline test covering all 4 cognitive areas. Recommended for first-time users.', color: 'var(--color-primary)' },
+            { id: 'reflexes_and_focus', title: 'Reflexes & Focus', desc: 'Measures your reaction time and ability to ignore rapid visual distractions.', color: 'var(--color-secondary)' },
+            { id: 'spatial_visual_memory', title: 'Spatial-Visual Memory', desc: 'Assesses your ability to recall patterns, shapes, and grid locations.', color: '#4ade80' },
+            { id: 'logical_mathematical', title: 'Logical Reasoning', desc: 'Tests your quantitative problem-solving and mathematical extrapolation.', color: '#f59e0b' },
+            { id: 'executive_strategy', title: 'Executive Strategy', desc: 'Evaluates cognitive flexibility, multi-step planning, and adaptive decision making.', color: '#10b981' }
           ].map(d => (
-             <label key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: selectedDomainFilter === d.id ? `${d.color}20` : 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '8px', cursor: 'pointer', border: `1px solid ${selectedDomainFilter === d.id ? d.color : 'rgba(255,255,255,0.1)'}`, transition: 'all 0.2s' }}>
+             <label key={d.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '15px', background: selectedDomainFilter === d.id ? `${d.color}20` : 'rgba(255,255,255,0.05)', padding: '1.25rem', borderRadius: '8px', cursor: 'pointer', border: `1px solid ${selectedDomainFilter === d.id ? d.color : 'rgba(255,255,255,0.1)'}`, transition: 'all 0.2s' }}>
                 <input 
                   type="radio" 
                   name="domainSelect" 
                   value={d.id} 
                   checked={selectedDomainFilter === d.id} 
                   onChange={() => setSelectedDomainFilter(d.id)} 
-                  style={{ accentColor: d.color, width: '18px', height: '18px' }}
+                  style={{ accentColor: d.color, width: '18px', height: '18px', marginTop: '4px' }}
                 />
-                <span style={{ color: selectedDomainFilter === d.id ? '#fff' : '#cbd5e1', fontWeight: selectedDomainFilter === d.id ? 'bold' : 'normal' }}>{d.title}</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <span style={{ color: selectedDomainFilter === d.id ? '#fff' : '#e2e8f0', fontSize: '1.1rem', fontWeight: selectedDomainFilter === d.id ? 'bold' : '600' }}>{d.title}</span>
+                  <span style={{ color: selectedDomainFilter === d.id ? '#cbd5e1' : '#94a3b8', fontSize: '0.85rem', lineHeight: '1.4' }}>{d.desc}</span>
+                </div>
              </label>
           ))}
         </div>
