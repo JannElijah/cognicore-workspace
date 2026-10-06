@@ -1,7 +1,9 @@
 import os
 import pickle
+import shutil
 import numpy as np
 import gc
+from datetime import datetime, timezone
 from database import get_db_connection
 
 # Try importing sklearn
@@ -18,6 +20,7 @@ except ImportError:
 MODEL_OUT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cognitive_model.pkl')
 CLUSTER_OUT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'clustering_model.pkl')
 SCALER_OUT_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'scaler.pkl')
+MODEL_VERSION_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'model_versions')
 
 def calculate_ols_slope(y_vals):
     n = len(y_vals)
@@ -218,6 +221,13 @@ def train_retargeted_classifier():
     print(f"\nEvaluation on Test Set (20% split - {len(y_test)} samples):")
     print(f"Test Accuracy Score: {test_acc:.4f}")
     
+    artifact_version = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    version_dir = os.path.join(MODEL_VERSION_DIR, artifact_version)
+    os.makedirs(version_dir, exist_ok=True)
+    for artifact_path in (MODEL_OUT_PATH, CLUSTER_OUT_PATH, SCALER_OUT_PATH):
+        if os.path.exists(artifact_path):
+            shutil.copy2(artifact_path, os.path.join(version_dir, os.path.basename(artifact_path)))
+
     # Save the files to disk
     print(f"Saving scaler to {SCALER_OUT_PATH}...")
     with open(SCALER_OUT_PATH, 'wb') as f:
@@ -234,6 +244,7 @@ def train_retargeted_classifier():
     # Create evaluation metrics structure to return
     metrics_summary = {
         "status": "success",
+        "artifact_version": artifact_version,
         "sample_size": n_samples,
         "test_accuracy": round(float(test_acc), 4),
         "best_params": grid_search.best_params_,
