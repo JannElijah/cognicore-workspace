@@ -467,6 +467,7 @@ export default function App() {
       if (!res.ok) throw new Error("Failed to connect to backend server.");
       const data = await res.json();
       if (data.status === 'success') {
+        setAssessmentError(null); // Clear waking up message if it appeared
         setCurrentUser(trimmedName);
         setActiveDashboardUser(trimmedName);
         
@@ -537,10 +538,15 @@ export default function App() {
         flatAnswers[qId] = data.isCorrect ? 1 : 0;
       }
       
-      const spatial_visual_score = spatialCount ? (spatialScore / spatialCount) * 100.0 : 0;
-      const logical_math_score = logicalCount ? (logicalScore / logicalCount) * 100.0 : 0;
-      const attention_score = attentionCount ? (attentionScore / attentionCount) * 100.0 : 0;
-      const executive_score = executiveCount ? (executiveScore / executiveCount) * 100.0 : 0;
+      const prevSpatial = type === 'post-test' ? preTestScores?.spatial_visual_memory : skills.spatial_visual_memory;
+      const prevLogical = type === 'post-test' ? preTestScores?.logical_mathematical : skills.logical_mathematical;
+      const prevAttention = type === 'post-test' ? preTestScores?.reflexes_and_focus : skills.reflexes_and_focus;
+      const prevExecutive = type === 'post-test' ? preTestScores?.executive_strategy : skills.executive_strategy;
+
+      const spatial_visual_score = spatialCount ? (spatialScore / spatialCount) * 100.0 : (prevSpatial || 0);
+      const logical_math_score = logicalCount ? (logicalScore / logicalCount) * 100.0 : (prevLogical || 0);
+      const attention_score = attentionCount ? (attentionScore / attentionCount) * 100.0 : (prevAttention || 0);
+      const executive_score = executiveCount ? (executiveScore / executiveCount) * 100.0 : (prevExecutive || 0);
 
       const res = await fetch(`${API_BASE}/api/submit-assessment`, {
         method: 'POST',

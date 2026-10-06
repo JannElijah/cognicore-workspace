@@ -20,6 +20,8 @@ export default function AssessmentFlow({
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isHighlighting, setIsHighlighting] = useState(false);
   const [showCheckmark, setShowCheckmark] = useState(false);
+  const [selectedDomainFilter, setSelectedDomainFilter] = useState('all');
+  const [expectedTotal, setExpectedTotal] = useState(8);
 
   const timerRef = useRef(null);
 
@@ -29,13 +31,16 @@ export default function AssessmentFlow({
     return pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : null;
   };
 
-  // Initialize Queue with Level 2 questions for all 4 domains
-  useEffect(() => {
-    const domains = ['spatial_visual_memory', 'logical_mathematical', 'reflexes_and_focus', 'executive_strategy'];
-    const initial = domains.map(d => getRandomQ(d, 2)).filter(Boolean);
+  const handleStart = () => {
+    const allDomains = ['spatial_visual_memory', 'logical_mathematical', 'reflexes_and_focus', 'executive_strategy'];
+    const domainsToTest = selectedDomainFilter === 'all' ? allDomains : [selectedDomainFilter];
+    const initial = domainsToTest.map(d => getRandomQ(d, 2)).filter(Boolean);
+    
     setQueue(initial);
+    setExpectedTotal(domainsToTest.length * 2);
+    setHasStarted(true);
     setStartTime(Date.now());
-  }, []);
+  };
 
   const currentQ = queue[currentIndex];
 
@@ -57,10 +62,9 @@ export default function AssessmentFlow({
     }, 1000);
 
     return () => clearInterval(timerRef.current);
-  }, [currentIndex, currentQ, showConfidence]);
+  }, [currentIndex, currentQ, showConfidence, hasStarted]);
 
   const handleTimeUp = () => {
-    // If they run out of time, mark as incorrect with 0 confidence
     setSelectedAnswer('TIMEOUT');
     commitAnswer('TIMEOUT', 1, 30000);
   };
@@ -89,13 +93,10 @@ export default function AssessmentFlow({
   };
 
   const commitAnswer = (answer, conf, rt) => {
-    // Check answer against data object instead of hardcoded logic
     const isCorrect = (answer === currentQ.correctAnswer);
-
     const newResults = { ...results, [currentQ.id]: { answer, isCorrect, rt, confidence: conf } };
     setResults(newResults);
 
-    // Adaptive Branching Logic
     const newQueue = [...queue];
     if (currentQ.difficulty === 2) {
       const nextDiff = isCorrect ? 3 : 1;
@@ -111,36 +112,51 @@ export default function AssessmentFlow({
     setConfidence(3);
 
     if (currentIndex + 1 >= newQueue.length) {
-      // Test complete
       handleSubmitAssessment(newResults);
     } else {
       setCurrentIndex(currentIndex + 1);
     }
   };
 
-  if (!currentQ) return <div style={{ color: '#fff', textAlign: 'center', marginTop: '2rem' }}>Loading assessment protocol...</div>;
-
-  const dom = DOMAIN_INFO[currentQ.domain];
-  
-  // Split scenario and question (B7)
-  const textMatch = currentQ.text.match(/(.*)(?:\s+)([^.]*\?)$/);
-  const scenarioText = textMatch ? textMatch[1] : currentQ.text;
-  const questionText = textMatch ? textMatch[2] : '';
+  if (hasStarted && !currentQ) return <div style={{ color: '#fff', textAlign: 'center', marginTop: '2rem' }}>Loading assessment protocol...</div>;
 
   const confidenceLabels = {1: 'Guessing', 2: 'Unsure', 3: 'Somewhat Sure', 4: 'Confident', 5: 'Certain'};
 
   if (!hasStarted) {
     return (
-      <div style={{ maxWidth: '600px', margin: '4rem auto', padding: '3rem', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(var(--rgb-primary), 0.4)', borderRadius: '16px', boxShadow: '0 12px 40px rgba(0,0,0,0.6)', textAlign: 'center', animation: 'fadeIn 0.5s ease-out' }}>
+      <div style={{ maxWidth: '650px', margin: '4rem auto', padding: '3rem', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(var(--rgb-primary), 0.4)', borderRadius: '16px', boxShadow: '0 12px 40px rgba(0,0,0,0.6)', textAlign: 'center', animation: 'fadeIn 0.5s ease-out' }}>
         <h1 style={{ color: '#fff', fontSize: '2rem', marginBottom: '1rem' }}>Cognitive Evaluation</h1>
         <p style={{ color: '#cbd5e1', fontSize: '1.1rem', lineHeight: '1.6', marginBottom: '2rem' }}>
-          This assessment measures your baseline across 4 cognitive domains. You will face {queue.length} rapid-fire scenarios.
+          This assessment measures your baseline cognitive capacity. Select which domains you wish to test.
         </p>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem', textAlign: 'left' }}>
+          {[
+            { id: 'all', title: 'Comprehensive (All Domains)', color: 'var(--color-primary)' },
+            { id: 'reflexes_and_focus', title: 'Reflexes & Focus', color: 'var(--color-secondary)' },
+            { id: 'spatial_visual_memory', title: 'Spatial-Visual Memory', color: '#4ade80' },
+            { id: 'logical_mathematical', title: 'Logical Reasoning', color: '#f59e0b' },
+            { id: 'executive_strategy', title: 'Executive Strategy', color: '#10b981' }
+          ].map(d => (
+             <label key={d.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: selectedDomainFilter === d.id ? `${d.color}20` : 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '8px', cursor: 'pointer', border: `1px solid ${selectedDomainFilter === d.id ? d.color : 'rgba(255,255,255,0.1)'}`, transition: 'all 0.2s' }}>
+                <input 
+                  type="radio" 
+                  name="domainSelect" 
+                  value={d.id} 
+                  checked={selectedDomainFilter === d.id} 
+                  onChange={() => setSelectedDomainFilter(d.id)} 
+                  style={{ accentColor: d.color, width: '18px', height: '18px' }}
+                />
+                <span style={{ color: selectedDomainFilter === d.id ? '#fff' : '#cbd5e1', fontWeight: selectedDomainFilter === d.id ? 'bold' : 'normal' }}>{d.title}</span>
+             </label>
+          ))}
+        </div>
+
         <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', color: '#ef4444', padding: '1rem', borderRadius: '8px', marginBottom: '2rem', fontWeight: 'bold' }}>
           ⏱️ You have exactly 30 seconds per question. 
         </div>
         <button 
-          onClick={() => { setHasStarted(true); setStartTime(Date.now()); }}
+          onClick={handleStart}
           style={{ background: 'linear-gradient(to right, var(--color-primary), var(--color-secondary))', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '1rem 3rem', fontSize: '1.2rem', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 15px rgba(var(--rgb-primary), 0.4)' }}
           onMouseOver={(e) => e.target.style.filter = 'brightness(1.15)'}
           onMouseOut={(e) => e.target.style.filter = 'brightness(1.0)'}
@@ -151,6 +167,11 @@ export default function AssessmentFlow({
     );
   }
 
+  const dom = DOMAIN_INFO[currentQ.domain];
+  const textMatch = currentQ.text.match(/(.*)(?:\s+)([^.]*\?)$/);
+  const scenarioText = textMatch ? textMatch[1] : currentQ.text;
+  const questionText = textMatch ? textMatch[2] : '';
+
   return (
     <div style={{ maxWidth: '800px', margin: '3rem auto', padding: '2.5rem', background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(20px)', border: '1px solid rgba(var(--rgb-secondary), 0.4)', borderRadius: '16px', boxShadow: '0 12px 40px rgba(0,0,0,0.6)', animation: 'fadeIn 0.4s ease-out', opacity: isTransitioning ? 0 : 1, transition: 'opacity 0.2s ease-in-out' }}>
       <div style={{ marginBottom: '1.5rem' }}>
@@ -159,12 +180,11 @@ export default function AssessmentFlow({
             <span>🧠</span> {assessmentStage === 'pre-test' ? 'Adaptive Pre-Test Evaluation' : 'Adaptive Post-Test Evaluation'}
           </h2>
           <div style={{ color: '#94a3b8', fontSize: '0.9rem', fontWeight: 'bold' }}>
-            Scenario {currentIndex + 1} of {queue.length}
+            Scenario {currentIndex + 1} of {expectedTotal}
           </div>
         </div>
-        {/* B1: Progress Bar */}
         <div style={{ height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${(currentIndex / queue.length) * 100}%`, background: 'linear-gradient(to right, var(--color-primary), var(--color-secondary))', transition: 'width 0.4s ease-out' }}></div>
+          <div style={{ height: '100%', width: `${(currentIndex / expectedTotal) * 100}%`, background: 'linear-gradient(to right, var(--color-primary), var(--color-secondary))', transition: 'width 0.4s ease-out' }}></div>
         </div>
       </div>
       
@@ -172,7 +192,6 @@ export default function AssessmentFlow({
         <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-              {/* B5: Domain Pill */}
               <div style={{ background: dom.color + '20', color: dom.color, padding: '4px 10px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '0.5rem', border: `1px solid ${dom.color}40` }}>
                 {dom.icon} {DOMAINS_LIST.find(d => d.id === currentQ.domain)?.title || dom.title}
               </div>
@@ -181,7 +200,6 @@ export default function AssessmentFlow({
               </span>
             </div>
             
-            {/* B2: Circular Timer Arc */}
             <div style={{ position: 'relative', width: '50px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="50" height="50" viewBox="0 0 50 50" style={{ position: 'absolute', transform: 'rotate(-90deg)', animation: timeLeft <= 10 ? 'pulse 1s infinite' : 'none' }}>
                 <circle cx="25" cy="25" r="22" fill="rgba(0,0,0,0.3)" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
@@ -192,7 +210,6 @@ export default function AssessmentFlow({
           </div>
           
           <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.25rem', borderRadius: '10px', borderLeft: `4px solid ${dom.color}`, marginBottom: '1.5rem' }}>
-            {/* B7: Split Scenario Typography */}
             <div style={{ fontSize: '1rem', color: '#cbd5e1', lineHeight: '1.6', marginBottom: questionText ? '1rem' : '0' }}>
               {scenarioText}
             </div>
@@ -236,7 +253,6 @@ export default function AssessmentFlow({
               <h3 style={{ color: '#fff', fontSize: '1.5rem', marginBottom: '1rem' }}>How confident are you?</h3>
               <p style={{ color: '#94a3b8', marginBottom: '2.5rem' }}>Rate your certainty in the answer you just selected.</p>
               
-              {/* B3: Labeled Confidence Indicators */}
               <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', marginBottom: '3rem', flexWrap: 'wrap' }}>
                 {[1, 2, 3, 4, 5].map(val => (
                   <div key={val} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', width: '80px' }}>
@@ -268,7 +284,6 @@ export default function AssessmentFlow({
 
       {assessmentError && <div style={{ color: '#f87171', fontSize: '0.9rem', fontWeight: 'bold', marginTop: '1.5rem', textAlign: 'center' }}>⚠️ {assessmentError}</div>}
       
-      {/* B8: Proper Loading Spinner */}
       {assessmentLoading && (
         <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
           <div style={{ width: '30px', height: '30px', border: '3px solid rgba(96, 165, 250, 0.2)', borderTop: '3px solid #60a5fa', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
