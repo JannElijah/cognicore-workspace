@@ -387,3 +387,73 @@ export const COGNITIVE_QUESTIONS = [
     ]
   }
 ];
+// Procedurally generate extra questions to support longer assessments
+const generateProceduralQuestions = () => {
+  const domainsList = ['spatial_visual_memory', 'logical_mathematical', 'reflexes_and_focus', 'executive_strategy'];
+  domainsList.forEach(domain => {
+    for (let diff = 1; diff <= 3; diff++) {
+      // 15 questions per difficulty per domain to guarantee we never run out
+      for (let i = 1; i <= 15; i++) {
+        let q = {
+          id: \q_ext_\_d\_\\,
+          domain: domain,
+          difficulty: diff,
+          title: '',
+          text: '',
+          correctAnswer: 'A',
+          options: []
+        };
+        
+        if (domain === 'logical_mathematical') {
+          const a = Math.floor(Math.random() * (10 * diff)) + 2;
+          const b = Math.floor(Math.random() * (5 * diff)) + 2;
+          const c = Math.floor(Math.random() * (10 * diff)) + 1;
+          const ans = (a * b) + c;
+          q.title = \Equation Link \\;
+          q.text = \Solve the system routing requirement: (\ * \) + \. What is the correct value?\;
+          q.options = [
+            { key: 'A', text: \\\ },
+            { key: 'B', text: \\\ },
+            { key: 'C', text: \\\ },
+            { key: 'D', text: \\\ }
+          ];
+        } else if (domain === 'spatial_visual_memory') {
+          const directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
+          const moves = [];
+          for (let m = 0; m < diff + 1; m++) moves.push(directions[Math.floor(Math.random() * 4)]);
+          q.title = \Grid Mapper \\;
+          q.text = \A dot starts in the center of a grid. It moves: \. Where is it relative to the center?\;
+          q.options = [
+            { key: 'A', text: 'Trace the path correctly' },
+            { key: 'B', text: 'Opposite of the path' },
+            { key: 'C', text: '1 step short' },
+            { key: 'D', text: 'Did not move' }
+          ];
+        } else if (domain === 'reflexes_and_focus') {
+          const colors = ['RED', 'BLUE', 'GREEN', 'YELLOW', 'PURPLE'];
+          const target = colors[Math.floor(Math.random() * colors.length)];
+          q.title = \Attention Protocol \\;
+          q.text = \Your target is \. The sequence flashes: \, \, \. Did the target appear?\;
+          q.options = [
+            { key: 'A', text: 'Yes, it appeared' },
+            { key: 'B', text: 'No, it was skipped' },
+            { key: 'C', text: 'It appeared twice' },
+            { key: 'D', text: 'I am not sure' }
+          ];
+        } else if (domain === 'executive_strategy') {
+          q.title = \Priority Triage \\;
+          q.text = \You have \ active alerts. Alert A is critical but slow. Alert B is minor but fast. Alert C is moderate. Which should you handle first to stabilize the system?\;
+          q.options = [
+            { key: 'A', text: 'Handle A first' },
+            { key: 'B', text: 'Handle B first' },
+            { key: 'C', text: 'Handle C first' },
+            { key: 'D', text: 'Ignore all' }
+          ];
+        }
+        
+        COGNITIVE_QUESTIONS.push(q);
+      }
+    }
+  });
+};
+generateProceduralQuestions();

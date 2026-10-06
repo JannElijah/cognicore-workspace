@@ -21,23 +21,53 @@ export default function AssessmentFlow({
   const [isHighlighting, setIsHighlighting] = useState(false);
   const [showCheckmark, setShowCheckmark] = useState(false);
   const [selectedDomainFilter, setSelectedDomainFilter] = useState('all');
-  const [expectedTotal, setExpectedTotal] = useState(8);
+  const [expectedTotal, setExpectedTotal] = useState(20);
+
+  const [domainSequence, setDomainSequence] = useState([]);
+  const [domainDiffs, setDomainDiffs] = useState({});
+  const [usedIds, setUsedIds] = useState([]);
 
   const timerRef = useRef(null);
 
-  // Helper to get random question from pool
-  const getRandomQ = (domain, diff) => {
-    const pool = COGNITIVE_QUESTIONS.filter(q => q.domain === domain && q.difficulty === diff);
+  const getRandomQ = (domain, diff, avoidIds) => {
+    let pool = COGNITIVE_QUESTIONS.filter(q => q.domain === domain && q.difficulty === diff && !avoidIds.includes(q.id));
+    if (pool.length === 0) {
+      pool = COGNITIVE_QUESTIONS.filter(q => q.domain === domain && q.difficulty === diff);
+    }
     return pool.length > 0 ? pool[Math.floor(Math.random() * pool.length)] : null;
   };
 
   const handleStart = () => {
     const allDomains = ['spatial_visual_memory', 'logical_mathematical', 'reflexes_and_focus', 'executive_strategy'];
-    const domainsToTest = selectedDomainFilter === 'all' ? allDomains : [selectedDomainFilter];
-    const initial = domainsToTest.map(d => getRandomQ(d, 2)).filter(Boolean);
     
-    setQueue(initial);
-    setExpectedTotal(domainsToTest.length * 2);
+    let seq = [];
+    if (selectedDomainFilter === 'all') {
+      for(let i=0; i<5; i++) {
+        allDomains.forEach(d => seq.push(d));
+      }
+      setExpectedTotal(20);
+    } else {
+      for(let i=0; i<10; i++) {
+        seq.push(selectedDomainFilter);
+      }
+      setExpectedTotal(10);
+    }
+
+    const initialDiffs = {
+      spatial_visual_memory: 2,
+      logical_mathematical: 2,
+      reflexes_and_focus: 2,
+      executive_strategy: 2
+    };
+
+    const firstDomain = seq[0];
+    const firstQ = getRandomQ(firstDomain, initialDiffs[firstDomain], []);
+    
+    setDomainSequence(seq);
+    setDomainDiffs(initialDiffs);
+    setUsedIds([firstQ.id]);
+    setQueue([firstQ]);
+    setCurrentIndex(0);
     setHasStarted(true);
     setStartTime(Date.now());
   };
@@ -97,25 +127,28 @@ export default function AssessmentFlow({
     const newResults = { ...results, [currentQ.id]: { answer, isCorrect, rt, confidence: conf } };
     setResults(newResults);
 
-    const newQueue = [...queue];
-    if (currentQ.difficulty === 2) {
-      const nextDiff = isCorrect ? 3 : 1;
-      const nextQ = getRandomQ(currentQ.domain, nextDiff);
-      if (nextQ) {
-        newQueue.splice(currentIndex + 1, 0, nextQ);
-      }
+    const currentDomain = currentQ.domain;
+    let currentDiff = domainDiffs[currentDomain];
+    let nextDiff = isCorrect ? Math.min(3, currentDiff + 1) : Math.max(1, currentDiff - 1);
+    
+    const nextDiffs = { ...domainDiffs, [currentDomain]: nextDiff };
+    setDomainDiffs(nextDiffs);
+
+    const nextIndex = currentIndex + 1;
+    if (nextIndex < domainSequence.length) {
+      const nextDomain = domainSequence[nextIndex];
+      const nextQ = getRandomQ(nextDomain, nextDiffs[nextDomain], usedIds);
+      
+      setUsedIds(prev => [...prev, nextQ.id]);
+      setQueue(prev => [...prev, nextQ]);
+      setCurrentIndex(nextIndex);
+    } else {
+      handleSubmitAssessment(newResults);
     }
 
-    setQueue(newQueue);
     setShowConfidence(false);
     setSelectedAnswer(null);
     setConfidence(3);
-
-    if (currentIndex + 1 >= newQueue.length) {
-      handleSubmitAssessment(newResults);
-    } else {
-      setCurrentIndex(currentIndex + 1);
-    }
   };
 
   if (hasStarted && !currentQ) return <div style={{ color: '#fff', textAlign: 'center', marginTop: '2rem' }}>Loading assessment protocol...</div>;
