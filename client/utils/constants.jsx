@@ -210,120 +210,120 @@ export const COGNITIVE_QUESTIONS = [
     id: 'q1',
     domain: 'spatial_visual_memory',
     difficulty: 1,
-    title: 'Air Traffic Control',
-    text: 'You are an air traffic controller. Your radar screen suddenly goes black. 3 seconds ago, you saw Flight Alpha in the top-left quadrant moving right, Flight Beta in the bottom-right moving left, and Flight Gamma in the center moving down. Assuming constant speeds, where are they now?',
-    visual: <div style={{width:'100%', height:'120px', background:'rgba(74, 222, 128, 0.1)', border:'1px solid #4ade80', borderRadius:'8px', position:'relative'}}><div style={{position:'absolute', top:'10px', left:'10px', color:'#4ade80'}}><GameIcon name="plane" inline /><GameIcon name="arrowRight" inline /></div><div style={{position:'absolute', bottom:'10px', right:'10px', color:'#4ade80'}}><GameIcon name="arrowLeft" inline /><GameIcon name="plane" inline /></div><div style={{position:'absolute', top:'45px', left:'50%', transform:'translateX(-50%)', color:'#4ade80'}}><GameIcon name="plane" inline /><GameIcon name="arrowDown" inline /></div></div>,
-    correctAnswer: 'A',
+    title: 'Grid Memory',
+    text: 'A glowing dot starts in the TOP-LEFT corner of a 3x3 grid. It moves one space RIGHT, then one space DOWN. Where is the dot now?',
+    visual: <div style={{display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:'5px', width:'100px', margin:'0 auto', background:'rgba(74, 222, 128, 0.1)', padding:'10px', borderRadius:'8px', border:'2px solid #4ade80'}}>{[...Array(9)].map((_,i) => <div key={i} style={{height:'25px', borderRadius:'4px', background: i === 4 ? '#4ade80' : 'rgba(255,255,255,0.1)', boxShadow: i === 4 ? '0 0 10px #4ade80' : 'none'}}></div>)}</div>,
+    correctAnswer: 'B',
     options: [
-      { key: 'A', text: 'Alpha: Top-Center | Beta: Bottom-Center | Gamma: Bottom-Center' },
-      { key: 'B', text: 'Alpha: Top-Right | Beta: Bottom-Left | Gamma: Center' },
-      { key: 'C', text: 'Alpha: Center | Beta: Top-Right | Gamma: Bottom-Left' },
-      { key: 'D', text: 'Alpha: Top-Center | Beta: Center | Gamma: Top-Right' }
+      { key: 'A', text: 'Top-Right' },
+      { key: 'B', text: 'Center' },
+      { key: 'C', text: 'Bottom-Right' },
+      { key: 'D', text: 'Bottom-Left' }
     ]
   },
   {
     id: 'q2',
     domain: 'logical_mathematical',
     difficulty: 1,
-    title: 'Resource Allocation',
-    text: 'A hospital ER is rationing 100 units of medicine. Protocol mandates Ward A gets twice as much as Ward B, and Ward C gets 10 units less than Ward A. If all units are distributed, how many units does Ward B receive?',
-    visual: <div style={{display:'flex', justifyContent:'space-around', alignItems:'center', background:'rgba(245, 158, 11, 0.1)', padding:'20px', borderRadius:'8px', border:'1px solid #f59e0b'}}><span style={{color:'#f59e0b', fontWeight:'bold'}}>A = 2B</span><span style={{color:'#f59e0b', fontWeight:'bold'}}>C = A - 10</span><span style={{color:'#f59e0b', fontWeight:'bold'}}>A+B+C = 100</span></div>,
+    title: 'Basic Supply',
+    text: 'A spaceship has 10 energy cells total. The shields use 4 cells. The engines use 3 cells. How many energy cells are left for life support?',
+    visual: <div style={{display:'flex', justifyContent:'center', gap:'15px', alignItems:'center', background:'rgba(245, 158, 11, 0.1)', padding:'20px', borderRadius:'8px', border:'2px solid #f59e0b', color:'#f59e0b', fontSize:'1.5rem', fontWeight:'bold'}}><span>🔋 10</span> <span>- 🛡️ 4</span> <span>- 🚀 3</span> <span>= ?</span></div>,
     correctAnswer: 'B',
     options: [
-      { key: 'A', text: '18 units' },
-      { key: 'B', text: '22 units' },
-      { key: 'C', text: '20 units' },
-      { key: 'D', text: '25 units' }
+      { key: 'A', text: '2 cells' },
+      { key: 'B', text: '3 cells' },
+      { key: 'C', text: '4 cells' },
+      { key: 'D', text: '5 cells' }
     ]
   },
   {
     id: 'q3',
     domain: 'reflexes_and_focus',
     difficulty: 1,
-    title: 'High-Speed Driving',
-    text: 'You are driving at 60 mph on a wet road. A digital traffic sign abruptly flashes the word "STOP" but the sign\'s actual LED color is GREEN. According to your strict training to ONLY obey the light color and ignore the text, what is your immediate reflex?',
-    visual: <div style={{textAlign:'center', background:'#000', padding:'30px', borderRadius:'8px', border:'2px solid #333'}}><span style={{color:'#4ade80', fontSize:'2.5rem', fontWeight:'900', fontFamily:'monospace', letterSpacing:'4px'}}>STOP</span></div>,
+    title: 'Quick Reaction',
+    text: 'Your dashboard has a "LAUNCH" button. You are told to press it ONLY when the status light turns GREEN. The light currently turns RED. What should you do?',
+    visual: <div style={{textAlign:'center', background:'rgba(239, 68, 68, 0.1)', padding:'30px', borderRadius:'8px', border:'2px solid #ef4444', display:'flex', flexDirection:'column', alignItems:'center', gap:'15px'}}><div style={{width:'50px', height:'50px', borderRadius:'25px', background:'#ef4444', boxShadow:'0 0 20px #ef4444'}}></div><div style={{color:'#ef4444', fontWeight:'bold', fontSize:'1.2rem'}}>STATUS: RED</div></div>,
     correctAnswer: 'C',
     options: [
-      { key: 'A', text: 'Slam on the brakes immediately' },
-      { key: 'B', text: 'Slow down cautiously' },
-      { key: 'C', text: 'Maintain speed and proceed' },
-      { key: 'D', text: 'Pull over to the side' }
+      { key: 'A', text: 'Press the button immediately' },
+      { key: 'B', text: 'Press the button twice' },
+      { key: 'C', text: 'Do NOT press the button' },
+      { key: 'D', text: 'Hold the button down' }
     ]
   },
   {
     id: 'q4',
     domain: 'executive_strategy',
     difficulty: 1,
-    title: 'Triage Protocol',
-    text: 'You manage a server farm. Server X is critical but takes 4 hours to fix. Server Y is non-critical but takes 30 minutes to fix. Server Z is critical and takes 1 hour to fix. You have one technician. To minimize critical downtime, what is the optimal repair sequence?',
-    visual: <div style={{display:'flex', flexDirection:'column', gap:'10px', background:'rgba(192, 132, 252, 0.1)', padding:'15px', borderRadius:'8px', border:'1px solid #c084fc', color:'#c084fc'}}><div><GameIcon name="fire" inline /> [CRITICAL] X: 4 Hrs</div><div><GameIcon name="info" inline /> [MINOR] Y: 0.5 Hrs</div><div><GameIcon name="fire" inline /> [CRITICAL] Z: 1 Hr</div></div>,
+    title: 'Simple Triage',
+    text: 'You have a broken pipe leaking water rapidly (Urgent) and a squeaky door (Not Urgent). You can only fix one thing at a time. Which one should you fix first?',
+    visual: <div style={{display:'flex', justifyContent:'center', gap:'20px', background:'rgba(192, 132, 252, 0.1)', padding:'20px', borderRadius:'8px', border:'2px solid #c084fc', color:'#fff'}}><div style={{textAlign:'center', padding:'10px', background:'rgba(239, 68, 68, 0.2)', borderRadius:'8px', border:'1px solid #ef4444'}}>💧 Leaking Pipe</div><div style={{textAlign:'center', padding:'10px', background:'rgba(255, 255, 255, 0.1)', borderRadius:'8px', border:'1px solid #666'}}>🚪 Squeaky Door</div></div>,
     correctAnswer: 'A',
     options: [
-      { key: 'A', text: 'Fix Z first, then X, then Y' },
-      { key: 'B', text: 'Fix Y first, then Z, then X' },
-      { key: 'C', text: 'Fix X first, then Z, then Y' },
-      { key: 'D', text: 'Fix Z first, then Y, then X' }
+      { key: 'A', text: 'The leaking pipe' },
+      { key: 'B', text: 'The squeaky door' },
+      { key: 'C', text: 'Fix neither' },
+      { key: 'D', text: 'Take a break' }
     ]
   },
   {
     id: 'q5',
     domain: 'spatial_visual_memory',
     difficulty: 2,
-    title: 'Assembly Blueprint',
-    text: 'You are assembling a satellite array. Component 1 is an L-shaped bracket facing UP. Component 2 is an identical bracket facing RIGHT. If you mentally rotate Component 2 90 degrees counter-clockwise and overlay it on Component 1, what shape is formed?',
-    visual: <div style={{display:'flex', justifyContent:'center', gap:'20px', padding:'20px', background:'rgba(74, 222, 128, 0.1)', borderRadius:'8px', border:'1px solid #4ade80'}}><div style={{width:'40px', height:'40px', borderBottom:'6px solid #4ade80', borderLeft:'6px solid #4ade80'}}></div> <span style={{color:'#4ade80', fontSize:'2rem'}}>+</span> <div style={{width:'40px', height:'40px', borderTop:'6px solid #4ade80', borderLeft:'6px solid #4ade80'}}></div></div>,
+    title: 'Shape Rotation',
+    text: 'Imagine a standard triangle pointing UP (▲). If you rotate it exactly 180 degrees (upside down), which direction is it pointing now?',
+    visual: <div style={{display:'flex', justifyContent:'center', gap:'20px', alignItems:'center', padding:'20px', background:'rgba(74, 222, 128, 0.1)', borderRadius:'8px', border:'2px solid #4ade80', color:'#4ade80', fontSize:'2rem'}}><div style={{transform:'rotate(0deg)'}}>▲</div> <span>↻ 180°</span> <span>= ?</span></div>,
     correctAnswer: 'D',
     options: [
-      { key: 'A', text: 'A perfect square' },
-      { key: 'B', text: 'A cross (+)' },
-      { key: 'C', text: 'A T-shape' },
-      { key: 'D', text: 'They perfectly overlap into an L-shape' }
+      { key: 'A', text: 'Left' },
+      { key: 'B', text: 'Right' },
+      { key: 'C', text: 'Up' },
+      { key: 'D', text: 'Down' }
     ]
   },
   {
     id: 'q6',
     domain: 'logical_mathematical',
     difficulty: 2,
-    title: 'Cyber Cryptography',
-    text: 'A cryptographic key increments by a specific algorithmic pattern: 1, 4, 13, 40... What is the next number required to decrypt the payload?',
-    visual: <div style={{textAlign:'center', background:'rgba(245, 158, 11, 0.1)', padding:'20px', borderRadius:'8px', border:'1px solid #f59e0b', color:'#f59e0b', fontFamily:'monospace', letterSpacing:'2px', fontSize:'1.2rem'}}>1 <GameIcon name="arrowRight" inline /> 4 <GameIcon name="arrowRight" inline /> 13 <GameIcon name="arrowRight" inline /> 40 <GameIcon name="arrowRight" inline /> ?</div>,
-    correctAnswer: 'C',
+    title: 'Number Pattern',
+    text: 'Look at the following number sequence: 2, 4, 6, 8, ... What is the next logical number in this pattern?',
+    visual: <div style={{textAlign:'center', background:'rgba(245, 158, 11, 0.1)', padding:'20px', borderRadius:'8px', border:'2px solid #f59e0b', color:'#f59e0b', fontSize:'1.5rem', fontWeight:'bold', letterSpacing:'4px'}}>2 ➔ 4 ➔ 6 ➔ 8 ➔ ?</div>,
+    correctAnswer: 'A',
     options: [
-      { key: 'A', text: '80' },
-      { key: 'B', text: '120' },
-      { key: 'C', text: '121' },
-      { key: 'D', text: '113' }
+      { key: 'A', text: '10' },
+      { key: 'B', text: '9' },
+      { key: 'C', text: '12' },
+      { key: 'D', text: '16' }
     ]
   },
   {
     id: 'q7',
     domain: 'reflexes_and_focus',
     difficulty: 2,
-    title: 'Security Surveillance',
-    text: 'You are monitoring 4 security feeds. Your directive is to press the ALARM button ONLY if a person wearing a RED hat enters Zone A. A person wearing a red jacket and a BLUE hat enters Zone A, while a flashing RED strobe light goes off in the background. Do you press the alarm?',
-    visual: <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px', background:'rgba(96, 165, 250, 0.1)', padding:'10px', borderRadius:'8px', border:'1px solid #60a5fa'}}><div style={{border:'2px dashed #60a5fa', height:'60px', display:'flex', alignItems:'center', justifyContent:'center', color:'#f87171', fontSize:'1.2rem'}}>Zone A: <GameIcon name="cap" inline />+<GameIcon name="coat" inline /></div><div style={{border:'2px dashed #60a5fa', height:'60px', background:'rgba(248, 113, 113, 0.2)'}}></div></div>,
+    title: 'Color Focus',
+    text: 'You must sound the alarm ONLY if you see a RED CIRCLE. On the screen, you see a BLUE SQUARE, a GREEN CIRCLE, and a RED SQUARE. Do you sound the alarm?',
+    visual: <div style={{display:'flex', justifyContent:'center', gap:'20px', background:'rgba(96, 165, 250, 0.1)', padding:'20px', borderRadius:'8px', border:'2px solid #60a5fa'}}><div style={{width:'40px', height:'40px', background:'#3b82f6'}}></div><div style={{width:'40px', height:'40px', background:'#22c55e', borderRadius:'20px'}}></div><div style={{width:'40px', height:'40px', background:'#ef4444'}}></div></div>,
     correctAnswer: 'B',
     options: [
-      { key: 'A', text: 'Yes, the red jacket and strobe justify an alarm' },
-      { key: 'B', text: 'No, the criteria (red hat) was not explicitly met' },
-      { key: 'C', text: 'Yes, the person is in Zone A with red items' },
-      { key: 'D', text: 'Yes, but only a silent alarm' }
+      { key: 'A', text: 'Yes, because there is a red shape' },
+      { key: 'B', text: 'No, because there is no red circle' },
+      { key: 'C', text: 'Yes, because there is a circle' },
+      { key: 'D', text: 'Yes, because there are three shapes' }
     ]
   },
   {
     id: 'q8',
     domain: 'executive_strategy',
     difficulty: 2,
-    title: 'Shifting Paradigms',
-    text: 'During manufacturing, Rule Set Alpha dictates: Reject flawed items (Action X). Suddenly, a contamination protocol (Rule Set Beta) is triggered, overriding Alpha. Under Beta, flawed items must be quarantined (Action Y), and perfect items must be destroyed (Action Z). A perfect item arrives. What is your action?',
-    visual: <div style={{textAlign:'center', background:'rgba(192, 132, 252, 0.1)', padding:'15px', borderRadius:'8px', border:'1px solid #c084fc', color:'#c084fc'}}><strong>OVERRIDE: PROTOCOL BETA ACTIVE</strong><br/><br/>Item Scan: [PERFECT CONDITION]</div>,
-    correctAnswer: 'A',
+    title: 'Rule Override',
+    text: 'Normally, you pack apples in RED boxes and bananas in YELLOW boxes. A new urgent rule is announced: "Pack ALL fruits in BLUE boxes today." You receive a banana. Which box do you use?',
+    visual: <div style={{textAlign:'center', background:'rgba(192, 132, 252, 0.1)', padding:'20px', borderRadius:'8px', border:'2px solid #c084fc', color:'#fff'}}><div style={{color:'#c084fc', fontWeight:'bold', marginBottom:'15px', fontSize:'1.1rem'}}>⚠️ NEW RULE: ALL FRUITS ➔ BLUE BOX</div><div style={{fontSize:'2rem'}}>🍌 ➔ 📦 ?</div></div>,
+    correctAnswer: 'C',
     options: [
-      { key: 'A', text: 'Action Z (Destroy the perfect item)' },
-      { key: 'B', text: 'Action Y (Quarantine it)' },
-      { key: 'C', text: 'Action X (Reject it)' },
-      { key: 'D', text: 'Pass it through normally' }
+      { key: 'A', text: 'Yellow Box' },
+      { key: 'B', text: 'Red Box' },
+      { key: 'C', text: 'Blue Box' },
+      { key: 'D', text: 'Green Box' }
     ]
   },
   {
@@ -331,14 +331,14 @@ export const COGNITIVE_QUESTIONS = [
     domain: 'spatial_visual_memory',
     difficulty: 3,
     title: 'Route Traceback',
-    text: 'You are a taxi driver. You took a detour: North for 2 blocks, East for 3 blocks, North for 1 block. The passenger suddenly asks to return to the exact starting point. Without U-turning, what is the cardinal direction sequence to retrace your path in reverse?',
-    visual: <div style={{width:'100%', height:'100px', background:'rgba(74, 222, 128, 0.1)', border:'1px solid #4ade80', borderRadius:'8px', position:'relative'}}><svg width="100%" height="100%"><path d="M 30 80 L 30 50 L 150 50 L 150 20" fill="none" stroke="#4ade80" strokeWidth="3" strokeDasharray="5,5" /><circle cx="30" cy="80" r="6" fill="#4ade80" /><circle cx="150" cy="20" r="6" fill="#ef4444" /><text x="35" y="65" fill="#4ade80" fontSize="12">2 blocks N</text><text x="90" y="40" fill="#4ade80" fontSize="12">3 blocks E</text><text x="155" y="35" fill="#4ade80" fontSize="12">1 block N</text><text x="8" y="20" fill="#4ade80" fontSize="12">N▲</text></svg></div>,
+    text: 'You walk 3 blocks North, then 2 blocks East, then 3 blocks South. How do you get back to your starting point in the shortest straight line?',
+    visual: <div style={{width:'100%', display:'flex', justifyContent:'center', padding:'20px', background:'rgba(74, 222, 128, 0.1)', border:'2px solid #4ade80', borderRadius:'8px'}}><svg width="150" height="100"><path d="M 20 80 L 20 20 L 120 20 L 120 80" fill="none" stroke="#4ade80" strokeWidth="4" /><circle cx="20" cy="80" r="8" fill="#4ade80" /><circle cx="120" cy="80" r="8" fill="#ef4444" /><text x="50" y="50" fill="#4ade80" fontSize="14" fontWeight="bold">Path Taken</text></svg></div>,
     correctAnswer: 'A',
     options: [
-      { key: 'A', text: 'South 1 block, West 3 blocks, South 2 blocks' },
-      { key: 'B', text: 'South 2 blocks, West 3 blocks, South 1 block' },
-      { key: 'C', text: 'North 1 block, East 3 blocks, North 2 blocks' },
-      { key: 'D', text: 'West 3 blocks, South 3 blocks, East 1 block' }
+      { key: 'A', text: 'Walk 2 blocks West' },
+      { key: 'B', text: 'Walk 2 blocks East' },
+      { key: 'C', text: 'Walk 3 blocks North' },
+      { key: 'D', text: 'Walk 3 blocks South' }
     ]
   },
   {
@@ -346,44 +346,44 @@ export const COGNITIVE_QUESTIONS = [
     domain: 'logical_mathematical',
     difficulty: 3,
     title: 'Logistics Network',
-    text: 'A supply chain network uses drones. Drone A can carry 5kg and takes 10 mins per trip. Drone B can carry 8kg and takes 15 mins per trip. You need to deliver 26kg in exactly 30 minutes using both drones efficiently. How many trips should Drone A and Drone B make?',
-    visual: <div style={{display:'flex', justifyContent:'space-around', background:'rgba(245, 158, 11, 0.1)', padding:'15px', borderRadius:'8px', border:'1px solid #f59e0b', color:'#f59e0b'}}><div><GameIcon name="ufo" inline /> A: 5kg / 10m</div><div><GameIcon name="ufo" inline /> B: 8kg / 15m</div><div><GameIcon name="box" inline /> Target: 26kg</div></div>,
+    text: 'Drone A carries exactly 2 packages per trip. Drone B carries exactly 3 packages per trip. If you need to deliver exactly 7 packages, how many trips should each drone make?',
+    visual: <div style={{display:'flex', justifyContent:'space-around', background:'rgba(245, 158, 11, 0.1)', padding:'20px', borderRadius:'8px', border:'2px solid #f59e0b', color:'#f59e0b', fontSize:'1.2rem', fontWeight:'bold'}}><div>🚁 Drone A: 2 📦</div><div>🚁 Drone B: 3 📦</div><div>🎯 Target: 7 📦</div></div>,
     correctAnswer: 'B',
     options: [
-      { key: 'A', text: 'Drone A: 1, Drone B: 3' },
-      { key: 'B', text: 'Drone A: 2, Drone B: 2' },
-      { key: 'C', text: 'Drone A: 4, Drone B: 1' },
-      { key: 'D', text: 'Drone A: 3, Drone B: 1' }
+      { key: 'A', text: 'Drone A: 1 trip, Drone B: 1 trip' },
+      { key: 'B', text: 'Drone A: 2 trips, Drone B: 1 trip' },
+      { key: 'C', text: 'Drone A: 3 trips, Drone B: 1 trip' },
+      { key: 'D', text: 'Drone A: 1 trip, Drone B: 2 trips' }
     ]
   },
   {
     id: 'q11',
     domain: 'reflexes_and_focus',
     difficulty: 3,
-    title: 'Auditory-Visual Sync',
-    text: 'In a noisy command center, you must click the "SYNC" button ONLY when a high-pitched tone plays while the main monitor flashes YELLOW. The monitor flashes YELLOW, but a low-pitched tone plays alongside a loud siren. What is your action?',
-    visual: <div style={{textAlign:'center', background:'#facc15', padding:'20px', borderRadius:'8px', border:'2px solid #eab308', color:'#000', fontWeight:'bold', display:'flex', alignItems:'center', justifyContent:'center', gap:'20px', fontSize:'1.2rem'}}><span><GameIcon name="warning" inline /> WARNING</span> <span><GameIcon name="sound" inline /> (Low Pitch + Siren)</span></div>,
+    title: 'Dual Condition Check',
+    text: 'You must approve access ONLY if the ID badge is GREEN AND the password is "123". The person standing in front of you has a GREEN badge, but their password is "XYZ". Do you approve access?',
+    visual: <div style={{textAlign:'center', background:'rgba(234, 179, 8, 0.1)', padding:'20px', borderRadius:'8px', border:'2px solid #eab308', color:'#fff', display:'flex', justifyContent:'center', gap:'20px', alignItems:'center'}}><div><div style={{padding:'10px 20px', background:'#22c55e', borderRadius:'4px', fontWeight:'bold', color:'#000'}}>GREEN BADGE</div></div><div><div style={{padding:'10px 20px', background:'rgba(0,0,0,0.5)', border:'1px solid #666', borderRadius:'4px', fontFamily:'monospace', letterSpacing:'2px'}}>PASS: XYZ</div></div></div>,
     correctAnswer: 'C',
     options: [
-      { key: 'A', text: 'Click SYNC immediately' },
-      { key: 'B', text: 'Click SYNC twice due to the siren' },
-      { key: 'C', text: 'Do nothing, the exact auditory condition failed' },
-      { key: 'D', text: 'Wait 3 seconds then click SYNC' }
+      { key: 'A', text: 'Yes, because the badge is green' },
+      { key: 'B', text: 'Yes, the password doesn\'t matter' },
+      { key: 'C', text: 'No, because the password is incorrect' },
+      { key: 'D', text: 'Yes, but report it later' }
     ]
   },
   {
     id: 'q12',
     domain: 'executive_strategy',
     difficulty: 3,
-    title: 'PERT Optimization',
-    text: 'You are managing a critical software launch. Task A (UI design) takes 3 days. Task B (Backend logic) takes 5 days. Both must finish before Task C (Integration), which takes 2 days. If you start A and B today simultaneously, what is the absolute minimum number of days until the launch is ready?',
-    visual: <div style={{display:'flex', justifyContent:'center', alignItems:'center', gap:'10px', background:'rgba(192, 132, 252, 0.1)', padding:'15px', borderRadius:'8px', border:'1px solid #c084fc', color:'#c084fc'}}><div style={{display:'flex', flexDirection:'column', gap:'5px'}}><span style={{border:'1px solid #c084fc', padding:'4px 8px', borderRadius:'4px'}}>A: 3d</span><span style={{border:'1px solid #c084fc', padding:'4px 8px', borderRadius:'4px'}}>B: 5d</span></div><span style={{fontSize:'1.5rem'}}><GameIcon name="arrowRight" inline /></span><span style={{border:'1px solid #c084fc', padding:'4px 8px', borderRadius:'4px'}}>C: 2d</span></div>,
+    title: 'Task Priority',
+    text: 'You need to boil pasta (takes 10 mins) and make sauce (takes 5 mins). If you want them both to finish at the EXACT same time so the meal is hot, when should you start the sauce?',
+    visual: <div style={{display:'flex', justifyContent:'center', alignItems:'center', gap:'20px', background:'rgba(192, 132, 252, 0.1)', padding:'20px', borderRadius:'8px', border:'2px solid #c084fc', color:'#fff', fontWeight:'bold'}}><div>🍝 Pasta: 10m</div><div>+</div><div>🍅 Sauce: 5m</div></div>,
     correctAnswer: 'A',
     options: [
-      { key: 'A', text: '7 days' },
-      { key: 'B', text: '10 days' },
-      { key: 'C', text: '5 days' },
-      { key: 'D', text: '8 days' }
+      { key: 'A', text: '5 minutes after starting the pasta' },
+      { key: 'B', text: 'At the exact same time as the pasta' },
+      { key: 'C', text: '5 minutes before starting the pasta' },
+      { key: 'D', text: '10 minutes after starting the pasta' }
     ]
   }
 ];
