@@ -3,7 +3,6 @@ from auth import token_required
 from database import db, get_db_connection
 import logging
 import threading
-import time
 from sqlalchemy import text
 from game_utils import safe_float, safe_int
 
@@ -30,13 +29,13 @@ def model_status():
 def retrain_model():
     import os
     cron_secret = os.environ.get("CRON_SECRET")
-    provided_secret = request.headers.get("X-Cron-Secret")
+    provided_secret = request.headers.get("Cron-Secret")
     
     if not cron_secret:
         return jsonify({"status": "error", "message": "CRON_SECRET environment variable is not configured."}), 500
         
     if provided_secret != cron_secret:
-        return jsonify({"status": "error", "message": "Unauthorized. Invalid X-Cron-Secret."}), 401
+        return jsonify({"status": "error", "message": "Unauthorized. Invalid Cron-Secret."}), 401
 
     if model_training_state["status"] == "training":
         return jsonify({"status": "error", "message": "Model retraining is already in progress."}), 400
