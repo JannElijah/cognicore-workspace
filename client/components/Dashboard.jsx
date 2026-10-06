@@ -187,10 +187,10 @@ export default function Dashboard({
                 <div style={{ flex: '1', minWidth: '200px' }}>
                   <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--color-primary)' }}>Your Cognitive Archetype</h3>
                   <div style={{ fontSize: '2rem', fontWeight: '900', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '2px', textShadow: '0 0 10px rgba(255,255,255,0.3)' }}>
-                    {personalizedReport.archetype_name}
+                    {cognitiveProfile ? cognitiveProfile.archetype : 'Assessing...'}
                   </div>
                   <p style={{ fontSize: '0.9rem', color: '#cbd5e1', marginTop: '0.5rem', lineHeight: '1.5' }}>
-                    {personalizedReport.summary}
+                    {personalizedReport.summary_message || "Complete more sessions to generate an archetype summary."}
                   </p>
                 </div>
                 <div style={{ flex: '1', minWidth: '250px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
