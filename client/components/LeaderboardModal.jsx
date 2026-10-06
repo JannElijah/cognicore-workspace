@@ -4,11 +4,11 @@ import { supabase } from '../utils/supabaseClient.js';
 import HoverTooltip from './HoverTooltip';
 
 const CATEGORIES = [
-  { id: 'xp', label: '🌟 Global XP' },
-  { id: 'coins', label: '💰 High Roller' },
-  { id: 'accuracy', label: '🎯 Perfectionist' },
-  { id: 'speed', label: '⚡ Speedrunner' },
-  { id: 'difficulty', label: '🧠 Grandmaster' }
+  { id: 'xp', label: '🌟 XP' },
+  { id: 'coins', label: '💰 Coins' },
+  { id: 'accuracy', label: '🎯 Accuracy' },
+  { id: 'speed', label: '⚡ Speed' },
+  { id: 'difficulty', label: '🧠 Max Level' }
 ];
 
 const DOMAINS = [
@@ -131,19 +131,20 @@ const LeaderboardModal = memo(({ onClose }) => {
         </div>
 
         {/* Categories Tab */}
-        <div style={{ flexShrink: 0, padding: '1rem 1.5rem', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.5rem', borderBottom: '1px solid rgba(148, 163, 184, 0.1)' }}>
+        <div style={{ flexShrink: 0, padding: '1rem 1.5rem', display: 'flex', flexWrap: 'nowrap', justifyContent: 'center', gap: '0.4rem', borderBottom: '1px solid rgba(148, 163, 184, 0.1)' }}>
           {CATEGORIES.map(cat => (
             <button
               key={cat.id}
               onClick={() => setCategory(cat.id)}
               style={{
-                flexShrink: 0,
-                padding: '0.5rem 1rem',
+                flexShrink: 1,
+                padding: '0.4rem 0.8rem',
                 background: category === cat.id ? 'var(--color-primary)' : 'rgba(255,255,255,0.05)',
                 color: category === cat.id ? '#0f172a' : '#94a3b8',
                 border: 'none',
                 borderRadius: '8px',
                 cursor: 'pointer',
+                fontSize: '0.9rem',
                 fontWeight: category === cat.id ? 'bold' : 'normal',
                 whiteSpace: 'nowrap',
                 transition: 'all 0.2s'
