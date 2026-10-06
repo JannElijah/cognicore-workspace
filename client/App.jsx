@@ -739,32 +739,52 @@ export default function App() {
     setChartsLoading(true);
     setChartsError(null);
     try {
+      const token = useCogniStore.getState().token || '';
+      const authHeaders = token ? { 'Authorization': `Bearer ${token}` } : {};
       // 1. Fetch user session history, cohort comparison, and archetype progression concurrently
-      const [historyRes, compRes, progressionRes] = await Promise.all([
-        fetch(`${API_BASE}/api/user-session-history/${username}`),
-        fetch(`${API_BASE}/api/cohort-comparison/${username}`),
-        fetch(`${API_BASE}/api/archetype-progression/${username}`)
+      const [historyRes, compRes, progressionRes, analyticsRes] = await Promise.all([
+        fetch(`${API_BASE}/api/user-session-history/${username}`, { headers: authHeaders }),
+        fetch(`${API_BASE}/api/cohort-comparison/${username}`, { headers: authHeaders }),
+        fetch(`${API_BASE}/api/archetype-progression/${username}`, { headers: authHeaders }),
+        fetch(`${API_BASE}/api/user-analytics/${username}`, { headers: authHeaders })
       ]);
 
       if (!historyRes.ok) throw new Error('Failed to load session history.');
       if (!compRes.ok) throw new Error('Failed to load cohort comparison.');
       if (!progressionRes.ok) throw new Error('Failed to load archetype progression.');
+      if (!analyticsRes.ok) throw new Error('Failed to load cognitive profile.');
 
-      const [historyData, compData, progressionData] = await Promise.all([
+      const [historyData, compData, progressionData, analyticsData] = await Promise.all([
         historyRes.json(),
         compRes.json(),
-        progressionRes.json()
+        progressionRes.json(),
+        analyticsRes.json()
       ]);
 
       const sessions = historyData.sessions || [];
       setSessionHistory(sessions);
       setCohortComparison(compData);
       setArchetypeHistory(progressionData.history || []);
+      if (analyticsData.cognitive_profile) {
+        setCognitiveProfile({
+          archetype: analyticsData.cognitive_profile.archetype_name || 'Unclassified',
+          confidence_score: Number(analyticsData.cognitive_profile.confidence_score) || 0,
+          top_strength: analyticsData.cognitive_profile.top_strength,
+          primary_bottleneck: analyticsData.cognitive_profile.primary_bottleneck,
+          insight_text: analyticsData.cognitive_profile.insight_text,
+          recommended_game: analyticsData.cognitive_profile.recommended_game
+        });
+      } else {
+        setCognitiveProfile({
+          archetype: 'Unclassified',
+          confidence_score: 0
+        });
+      }
 
       // 2. Fetch latest session metrics sequentially (dependent on latestSid from historyRes)
       if (sessions.length > 0) {
         const latestSid = sessions[0].session_id;
-        const metricsRes = await fetch(`${API_BASE}/api/session-metrics/${latestSid}`);
+        const metricsRes = await fetch(`${API_BASE}/api/session-metrics/${latestSid}`, { headers: authHeaders });
         if (!metricsRes.ok) throw new Error('Failed to load latest session metrics.');
         const metricsData = await metricsRes.json();
         setLatestSessionMetrics(metricsData.metrics || []);
@@ -3559,4 +3579,3 @@ export default function App() {
     </div>
   );
 }
-
