@@ -89,7 +89,7 @@ const LeaderboardModal = memo(({ onClose }) => {
     if (category === 'difficulty' && player.score) displayScore = `Lvl ${player.score}`;
 
     return (
-      <div style={{ fontWeight: 'bold', fontSize: '1.2rem', color }}>
+      <div style={{ fontWeight: 'bold', fontSize: '1.2rem', color, whiteSpace: 'nowrap' }}>
         {displayScore}
       </div>
     );
@@ -112,7 +112,7 @@ const LeaderboardModal = memo(({ onClose }) => {
         flexDirection: 'column',
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
       }}>
-        <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(148, 163, 184, 0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ flexShrink: 0, padding: '1.5rem', borderBottom: '1px solid rgba(148, 163, 184, 0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ color: '#f8fafc', margin: 0, fontSize: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <span>🏆</span> Global Leaderboards
           </h2>
@@ -131,12 +131,13 @@ const LeaderboardModal = memo(({ onClose }) => {
         </div>
 
         {/* Categories Tab */}
-        <div style={{ padding: '1rem 1.5rem', display: 'flex', gap: '0.5rem', overflowX: 'auto', borderBottom: '1px solid rgba(148, 163, 184, 0.1)' }}>
+        <div style={{ flexShrink: 0, padding: '1rem 1.5rem', display: 'flex', gap: '0.5rem', overflowX: 'auto', borderBottom: '1px solid rgba(148, 163, 184, 0.1)' }}>
           {CATEGORIES.map(cat => (
             <button
               key={cat.id}
               onClick={() => setCategory(cat.id)}
               style={{
+                flexShrink: 0,
                 padding: '0.5rem 1rem',
                 background: category === cat.id ? 'var(--color-primary)' : 'rgba(255,255,255,0.05)',
                 color: category === cat.id ? '#0f172a' : '#94a3b8',
@@ -155,12 +156,13 @@ const LeaderboardModal = memo(({ onClose }) => {
 
         {/* Domains Filter (Only show for game-specific metrics) */}
         {['accuracy', 'speed', 'difficulty'].includes(category) && (
-          <div style={{ padding: '0.75rem 1.5rem', display: 'flex', gap: '0.5rem', overflowX: 'auto', background: 'rgba(0,0,0,0.2)' }}>
+          <div style={{ flexShrink: 0, padding: '0.75rem 1.5rem', display: 'flex', gap: '0.5rem', overflowX: 'auto', background: 'rgba(0,0,0,0.2)' }}>
             {DOMAINS.map(dom => (
               <button
                 key={dom.id}
                 onClick={() => setDomain(dom.id)}
                 style={{
+                  flexShrink: 0,
                   padding: '0.4rem 0.8rem',
                   background: domain === dom.id ? 'rgba(255,255,255,0.2)' : 'transparent',
                   color: domain === dom.id ? '#f8fafc' : '#64748b',
@@ -211,28 +213,30 @@ const LeaderboardModal = memo(({ onClose }) => {
                   {getAvatarIcon(player.equipped_avatar)}
                 </div>
                 
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.2rem', minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ fontWeight: 'bold', fontSize: '1.1rem', color: idx < 3 ? '#0f172a' : '#f8fafc' }}>
+                    <span style={{ fontWeight: 'bold', fontSize: '1.1rem', color: idx < 3 ? '#0f172a' : '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {player.username}
                     </span>
                     {(player.current_streak > 0) && (
-                      <span style={{ fontSize: '0.8rem', background: 'rgba(0,0,0,0.2)', padding: '0.1rem 0.4rem', borderRadius: '4px', color: '#f59e0b' }}>
+                      <span style={{ flexShrink: 0, fontSize: '0.8rem', background: 'rgba(0,0,0,0.2)', padding: '0.1rem 0.4rem', borderRadius: '4px', color: '#f59e0b' }}>
                         🔥 {player.current_streak}
                       </span>
                     )}
                   </div>
                   
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: idx < 3 ? 'rgba(15,23,42,0.8)' : '#94a3b8' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: idx < 3 ? 'rgba(15,23,42,0.8)' : '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     <span>Lvl {player.level}</span>
                     <span>•</span>
-                    <span style={{ fontStyle: 'italic' }}>
+                    <span style={{ fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {player.archetype_name || player.equipped_title || 'Unclassified'}
                     </span>
                   </div>
                 </div>
                 
-                {renderScore(player, idx)}
+                <div style={{ flexShrink: 0 }}>
+                  {renderScore(player, idx)}
+                </div>
               </div>
               </HoverTooltip>
             ))
