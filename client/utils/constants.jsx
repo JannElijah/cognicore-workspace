@@ -395,7 +395,7 @@ const generateProceduralQuestions = () => {
       // 15 questions per difficulty per domain to guarantee we never run out
       for (let i = 1; i <= 15; i++) {
         let q = {
-          id: \q_ext_\_d\_\\,
+          id: `q_ext_${domain}_d${diff}_${i}`,
           domain: domain,
           difficulty: diff,
           title: '',
@@ -409,20 +409,20 @@ const generateProceduralQuestions = () => {
           const b = Math.floor(Math.random() * (5 * diff)) + 2;
           const c = Math.floor(Math.random() * (10 * diff)) + 1;
           const ans = (a * b) + c;
-          q.title = \Equation Link \\;
-          q.text = \Solve the system routing requirement: (\ * \) + \. What is the correct value?\;
+          q.title = `Equation Link ${i}`;
+          q.text = `Solve the system routing requirement: (${a} * ${b}) + ${c}. What is the correct value?`;
           q.options = [
-            { key: 'A', text: \\\ },
-            { key: 'B', text: \\\ },
-            { key: 'C', text: \\\ },
-            { key: 'D', text: \\\ }
+            { key: 'A', text: `${ans}` },
+            { key: 'B', text: `${ans + Math.floor(Math.random() * 5) + 1}` },
+            { key: 'C', text: `${ans - Math.floor(Math.random() * 5) - 1}` },
+            { key: 'D', text: `${ans * 2}` }
           ];
         } else if (domain === 'spatial_visual_memory') {
           const directions = ['UP', 'DOWN', 'LEFT', 'RIGHT'];
           const moves = [];
           for (let m = 0; m < diff + 1; m++) moves.push(directions[Math.floor(Math.random() * 4)]);
-          q.title = \Grid Mapper \\;
-          q.text = \A dot starts in the center of a grid. It moves: \. Where is it relative to the center?\;
+          q.title = `Grid Mapper ${i}`;
+          q.text = `A dot starts in the center of a grid. It moves: ${moves.join(', ')}. Where is it relative to the center?`;
           q.options = [
             { key: 'A', text: 'Trace the path correctly' },
             { key: 'B', text: 'Opposite of the path' },
@@ -432,8 +432,8 @@ const generateProceduralQuestions = () => {
         } else if (domain === 'reflexes_and_focus') {
           const colors = ['RED', 'BLUE', 'GREEN', 'YELLOW', 'PURPLE'];
           const target = colors[Math.floor(Math.random() * colors.length)];
-          q.title = \Attention Protocol \\;
-          q.text = \Your target is \. The sequence flashes: \, \, \. Did the target appear?\;
+          q.title = `Attention Protocol ${i}`;
+          q.text = `Your target is ${target}. The sequence flashes: ${colors[Math.floor(Math.random() * colors.length)]}, ${colors[Math.floor(Math.random() * colors.length)]}, ${target}. Did the target appear?`;
           q.options = [
             { key: 'A', text: 'Yes, it appeared' },
             { key: 'B', text: 'No, it was skipped' },
@@ -441,8 +441,8 @@ const generateProceduralQuestions = () => {
             { key: 'D', text: 'I am not sure' }
           ];
         } else if (domain === 'executive_strategy') {
-          q.title = \Priority Triage \\;
-          q.text = \You have \ active alerts. Alert A is critical but slow. Alert B is minor but fast. Alert C is moderate. Which should you handle first to stabilize the system?\;
+          q.title = `Priority Triage ${i}`;
+          q.text = `You have ${diff + 2} active alerts. Alert A is critical but slow. Alert B is minor but fast. Alert C is moderate. Which should you handle first to stabilize the system?`;
           q.options = [
             { key: 'A', text: 'Handle A first' },
             { key: 'B', text: 'Handle B first' },
