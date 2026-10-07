@@ -4,8 +4,8 @@ import { supabase } from '../utils/supabaseClient.js';
 import HoverTooltip from './HoverTooltip';
 
 const CATEGORIES = [
-  { id: 'xp', label: '🌟 XP' },
-  { id: 'coins', label: '💰 Coins' },
+  { id: 'xp', label: '💠 XP' },
+  { id: 'coins', label: '🪙 Coins' },
   { id: 'accuracy', label: '🎯 Accuracy' },
   { id: 'speed', label: '⚡ Speed' },
   { id: 'difficulty', label: '🧠 Max Level' }
