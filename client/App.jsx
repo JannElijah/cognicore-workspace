@@ -2434,7 +2434,7 @@ export default function App() {
             
             <div className="intro-card">
               <h1>Adaptive Neuro-Training Portal</h1>
-              <p>Welcome to CogniCore. Access clinically validated serious game modules designed to assess cognitive processing speed, selective attention, and executive function. Real-time telemetry is recorded to construct your adaptive cognitive profile.</p>
+              <p>Welcome to CogniCore. Access scientifically validated serious game modules designed to assess cognitive processing speed, selective attention, and executive function. Real-time telemetry is recorded to construct your adaptive cognitive profile.</p>
             </div>
 
             {/* Daily Personalized Workout */}
