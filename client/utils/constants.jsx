@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import GameIcon from '../components/GameIcon';
 
 export const SvgGameIcon = ({ name, color }) => (
@@ -24,10 +24,10 @@ export const SvgGameIcon = ({ name, color }) => (
 );
 
 export const DOMAIN_INFO = {
-  reflexes_and_focus: { title: 'Reflexes & Focus', color: 'var(--color-primary)', icon: <SvgGameIcon name="Lightning" color="var(--color-primary)" /> },
-  spatial_visual_memory: { title: 'Memory & Recall', color: '#4ade80', icon: <SvgGameIcon name="Brain" color="#4ade80" /> },
-  logical_mathematical: { title: 'Logical Reasoning', color: '#f59e0b', icon: <SvgGameIcon name="Numbers" color="#f59e0b" /> },
-  executive_strategy: { title: 'Executive Strategy', color: 'var(--color-secondary)', icon: <SvgGameIcon name="Compass" color="var(--color-secondary)" /> }
+  reflexes_and_focus: { title: 'Reflexes & Focus', color: '#ef4444', icon: <SvgGameIcon name="Lightning" color="#ef4444" /> },
+  spatial_visual_memory: { title: 'Memory & Recall', color: '#06b6d4', icon: <SvgGameIcon name="Brain" color="#06b6d4" /> },
+  logical_mathematical: { title: 'Logical Reasoning', color: '#14b8a6', icon: <SvgGameIcon name="Numbers" color="#14b8a6" /> },
+  executive_strategy: { title: 'Executive Strategy', color: '#10b981', icon: <SvgGameIcon name="Compass" color="#10b981" /> }
 };
 
 export const DOMAIN_LABELS = {
@@ -39,32 +39,32 @@ export const DOMAIN_LABELS = {
 
 export const DOMAIN_THEMES = {
   reflex: {
-    color: 'var(--color-primary)',
-    glow: 'rgba(var(--rgb-primary), 0.25)',
-    btnGlow: 'rgba(var(--rgb-primary), 0.4)',
-    bg: 'rgba(var(--rgb-primary), 0.03)',
-    btnGradient: 'linear-gradient(to right, var(--color-primary), #60a5fa)'
+    color: '#ef4444',
+    glow: 'rgba(239, 68, 68, 0.25)',
+    btnGlow: 'rgba(239, 68, 68, 0.4)',
+    bg: 'rgba(239, 68, 68, 0.03)',
+    btnGradient: 'linear-gradient(to right, #ef4444, #f87171)'
   },
   memory: {
-    color: '#4ade80',
-    glow: 'rgba(74, 222, 128, 0.25)',
-    btnGlow: 'rgba(74, 222, 128, 0.4)',
-    bg: 'rgba(74, 222, 128, 0.03)',
-    btnGradient: 'linear-gradient(to right, #4ade80, #34d399)'
+    color: '#06b6d4',
+    glow: 'rgba(6, 182, 212, 0.25)',
+    btnGlow: 'rgba(6, 182, 212, 0.4)',
+    bg: 'rgba(6, 182, 212, 0.03)',
+    btnGradient: 'linear-gradient(to right, #06b6d4, #22d3ee)'
   },
   reasoning: {
-    color: '#f59e0b',
-    glow: 'rgba(245, 158, 11, 0.25)',
-    btnGlow: 'rgba(245, 158, 11, 0.4)',
-    bg: 'rgba(245, 158, 11, 0.03)',
-    btnGradient: 'linear-gradient(to right, #f59e0b, #fbbf24)'
+    color: '#14b8a6',
+    glow: 'rgba(20, 184, 166, 0.25)',
+    btnGlow: 'rgba(20, 184, 166, 0.4)',
+    bg: 'rgba(20, 184, 166, 0.03)',
+    btnGradient: 'linear-gradient(to right, #14b8a6, #2dd4bf)'
   },
   executive: {
-    color: 'var(--color-secondary)',
-    glow: 'rgba(var(--rgb-secondary), 0.25)',
-    btnGlow: 'rgba(var(--rgb-secondary), 0.4)',
-    bg: 'rgba(var(--rgb-secondary), 0.03)',
-    btnGradient: 'linear-gradient(to right, var(--color-secondary), #c084fc)'
+    color: '#10b981',
+    glow: 'rgba(16, 185, 129, 0.25)',
+    btnGlow: 'rgba(16, 185, 129, 0.4)',
+    bg: 'rgba(16, 185, 129, 0.03)',
+    btnGradient: 'linear-gradient(to right, #10b981, #34d399)'
   }
 };
 
@@ -73,27 +73,27 @@ export const DOMAINS_LIST = [
     id: 'reflexes_and_focus',
     themeClass: 'reflex',
     title: 'Reflex & Attentional Focus',
-    icon: <SvgGameIcon name="Lightning" color="var(--color-primary)" />,
+    icon: <SvgGameIcon name="Lightning" color="#ef4444" />,
     description: 'Improve your reaction time, focus, and ability to ignore distractions under pressure.',
     games: [
       {
         id: 'SpeedTap',
         title: 'Speed Tap',
-        icon: <SvgGameIcon name="Lightning" color="var(--color-primary)" />,
+        icon: <SvgGameIcon name="Lightning" color="#ef4444" />,
         objective: 'Quickly tap the highlighted targets before time runs out, while ignoring the wrong ones.',
         benefit: 'Helps you make faster decisions and react quicker in fast-paced situations.'
       },
       {
         id: 'FocusFinder',
         title: 'Focus Finder',
-        icon: <SvgGameIcon name="Target" color="var(--color-primary)" />,
+        icon: <SvgGameIcon name="Target" color="#ef4444" />,
         objective: 'Find the hidden targets moving around in a crowded, messy space.',
         benefit: 'Improves your ability to focus on what matters in a busy environment.'
       },
       {
         id: 'StroopShift',
         title: 'Stroop Shift',
-        icon: <SvgGameIcon name="Palette" color="var(--color-primary)" />,
+        icon: <SvgGameIcon name="Palette" color="#ef4444" />,
         objective: 'Pick the correct color while ignoring tricky mismatched words (like the word "RED" painted in blue).',
         benefit: 'Trains your brain to overcome confusion and switch tasks easily.'
       }
@@ -103,34 +103,34 @@ export const DOMAINS_LIST = [
     id: 'spatial_visual_memory',
     themeClass: 'memory',
     title: 'Spatial-Visual Memory',
-    icon: <SvgGameIcon name="Brain" color="#4ade80" />,
+    icon: <SvgGameIcon name="Brain" color="#06b6d4" />,
     description: 'Boost your ability to remember patterns, shapes, and where things are located.',
     games: [
       {
         id: 'MemoryMatch',
         title: 'Memory Match',
-        icon: <SvgGameIcon name="Cards" color="#4ade80" />,
+        icon: <SvgGameIcon name="Cards" color="#06b6d4" />,
         objective: 'Flip and match pairs of hidden cards on a grid.',
         benefit: 'Helps you remember information longer and recall visual details quickly.'
       },
       {
         id: 'MatrixRecall',
         title: 'Matrix Recall',
-        icon: <SvgGameIcon name="Grid" color="#4ade80" />,
+        icon: <SvgGameIcon name="Grid" color="#06b6d4" />,
         objective: 'Observe grid pattern sequences highlighted for brief intervals and reconstruct coordinates.',
         benefit: 'Improves spatial orientation and visual-spatial short-term working retention.'
       },
       {
         id: 'SynapseSpin',
         title: 'Synapse Spin',
-        icon: <SvgGameIcon name="Sync" color="#4ade80" />,
+        icon: <SvgGameIcon name="Sync" color="#06b6d4" />,
         objective: 'Compare visual geometric shapes and rotate them mentally to identify matching templates.',
         benefit: 'Boosts spatial manipulation speed, mental rotation, and spatial configuration logic.'
       },
       {
         id: 'NexusMapper',
         title: 'Nexus Mapper',
-        icon: <SvgGameIcon name="Map" color="#4ade80" />,
+        icon: <SvgGameIcon name="Map" color="#06b6d4" />,
         objective: 'Memorize visual objects placed in complex network nodes and recall locations.',
         benefit: 'Enhances associative object-location memory bindings and structural retention.'
       }
@@ -140,34 +140,34 @@ export const DOMAINS_LIST = [
     id: 'logical_mathematical',
     themeClass: 'reasoning',
     title: 'Logical-Mathematical Reasoning',
-    icon: <SvgGameIcon name="Numbers" color="#f59e0b" />,
+    icon: <SvgGameIcon name="Numbers" color="#14b8a6" />,
     description: 'Sharpen your math skills, problem-solving abilities, and logical thinking.',
     games: [
       {
         id: 'LogicLink',
         title: 'Logic Link',
-        icon: <SvgGameIcon name="Link" color="#f59e0b" />,
+        icon: <SvgGameIcon name="Link" color="#14b8a6" />,
         objective: 'Connect the dots in order without crossing lines.',
         benefit: 'Trains you to plan ahead and solve tricky puzzles efficiently.'
       },
       {
         id: 'EquationBalance',
         title: 'Equation Balance',
-        icon: <SvgGameIcon name="Scale" color="#f59e0b" />,
+        icon: <SvgGameIcon name="Scale" color="#14b8a6" />,
         objective: 'Figure out the missing numbers or symbols to balance the scale.',
         benefit: 'Makes you faster and more confident with everyday math and logic.'
       },
       {
         id: 'SequenceDecoder',
         title: 'Sequence Decoder',
-        icon: <SvgGameIcon name="Numbers" color="#f59e0b" />,
+        icon: <SvgGameIcon name="Numbers" color="#14b8a6" />,
         objective: 'Examine numeric sequences (e.g. geometric, Fibonacci) and infer missing patterns.',
         benefit: 'Strengthens inductive logical reasoning, sequence detection, and mathematical extrapolation.'
       },
       {
         id: 'RouteOptimizer',
         title: 'Route Optimizer',
-        icon: <SvgGameIcon name="Pin" color="#f59e0b" />,
+        icon: <SvgGameIcon name="Pin" color="#14b8a6" />,
         objective: 'Determine the absolute shortest route visiting all destination nodes under a time limit.',
         benefit: 'Trains combinatorial logic, spatial graph reasoning, and planning efficiency.'
       }
@@ -177,27 +177,27 @@ export const DOMAINS_LIST = [
     id: 'executive_strategy',
     themeClass: 'executive',
     title: 'Executive Strategy & Planning',
-    icon: <SvgGameIcon name="Compass" color="var(--color-secondary)" />,
+    icon: <SvgGameIcon name="Compass" color="#10b981" />,
     description: 'Train adaptive executive control, dynamic plan correction, card matching rule-switching, and decision confidence.',
     games: [
       {
         id: 'PriorityQueue',
         title: 'Priority Queue',
-        icon: <SvgGameIcon name="Inbox" color="var(--color-secondary)" />,
+        icon: <SvgGameIcon name="Inbox" color="#10b981" />,
         objective: 'Drag and drop incoming task cards into Urgent, Important, or Delegate bins before they scroll off the conveyor belt.',
         benefit: 'Trains executive triage, multi-priority switching, decision speed under pressure, and resource allocation.'
       },
       {
         id: 'NeuroMaze',
         title: 'Neuro Maze',
-        icon: <SvgGameIcon name="Maze" color="var(--color-secondary)" />,
+        icon: <SvgGameIcon name="Maze" color="#10b981" />,
         objective: 'Escape dynamic grid mazes with moving barrier walls and shifting exit locations.',
         benefit: 'Improves real-time replanning, visual obstacle prediction, and quick strategic changes.'
       },
       {
         id: 'MentalFlex',
         title: 'Mental Flex',
-        icon: <SvgGameIcon name="Juggler" color="var(--color-secondary)" />,
+        icon: <SvgGameIcon name="Juggler" color="#10b981" />,
         objective: 'Match incoming target items based on rapidly shifting rules (color, shape, count).',
         benefit: 'Enhances cognitive flexibility, rule induction switching, and adaptive execution.'
       }
@@ -392,7 +392,7 @@ export const COGNITIVE_QUESTIONS = [
     difficulty: 2,
     title: 'Data Stream Sorting',
     text: 'A server receives packets at 5 MB/s. Another sends packets at 3 MB/s. If the buffer starts empty, how much data is in the buffer after 10 seconds?',
-    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'2rem', padding:'20px'}}>📥 5 MB/s &nbsp;&nbsp; 📤 3 MB/s</div>,
+    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'2rem', padding:'20px'}}>?? 5 MB/s &nbsp;&nbsp; ?? 3 MB/s</div>,
     correctAnswer: 'B',
     options: [
       {key: 'A', text: '80 MB'},
@@ -507,3 +507,4 @@ export const COGNITIVE_QUESTIONS = [
     ],
   },
 ];
+
