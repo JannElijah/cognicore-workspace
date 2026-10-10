@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import HoverTooltip from './HoverTooltip';
+import { SvgGameIcon } from '../utils/constants';
 
 const KNOWLEDGE_DATA = [
   {
@@ -27,11 +28,64 @@ const KNOWLEDGE_DATA = [
     title: 'Cognitive Domains',
     color: '#f472b6',
     content: (
-      <ul style={{ color: '#e2e8f0', lineHeight: '1.6', paddingLeft: '1.5rem', margin: 0 }}>
-        <li style={{ marginBottom: '0.5rem' }}><strong style={{ color: '#f8fafc' }}>Spatial-Visual Memory:</strong> Training working memory and object permanence (e.g. Memory Match, Sequence Decoder).</li>
-        <li style={{ marginBottom: '0.5rem' }}><strong style={{ color: '#f8fafc' }}>Reflex & Attentional Focus:</strong> Enhancing reaction times and sustained vigilance against visual distractors (e.g. Speed Tap, Focus Finder).</li>
-        <li><strong style={{ color: '#f8fafc' }}>Logical-Mathematical Strategy:</strong> Problem-solving and dynamic rule-shifting tasks (e.g. Mental Flex, Logic Link).</li>
-      </ul>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginTop: '0.5rem' }}>
+        
+        {/* Reflexes */}
+        <div style={{ background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: '12px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <SvgGameIcon name="Lightning" color="#ef4444" />
+            <strong style={{ color: '#ef4444', fontSize: '1.05rem' }}>Reflexes & Focus</strong>
+          </div>
+          <p style={{ color: '#cbd5e1', fontSize: '0.85rem', margin: 0, flex: 1 }}>Enhancing reaction speed, sustained vigilance, and resistance to visual distractors.</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: 'auto' }}>
+            {['Speed Tap', 'Focus Finder', 'Stroop Shift'].map(m => (
+              <span key={m} style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>{m}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* Memory */}
+        <div style={{ background: 'rgba(6, 182, 212, 0.05)', border: '1px solid rgba(6, 182, 212, 0.2)', borderRadius: '12px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <SvgGameIcon name="Brain" color="#06b6d4" />
+            <strong style={{ color: '#06b6d4', fontSize: '1.05rem' }}>Spatial-Visual Memory</strong>
+          </div>
+          <p style={{ color: '#cbd5e1', fontSize: '0.85rem', margin: 0, flex: 1 }}>Training working memory, object permanence, and spatial manipulation.</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: 'auto' }}>
+            {['Memory Match', 'Matrix Recall', 'Synapse Spin', 'Nexus Mapper'].map(m => (
+              <span key={m} style={{ background: 'rgba(6, 182, 212, 0.15)', color: '#22d3ee', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>{m}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* Reasoning */}
+        <div style={{ background: 'rgba(20, 184, 166, 0.05)', border: '1px solid rgba(20, 184, 166, 0.2)', borderRadius: '12px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <SvgGameIcon name="Numbers" color="#14b8a6" />
+            <strong style={{ color: '#14b8a6', fontSize: '1.05rem' }}>Logical-Mathematical</strong>
+          </div>
+          <p style={{ color: '#cbd5e1', fontSize: '0.85rem', margin: 0, flex: 1 }}>Sharpening inductive logic, math skills, and analytical problem-solving.</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: 'auto' }}>
+            {['Logic Link', 'Equation Balance', 'Sequence Decoder', 'Route Opt.'].map(m => (
+              <span key={m} style={{ background: 'rgba(20, 184, 166, 0.15)', color: '#2dd4bf', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>{m}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* Executive */}
+        <div style={{ background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '12px', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <SvgGameIcon name="Compass" color="#10b981" />
+            <strong style={{ color: '#10b981', fontSize: '1.05rem' }}>Executive Strategy</strong>
+          </div>
+          <p style={{ color: '#cbd5e1', fontSize: '0.85rem', margin: 0, flex: 1 }}>Training adaptive control, dynamic plan correction, and multi-priority switching.</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: 'auto' }}>
+            {['Priority Queue', 'Neuro Maze', 'Mental Flex'].map(m => (
+              <span key={m} style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', padding: '0.2rem 0.6rem', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 'bold' }}>{m}</span>
+            ))}
+          </div>
+        </div>
+      </div>
     )
   },
   {
@@ -42,6 +96,87 @@ const KNOWLEDGE_DATA = [
       <p style={{ color: '#e2e8f0', lineHeight: '1.6', margin: 0 }}>
         You can customize your experience by clicking your Profile avatar in the top right. In the <strong>Settings</strong> tab, you can disable flashing visual effects, control the master audio volume, and toggle <HoverTooltip content="On-screen visual noise designed to intensely test your concentration."><strong style={{color: '#10b981', cursor:'pointer', borderBottom:'1px dashed rgba(16,185,129,0.6)'}}>Adaptive Distractors</strong></HoverTooltip> (background noise/glitches) used in high-difficulty levels.
       </p>
+    )
+  },
+  {
+    id: 'research',
+    title: 'Scientific Research & Color Psychology (RRL)',
+    color: '#38bdf8',
+    content: (
+      <div style={{ color: '#e2e8f0', lineHeight: '1.6', margin: 0 }}>
+        <p style={{ marginBottom: '1rem' }}>
+          CogniCore is built upon validated clinical studies. Our platform specifically utilizes targeted color psychology to alter psychological arousal and optimize cognitive focus depending on the task:
+        </p>
+        <ul style={{ paddingLeft: '1.5rem', marginBottom: '1rem' }}>
+          <li style={{ marginBottom: '0.75rem' }}>
+            <strong style={{ color: '#ef4444' }}>High-Saturation Red (Reflexes & Focus):</strong> Triggers increased physiological arousal and captures early attentional resources. Utilized in fast-paced modules to maximize reaction time and motor velocity. 
+            <br/><span style={{ fontSize: '0.85em', color: '#94a3b8' }}>Citation: Wang, Y., & Chen, Y. (2022). Influence of Background Color on Attention.</span>
+          </li>
+          <li style={{ marginBottom: '0.75rem' }}>
+            <strong style={{ color: '#06b6d4' }}>Cool Blues (Spatial Memory):</strong> Induces an "approach motivation" that lowers cognitive load, accelerating post-stress relaxation and enhancing complex pattern visualization.
+            <br/><span style={{ fontSize: '0.85em', color: '#94a3b8' }}>Citation: Xu, Z. (2024). Impact and Emotional Resonance of Colors on Mood.</span>
+          </li>
+          <li style={{ marginBottom: '0.75rem' }}>
+            <strong style={{ color: '#10b981' }}>Muted Greens (Logic & Strategy):</strong> Backed by "Attention Restoration Theory", it reduces visual and cognitive fatigue, acting as a mental micro-break during prolonged problem-solving tasks.
+            <br/><span style={{ fontSize: '0.85em', color: '#94a3b8' }}>Citation: Schertz, K. E., & Berman, M. G. (2021). Understanding Nature and Its Cognitive Benefits.</span>
+          </li>
+        </ul>
+        <p style={{ fontSize: '0.9em', color: '#cbd5e1', fontStyle: 'italic', borderLeft: '3px solid #38bdf8', paddingLeft: '10px' }}>
+          The global UI utilizes a "Deep Blue" primary layout to mitigate generalized "test anxiety", creating a calm environment for users to review their cognitive analytics without stress.
+        </p>
+      </div>
+    )
+  },
+  {
+    id: 'rrl_dda',
+    title: 'Scientific Research: AI & Adaptive Difficulty (RRL)',
+    color: '#c084fc',
+    content: (
+      <div style={{ color: '#e2e8f0', lineHeight: '1.6', margin: 0 }}>
+        <p style={{ marginBottom: '1rem' }}>
+          The machine learning and dynamic difficulty mechanics driving CogniCore are substantiated by recent developments in artificial intelligence and serious game design:
+        </p>
+        <ul style={{ paddingLeft: '1.5rem', marginBottom: '1rem' }}>
+          <li style={{ marginBottom: '0.75rem' }}>
+            <strong style={{ color: '#f8fafc' }}>Dynamic Difficulty Adjustment (DDA):</strong> Real-time adaptation significantly improves immersion, user engagement, and learning efficiency while preventing test frustration.
+            <br/><span style={{ fontSize: '0.85em', color: '#94a3b8' }}>Citations: Moon & Seo (2020); Chiotaki, Poulopoulos, & Karpouzis (2023).</span>
+          </li>
+          <li style={{ marginBottom: '0.75rem' }}>
+            <strong style={{ color: '#f8fafc' }}>AI-Driven Behavioral Analytics:</strong> Machine Learning approaches allow for the identification of meaningful behavioral patterns beyond numerical scoring, providing deeper cognitive profiling.
+            <br/><span style={{ fontSize: '0.85em', color: '#94a3b8' }}>Citation: Ahmad et al. (2023). A pilot study on the evaluation of cognitive abilities’ cluster.</span>
+          </li>
+          <li style={{ marginBottom: '0.75rem' }}>
+            <strong style={{ color: '#f8fafc' }}>Cognitive Categorization:</strong> Using algorithms (like Random Forest) enables accurate, personalized performance evaluation and qualitative feedback generation.
+            <br/><span style={{ fontSize: '0.85em', color: '#94a3b8' }}>Citation: Tolks, Schmidt, & Kuhn (2024). The role of AI in serious games.</span>
+          </li>
+        </ul>
+      </div>
+    )
+  },
+  {
+    id: 'rrl_validity',
+    title: 'Scientific Research: Game-Based Validity (RRL)',
+    color: '#4ade80',
+    content: (
+      <div style={{ color: '#e2e8f0', lineHeight: '1.6', margin: 0 }}>
+        <p style={{ marginBottom: '1rem' }}>
+          CogniCore replaces traditional neuropsychological tests with interactive domains. This methodology is supported by extensive literature confirming the clinical and diagnostic validity of serious games:
+        </p>
+        <ul style={{ paddingLeft: '1.5rem', marginBottom: '1rem' }}>
+          <li style={{ marginBottom: '0.75rem' }}>
+            <strong style={{ color: '#f8fafc' }}>Anxiety Reduction & Motivation:</strong> Game-based assessments drastically reduce "test anxiety" and increase user participation and motivation compared to static clinical tests.
+            <br/><span style={{ fontSize: '0.85em', color: '#94a3b8' }}>Citations: Berg (2021); Vasconcelos et al. (2024).</span>
+          </li>
+          <li style={{ marginBottom: '0.75rem' }}>
+            <strong style={{ color: '#f8fafc' }}>Diagnostic Equivalence:</strong> 3D mobile games and virtual reality cognitive assessments have been validated against traditional tools (like ACE-III), effectively evaluating memory, attention, and executive functions.
+            <br/><span style={{ fontSize: '0.85em', color: '#94a3b8' }}>Citation: Bhargava, Kottapalli, & Baths (2024). Scientific Reports.</span>
+          </li>
+          <li style={{ marginBottom: '0.75rem' }}>
+            <strong style={{ color: '#f8fafc' }}>Specific Domain Testing:</strong> Mechanics like Route Optimization and Stroop-based conflict tasks are proven to reliably measure logical reasoning, inhibitory control, and strategic planning.
+            <br/><span style={{ fontSize: '0.85em', color: '#94a3b8' }}>Citations: Nogueira et al. (2021); Müller et al. (2024).</span>
+          </li>
+        </ul>
+      </div>
     )
   }
 ];
@@ -64,7 +199,7 @@ const AccordionItem = ({ item, isOpen, onClick }) => {
         </svg>
       </button>
       <div style={{
-        maxHeight: isOpen ? '500px' : '0px',
+        maxHeight: isOpen ? '2000px' : '0px',
         opacity: isOpen ? 1 : 0,
         transition: 'all 0.3s ease-in-out',
         padding: isOpen ? '0 1.25rem 1.25rem 1.25rem' : '0 1.25rem',
