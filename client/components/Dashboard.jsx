@@ -116,6 +116,55 @@ export default function Dashboard({
   return (
     <div className="dashboard-content" style={{ animation: 'fadeIn 0.4s ease-out' }}>
       
+      {/* Mobile Companion Mode Header Notice */}
+      {isMobile && (
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(168, 85, 247, 0.12))',
+          border: '1px solid rgba(56, 189, 248, 0.35)',
+          borderRadius: '16px',
+          padding: '1.25rem',
+          marginBottom: '2rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.75rem',
+          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.35)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#38bdf8', fontWeight: 'bold', fontSize: '1rem' }}>
+              <span style={{ fontSize: '1.25rem' }}>📱</span>
+              <span>Mobile Companion Portal</span>
+            </div>
+            <span style={{ fontSize: '0.72rem', padding: '0.2rem 0.5rem', background: 'rgba(56, 189, 248, 0.2)', color: '#7dd3fc', borderRadius: '12px', fontWeight: 'bold', textTransform: 'uppercase' }}>
+              Companion Active
+            </span>
+          </div>
+          <p style={{ margin: 0, fontSize: '0.88rem', color: '#cbd5e1', lineHeight: '1.5' }}>
+            You are currently viewing scores, cognitive telemetry, and quest milestones. <strong style={{ color: '#ffffff' }}>Go to Desktop to unlock your full cognitive potential</strong> — serious training games require physical input precision.
+          </p>
+          <button
+            onClick={() => onRequireDesktop ? onRequireDesktop('Full Cognitive Training Suite') : null}
+            style={{
+              background: 'linear-gradient(90deg, #38bdf8, #818cf8)',
+              color: '#0f172a',
+              border: 'none',
+              borderRadius: '10px',
+              padding: '0.75rem 1rem',
+              fontWeight: 'bold',
+              fontSize: '0.88rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              marginTop: '0.25rem',
+              boxShadow: '0 4px 15px rgba(56, 189, 248, 0.35)'
+            }}
+          >
+            <span>🖥️</span> <span>Go to Desktop to Train Potential</span>
+          </button>
+        </div>
+      )}
+
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
         <button 
           onClick={() => setActiveTab('participant')}
@@ -462,8 +511,8 @@ export default function Dashboard({
               {/* Cognitive Radar Chart */}
               <div className="game-card" style={{ width: '100%', alignItems: 'stretch', boxSizing: 'border-box' }}>
                 <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(var(--rgb-secondary),0.7))',flexShrink:0}} xmlns="http://www.w3.org/2000/svg"><polygon points="12,2 20,8 17,19 7,19 4,8" stroke="var(--color-secondary)" strokeWidth="1.5" fill="rgba(var(--rgb-secondary),0.1)"/><polygon points="12,6 17,10 15,16 9,16 7,10" stroke="var(--color-secondary)" strokeWidth="1" fill="rgba(var(--rgb-secondary),0.15)"/></svg> Cognitive Domain Radar Chart</h3>
-                <div style={{ position: 'relative', height: '240px' }}>
-                  <Radar data={radarDataEnhanced} options={radarOptions} />
+                <div style={radarContainerStyle}>
+                  <Radar data={radarDataEnhanced} options={customRadarOptions} />
                 </div>
               </div>
             </div>
@@ -666,18 +715,23 @@ export default function Dashboard({
 
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem', marginTop: '1rem' }}>
                   <div style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign: "middle", marginRight: "6px"}}><path d="M9 21h6"/><path d="M10 21v-2a4 4 0 01-4-4 7 7 0 1112 0 4 4 0 01-4 4v2"/></svg> Personalized Adviser Recommendation</div>
-                    <button 
-                      onClick={() => {
-                        if (isMobile) {
-                          if (onRequireDesktop) onRequireDesktop(rec?.game || prescribedGame);
-                          return;
-                        }
-                        setActiveGame && setActiveGame(prescribedGame);
-                      }} 
-                      style={{ width: '100%', padding: '0.75rem', marginTop: '0.5rem', background: 'linear-gradient(90deg, var(--color-secondary), #ec4899)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
-                    >
-                      {isMobile ? `🖥️ Play ${rec?.game || prescribedGame} on PC (Desktop Only)` : `▶ Start Recommended Training: ${rec.game}`}
-                    </button>
+                  {isMobile && (
+                    <div style={{ fontSize: '0.8rem', color: '#7dd3fc', margin: '0.4rem 0', lineHeight: '1.4' }}>
+                      💡 <strong>Go to Desktop to unlock potential:</strong> Clinical benchmarks require PC precision.
+                    </div>
+                  )}
+                  <button 
+                    onClick={() => {
+                      if (isMobile) {
+                        if (onRequireDesktop) onRequireDesktop(rec?.game || prescribedGame);
+                        return;
+                      }
+                      setActiveGame && setActiveGame(prescribedGame);
+                    }} 
+                    style={{ width: '100%', padding: '0.75rem', marginTop: '0.5rem', background: 'linear-gradient(90deg, var(--color-secondary), #ec4899)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+                  >
+                    {isMobile ? `🖥️ Go to Desktop to Play ${rec?.game || prescribedGame}` : `▶ Start Recommended Training: ${rec.game}`}
+                  </button>
                   <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
                     {rec.reason}. Launch module to {rec.action}.
                   </p>

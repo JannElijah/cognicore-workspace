@@ -294,6 +294,26 @@ const PretestResults = ({
           Based on your profile, the best way to level up your brain is to practice <strong>{weakestTheme.name}</strong>. 
           We recommend starting with the <strong style={{ color: weakestTheme.color, fontSize: isMobile ? '1.1rem' : '1.2rem' }}>{friendlyGameName}</strong> exercise to build those neural pathways!
         </p>
+
+        {isMobile && (
+          <div style={{
+            background: 'rgba(56, 189, 248, 0.12)',
+            border: '1px solid rgba(56, 189, 248, 0.35)',
+            borderRadius: '12px',
+            padding: '1rem 1.25rem',
+            marginBottom: '1.25rem',
+            textAlign: 'left',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem'
+          }}>
+            <span style={{ fontSize: '1.4rem', flexShrink: 0 }}>💡</span>
+            <div style={{ fontSize: '0.85rem', color: '#cbd5e1', lineHeight: '1.5' }}>
+              <strong style={{ color: '#38bdf8' }}>Go to Desktop to unlock full potential:</strong> Gameplay requires physical keyboard/mouse precision to record clinically valid response times.
+            </div>
+          </div>
+        )}
+
         <button
           onClick={onStartPrescribedGame}
           style={{ 
@@ -302,14 +322,21 @@ const PretestResults = ({
             border: 'none',
             fontSize: isMobile ? '0.95rem' : '1.1rem',
             fontWeight: 'bold',
-            padding: isMobile ? '0.9rem 1.5rem' : '1.25rem 3rem',
-            borderRadius: '9999px',
+            padding: isMobile ? '1rem 1.25rem' : '1.25rem 3rem',
+            borderRadius: isMobile ? '12px' : '9999px',
             cursor: 'pointer',
             transition: 'all 0.2s',
             boxShadow: `0 8px 25px ${weakestTheme.color}60`,
             textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-            width: isMobile ? '100%' : 'auto'
+            letterSpacing: '0.04em',
+            width: isMobile ? '100%' : 'auto',
+            maxWidth: '100%',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem',
+            boxSizing: 'border-box',
+            lineHeight: '1.3'
           }}
           onMouseOver={(e) => {
             e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';
@@ -320,7 +347,7 @@ const PretestResults = ({
             e.currentTarget.style.boxShadow = `0 8px 25px ${weakestTheme.color}60`;
           }}
         >
-          {isMobile ? `🖥️ Play ${friendlyGameName} on PC (Desktop Only)` : `Start ${friendlyGameName} Training`}
+          {isMobile ? `🖥️ Go to Desktop to Play ${friendlyGameName}` : `Start ${friendlyGameName} Training`}
         </button>
       </div>
     </div>

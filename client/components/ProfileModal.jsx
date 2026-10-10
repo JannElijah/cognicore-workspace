@@ -223,10 +223,10 @@ const ProfileModal = ({ onClose }) => {
     datasets: [{
       label: 'Accuracy %',
       data: domainStats.map(d => (d.avg_accuracy * 100).toFixed(1)),
-      backgroundColor: 'rgba(var(--rgb-primary), 0.4)',
-      borderColor: 'rgba(var(--rgb-primary), 1)',
+      backgroundColor: 'rgba(56, 189, 248, 0.4)',
+      borderColor: '#38bdf8',
       borderWidth: 2,
-      pointBackgroundColor: 'rgba(var(--rgb-primary), 1)',
+      pointBackgroundColor: '#38bdf8',
     }]
   }), [domainStats]);
   const radarOptions = { scales: { r: { angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, pointLabels: { color: '#e2e8f0', font: { size: 11 } }, ticks: { backdropColor: 'transparent', color: '#94a3b8', min: 0, max: 100 } } }, plugins: { legend: { display: false } }, maintainAspectRatio: false };
@@ -239,8 +239,8 @@ const ProfileModal = ({ onClose }) => {
     datasets: [{ 
       label: metricToggle === 'accuracy' ? 'Accuracy (%)' : 'Reaction Time (ms)', 
       data: timelineStats.map(d => metricToggle === 'accuracy' ? (d.avg_accuracy * 100).toFixed(1) : d.avg_rt), 
-      borderColor: metricToggle === 'accuracy' ? '#10b981' : 'var(--color-secondary)', 
-      backgroundColor: metricToggle === 'accuracy' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(var(--rgb-secondary), 0.2)', 
+      borderColor: metricToggle === 'accuracy' ? '#10b981' : '#c084fc', 
+      backgroundColor: metricToggle === 'accuracy' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(192, 132, 252, 0.2)', 
       fill: true, 
       tension: 0.4 
     }]
@@ -252,8 +252,8 @@ const ProfileModal = ({ onClose }) => {
       {
         label: 'Fast Learner Core',
         data: [{ x: 950, y: 85 }],
-        backgroundColor: 'rgba(var(--rgb-primary), 0.1)',
-        borderColor: 'rgba(var(--rgb-primary), 0.4)',
+        backgroundColor: 'rgba(56, 189, 248, 0.1)',
+        borderColor: 'rgba(56, 189, 248, 0.4)',
         pointRadius: 40,
         pointHoverRadius: 40
       },

@@ -68,7 +68,7 @@ ChartJS.defaults.font.family = 'system-ui, -apple-system, sans-serif';
 ChartJS.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 23, 42, 0.95)';
 ChartJS.defaults.plugins.tooltip.titleColor = '#f8fafc';
 ChartJS.defaults.plugins.tooltip.bodyColor = '#e2e8f0';
-ChartJS.defaults.plugins.tooltip.borderColor = 'rgba(var(--rgb-primary), 0.3)';
+ChartJS.defaults.plugins.tooltip.borderColor = 'rgba(56, 189, 248, 0.35)';
 ChartJS.defaults.plugins.tooltip.borderWidth = 1;
 ChartJS.defaults.plugins.tooltip.padding = 12;
 ChartJS.defaults.plugins.tooltip.cornerRadius = 8;
@@ -1055,8 +1055,8 @@ export default function App() {
         {
           label: 'Observed Telemetry Points',
           data: pts,
-          backgroundColor: 'var(--color-primary)',
-          borderColor: 'rgba(var(--rgb-primary), 0.4)',
+          backgroundColor: '#38bdf8',
+          borderColor: 'rgba(56, 189, 248, 0.6)',
           borderWidth: 1,
           pointRadius: 5,
           pointHoverRadius: 7,
@@ -1065,7 +1065,7 @@ export default function App() {
         {
           label: 'Linear Regression Fit',
           data: linePoints,
-          borderColor: 'var(--color-secondary)',
+          borderColor: '#c084fc',
           backgroundColor: 'transparent',
           borderWidth: 2,
           pointRadius: 0,
@@ -1153,8 +1153,8 @@ export default function App() {
         {
           label: `${activeDashboardUser.toUpperCase()} (Active Subject)`,
           data: activeData,
-          borderColor: 'var(--color-primary)',
-          backgroundColor: 'rgba(var(--rgb-primary), 0.1)',
+          borderColor: '#38bdf8',
+          backgroundColor: 'rgba(56, 189, 248, 0.15)',
           borderWidth: 3,
           tension: 0.15,
           fill: false,
@@ -1545,13 +1545,13 @@ export default function App() {
           skills.reflexes_and_focus,
           skills.executive_strategy
         ],
-        backgroundColor: 'rgba(var(--rgb-secondary), 0.2)',
-        borderColor: 'var(--color-secondary)',
+        backgroundColor: 'rgba(168, 85, 247, 0.25)',
+        borderColor: '#a855f7',
         borderWidth: 2,
-        pointBackgroundColor: 'var(--color-primary)',
+        pointBackgroundColor: '#38bdf8',
         pointBorderColor: '#ffffff',
         pointHoverBackgroundColor: '#ffffff',
-        pointHoverBorderColor: 'var(--color-primary)'
+        pointHoverBorderColor: '#38bdf8'
       }
     ]
   };
@@ -1568,7 +1568,7 @@ export default function App() {
           color: 'rgba(255, 255, 255, 0.08)'
         },
         pointLabels: {
-          color: '#94a3b8',
+          color: '#e2e8f0',
           font: {
             family: 'system-ui, -apple-system, sans-serif',
             size: 11,
@@ -1576,7 +1576,7 @@ export default function App() {
           }
         },
         ticks: {
-          color: '#64748b',
+          color: '#94a3b8',
           backdropColor: 'transparent',
           font: {
             size: 9
@@ -1606,33 +1606,38 @@ export default function App() {
     return val !== diffLevels[idx - 1] ? 8 : 4;
   });
   const diffPointColors = diffLevels.map((val, idx) => {
-    if (idx === 0) return 'var(--color-secondary)';
-    return val !== diffLevels[idx - 1] ? '#22c55e' : 'var(--color-secondary)';
+    if (idx === 0) return '#c084fc';
+    return val !== diffLevels[idx - 1] ? '#22c55e' : '#c084fc';
   });
 
   const lineChartData = useMemo(() => ({
     labels: latestSessionMetrics.map((_, index) => `Round ${index + 1}`),
     datasets: [
       {
-        label: 'Reaction Time (ms)',
-        data: latestSessionMetrics.map(m => m.reaction_time),
-        borderColor: 'var(--color-primary)',
-        backgroundColor: 'rgba(var(--rgb-primary), 0.1)',
-        tension: 0.4,
-        yAxisID: 'y',
+        label: 'Difficulty Level',
+        data: latestSessionMetrics.map(m => m.difficulty_level || 1),
+        borderColor: '#c084fc',
+        backgroundColor: 'rgba(192, 132, 252, 0.15)',
+        pointBackgroundColor: diffPointColors,
+        pointRadius: diffPointRadii,
+        tension: 0.2,
+        yAxisID: 'yDiff',
         fill: true,
+        order: 2
       },
       {
-        label: 'Accuracy (%)',
-        data: latestSessionMetrics.map(m => m.accuracy_rate),
-        borderColor: 'var(--color-secondary)',
+        label: 'Reaction Time (ms)',
+        data: latestSessionMetrics.map(m => m.reaction_time || m.reaction_time_ms || 0),
+        borderColor: '#38bdf8',
         backgroundColor: 'transparent',
-        borderDash: [5, 5],
-        tension: 0.4,
-        yAxisID: 'y1',
+        pointBackgroundColor: '#38bdf8',
+        pointRadius: 3,
+        tension: 0.35,
+        yAxisID: 'yRt',
+        order: 1
       }
     ]
-  }), [latestSessionMetrics]);
+  }), [latestSessionMetrics, diffPointColors, diffPointRadii]);
 
   const lineChartOptions = {
     responsive: true,
@@ -1673,11 +1678,11 @@ export default function App() {
         position: 'right',
         min: 0,
         grid: { drawOnChartArea: false },
-        ticks: { color: 'var(--color-primary)', font: { size: 9 } },
+        ticks: { color: '#38bdf8', font: { size: 9 } },
         title: {
           display: true,
           text: 'RT (ms)',
-          color: 'var(--color-primary)',
+          color: '#38bdf8',
           font: { size: 10, weight: 'bold' }
         }
       }
@@ -1695,8 +1700,8 @@ export default function App() {
       {
         label: 'RT (ms)',
         data: [userRt, cohortRt],
-        backgroundColor: 'rgba(var(--rgb-primary), 0.75)',
-        borderColor: 'var(--color-primary)',
+        backgroundColor: 'rgba(56, 189, 248, 0.75)',
+        borderColor: '#38bdf8',
         borderWidth: 1.5,
         yAxisID: 'yRt',
         borderRadius: 4
@@ -1733,11 +1738,11 @@ export default function App() {
         position: 'left',
         min: 0,
         grid: { color: 'rgba(255, 255, 255, 0.05)' },
-        ticks: { color: 'var(--color-primary)', font: { size: 9 } },
+        ticks: { color: '#38bdf8', font: { size: 9 } },
         title: {
           display: true,
           text: 'RT (ms)',
-          color: 'var(--color-primary)',
+          color: '#38bdf8',
           font: { size: 10, weight: 'bold' }
         }
       },
@@ -1784,10 +1789,11 @@ export default function App() {
       {
         label: 'Avg Reaction Time (ms)',
         data: trendRt,
-        borderColor: 'var(--color-primary)',
-        backgroundColor: 'rgba(var(--rgb-primary),0.07)',
+        borderColor: '#38bdf8',
+        backgroundColor: 'rgba(56, 189, 248, 0.15)',
         borderWidth: 2,
-        pointBackgroundColor: 'var(--color-primary)',
+        pointBackgroundColor: '#38bdf8',
+        pointBorderColor: '#ffffff',
         pointRadius: 4,
         pointHoverRadius: 6,
         tension: 0.35,
@@ -1822,21 +1828,21 @@ export default function App() {
           label: (item) => ` ${item.dataset.label}: ${item.raw} ms`
         },
         backgroundColor: 'rgba(15,23,42,0.95)',
-        borderColor: 'rgba(var(--rgb-primary),0.4)', borderWidth: 1,
-        titleColor: 'var(--color-primary)', bodyColor: '#e2e8f0'
+        borderColor: 'rgba(56, 189, 248, 0.4)', borderWidth: 1,
+        titleColor: '#38bdf8', bodyColor: '#e2e8f0'
       }
     },
     scales: {
       x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8', font: { size: 9 } } },
       y: {
         grid: { color: 'rgba(255,255,255,0.05)' },
-        ticks: { color: 'var(--color-primary)', font: { size: 9 } },
-        title: { display: true, text: 'RT (ms)', color: 'var(--color-primary)', font: { size: 10 } }
+        ticks: { color: '#38bdf8', font: { size: 9 } },
+        title: { display: true, text: 'RT (ms)', color: '#38bdf8', font: { size: 10, weight: 'bold' } }
       }
     }
   };
 
-  // â”€â”€â”€ 2. PER-DOMAIN ACCURACY HORIZONTAL BAR CHART â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── 2. PER-DOMAIN ACCURACY HORIZONTAL BAR CHART ──────────────────────────
   const domainAccMap_d = { Reflexes: [], Memory: [], Logic: [], Strategy: [] };
   sessionHistory.slice(0, 20).forEach(s => {
     const domain = GAME_DOMAIN_MAP[s.game_type];
@@ -1847,12 +1853,22 @@ export default function App() {
     return vals.length ? +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1) : 0;
   });
   const domainAccData = {
-    labels: ['\u26a1 Reflexes', '\ud83e\udde0 Memory', '\ud83d\udd22 Logic', '\ud83e\udded Strategy'],
+    labels: ['⚡ Reflexes', '🧠 Memory', '🔢 Logic', '🧭 Strategy'],
     datasets: [{
       label: 'Avg Accuracy (%)',
       data: domainAccAvg,
-      backgroundColor: ['rgba(var(--rgb-secondary),0.75)', 'rgba(var(--rgb-primary),0.75)', 'rgba(245,158,11,0.75)', 'rgba(16,185,129,0.75)'],
-      borderColor: ['var(--color-secondary)', 'var(--color-primary)', '#f59e0b', '#10b981'],
+      backgroundColor: [
+        'rgba(244, 63, 94, 0.75)',   // Reflexes: Rose Red
+        'rgba(56, 189, 248, 0.75)',  // Memory: Sky Blue
+        'rgba(245, 158, 11, 0.75)',  // Logic: Amber
+        'rgba(16, 185, 129, 0.75)'   // Strategy: Emerald Green
+      ],
+      borderColor: [
+        '#f43f5e',
+        '#38bdf8',
+        '#f59e0b',
+        '#10b981'
+      ],
       borderWidth: 1.5,
       borderRadius: 6,
     }]
@@ -1959,18 +1975,18 @@ export default function App() {
         {
           label: 'Your Profile',
           data: [skills.spatial_visual_memory, skills.logical_mathematical, skills.reflexes_and_focus, skills.executive_strategy],
-          backgroundColor: 'rgba(var(--rgb-secondary),0.2)',
-          borderColor: 'var(--color-secondary)', borderWidth: 2.5,
-          pointBackgroundColor: 'var(--color-primary)', pointBorderColor: '#ffffff',
+          backgroundColor: 'rgba(168, 85, 247, 0.28)',
+          borderColor: '#a855f7', borderWidth: 2.5,
+          pointBackgroundColor: '#38bdf8', pointBorderColor: '#ffffff',
           pointRadius: 5, pointHoverRadius: 7, order: 1
         },
         {
           label: `${cognitiveProfile?.archetype || 'Archetype'} Baseline`,
           data: baselineValues,
-          backgroundColor: 'rgba(255,255,255,0.04)',
-          borderColor: 'rgba(255,255,255,0.22)', borderWidth: 1.5,
+          backgroundColor: 'rgba(255,255,255,0.05)',
+          borderColor: 'rgba(255,255,255,0.35)', borderWidth: 1.5,
           borderDash: [5, 4],
-          pointBackgroundColor: 'rgba(255,255,255,0.25)', pointBorderColor: 'transparent',
+          pointBackgroundColor: 'rgba(255,255,255,0.4)', pointBorderColor: 'transparent',
           pointRadius: 3, order: 2
         }
       ]

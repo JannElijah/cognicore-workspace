@@ -314,7 +314,26 @@ export default function PostTestResults({
       </div>
 
       {/* D5: CTAs */}
-      <div style={{ marginTop: isMobile ? '2rem' : '4rem', display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+      {isMobile && (
+        <div style={{
+          background: 'rgba(56, 189, 248, 0.12)',
+          border: '1px solid rgba(56, 189, 248, 0.35)',
+          borderRadius: '12px',
+          padding: '1rem 1.25rem',
+          marginTop: '2rem',
+          textAlign: 'left',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem'
+        }}>
+          <span style={{ fontSize: '1.4rem', flexShrink: 0 }}>💡</span>
+          <div style={{ fontSize: '0.85rem', color: '#cbd5e1', lineHeight: '1.5' }}>
+            <strong style={{ color: '#38bdf8' }}>Go to Desktop to unlock full potential:</strong> Continue post-intervention neuro-training with physical keyboard/mouse precision on desktop.
+          </div>
+        </div>
+      )}
+
+      <div style={{ marginTop: isMobile ? '1.25rem' : '4rem', display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
         {onReturn && (
           <button 
             onClick={onReturn}
@@ -363,7 +382,7 @@ export default function PostTestResults({
           onMouseOver={(e) => e.target.style.filter = 'brightness(1.15)'}
           onMouseOut={(e) => e.target.style.filter = 'brightness(1.0)'}
         >
-          {isMobile ? '🖥️ Train on PC (Desktop Only)' : 'Train Weakest Domain'}
+          {isMobile ? '🖥️ Go to Desktop to Train Potential' : 'Train Weakest Domain'}
         </button>
       </div>
 
