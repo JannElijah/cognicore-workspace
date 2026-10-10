@@ -41,6 +41,8 @@ import KnowledgeBase from './components/KnowledgeBase';
 import AppNavigation from './components/AppNavigation';
 import HoverTooltip from './components/HoverTooltip';
 import GameRenderer from './components/GameRenderer';
+import useDeviceDetect from './hooks/useDeviceDetect';
+import DesktopRequiredModal from './components/DesktopRequiredModal';
 
 import { audioDda } from './utils/audioSynth';
 import audioEngine from './utils/audioEngine';
@@ -263,6 +265,31 @@ export default function App() {
   const [cohortAnalytics, setCohortAnalytics] = useState(null);
   const [cohortLoading, setCohortLoading] = useState(false);
   const [retrainLoading, setRetrainLoading] = useState(false);
+
+  // Mobile Companion Mode (Steam-style: Desktop for gameplay, mobile for companion stats/tasks/inventory)
+  const { isMobile } = useDeviceDetect();
+  const [showDesktopRequiredModal, setShowDesktopRequiredModal] = useState(false);
+  const [blockedGameTitle, setBlockedGameTitle] = useState('');
+
+  const handleMobileGameAttempt = useCallback((gameTitle = '') => {
+    setBlockedGameTitle(gameTitle);
+    setShowDesktopRequiredModal(true);
+  }, []);
+
+  // Safety guard: Never mount Phaser game canvas on mobile viewport
+  useEffect(() => {
+    if (isMobile && activeGame) {
+      setActiveGame(null);
+      setShowDesktopRequiredModal(true);
+    }
+  }, [isMobile, activeGame]);
+
+  // On mobile, default directly to Companion Dashboard when user logs in
+  useEffect(() => {
+    if (isMobile && currentUser) {
+      setShowDashboard(true);
+    }
+  }, [isMobile, currentUser]);
 
   const handleRetrain = async () => {
     setRetrainLoading(true);
@@ -2072,10 +2099,11 @@ export default function App() {
         setShowShop={setShowShop}
         showSoundTuner={showSoundTuner}
         setShowSoundTuner={setShowSoundTuner}
+        isMobile={isMobile}
       />
 
       {/* Main Container */}
-      <main className="portal-main" style={{ maxWidth: activeGame ? 'none' : '1400px' }} key={activeGame ? 'game' : showDashboard ? 'dash' : portalView === 'admin' ? 'admin' : 'select'}>
+      <main className="portal-main" style={{ maxWidth: (activeGame && !isMobile) ? 'none' : '1400px' }} key={(activeGame && !isMobile) ? 'game' : showDashboard ? 'dash' : portalView === 'admin' ? 'admin' : 'select'}>
         {showSoundTuner && (
           <div className="game-card" style={{
             padding: '1.5rem',
@@ -2233,15 +2261,19 @@ export default function App() {
               preTestScores={preTestScores} 
               weakestDomain={weakestDomain} 
               prescribedGame={prescribedGame}
-              personalizedReport={personalizedReport}
               onStartPrescribedGame={() => {
                 setAssessmentStage('none');
+                if (isMobile) {
+                  handleMobileGameAttempt(prescribedGame);
+                  return;
+                }
                 const domain = DOMAINS_LIST.find(d => d.games.some(g => g.id === prescribedGame));
                 const gameInfo = domain?.games.find(g => g.id === prescribedGame);
                 if (gameInfo && domain) {
                   setPendingGameToLaunch({ ...gameInfo, themeClass: domain.themeClass });
                 }
               }}
+              isMobile={isMobile}
             />
             <div style={{ textAlign: 'center', marginTop: '2rem' }}>
                <button 
@@ -2265,7 +2297,7 @@ export default function App() {
                </button>
             </div>
           </div>
-        ) : activeGame ? (
+        ) : (activeGame && !isMobile) ? (
 
           <div className="game-screen-wrapper">
             <button className="back-btn" onClick={handleBackToLobby}>
@@ -2413,6 +2445,8 @@ export default function App() {
             weakestDomain={weakestDomain}
             lastGameStats={lastGameStats}
             cognitiveProfile={cognitiveProfile}
+            isMobile={isMobile}
+            onRequireDesktop={handleMobileGameAttempt}
           />
         ) : portalView === 'knowledge' ? (
           <KnowledgeBase />
@@ -2445,8 +2479,16 @@ export default function App() {
                 </h2>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
                   {DOMAINS_LIST.find(d => d.id === weakestDomain).games.slice(0, 3).map((game) => (
-                    <HoverTooltip key={game.id} text="This game targets your weakest domain" content="This game targets your weakest domain" delay={200}>
-                    <div className="game-card glass-panel" style={{ cursor: 'pointer', position: 'relative', overflow: 'hidden', padding: '1rem' }} onClick={() => { audioEngine.playClick(); launchGame(game.id); }} onMouseEnter={() => audioEngine.playHover()}>
+                    <HoverTooltip key={game.id} text={isMobile ? "Play on PC (Desktop Only)" : "This game targets your weakest domain"} content={isMobile ? "Play on PC (Desktop Only)" : "This game targets your weakest domain"} delay={200}>
+                    <div className="game-card glass-panel" style={{ cursor: 'pointer', position: 'relative', overflow: 'hidden', padding: '1rem' }} onClick={() => { 
+                      audioEngine.playClick(); 
+                      if (isMobile) {
+                        handleMobileGameAttempt(game.title);
+                        return;
+                      }
+                      const dom = DOMAINS_LIST.find(d => d.id === weakestDomain);
+                      setPendingGameToLaunch({ id: game.id, title: game.title, themeClass: dom?.themeClass || 'reflex', icon: game.icon });
+                    }} onMouseEnter={() => audioEngine.playHover()}>
                       <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '4px', background: 'linear-gradient(90deg, var(--color-secondary), var(--color-primary))' }}></div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
                         <div style={{ fontSize: '2rem', width: '50px', height: '50px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -2795,15 +2837,18 @@ export default function App() {
                     {dom.games.map(game => {
                       const isPrescribed = prescribedGame === game.id;
                       const theme = DOMAIN_THEMES[dom.themeClass] || DOMAIN_THEMES.reflex;
-                      
                       return (
-                        <HoverTooltip key={game.id} text={isPrescribed ? "Recommended to improve your weakest domain" : "Free play mode - Train this specific cognitive skill"} content={isPrescribed ? "Recommended to improve your weakest domain" : "Free play mode - Train this specific cognitive skill"} delay={200}>
+                        <HoverTooltip key={game.id} text={isMobile ? "Cognitive training is Desktop Only — open on PC to train" : isPrescribed ? "Recommended to improve your weakest domain" : "Free play mode - Train this specific cognitive skill"} content={isMobile ? "Cognitive training is Desktop Only — open on PC to train" : isPrescribed ? "Recommended to improve your weakest domain" : "Free play mode - Train this specific cognitive skill"} delay={200}>
                         <div 
                           className={`game-card theme-${dom.themeClass} active`}
                           onMouseEnter={() => !game.inProgress && audioEngine.playHover()}
                           onClick={() => { 
                             if (game.inProgress) return;
                             audioEngine.playClick();
+                            if (isMobile) {
+                              handleMobileGameAttempt(game.title);
+                              return;
+                            }
                             setPendingGameToLaunch({ id: game.id, title: game.title, themeClass: dom.themeClass, icon: game.icon }); 
                           }}
                           style={{
@@ -2865,6 +2910,10 @@ export default function App() {
                               if (game.inProgress) return;
                               e.stopPropagation(); 
                               audioEngine.playClick();
+                              if (isMobile) {
+                                handleMobileGameAttempt(game.title);
+                                return;
+                              }
                               setPendingGameToLaunch({ id: game.id, title: game.title, themeClass: dom.themeClass, icon: game.icon }); 
                             }}
                             disabled={game.inProgress}
@@ -2880,10 +2929,25 @@ export default function App() {
                               fontWeight: 'bold',
                               fontSize: '0.85rem',
                               boxShadow: game.inProgress ? 'none' : isPrescribed ? `0 4px 12px ${theme.btnGlow}` : 'none',
-                              transition: 'all 0.2s'
+                              transition: 'all 0.2s',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '0.4rem'
                             }}
                           >
-                            {game.inProgress ? 'In Progress ' : isPrescribed ? 'Launch Active Game' : 'Launch Game'}
+                            {game.inProgress ? (
+                              'In Progress '
+                            ) : isMobile ? (
+                              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem' }}>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
+                                Play on PC (Desktop Only)
+                              </span>
+                            ) : isPrescribed ? (
+                              'Launch Active Game'
+                            ) : (
+                              'Launch Game'
+                            )}
                           </button>
                         </div>
                         </HoverTooltip>
@@ -3093,6 +3157,11 @@ export default function App() {
                   
                   <button
                     onClick={() => {
+                      if (isMobile) {
+                        handleMobileGameAttempt(pendingGameToLaunch.title);
+                        setPendingGameToLaunch(null);
+                        return;
+                      }
                       setActiveGame(pendingGameToLaunch.id);
                       setPendingGameToLaunch(null);
                     }}
@@ -3111,8 +3180,17 @@ export default function App() {
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                      <span>Start Training Session</span>
-                      <SvgLauncherIcon name="start" />
+                      {isMobile ? (
+                        <>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
+                          <span>Desktop Platform Required</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Start Training Session</span>
+                          <SvgLauncherIcon name="start" />
+                        </>
+                      )}
                     </div>
                   </button>
                 </div>
@@ -3137,6 +3215,13 @@ export default function App() {
       <OfflineCacheWarningBanner isVisible={offlineCacheFullWarning} onClose={() => setOfflineCacheFullWarning(false)} />
 
       {activeAchievements.length > 0 && <AchievementToast achievementIds={activeAchievements} onDone={() => setActiveAchievements([])} />}
+
+      {/* Mobile Desktop-Required Redirection Modal */}
+      <DesktopRequiredModal
+        isOpen={showDesktopRequiredModal}
+        onClose={() => setShowDesktopRequiredModal(false)}
+        gameTitle={blockedGameTitle}
+      />
 
       {/* PWD Accessibility Menu overlaid globally */}
       <AccessibilityMenu />

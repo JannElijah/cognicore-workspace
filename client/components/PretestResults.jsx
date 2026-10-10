@@ -33,7 +33,8 @@ const PretestResults = ({
   weakestDomain, 
   prescribedGame, 
   personalizedReport,
-  onStartPrescribedGame 
+  onStartPrescribedGame,
+  isMobile
 }) => {
   if (!preTestScores) return null;
 
@@ -309,7 +310,7 @@ const PretestResults = ({
             e.currentTarget.style.boxShadow = `0 8px 25px ${weakestTheme.color}60`;
           }}
         >
-          Start {friendlyGameName} Training
+          {isMobile ? `🖥️ Play ${friendlyGameName} on PC (Desktop Only)` : `Start ${friendlyGameName} Training`}
         </button>
       </div>
     </div>

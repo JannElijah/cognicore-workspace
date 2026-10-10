@@ -6,7 +6,8 @@ const AppNavigation = memo(function AppNavigation({
   showDashboard, setShowDashboard, coins, totalXp, level, inventory,
   setActiveGame, currentLevel, dailyRewardData, xpPercent,
   globalMuted, setGlobalMuted, audioDda,
-  setShowShop, showSoundTuner, setShowSoundTuner, setShowLeaderboard
+  setShowShop, showSoundTuner, setShowSoundTuner, setShowLeaderboard,
+  isMobile
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [portalDropdownOpen, setPortalDropdownOpen] = useState(false);
@@ -382,8 +383,8 @@ const AppNavigation = memo(function AppNavigation({
             </svg>
           </button>
 
-          <div className="portal-status" style={{ marginLeft: '1rem' }}>
-            <span className="status-dot"></span> Secure Telemetry Hub
+          <div className="portal-status" style={{ marginLeft: '1rem', border: isMobile ? '1px solid rgba(56, 189, 248, 0.3)' : undefined, background: isMobile ? 'rgba(56, 189, 248, 0.1)' : undefined }}>
+            <span className="status-dot" style={{ background: isMobile ? '#38bdf8' : undefined }}></span> {isMobile ? 'Mobile Companion' : 'Secure Telemetry Hub'}
           </div>
         </div>
 
@@ -409,6 +410,15 @@ const AppNavigation = memo(function AppNavigation({
 
       {/* Mobile Slide-Out Drawer */}
       <nav className={`mobile-nav-drawer${drawerOpen ? ' open' : ''}`} aria-label="Mobile navigation">
+        {/* Mobile Companion Mode Header Badge */}
+        <div style={{ padding: '0.65rem 0.85rem', background: 'rgba(56, 189, 248, 0.08)', borderRadius: '10px', border: '1px solid rgba(56, 189, 248, 0.25)', marginBottom: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#38bdf8', fontWeight: 'bold', fontSize: '0.8rem' }}>
+            <span>📱 Companion Portal</span>
+          </div>
+          <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '0.2rem', lineHeight: '1.4' }}>
+            View stats, quests & inventory on mobile. Switch to PC to train.
+          </div>
+        </div>
         {/* Profile card at top of drawer */}
         {currentUser && (
           <>

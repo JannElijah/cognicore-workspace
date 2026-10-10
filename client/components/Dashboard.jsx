@@ -50,7 +50,8 @@ export default function Dashboard({
   perGameScoreData, perGameScoreOptions,
   scatterData, scatterOptions,
   skills, domainDeltas, rec, personalizedReport, preTestScores, weakestDomain,
-  lastGameStats, cognitiveProfile
+  lastGameStats, cognitiveProfile,
+  isMobile, onRequireDesktop
 }) {
   const { inventory } = useCogniStore();
   const activeVisualizer = inventory?.find(i => i.item_type === 'visualizer' && i.is_equipped)?.item_id || 'default-visualizer';
@@ -137,7 +138,14 @@ export default function Dashboard({
             weakestDomain={weakestDomain}
             prescribedGame={prescribedGame}
             personalizedReport={personalizedReport}
-            onStartPrescribedGame={() => setActiveGame(prescribedGame)}
+            onStartPrescribedGame={() => {
+              if (isMobile) {
+                if (onRequireDesktop) onRequireDesktop(prescribedGame);
+                return;
+              }
+              setActiveGame(prescribedGame);
+            }}
+            isMobile={isMobile}
           />
         </div>
       )}
@@ -658,11 +666,18 @@ export default function Dashboard({
 
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem', marginTop: '1rem' }}>
                   <div style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign: "middle", marginRight: "6px"}}><path d="M9 21h6"/><path d="M10 21v-2a4 4 0 01-4-4 7 7 0 1112 0 4 4 0 01-4 4v2"/></svg> Personalized Adviser Recommendation</div>
-                  <div style={{ fontWeight: '700', color: '#c084fc', marginTop: '0.25rem', fontSize: '0.95rem' }}>
-                    <button onClick={() => setActiveGame && setActiveGame(prescribedGame)} style={{ width: '100%', padding: '0.75rem', marginTop: '0.5rem', background: 'linear-gradient(90deg, var(--color-secondary), #ec4899)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
-                      ▶ Start Recommended Training: {rec.game}
+                    <button 
+                      onClick={() => {
+                        if (isMobile) {
+                          if (onRequireDesktop) onRequireDesktop(rec?.game || prescribedGame);
+                          return;
+                        }
+                        setActiveGame && setActiveGame(prescribedGame);
+                      }} 
+                      style={{ width: '100%', padding: '0.75rem', marginTop: '0.5rem', background: 'linear-gradient(90deg, var(--color-secondary), #ec4899)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+                    >
+                      {isMobile ? `🖥️ Play ${rec?.game || prescribedGame} on PC (Desktop Only)` : `▶ Start Recommended Training: ${rec.game}`}
                     </button>
-                  </div>
                   <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>
                     {rec.reason}. Launch module to {rec.action}.
                   </p>
