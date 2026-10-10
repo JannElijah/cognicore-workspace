@@ -2457,13 +2457,23 @@ export default function App() {
           <div className="lobby-content">
             
             {assessmentStage === 'completed' && (
-               <PostTestResults 
-                  preScores={preTestScores} 
-                  postScores={postTestScores} 
-                  aiFeedback={aiFeedback}
-                  currentUser={currentUser} 
-                  onReturn={() => setAssessmentStage('none')}
-               />
+              <PostTestResults 
+                preScores={preTestScores} 
+                postScores={postTestScores} 
+                aiFeedback={aiFeedback}
+                currentUser={currentUser} 
+                onReturn={() => setAssessmentStage('none')}
+                isMobile={isMobile}
+                onRequireDesktop={() => handleMobileGameAttempt('Post-Assessment Training')}
+                onStartPrescribedGame={() => {
+                  const targetGame = prescribedGame || (weakestDomain && DOMAINS_LIST.find(d => d.id === weakestDomain)?.games[0]?.id);
+                  if (isMobile) {
+                    handleMobileGameAttempt(targetGame || 'Recommended Training');
+                    return;
+                  }
+                  if (targetGame) setActiveGame(targetGame);
+                }}
+              />
             )}
             
             <div className="intro-card">

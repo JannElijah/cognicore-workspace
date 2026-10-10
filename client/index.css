@@ -761,12 +761,48 @@ svg circle:hover {
     overflow-wrap: anywhere;
   }
 
-  /* Override fixed widths on inline-style modals */
+  /* Override fixed widths on inline-style modals and containers */
+  div[style*="max-width: 800px"],
+  div[style*="max-width: 900px"],
+  div[style*="max-width: 1000px"],
+  div[style*="max-width: 1200px"],
   div[style*="maxWidth: '800px'"],
   div[style*="maxWidth: '900px'"],
-  div[style*="maxWidth: '1000px'"] {
+  div[style*="maxWidth: '1000px'"],
+  div[style*="maxWidth: '1200px'"] {
     width: 100% !important;
     max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .post-test-container {
+    padding: 1.25rem 1rem !important;
+    margin: 1rem auto 2rem auto !important;
+    border-radius: 16px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .post-test-title {
+    font-size: 1.55rem !important;
+    line-height: 1.25 !important;
+    word-break: normal !important;
+    overflow-wrap: break-word !important;
+  }
+
+  .post-test-stat-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .pretest-results-container {
+    padding: 1.25rem 1rem !important;
+    border-radius: 16px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   input[type="text"],

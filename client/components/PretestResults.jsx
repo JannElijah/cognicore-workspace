@@ -96,18 +96,23 @@ const PretestResults = ({
   const dynamicPrediction = `Based on your pre-test scores (ranging from ${Math.round(minScore)} to ${Math.round(maxScore)}), our model sees the most room for rapid improvement in ${weakestTheme.name}. By focusing here, you can quickly close the ${Math.round(scoreGap)}-point gap in your cognitive profile.`;
 
   return (
-    <div style={{
-      background: 'rgba(30, 41, 59, 0.8)',
-      backdropFilter: 'blur(12px)',
-      borderRadius: '24px',
-      padding: '2.5rem',
-      border: '1px solid rgba(51, 65, 85, 0.5)',
-      maxWidth: '1200px',
-      margin: '0 auto',
-      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
-      position: 'relative',
-      overflow: 'hidden'
-    }}>
+    <div 
+      className="pretest-results-container"
+      style={{
+        background: 'rgba(30, 41, 59, 0.8)',
+        backdropFilter: 'blur(12px)',
+        borderRadius: isMobile ? '16px' : '24px',
+        padding: isMobile ? '1.25rem 1rem' : '2.5rem',
+        border: '1px solid rgba(51, 65, 85, 0.5)',
+        maxWidth: '1200px',
+        width: '100%',
+        boxSizing: 'border-box',
+        margin: '0 auto',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}
+    >
       {/* Decorative Glow Effect */}
       <div 
         style={{
@@ -125,27 +130,30 @@ const PretestResults = ({
         }}
       />
 
-      <div style={{ textAlign: 'center', marginBottom: '2.5rem', position: 'relative', zIndex: 1 }}>
+      <div style={{ textAlign: 'center', marginBottom: isMobile ? '1.5rem' : '2.5rem', position: 'relative', zIndex: 1 }}>
         <h2 style={{
-          fontSize: '2.25rem',
+          fontSize: isMobile ? '1.6rem' : '2.25rem',
           fontWeight: '800',
           background: 'linear-gradient(135deg, #e0f2fe 0%, #7dd3fc 100%)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
-          marginBottom: '1rem',
-          letterSpacing: '-0.02em'
+          marginBottom: '0.75rem',
+          letterSpacing: '-0.02em',
+          wordBreak: 'normal',
+          overflowWrap: 'break-word',
+          lineHeight: '1.25'
         }}>
           Your Unique Cognitive Profile
         </h2>
-        <p style={{ color: '#94a3b8', fontSize: '1.1rem', maxWidth: '600px', margin: '0 auto', lineHeight: '1.6' }}>
+        <p style={{ color: '#94a3b8', fontSize: isMobile ? '0.9rem' : '1.1rem', maxWidth: '600px', margin: '0 auto', lineHeight: '1.6' }}>
           We've analyzed your initial gameplay to understand how your mind works. Here is your personalized assessment and training plan.
         </p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem', marginBottom: '3rem', position: 'relative', zIndex: 1, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(320px, 1fr))', gap: isMobile ? '1.25rem' : '2rem', marginBottom: isMobile ? '1.75rem' : '3rem', position: 'relative', zIndex: 1, alignItems: 'start' }}>
         
         {/* Personalized AI Report (Left side) */}
-        <div style={{ background: 'rgba(15, 23, 42, 0.6)', borderRadius: '16px', padding: '2rem', border: '1px solid rgba(51, 65, 85, 0.4)' }}>
+        <div style={{ background: 'rgba(15, 23, 42, 0.6)', borderRadius: '16px', padding: isMobile ? '1.25rem 1rem' : '2rem', border: '1px solid rgba(51, 65, 85, 0.4)', boxSizing: 'border-box' }}>
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
             <span style={{ fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#94a3b8', fontWeight: '600' }}>Your Archetype</span>
             <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#f8fafc', marginTop: '0.5rem' }}>
@@ -204,7 +212,7 @@ const PretestResults = ({
         </div>
 
         {/* Baseline Metrics (Right side) */}
-        <div style={{ background: 'rgba(15, 23, 42, 0.6)', borderRadius: '16px', padding: '2rem', border: '1px solid rgba(51, 65, 85, 0.4)', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ background: 'rgba(15, 23, 42, 0.6)', borderRadius: '16px', padding: isMobile ? '1.25rem 1rem' : '2rem', border: '1px solid rgba(51, 65, 85, 0.4)', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
           <h3 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#f8fafc', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <SvgIcon name='📊' color='#e2e8f0' /> Your Skill Breakdown
           </h3>
@@ -274,16 +282,17 @@ const PretestResults = ({
       <div style={{ 
         background: `linear-gradient(135deg, ${weakestTheme.color}15, rgba(15, 23, 42, 0.8))`, 
         borderRadius: '16px', 
-        padding: '2.5rem', 
+        padding: isMobile ? '1.25rem 1rem' : '2.5rem', 
         textAlign: 'center', 
         border: `1px solid ${weakestTheme.color}40`, 
         position: 'relative', 
-        zIndex: 1 
+        zIndex: 1,
+        boxSizing: 'border-box'
       }}>
         <h3 style={{ fontSize: '1.25rem', color: '#e2e8f0', marginBottom: '1rem', fontWeight: '600' }}>Your Personalized Training Plan</h3>
-        <p style={{ fontSize: '1.05rem', color: '#cbd5e1', marginBottom: '2rem', maxWidth: '48rem', margin: '0 auto 2rem auto', lineHeight: '1.6' }}>
+        <p style={{ fontSize: isMobile ? '0.95rem' : '1.05rem', color: '#cbd5e1', marginBottom: '1.5rem', maxWidth: '48rem', margin: '0 auto 1.5rem auto', lineHeight: '1.6' }}>
           Based on your profile, the best way to level up your brain is to practice <strong>{weakestTheme.name}</strong>. 
-          We recommend starting with the <strong style={{ color: weakestTheme.color, fontSize: '1.2rem' }}>{friendlyGameName}</strong> exercise to build those neural pathways!
+          We recommend starting with the <strong style={{ color: weakestTheme.color, fontSize: isMobile ? '1.1rem' : '1.2rem' }}>{friendlyGameName}</strong> exercise to build those neural pathways!
         </p>
         <button
           onClick={onStartPrescribedGame}
@@ -291,15 +300,16 @@ const PretestResults = ({
             backgroundColor: weakestTheme.color,
             color: '#0f172a',
             border: 'none',
-            fontSize: '1.1rem',
+            fontSize: isMobile ? '0.95rem' : '1.1rem',
             fontWeight: 'bold',
-            padding: '1.25rem 3rem',
+            padding: isMobile ? '0.9rem 1.5rem' : '1.25rem 3rem',
             borderRadius: '9999px',
             cursor: 'pointer',
             transition: 'all 0.2s',
             boxShadow: `0 8px 25px ${weakestTheme.color}60`,
             textTransform: 'uppercase',
-            letterSpacing: '0.05em'
+            letterSpacing: '0.05em',
+            width: isMobile ? '100%' : 'auto'
           }}
           onMouseOver={(e) => {
             e.currentTarget.style.transform = 'translateY(-3px) scale(1.02)';

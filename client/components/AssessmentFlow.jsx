@@ -178,13 +178,13 @@ export default function AssessmentFlow({
 
   if (!hasStarted) {
     return (
-      <div style={{ maxWidth: '650px', margin: '4rem auto', padding: '3rem', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(var(--rgb-primary), 0.4)', borderRadius: '16px', boxShadow: '0 12px 40px rgba(0,0,0,0.6)', textAlign: 'center', animation: 'fadeIn 0.5s ease-out' }}>
+      <div className="assessment-flow-card" style={{ maxWidth: '650px', margin: '4rem auto', padding: '3rem', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(var(--rgb-primary), 0.4)', borderRadius: '16px', boxShadow: '0 12px 40px rgba(0,0,0,0.6)', textAlign: 'center', animation: 'fadeIn 0.5s ease-out', boxSizing: 'border-box' }}>
         <h1 style={{ color: '#fff', fontSize: '2rem', marginBottom: '1rem' }}>Cognitive Evaluation</h1>
         <p style={{ color: '#cbd5e1', fontSize: '1.1rem', lineHeight: '1.6', marginBottom: '2rem' }}>
           This assessment measures your baseline cognitive capacity. Select which domains you wish to test.
         </p>
         
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem', textAlign: 'left' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '1rem', marginBottom: '2rem', textAlign: 'left' }}>
           {[
             { id: 'all', title: 'Comprehensive (All Domains)', desc: 'A full baseline test covering all 4 cognitive areas. Recommended for first-time users.', color: 'var(--color-primary)' },
             { id: 'reflexes_and_focus', title: 'Reflexes & Focus', desc: 'Measures your reaction time and ability to ignore rapid visual distractions.', color: 'var(--color-secondary)' },
