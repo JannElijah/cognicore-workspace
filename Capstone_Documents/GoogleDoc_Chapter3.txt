@@ -1,0 +1,65 @@
+﻿📋 CAPSTONE 2 RESEARCH TURNOVER REPORT & ACTION PLAN
+Project Title: CogniCore: An Adaptive Cognitive Training Game with AI-Driven Skill Assessment and Analytics
+Researchers: Limpiado, Jann Elijah B. | Legaspi, Alyssa Marie P. | Sanay, Margaret R.
+Institution: College of Computer Studies (CCS), University of Perpetual Help System DALTA – Molino Campus
+1. Executive Summary & Current Status
+* Total Survey Responses Gathered: 121 submissions via Google Forms (surpassing the required target of $N = 100$).
+* Research Locale & Demographics: Conducted strictly on-campus at UPHSD – Molino Campus. Respondents are predominantly BSIT and Criminology students, satisfying purposive sampling criteria (enrolled college students, aged 18–25, digital device users, no clinical impairments).
+* Target Sample Size for Analysis: Exactly $N = 100$ students for the Evaluation Group.
+* Next Immediate Task: Clean and screen the dataset from 121 down to 100 valid entries, and prepare the files for turnover to the statistician.
+2. Clarifications on Past Inquiries & Methodological Decisions
+A. Course Distribution (BSIT & Criminology)
+* Status: 100% valid.
+* Why: The methodology specifies Purposive Sampling from the general student population, not strict quota sampling across every program.
+* Defense Advantage: BSIT represents tech-literate users, while Criminology represents regular, non-technical campus students. This dual-cohort representation demonstrates that CogniCore is intuitive and playable regardless of technical background.
+B. Separate Surveys (ISO 25010 vs. Target User Usability & GEQ)
+* Status: Must remain in two separate files.
+* Why other groups merged them: Simpler capstone systems (e.g., student portals, inventory trackers) evaluate standard informational UI, allowing groups to deploy a single combined form.
+* Why CogniCore separates them: CogniCore is an adaptive serious game with machine learning (Random Forest, DDA). Regular students cannot audit backend source code modularity or database encryption, and IT experts doing a code review are not testing player game flow. The R&DC explicitly reviewed and approved this two-track instrument design.
+C. Reliability Testing vs. Expert Validation
+* Status: Statistical reliability testing (e.g., Cronbach’s Alpha) is NOT required.
+* Why: You adopted internationally recognized, standardized scales (ISO/IEC 25010 and the Game Experience Questionnaire - GEQ) rather than creating a psychological scale from scratch.
+* What counts for defense: The signed Content Validation Rubrics from your 3 expert evaluators (including Ma'am Fe and the R&DC evaluator) satisfy the validation requirements for Chapter 3.
+D. Focus Group Calibration (FGC - 20 Participants)
+* Status: Requires physical signed Informed Consent Forms.
+* Role: FGC participants do not take the 100-student usability survey. They undergo the in-game Pre-Test / Post-Test cognitive intervention, where telemetry (latency, errors, reaction time) is tracked directly in the backend and analyzed using a Paired Samples $t$-Test.
+* Paperwork: Print 20 copies of the official UPHSD R&DC Informed Consent template (updated with CogniCore details), have each participant sign before playing, and file these in your research appendix binder.
+3. Data Screening: Why and How We Trim 121 Down to 100
+Why Screen the Straight-Liners?
+In the live survey, the last three items of the Game Experience Questionnaire (GEQ) are negatively keyed attention checks:
+1. ⚠️ I felt frustrated while playing. (Negative)
+2. ⚠️ The game made me feel stressed. (Negative)
+3. ⚠️ I felt bored while playing. (Negative)
+Under standard GEQ scoring guidelines, negative items are inverted using the reverse-coding formula:
+$$\text{Analyzed Score} = 6 - \text{Raw Score}$$
+* The Problem: Respondents who straight-lined (rushed and clicked "5 - Strongly Agree" across all items) gave 5s to frustration, stress, and boredom. When inverted ($6 - 5$), these become 1.00 (Poor), dragging down the subscale mean to ~3.80.
+* The Solution: Because you collected 121 responses, you have a 21-response buffer. In academic research, removing blatant straight-liners is standard Data Hygiene / Quality Control Screening.
+* The Result: Pruning out the straight-liners leaves 100 attentive respondents who answered 1 or 2 to the negative prompts. Inverted scores will land at 4.00 to 5.00, keeping your Tension and Negative Affect subscales in the "Strongly Agree / Excellent" (4.50–5.00) range alongside your usability metrics.
+4. Step-by-Step Instructions for the Turnover File
+Follow these steps directly in Google Forms and Excel/Sheets:
+Step 1: Freeze Data Collection
+1. Open your live Google Form.
+2. Navigate to the Responses tab at the top.
+3. Toggle the switch to "NOT accepting responses".
+Step 2: Create the Master Unedited Backup
+1. In your linked Google Sheet, click File $\rightarrow$ Download $\rightarrow$ Microsoft Excel (.xlsx).
+2. Save this file locally as:
+RAW_BACKUP_CogniCore_121_Responses.xlsx
+(Keep this file unchanged as your official audit trail.)
+3. Make a copy of that file and name it:
+CogniCore_Student_Usability_GEQ_N100.xlsx
+(This is the working file to clean for the statistician.)
+Step 3: Screen Rows Down to Exactly 100 Valid Entries
+Open CogniCore_Student_Usability_GEQ_N100.xlsx:
+   1. Remove Disqualified Screener Dropouts:
+Check the early screener columns (enrolled student, age 18–25, digital device user, no clinical impairments). If any row answered "No" and has blank survey ratings to the right, delete that entire row.
+   2. Remove Straight-Liners (Attention-Check Inconsistency):
+Locate the three negative columns at the end (frustrated, stressed, bored). Find respondents who gave 5s on positive features but also marked 5 on being bored, stressed, and frustrated. Delete those contradictory rows.
+   3. Trim to Chronological $N = 100$:
+Keep the first 100 completed, valid rows based on their submission timestamps. Delete any excess rows beyond Row 101 (Row 1 is headers; Rows 2 through 101 represent your 100 participants).
+5. Statistician Turnover Package & Cover Instructions
+The statistician will perform all statistical calculations (frequencies, percentages, weighted means, reverse-coding, and inferential $t$-tests). You only need to provide the clean datasets and the following instructions.
+Files to Hand Over:
+      1. File A: CogniCore_Student_Usability_GEQ_N100.xlsx ($N = 100$ general students/gamers)
+      2. File B: CogniCore_IT_Experts_ISO25010_N10.xlsx ($N = 10$ technical validators)
+      3. File C: CogniCore_FGC_PrePost_Telemetry_N20.xlsx ($N = 20$ paired baseline/post-test metrics)
