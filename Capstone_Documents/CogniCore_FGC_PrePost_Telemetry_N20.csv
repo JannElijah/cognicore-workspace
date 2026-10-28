@@ -1,21 +1,21 @@
-FG_ID,RESP_ID,First_Name,Program,Sex,Age,Cognitive_Archetype,Total_XP,Player_Level,Coins,Pre_Spatial,Post_Spatial,Delta_Spatial,Pre_Logical,Post_Logical,Delta_Logical,Pre_Attention,Post_Attention,Delta_Attention,Pre_Executive,Post_Executive,Delta_Executive,Pre_Composite_Mean,Post_Composite_Mean,Overall_Gain_Delta,Improvement_Pct
-FG-01,RESP-003,Vince,BS Information Technology,Male,21,Fast Learner,3150,7,5400,40.2,60.3,20.1,55.0,78.1,23.1,56.6,75.5,18.9,48.6,70.1,21.5,50.1,71.0,20.9,41.7
-FG-02,RESP-009,Brian,BS Information Technology,Male,21,Fast Learner,2850,6,4900,40.1,64.2,24.1,55.0,77.1,22.1,57.2,76.1,18.9,55.6,78.6,23.0,51.98,74.0,22.02,42.4
-FG-03,RESP-011,Andrea,BS Information Technology,Female,23,Steady Improver,2400,5,4100,51.0,68.2,17.2,44.8,60.0,15.2,58.0,69.0,11.0,48.6,62.2,13.6,50.6,64.85,14.25,28.2
-FG-04,RESP-012,Christian,BS Information Technology,Male,22,Steady Improver,2250,5,3850,42.0,54.9,12.9,48.5,61.4,12.9,61.8,77.3,15.5,52.9,64.5,11.6,51.3,64.53,13.23,25.8
-FG-05,RESP-014,Karel,BS Information Technology,Male,21,Steady Improver,2100,5,3600,54.7,71.0,16.3,59.6,78.2,18.6,54.1,66.4,12.3,42.0,57.2,15.2,52.6,68.2,15.6,29.7
-FG-06,RESP-018,James,BS Information Technology,Male,21,Fast Learner,2700,6,4600,57.4,81.1,23.7,58.7,79.9,21.2,57.8,81.2,23.4,51.0,72.0,21.0,56.22,78.55,22.33,39.7
-FG-07,RESP-021,Noreen,BS Information Technology,Female,21,Steady Improver,2550,6,4300,48.1,63.5,15.4,46.5,62.2,15.7,46.1,57.2,11.1,40.3,57.0,16.7,45.25,59.98,14.73,32.6
-FG-08,RESP-034,Benedict,BS Information Technology,Male,21,Fast Learner,2950,6,5100,44.1,64.0,19.9,58.3,81.7,23.4,59.6,79.3,19.7,41.1,60.2,19.1,50.77,71.3,20.53,40.4
-FG-09,RESP-035,Harvee,BS Computer Science,Male,24,Steady Improver,2150,5,3700,44.4,60.7,16.3,50.5,64.3,13.8,51.9,66.2,14.3,41.5,59.4,17.9,47.08,62.65,15.57,33.1
-FG-10,RESP-039,Hanz,BS Computer Science,Male,22,Fast Learner,3300,7,5600,52.1,72.8,20.7,59.7,84.6,24.9,46.7,66.7,20.0,46.4,65.9,19.5,51.23,72.5,21.27,41.5
-FG-11,RESP-040,Ken,BS Computer Science,Male,23,Steady Improver,1850,4,3200,42.5,54.1,11.6,45.3,62.8,17.5,52.9,70.7,17.8,54.0,65.8,11.8,48.67,63.35,14.68,30.2
-FG-12,RESP-043,Kaliel,BS Computer Science,Male,20,Fast Learner,2800,6,4750,57.4,79.3,21.9,58.7,78.4,19.7,59.4,80.6,21.2,42.7,61.2,18.5,54.55,74.88,20.33,37.3
-FG-13,RESP-045,Dustin,BS Computer Science,Male,19,Steady Improver,2350,5,4000,40.0,53.3,13.3,49.0,65.6,16.6,60.8,77.6,16.8,52.6,69.9,17.3,50.6,66.6,16.0,31.6
-FG-14,RESP-048,Cyrus,BS Computer Science,Male,20,High Fatigue,1450,3,2500,42.8,51.6,8.8,47.3,57.5,10.2,61.5,66.9,5.4,49.3,58.4,9.1,50.22,58.6,8.38,16.7
-FG-15,RESP-022,Joy,BS Criminology,Female,20,Fast Learner,2600,6,4450,56.5,81.3,24.8,51.6,70.1,18.5,46.0,64.5,18.5,48.1,73.0,24.9,50.55,72.22,21.67,42.9
-FG-16,RESP-023,Ryan,BS Criminology,Male,20,Steady Improver,1700,4,2950,42.2,58.2,16.0,58.0,72.4,14.4,49.2,64.9,15.7,49.5,64.7,15.2,49.73,65.05,15.32,30.8
-FG-17,RESP-025,Jethro,BS Criminology,Male,22,Steady Improver,2050,5,3500,43.7,60.1,16.4,54.9,68.3,13.4,49.1,62.6,13.5,46.3,63.3,17.0,48.5,63.58,15.08,31.1
-FG-18,RESP-031,Macey,BS Criminology,Female,20,Steady Improver,1900,4,3250,40.2,55.5,15.3,53.2,68.2,15.0,54.6,66.7,12.1,41.6,55.4,13.8,47.4,61.45,14.05,29.6
-FG-19,RESP-089,Faith,BS Criminology,Female,20,Steady Improver,1750,4,3100,55.8,72.4,16.6,48.7,64.6,15.9,47.7,66.6,18.9,53.3,69.5,16.2,51.38,68.28,16.9,32.9
-FG-20,RESP-098,Demi,BS Criminology,Female,19,Steady Improver,1600,4,2800,52.0,70.0,18.0,52.0,65.1,13.1,60.8,78.9,18.1,41.7,58.6,16.9,51.62,68.15,16.53,32.0
+Participant_Code,Age,Sex,Course_Year,PreTest_Hesitation_ms,PostTest_Hesitation_ms,Hesitation_Diff,PreTest_Error_Count,PostTest_Error_Count,Error_Diff,PreTest_Accuracy_Pct,PostTest_Accuracy_Pct,Accuracy_Gain_Pct
+FG-01,21,Male,BSIT - 4th Year,1420,760,660,6,1,5,0.7,0.95,0.25
+FG-02,21,Male,BSIT - 4th Year,1490,910,580,5,2,3,0.75,0.9,0.15
+FG-03,23,Female,BSIT - 4th Year,1820,1180,640,8,3,5,0.6,0.85,0.25
+FG-04,22,Male,BSIT - 4th Year,1640,1150,490,7,2,5,0.65,0.9,0.25
+FG-05,21,Male,BSIT - 4th Year,1780,1260,520,8,4,4,0.6,0.8,0.2
+FG-06,21,Male,BSIT - 4th Year,1450,820,630,6,1,5,0.7,0.95,0.25
+FG-07,21,Female,BSIT - 4th Year,1690,1040,650,7,2,5,0.65,0.9,0.25
+FG-08,21,Male,BSIT - 4th Year,1340,690,650,5,1,4,0.75,0.95,0.2
+FG-09,24,Male,BSCS - 4th Year,1750,1210,540,7,3,4,0.65,0.85,0.2
+FG-10,22,Male,BSCS - 4th Year,1310,650,660,5,1,4,0.75,0.95,0.2
+FG-11,23,Male,BSCS - 3rd Year,1830,1340,490,8,3,5,0.6,0.85,0.25
+FG-12,20,Male,BSCS - 2nd Year,1420,790,630,5,1,4,0.75,0.95,0.2
+FG-13,19,Male,BSCS - 2nd Year,1660,1120,540,7,2,5,0.65,0.9,0.25
+FG-14,20,Male,BSCS - 2nd Year,2080,1560,520,9,5,4,0.55,0.75,0.2
+FG-15,20,Female,BSCrim - 3rd Year,1520,880,640,6,2,4,0.7,0.9,0.2
+FG-16,20,Male,BSCrim - 3rd Year,1860,1380,480,8,4,4,0.6,0.8,0.2
+FG-17,22,Male,BSCrim - 3rd Year,1720,1190,530,7,3,4,0.65,0.85,0.2
+FG-18,20,Female,BSCrim - 3rd Year,1790,1220,570,8,3,5,0.6,0.85,0.25
+FG-19,20,Female,BSCrim - 4th Year,1840,1280,560,8,3,5,0.6,0.85,0.25
+FG-20,19,Female,BSCrim - 2nd Year,1910,1410,500,9,4,5,0.55,0.8,0.25
