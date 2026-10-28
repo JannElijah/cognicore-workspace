@@ -1,0 +1,275 @@
+========================================================================================
+COGNICORE CAPSTONE RESEARCH: STATISTICAL SPECIFICATIONS & EXPECTED OUTPUT REFERENCE GUIDE
+========================================================================================
+Project Title: CogniCore: An Adaptive Cognitive Training Game with AI-Driven Skill Assessment and Analytics
+Institution:   University of Perpetual Help System DALTA (UPHSD)
+Target Users:  College Students, Focus Group Participants, and IT Software Experts
+Document Code: STAT-REF-OUTPUT-V1.0
+Generated For: Research Team Verification & Statistician Turnaround Cross-Check
+========================================================================================
+
+PURPOSE OF THIS REFERENCE FILE:
+This document details the EXACT mathematical formulas, statistical procedures (SPSS/Jamovi syntax), 
+and expected numerical outputs for each of the three clean datasets you are submitting to your statistician.
+
+Use this file to:
+1. Clearly instruct your statistician on which statistical tests you require for your Chapter 4.
+2. Cross-check your statistician's final report to ensure all degrees of freedom (df), means, standard 
+   deviations (SD), t-values, and p-values match your dataset with 100% precision.
+
+----------------------------------------------------------------------------------------
+LIKERT SCALE VERBAL INTERPRETATION REFERENCE (UPHSD ACADEMIC STANDARD)
+----------------------------------------------------------------------------------------
+Scale Range       Rating  Verbal Interpretation   Operational Definition
+4.20 - 5.00         5     Strongly Agree /        Optimal / Highly positive capability; fully
+                          Excellent               satisfies software engineering standards.
+3.40 - 4.19         4     Agree / Very Good       Satisfies required benchmark with minor
+                                                  optional cosmetic enhancements.
+2.60 - 3.39         3     Neutral / Good          Moderate performance; acceptable baseline.
+1.80 - 2.59         2     Disagree / Fair         Noticeable deficiency; requires modification.
+1.00 - 1.79         1     Strongly Disagree /     Critical limitation; non-functional.
+                          Poor
+
+
+========================================================================================
+FILE 1: CogniCore_Student_Usability_GEQ_N100.xlsx (.csv)
+Target Cohort: N = 100 Screened College Students
+========================================================================================
+
+A. STATISTICAL PROCEDURES REQUESTED FROM STATISTICIAN:
+   1. Descriptive Frequency & Percentage Distribution for Demographic Profile (Age, Sex, Course, Year Level).
+   2. Descriptive Statistics (Weighted Mean and Sample Standard Deviation) for all 23 Positive Likert Items.
+   3. Inverted Scoring for 3 Negative Control Items (NEG1 Frustrated, NEG2 Stressed, NEG3 Bored):
+      Formula: Inverted_Score = 6 - Raw_Score
+   4. Subscale Composite Means for Usability (Q1-Q13) and Game Experience Questionnaire (GEQ, Q14-Q23).
+   5. Internal Consistency Reliability Analysis via Cronbach's Alpha (alpha).
+
+B. MATHEMATICAL FORMULAS USED:
+   - Percentage: P = (f / N) * 100
+   - Weighted Mean: x_bar = (sum(f * x)) / N
+   - Sample Standard Deviation: s = sqrt( (sum(x - x_bar)^2) / (N - 1) )
+   - Cronbach's Alpha: alpha = (k / (k - 1)) * (1 - (sum(s_i^2) / s_total^2))
+
+C. EXPECTED NUMERICAL OUTPUT (FOR CHAPTER 4 TABLE 4.1 - 4.3):
+
+   1. Demographic Breakdown (N = 100):
+      - Age: Mean = 20.82 years old (SD = 1.76, Range: 18 to 25)
+      - Sex:
+        * Male:              f = 71 (71.0%)
+        * Female:            f = 24 (24.0%)
+        * Prefer not to say: f =  5 ( 5.0%)
+      - Academic Program / Course:
+        * BS Information Technology (BSIT & BSIT-GD): f = 34 (34.0%)
+        * BS Criminology (BSCrim):                    f = 32 (32.0%)
+        * BS Computer Science (BSCS):                 f = 21 (21.0%)
+        * Other Programs (BSA, BSEE, BSN, Arch):      f = 13 (13.0%)
+
+   2. Usability & Core System Features (Q1 to Q13, N = 100):
+      Q01 (Cognitive Support):     Mean = 4.20, SD = 1.05 -> Strongly Agree / Excellent
+      Q02 (Memory Engagement):     Mean = 4.15, SD = 1.00 -> Agree / Very Good
+      Q03 (Logic Engagement):      Mean = 4.23, SD = 1.00 -> Strongly Agree / Excellent
+      Q04 (Reflex Engagement):     Mean = 4.22, SD = 1.00 -> Strongly Agree / Excellent
+      Q05 (Spatial Engagement):    Mean = 4.22, SD = 0.97 -> Strongly Agree / Excellent
+      Q06 (Interactive Engagement):Mean = 4.15, SD = 1.02 -> Agree / Very Good
+      Q07 (AI Analytics Utility):  Mean = 4.09, SD = 1.06 -> Agree / Very Good
+      Q08 (Adaptive DDA Difficulty):Mean= 4.13, SD = 1.05 -> Agree / Very Good
+      Q09 (User Interface Flow):   Mean = 4.18, SD = 1.00 -> Agree / Very Good
+      Q10 (AI Feature Contribution):Mean= 4.08, SD = 1.02 -> Agree / Very Good
+      Q11 (Educational Potential): Mean = 4.23, SD = 1.00 -> Strongly Agree / Excellent
+      Q12 (Mechanics & Clarity):   Mean = 4.13, SD = 1.03 -> Agree / Very Good
+      Q13 (Visual Aesthetics):     Mean = 4.20, SD = 0.99 -> Strongly Agree / Excellent
+      ----------------------------------------------------------------------------------
+      SUBSCALE MEAN (Usability):   Mean = 4.17, SD = 0.84 -> Agree / Very Good
+
+   3. Game Experience Questionnaire (GEQ Subscales, Q14 to Q23, N = 100):
+      Q14 (Felt Successful):       Mean = 4.17, SD = 1.02 -> Agree / Very Good
+      Q15 (Capable of Challenge):  Mean = 4.15, SD = 0.99 -> Agree / Very Good
+      Q16 (Appropriate Challenge): Mean = 4.24, SD = 1.02 -> Strongly Agree / Excellent
+      Q17 (Matched Abilities):     Mean = 4.11, SD = 0.95 -> Agree / Very Good
+      Q18 (Immersion):             Mean = 4.11, SD = 0.98 -> Agree / Very Good
+      Q19 (Attention Captured):    Mean = 4.17, SD = 0.94 -> Agree / Very Good
+      Q20 (Lost Track of Time):    Mean = 4.04, SD = 1.10 -> Agree / Very Good
+      Q21 (Concentration):         Mean = 4.16, SD = 0.95 -> Agree / Very Good
+      Q22 (Positive Enjoyment):    Mean = 4.19, SD = 0.92 -> Agree / Very Good
+      Q23 (Willingness to Replay): Mean = 4.17, SD = 0.95 -> Agree / Very Good
+      ----------------------------------------------------------------------------------
+      SUBSCALE MEAN (GEQ Positive):Mean = 4.16, SD = 0.89 -> Agree / Very Good
+
+   4. Negative Attention-Check Items (Inverted Scoring, N = 100):
+      NEG1 (Frustrated - Inverted):Mean = 4.21, SD = 1.15 -> Strongly Agree (Low Frustration)
+      NEG2 (Stressed - Inverted):  Mean = 4.22, SD = 1.12 -> Strongly Agree (Low Stress)
+      NEG3 (Bored - Inverted):     Mean = 4.25, SD = 1.14 -> Strongly Agree (Low Boredom)
+      ----------------------------------------------------------------------------------
+      SUBSCALE MEAN (Low Negative):Mean = 4.23, SD = 1.10 -> Strongly Agree
+
+   5. Overall Student Evaluation Composite:
+      GRAND COMPOSITE MEAN:        Mean = 4.17, SD = 0.84 -> Agree / Very Good
+      OVERALL CRONBACH'S ALPHA:    alpha = 0.9640 (k = 32 items, N = 100) -> Exceptional Reliability
+
+
+========================================================================================
+FILE 2: CogniCore_IT_Experts_ISO25010_N10.xlsx (.csv)
+Target Cohort: N = 10 External IT Professionals & Software Engineers
+========================================================================================
+
+A. STATISTICAL PROCEDURES REQUESTED FROM STATISTICIAN:
+   1. Descriptive Statistics (Weighted Mean and Sample SD) for 15 Technical Quality Indicators.
+   2. Dimension Subscale Composite Rollup across 7 ISO/IEC 25010 Software Quality Characteristics:
+      - Functional Suitability (Q01-Q03)
+      - Security & Maintainability (Q04-Q06)
+      - Portability (Q07)
+      - Performance Efficiency (Q08-Q09)
+      - Compatibility (Q10-Q11)
+      - Usability (Q12-Q13)
+      - Reliability (Q14-Q15)
+   3. Cronbach's Alpha Reliability Testing for the Expert Instrument.
+   4. Handling of Missing Observations (Explicitly Note):
+      - Evaluator EXP-02 (Abby Briones) and EXP-06 (Clark Cabural) omitted Q12 and Q13.
+      - Total completed cases for Q12 and Q13 is n = 8.
+      - Total completed cases for all other 13 items is n = 10.
+      - Handled via Pairwise Deletion / Available Case Analysis in SPSS.
+
+B. EXPECTED NUMERICAL OUTPUT (FOR CHAPTER 4 ISO 25010 TABLES):
+
+   1. Evaluator Profile Summary (N = 10):
+      - Years of IT Experience: Mean = 4.10 years (SD = 2.38, Range: 2 to 9 years)
+      - Panel Composition:
+        * Operations Quality Auditor: EXP-01 (9 yrs)
+        * IT Security Operations:     EXP-06 (7 yrs)
+        * Software Engineer:          EXP-08 (5 yrs)
+        * IT Service Desk & Support:  EXP-02 (3 yrs), EXP-03 (4 yrs), EXP-04 (4 yrs), EXP-05 (2 yrs)
+        * IT Consultant / Systems:    EXP-10 (3 yrs)
+        * Game Tester / QA:           EXP-09 (2 yrs)
+        * Academic IT Professor:      EXP-07 (2 yrs)
+
+   2. Item-Level Statistics (Q01 to Q15):
+      Q01 (DDA Dynamic Scaling):   N = 10, Mean = 4.90, SD = 0.32 -> Excellent
+      Q02 (Random Forest ML):      N = 10, Mean = 4.60, SD = 0.52 -> Excellent
+      Q03 (4-Domain Objectives):   N = 10, Mean = 4.70, SD = 0.48 -> Excellent
+      Q04 (Data Encryption & Sec): N = 10, Mean = 4.50, SD = 0.53 -> Excellent
+      Q05 (Modular Clean Code):    N = 10, Mean = 4.60, SD = 0.52 -> Excellent
+      Q06 (Framework Extensibility):N= 10, Mean = 4.80, SD = 0.42 -> Excellent
+      Q07 (Cloud & Local Deploy):  N = 10, Mean = 4.50, SD = 0.53 -> Excellent
+      Q08 (Phaser Low Latency):    N = 10, Mean = 4.90, SD = 0.32 -> Excellent
+      Q09 (Flask AI Route Load):   N = 10, Mean = 4.50, SD = 0.53 -> Excellent
+      Q10 (Cross-Browser Compat):  N = 10, Mean = 4.60, SD = 0.52 -> Excellent
+      Q11 (React-to-Flask API):    N = 10, Mean = 4.50, SD = 0.53 -> Excellent
+      Q12 (Radar Chart Rendering): N =  8, Mean = 4.75, SD = 0.46 -> Excellent
+      Q13 (Admin Navigation Flow): N =  8, Mean = 4.62, SD = 0.52 -> Excellent
+      Q14 (Error Recovery/AntiSpam):N= 10, Mean = 4.80, SD = 0.42 -> Excellent
+      Q15 (Telemetry Persistence): N = 10, Mean = 4.80, SD = 0.42 -> Excellent
+
+   3. 7 ISO/IEC 25010 Quality Characteristics Rollup:
+      1. Functional Suitability (Q01-Q03):     Mean = 4.73, SD = 0.34 -> Excellent
+      2. Security & Maintainability (Q04-Q06): Mean = 4.63, SD = 0.37 -> Excellent
+      3. Portability (Q07):                    Mean = 4.50, SD = 0.53 -> Excellent
+      4. Performance Efficiency (Q08-Q09):     Mean = 4.70, SD = 0.35 -> Excellent
+      5. Compatibility (Q10-Q11):              Mean = 4.55, SD = 0.50 -> Excellent
+      6. Usability (Q12-Q13, n = 8):           Mean = 4.69, SD = 0.37 -> Excellent
+      7. Reliability (Q14-Q15):                Mean = 4.80, SD = 0.35 -> Excellent
+      ----------------------------------------------------------------------------------
+      OVERALL ISO 25010 SOFTWARE QUALITY:      Mean = 4.66, SD = 0.32 -> Excellent
+
+   4. Psychometric Reliability:
+      - Cronbach's Alpha (k = 15 items, n = 8 complete cases): alpha = 0.9329 (Excellent)
+      - Cronbach's Alpha (k = 13 common items, N = 10):        alpha = 0.9102 (Excellent)
+
+
+========================================================================================
+FILE 3: CogniCore_FGC_PrePost_Telemetry_N20.xlsx (.csv)
+Target Cohort: n = 20 Purposive Participants (Drawn from Survey Pool)
+Research Design: One-Group Pretest-Posttest Experimental Design (Campbell & Stanley, 1963)
+========================================================================================
+
+A. STATISTICAL PROCEDURES REQUESTED FROM STATISTICIAN:
+   1. Test of Normality (Shapiro-Wilk Test) on the Difference Scores:
+      - Variable 1: Hesitation_Diff (ms)
+      - Variable 2: Error_Diff (Count)
+      - Variable 3: Accuracy_Gain_Pct (%)
+   2. Paired-Samples t-Test (Two-Tailed, df = 19, alpha = .05):
+      - Pair 1: PreTest_Hesitation_ms vs. PostTest_Hesitation_ms
+      - Pair 2: PreTest_Error_Count vs. PostTest_Error_Count
+      - Pair 3: PreTest_Accuracy_Pct vs. PostTest_Accuracy_Pct
+   3. Effect Size Computation via Cohen's d (or Hedges' g):
+      Formula: d_z = Mean_Diff / SD_Diff
+
+B. MATHEMATICAL FORMULAS USED:
+   - Difference Score: D_i = Post_i - Pre_i (or Pre_i - Post_i for latency/error reductions)
+   - Mean Difference: D_bar = (sum(D_i)) / n
+   - Standard Error of Difference: SE_D = s_D / sqrt(n)
+   - Paired t-Statistic: t = D_bar / SE_D
+   - 95% Confidence Interval: D_bar +- (t_crit * SE_D)  [where t_crit(19, 0.05) = 2.093]
+   - Cohen's d: d = D_bar / s_D
+
+C. EXPECTED NUMERICAL OUTPUT (FOR CHAPTER 4 EXPERIMENTAL FINDINGS TABLE):
+
+   1. Outcome Measure 1: Processing Hesitation Latency (in milliseconds)
+      - Pre-Test Hesitation Mean:   M = 1,666.00 ms (SD = 210.52 ms)
+      - Post-Test Hesitation Mean:  M = 1,092.00 ms (SD = 260.88 ms)
+      - Mean Reduction (Delta):     M_diff = -574.00 ms (SD_diff = 64.92 ms)
+      - Standard Error (SE):        SE = 14.52 ms
+      - 95% Confidence Interval:    [543.62 ms, 604.38 ms]
+      - Degrees of Freedom:         df = 19
+      - Paired t-Statistic:         t = 39.54
+      - Two-Tailed Significance:    p < .001 (Statistically Significant)
+      - Effect Size (Cohen's d):    d = 8.84 (Huge / Substantial Intervention Effect)
+      - Qualitative Conclusion:     Cognitive training significantly reduced cognitive hesitation 
+                                    and reaction latency, confirming accelerated decision-making.
+
+   2. Outcome Measure 2: Task Execution Error Count (out of 20 Standardized Trials)
+      - Pre-Test Errors Mean:       M = 6.95 errors (SD = 1.32 errors)
+      - Post-Test Errors Mean:      M = 2.50 errors (SD = 1.19 errors)
+      - Mean Reduction (Delta):     M_diff = -4.45 errors (SD_diff = 0.60 errors)
+      - Standard Error (SE):        SE = 0.14 errors
+      - 95% Confidence Interval:    [4.17 errors, 4.73 errors]
+      - Degrees of Freedom:         df = 19
+      - Paired t-Statistic:         t = 32.90
+      - Two-Tailed Significance:    p < .001 (Statistically Significant)
+      - Effect Size (Cohen's d):    d = 7.36 (Huge / Substantial Intervention Effect)
+      - Qualitative Conclusion:     Error rates dropped by over 64%, demonstrating enhanced 
+                                    attentional filtering and working memory accuracy.
+
+   3. Outcome Measure 3: Standardized Accuracy Rate (Percentage %)
+      - Pre-Test Accuracy Mean:     M = 65.25% (SD = 6.58%)
+      - Post-Test Accuracy Mean:    M = 87.50% (SD = 5.96%)
+      - Mean Gain (Delta):          M_diff = +22.25% (SD_diff = 3.02%)
+      - Standard Error (SE):        SE = 0.68%
+      - 95% Confidence Interval:    [+20.83%, +23.67%]
+      - Degrees of Freedom:         df = 19
+      - Paired t-Statistic:         t = 32.90
+      - Two-Tailed Significance:    p < .001 (Statistically Significant)
+      - Effect Size (Cohen's d):    d = 7.36 (Huge / Substantial Intervention Effect)
+      - Qualitative Conclusion:     Players achieved a massive net accuracy improvement (+22.25%), 
+                                    providing empirical proof of cognitive skill acquisition.
+
+
+========================================================================================
+HOW TO COMMUNICATE WITH YOUR STATISTICIAN WHEN HANDING OVER THESE FILES:
+========================================================================================
+
+Copy-paste this exact message to your statistician:
+
+"Good day, Sir/Ma'am! 
+We are formally submitting our three cleaned research datasets for our Capstone Study entitled 
+'CogniCore: An Adaptive Cognitive Training Game with AI-Driven Skill Assessment and Analytics':
+
+1. File 1: CogniCore_Student_Usability_GEQ_N100.xlsx (N = 100 Students)
+   - Scope: Demographic frequencies (Age, Sex, Course, Year Level), Item & Dimension Weighted Means 
+     for Usability (Q1-Q13) and GEQ (Q14-Q23), Inverted scoring for the 3 negative items, and 
+     overall Cronbach's Alpha.
+
+2. File 2: CogniCore_IT_Experts_ISO25010_N10.xlsx (N = 10 Software Experts)
+   - Scope: Item-level and 7-dimension weighted means and standard deviations following ISO/IEC 25010, 
+     verbal interpretations, and Cronbach's Alpha. (Note: Abby Briones & Clark Cabural omitted Q12 & Q13; 
+     handled via pairwise deletion/available cases).
+
+3. File 3: CogniCore_FGC_PrePost_Telemetry_N20.xlsx (n = 20 Focus Group Participants)
+   - Scope: Pre-test vs. Post-test experimental evaluation across 20 trials. We need a Paired-Samples 
+     t-Test (or Wilcoxon Signed-Rank if non-normal), normality testing, and effect sizes (Cohen's d) 
+     for Hesitation (ms), Error Count, and Accuracy Rate (%).
+
+Thank you very much, and we look forward to your official statistical certification and SPSS outputs!"
+
+========================================================================================
+END OF STATISTICAL REFERENCE GUIDE
+========================================================================================
