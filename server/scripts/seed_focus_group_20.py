@@ -15,27 +15,34 @@ if not DB_URL:
 # Generate standard PIN hash for '1234'
 DEFAULT_PIN_HASH = bcrypt.hashpw(b"1234", bcrypt.gensalt(10)).decode('utf-8')
 
+# 20 Focus Group participants drawn directly from Screened Survey Respondents (N=100)
+# Uses clean First Names only (per research ethics and participant privacy guidelines)
 PARTICIPANTS = [
-    {"username": "FG01_Kaelen", "gender": "Male", "course": "BS Information Technology", "age": 21, "archetype": "Fast Learner", "base_diff": 3.8, "xp": 3150, "coins": 5400, "avatar": "avatar_cyber_ninja", "title": "title-reflex-demon"},
-    {"username": "FG02_Andrea", "gender": "Female", "course": "BS Computer Science", "age": 20, "archetype": "Fast Learner", "base_diff": 3.6, "xp": 2850, "coins": 4900, "avatar": "avatar_neon_cat", "title": "title-logic-weaver"},
-    {"username": "FG03_Miggy", "gender": "Male", "course": "BS Criminology", "age": 22, "archetype": "Steady Improver", "base_diff": 2.9, "xp": 2100, "coins": 3600, "avatar": "avatar_retro_bot", "title": "title-zen-architect"},
-    {"username": "FG04_Chloe", "gender": "Female", "course": "BS Information Technology", "age": 21, "archetype": "Steady Improver", "base_diff": 3.1, "xp": 2400, "coins": 4100, "avatar": "default_avatar", "title": "title-strategist"},
-    {"username": "FG05_Justin", "gender": "Male", "course": "BS Criminology", "age": 23, "archetype": "Steady Improver", "base_diff": 2.7, "xp": 1750, "coins": 3100, "avatar": "avatar_cyber_ninja", "title": "title-novice"},
-    {"username": "FG06_Bea", "gender": "Female", "course": "BS Computer Science", "age": 20, "archetype": "Fast Learner", "base_diff": 3.7, "xp": 2950, "coins": 5100, "avatar": "avatar_hacker_cat", "title": "title-reflex-demon"},
-    {"username": "FG07_Mark", "gender": "Male", "course": "BS Information Technology", "age": 22, "archetype": "Steady Improver", "base_diff": 3.0, "xp": 2250, "coins": 3850, "avatar": "default_avatar", "title": "title-logic-weaver"},
-    {"username": "FG08_Faith", "gender": "Female", "course": "BS Criminology", "age": 21, "archetype": "Steady Improver", "base_diff": 2.8, "xp": 1900, "coins": 3250, "avatar": "avatar_retro_bot", "title": "title-zen-architect"},
-    {"username": "FG09_Lance", "gender": "Male", "course": "BS Information Technology", "age": 20, "archetype": "Fast Learner", "base_diff": 3.5, "xp": 2700, "coins": 4600, "avatar": "avatar_cyber_ninja", "title": "title-strategist"},
-    {"username": "FG10_Sophia", "gender": "Female", "course": "BS Computer Science", "age": 21, "archetype": "Steady Improver", "base_diff": 3.2, "xp": 2550, "coins": 4300, "avatar": "avatar_neon_cat", "title": "title-logic-weaver"},
-    {"username": "FG11_Tristan", "gender": "Male", "course": "BS Criminology", "age": 22, "archetype": "Steady Improver", "base_diff": 2.6, "xp": 1600, "coins": 2800, "avatar": "default_avatar", "title": "title-novice"},
-    {"username": "FG12_Hannah", "gender": "Female", "course": "BS Information Technology", "age": 20, "archetype": "Fast Learner", "base_diff": 3.4, "xp": 2600, "coins": 4450, "avatar": "avatar_hacker_cat", "title": "title-reflex-demon"},
-    {"username": "FG13_Jericho", "gender": "Male", "course": "BS Criminology", "age": 23, "archetype": "Steady Improver", "base_diff": 2.8, "xp": 1850, "coins": 3200, "avatar": "avatar_retro_bot", "title": "title-zen-architect"},
-    {"username": "FG14_Patricia", "gender": "Female", "course": "BS Computer Science", "age": 21, "archetype": "Steady Improver", "base_diff": 3.0, "xp": 2150, "coins": 3700, "avatar": "default_avatar", "title": "title-strategist"},
-    {"username": "FG15_Rafael", "gender": "Male", "course": "BS Information Technology", "age": 22, "archetype": "Fast Learner", "base_diff": 3.9, "xp": 3300, "coins": 5600, "avatar": "avatar_cyber_ninja", "title": "title-reflex-demon"},
-    {"username": "FG16_Mae", "gender": "Female", "course": "BS Criminology", "age": 20, "archetype": "Steady Improver", "base_diff": 2.7, "xp": 1700, "coins": 2950, "avatar": "avatar_neon_cat", "title": "title-novice"},
-    {"username": "FG17_Gabriel", "gender": "Male", "course": "BS Information Technology", "age": 21, "archetype": "Steady Improver", "base_diff": 3.1, "xp": 2350, "coins": 4000, "avatar": "default_avatar", "title": "title-logic-weaver"},
-    {"username": "FG18_Kim", "gender": "Female", "course": "BS Computer Science", "age": 22, "archetype": "High Fatigue", "base_diff": 2.4, "xp": 1450, "coins": 2500, "avatar": "avatar_retro_bot", "title": "title-novice"},
-    {"username": "FG19_Nathan", "gender": "Male", "course": "BS Criminology", "age": 21, "archetype": "Steady Improver", "base_diff": 2.9, "xp": 2050, "coins": 3500, "avatar": "avatar_cyber_ninja", "title": "title-zen-architect"},
-    {"username": "FG20_Zoe", "gender": "Female", "course": "BS Information Technology", "age": 20, "archetype": "Fast Learner", "base_diff": 3.5, "xp": 2800, "coins": 4750, "avatar": "avatar_hacker_cat", "title": "title-strategist"}
+    # --- BS Information Technology (8 participants) ---
+    {"resp_id": "RESP-003", "code": "FG-01", "username": "FG01_Vince", "first_name": "Vince", "gender": "Male", "course": "BS Information Technology", "age": 21, "archetype": "Fast Learner", "base_diff": 3.8, "xp": 3150, "coins": 5400, "avatar": "avatar_cyber_ninja", "title": "title-reflex-demon"},
+    {"resp_id": "RESP-009", "code": "FG-02", "username": "FG02_Brian", "first_name": "Brian", "gender": "Male", "course": "BS Information Technology", "age": 21, "archetype": "Fast Learner", "base_diff": 3.6, "xp": 2850, "coins": 4900, "avatar": "avatar_neon_cat", "title": "title-logic-weaver"},
+    {"resp_id": "RESP-011", "code": "FG-03", "username": "FG03_Andrea", "first_name": "Andrea", "gender": "Female", "course": "BS Information Technology", "age": 23, "archetype": "Steady Improver", "base_diff": 3.1, "xp": 2400, "coins": 4100, "avatar": "default_avatar", "title": "title-strategist"},
+    {"resp_id": "RESP-012", "code": "FG-04", "username": "FG04_Christian", "first_name": "Christian", "gender": "Male", "course": "BS Information Technology", "age": 22, "archetype": "Steady Improver", "base_diff": 3.0, "xp": 2250, "coins": 3850, "avatar": "avatar_cyber_ninja", "title": "title-zen-architect"},
+    {"resp_id": "RESP-014", "code": "FG-05", "username": "FG05_Karel", "first_name": "Karel", "gender": "Male", "course": "BS Information Technology", "age": 21, "archetype": "Steady Improver", "base_diff": 2.9, "xp": 2100, "coins": 3600, "avatar": "avatar_retro_bot", "title": "title-novice"},
+    {"resp_id": "RESP-018", "code": "FG-06", "username": "FG06_James", "first_name": "James", "gender": "Male", "course": "BS Information Technology", "age": 21, "archetype": "Fast Learner", "base_diff": 3.5, "xp": 2700, "coins": 4600, "avatar": "avatar_cyber_ninja", "title": "title-strategist"},
+    {"resp_id": "RESP-021", "code": "FG-07", "username": "FG07_Noreen", "first_name": "Noreen", "gender": "Female", "course": "BS Information Technology", "age": 21, "archetype": "Steady Improver", "base_diff": 3.2, "xp": 2550, "coins": 4300, "avatar": "avatar_hacker_cat", "title": "title-logic-weaver"},
+    {"resp_id": "RESP-034", "code": "FG-08", "username": "FG08_Benedict", "first_name": "Benedict", "gender": "Male", "course": "BS Information Technology", "age": 21, "archetype": "Fast Learner", "base_diff": 3.7, "xp": 2950, "coins": 5100, "avatar": "avatar_cyber_ninja", "title": "title-reflex-demon"},
+
+    # --- BS Computer Science (6 participants) ---
+    {"resp_id": "RESP-035", "code": "FG-09", "username": "FG09_Harvee", "first_name": "Harvee", "gender": "Male", "course": "BS Computer Science", "age": 24, "archetype": "Steady Improver", "base_diff": 3.0, "xp": 2150, "coins": 3700, "avatar": "default_avatar", "title": "title-strategist"},
+    {"resp_id": "RESP-039", "code": "FG-10", "username": "FG10_Hanz", "first_name": "Hanz", "gender": "Male", "course": "BS Computer Science", "age": 22, "archetype": "Fast Learner", "base_diff": 3.9, "xp": 3300, "coins": 5600, "avatar": "avatar_neon_cat", "title": "title-reflex-demon"},
+    {"resp_id": "RESP-040", "code": "FG-11", "username": "FG11_Ken", "first_name": "Ken", "gender": "Male", "course": "BS Computer Science", "age": 23, "archetype": "Steady Improver", "base_diff": 2.8, "xp": 1850, "coins": 3200, "avatar": "avatar_retro_bot", "title": "title-zen-architect"},
+    {"resp_id": "RESP-043", "code": "FG-12", "username": "FG12_Kaliel", "first_name": "Kaliel", "gender": "Male", "course": "BS Computer Science", "age": 20, "archetype": "Fast Learner", "base_diff": 3.5, "xp": 2800, "coins": 4750, "avatar": "avatar_hacker_cat", "title": "title-strategist"},
+    {"resp_id": "RESP-045", "code": "FG-13", "username": "FG13_Dustin", "first_name": "Dustin", "gender": "Male", "course": "BS Computer Science", "age": 19, "archetype": "Steady Improver", "base_diff": 3.1, "xp": 2350, "coins": 4000, "avatar": "default_avatar", "title": "title-logic-weaver"},
+    {"resp_id": "RESP-048", "code": "FG-14", "username": "FG14_Cyrus", "first_name": "Cyrus", "gender": "Male", "course": "BS Computer Science", "age": 20, "archetype": "High Fatigue", "base_diff": 2.4, "xp": 1450, "coins": 2500, "avatar": "avatar_retro_bot", "title": "title-novice"},
+
+    # --- BS Criminology (6 participants) ---
+    {"resp_id": "RESP-022", "code": "FG-15", "username": "FG15_Joy", "first_name": "Joy", "gender": "Female", "course": "BS Criminology", "age": 20, "archetype": "Fast Learner", "base_diff": 3.4, "xp": 2600, "coins": 4450, "avatar": "avatar_neon_cat", "title": "title-reflex-demon"},
+    {"resp_id": "RESP-023", "code": "FG-16", "username": "FG16_Ryan", "first_name": "Ryan", "gender": "Male", "course": "BS Criminology", "age": 20, "archetype": "Steady Improver", "base_diff": 2.7, "xp": 1700, "coins": 2950, "avatar": "default_avatar", "title": "title-novice"},
+    {"resp_id": "RESP-025", "code": "FG-17", "username": "FG17_Jethro", "first_name": "Jethro", "gender": "Male", "course": "BS Criminology", "age": 22, "archetype": "Steady Improver", "base_diff": 2.9, "xp": 2050, "coins": 3500, "avatar": "avatar_cyber_ninja", "title": "title-zen-architect"},
+    {"resp_id": "RESP-031", "code": "FG-18", "username": "FG18_Macey", "first_name": "Macey", "gender": "Female", "course": "BS Criminology", "age": 20, "archetype": "Steady Improver", "base_diff": 2.8, "xp": 1900, "coins": 3250, "avatar": "avatar_retro_bot", "title": "title-novice"},
+    {"resp_id": "RESP-089", "code": "FG-19", "username": "FG19_Faith", "first_name": "Faith", "gender": "Female", "course": "BS Criminology", "age": 20, "archetype": "Steady Improver", "base_diff": 2.7, "xp": 1750, "coins": 3100, "avatar": "avatar_hacker_cat", "title": "title-zen-architect"},
+    {"resp_id": "RESP-098", "code": "FG-20", "username": "FG20_Demi", "first_name": "Demi", "gender": "Female", "course": "BS Criminology", "age": 19, "archetype": "Steady Improver", "base_diff": 2.6, "xp": 1600, "coins": 2800, "avatar": "default_avatar", "title": "title-novice"}
 ]
 
 GAMES = [
@@ -64,12 +71,11 @@ def seed_focus_group():
             cur.execute("DELETE FROM users WHERE id IN %s", (uids,))
             print("Cleaned successfully.")
 
-        print("=== Step 2: Preparing batch data ===")
+        print("=== Step 2: Preparing batch data aligned with survey respondents ===")
         now = datetime.now(timezone.utc)
         random.seed(42) # Deterministic for academic reproducibility
 
-        # 1. Insert users one by one or in batch
-        user_rows = []
+        # 1. Insert users
         user_meta = {}
         for p in PARTICIPANTS:
             created_days_ago = random.randint(4, 7)
@@ -83,7 +89,7 @@ def seed_focus_group():
             user_meta[uid] = (p, user_created)
 
         user_ids = list(user_meta.keys())
-        print(f"Inserted {len(user_ids)} users.")
+        print(f"Inserted {len(user_ids)} users linked to survey respondents.")
 
         # 2. Batch user_profiles
         profile_values = []
@@ -165,7 +171,7 @@ def seed_focus_group():
         """, assessment_values)
         print("Batch inserted cognitive_assessments (Pre-test & Post-test).")
 
-        # 6. Insert Game Sessions & Performance Metrics
+        # 6. Insert Game Sessions
         session_values = []
         for uid in user_ids:
             p, u_created = user_meta[uid]
@@ -183,7 +189,7 @@ def seed_focus_group():
         """, session_values, fetch=True)
         print(f"Batch inserted {len(session_records)} game_sessions.")
 
-        # 7. Batch Performance Metrics (2 per session = 10 metrics per player -> satisfies Leaderboard criteria)
+        # 7. Batch Performance Metrics (Leaderboard data)
         metric_values = []
         for s in session_records:
             sid = s['id']
@@ -231,7 +237,7 @@ def seed_focus_group():
         """, inv_values)
         print("Batch inserted achievements and inventory.")
 
-        print("=== ALL 20 FOCUS GROUP PLAYERS SUCCESSFULLY SEEDED! ===")
+        print("=== ALL 20 FOCUS GROUP PLAYERS (ALIGNED WITH SURVEY RESPONDENTS) SUCCESSFULLY SEEDED! ===")
 
     except Exception as e:
         print("Error during batch seeding:", e)
