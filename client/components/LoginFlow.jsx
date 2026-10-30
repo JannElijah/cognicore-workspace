@@ -174,35 +174,51 @@ export default function LoginFlow({
           {/* Continuous Vertical Timeline Spine */}
           <div style={{
             position: 'absolute',
-            left: isMobileMode ? '16px' : '20px',
+            left: isMobileMode ? '17px' : '21px',
             top: '24px',
             bottom: '24px',
             width: '2px',
-            background: 'linear-gradient(to bottom, #00f0ff 0%, #d946ef 50%, #00f0ff 100%)',
+            background: 'linear-gradient(to bottom, #00f0ff 0%, #d946ef 50%, #10b981 100%)',
             boxShadow: '0 0 6px rgba(0, 240, 255, 0.6)',
             zIndex: 1
           }} />
 
           {/* ---------------- STAGE 01 ---------------- */}
-          <div style={{ display: 'flex', alignItems: isMobileMode ? 'flex-start' : 'center', gap: isMobileMode ? '0.6rem' : '0.85rem', position: 'relative', zIndex: 2 }}>
+          <div style={{ display: 'flex', alignItems: isMobileMode ? 'flex-start' : 'center', gap: isMobileMode ? '0.65rem' : '0.9rem', position: 'relative', zIndex: 2 }}>
             <div style={{
-              width: isMobileMode ? '34px' : '42px',
-              height: isMobileMode ? '34px' : '42px',
-              borderRadius: isMobileMode ? '10px' : '12px',
-              background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.2) 0%, rgba(6, 182, 212, 0.05) 100%)',
+              width: isMobileMode ? '36px' : '44px',
+              height: isMobileMode ? '36px' : '44px',
+              borderRadius: '50%',
+              background: 'radial-gradient(circle at 35% 35%, rgba(18, 30, 58, 0.95) 0%, rgba(6, 12, 26, 0.98) 100%)',
               border: '1.5px solid #00f0ff',
-              boxShadow: '0 0 14px rgba(0, 240, 255, 0.4)',
+              boxShadow: '0 0 16px rgba(0, 240, 255, 0.4), inset 0 0 10px rgba(0, 240, 255, 0.2)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
-              marginTop: isMobileMode ? '0.35rem' : '0'
+              marginTop: isMobileMode ? '0.35rem' : '0',
+              position: 'relative'
             }}>
-              <svg width={isMobileMode ? "17" : "20"} height={isMobileMode ? "17" : "20"} viewBox="0 0 24 24" fill="none" stroke="#00f0ff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-                <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
-                <circle cx="12" cy="13" r="3" />
-                <path d="M9 13v.01M15 13v.01" />
+              <span style={{
+                position: 'absolute',
+                top: '-5px',
+                right: '-4px',
+                background: '#020617',
+                border: '1px solid #00f0ff',
+                color: '#00f0ff',
+                fontSize: '0.52rem',
+                fontWeight: '900',
+                padding: '0 4px',
+                borderRadius: '9999px',
+                letterSpacing: '0.04em',
+                boxShadow: '0 0 6px rgba(0, 240, 255, 0.6)'
+              }}>
+                01
+              </span>
+              <svg width={isMobileMode ? "17" : "21"} height={isMobileMode ? "17" : "21"} viewBox="0 0 24 24" fill="none">
+                <rect x="5" y="4" width="14" height="17" rx="3" stroke="#00f0ff" strokeWidth="1.8" />
+                <path d="M9 2H15C15.5523 2 16 2.44772 16 3V4C16 4.55228 15.5523 5 15 5H9C8.44772 5 8 4.55228 8 4V3C8 2.44772 8.44772 2 9 2Z" fill="rgba(0, 240, 255, 0.2)" stroke="#00f0ff" strokeWidth="1.5" />
+                <path d="M8.5 12.5L10.5 14.5L15.5 9.5" stroke="#38bdf8" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
 
@@ -292,26 +308,43 @@ export default function LoginFlow({
           </div>
 
           {/* ---------------- STAGE 02 ---------------- */}
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: isMobileMode ? '0.6rem' : '0.85rem', position: 'relative', zIndex: 2 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: isMobileMode ? '0.65rem' : '0.9rem', position: 'relative', zIndex: 2 }}>
             <div style={{
-              width: isMobileMode ? '34px' : '42px',
-              height: isMobileMode ? '34px' : '42px',
-              borderRadius: isMobileMode ? '10px' : '12px',
-              background: 'linear-gradient(135deg, rgba(217, 70, 239, 0.22) 0%, rgba(168, 85, 247, 0.08) 100%)',
-              border: '1.5px solid #d946ef',
-              boxShadow: '0 0 14px rgba(217, 70, 239, 0.45)',
+              width: isMobileMode ? '36px' : '44px',
+              height: isMobileMode ? '36px' : '44px',
+              borderRadius: '50%',
+              background: 'radial-gradient(circle at 35% 35%, rgba(40, 16, 52, 0.95) 0%, rgba(14, 8, 26, 0.98) 100%)',
+              border: '1.5px solid #e879f9',
+              boxShadow: '0 0 16px rgba(232, 121, 249, 0.45), inset 0 0 10px rgba(232, 121, 249, 0.2)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
-              marginTop: isMobileMode ? '0.35rem' : '0.5rem'
+              marginTop: isMobileMode ? '0.35rem' : '0.5rem',
+              position: 'relative'
             }}>
-              <svg width={isMobileMode ? "18" : "22"} height={isMobileMode ? "18" : "22"} viewBox="0 0 24 24" fill="none" stroke="#e879f9" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="6" y1="12" x2="10" y2="12" />
-                <line x1="8" y1="10" x2="8" y2="14" />
-                <line x1="15" y1="13" x2="15.01" y2="13" />
-                <line x1="18" y1="11" x2="18.01" y2="11" />
-                <rect x="2" y="6" width="20" height="12" rx="6" />
+              <span style={{
+                position: 'absolute',
+                top: '-5px',
+                right: '-4px',
+                background: '#020617',
+                border: '1px solid #e879f9',
+                color: '#e879f9',
+                fontSize: '0.52rem',
+                fontWeight: '900',
+                padding: '0 4px',
+                borderRadius: '9999px',
+                letterSpacing: '0.04em',
+                boxShadow: '0 0 6px rgba(232, 121, 249, 0.6)'
+              }}>
+                02
+              </span>
+              <svg width={isMobileMode ? "18" : "22"} height={isMobileMode ? "18" : "22"} viewBox="0 0 24 24" fill="none">
+                <rect x="2" y="6" width="20" height="12" rx="6" stroke="#e879f9" strokeWidth="1.8" fill="rgba(232, 121, 249, 0.12)" />
+                <line x1="6" y1="12" x2="10" y2="12" stroke="#e879f9" strokeWidth="2" strokeLinecap="round" />
+                <line x1="8" y1="10" x2="8" y2="14" stroke="#e879f9" strokeWidth="2" strokeLinecap="round" />
+                <circle cx="15" cy="13" r="1.3" fill="#e879f9" />
+                <circle cx="18" cy="11" r="1.3" fill="#e879f9" />
               </svg>
             </div>
 
@@ -486,24 +519,43 @@ export default function LoginFlow({
           </div>
 
           {/* ---------------- STAGE 03 ---------------- */}
-          <div style={{ display: 'flex', alignItems: isMobileMode ? 'flex-start' : 'center', gap: isMobileMode ? '0.6rem' : '0.85rem', position: 'relative', zIndex: 2 }}>
+          <div style={{ display: 'flex', alignItems: isMobileMode ? 'flex-start' : 'center', gap: isMobileMode ? '0.65rem' : '0.9rem', position: 'relative', zIndex: 2 }}>
             <div style={{
-              width: isMobileMode ? '34px' : '42px',
-              height: isMobileMode ? '34px' : '42px',
-              borderRadius: isMobileMode ? '10px' : '12px',
-              background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.2) 0%, rgba(6, 182, 212, 0.05) 100%)',
-              border: '1.5px solid #00f0ff',
-              boxShadow: '0 0 14px rgba(0, 240, 255, 0.4)',
+              width: isMobileMode ? '36px' : '44px',
+              height: isMobileMode ? '36px' : '44px',
+              borderRadius: '50%',
+              background: 'radial-gradient(circle at 35% 35%, rgba(10, 36, 28, 0.95) 0%, rgba(6, 16, 14, 0.98) 100%)',
+              border: '1.5px solid #10b981',
+              boxShadow: '0 0 16px rgba(16, 185, 129, 0.45), inset 0 0 10px rgba(16, 185, 129, 0.2)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
-              marginTop: isMobileMode ? '0.35rem' : '0'
+              marginTop: isMobileMode ? '0.35rem' : '0',
+              position: 'relative'
             }}>
-              <svg width={isMobileMode ? "17" : "20"} height={isMobileMode ? "17" : "20"} viewBox="0 0 24 24" fill="none" stroke="#00f0ff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M16 8l-4 4-2-2-4 4" />
-                <polyline points="12 8 16 8 16 12" />
+              <span style={{
+                position: 'absolute',
+                top: '-5px',
+                right: '-4px',
+                background: '#020617',
+                border: '1px solid #10b981',
+                color: '#10b981',
+                fontSize: '0.52rem',
+                fontWeight: '900',
+                padding: '0 4px',
+                borderRadius: '9999px',
+                letterSpacing: '0.04em',
+                boxShadow: '0 0 6px rgba(16, 185, 129, 0.6)'
+              }}>
+                03
+              </span>
+              <svg width={isMobileMode ? "17" : "21"} height={isMobileMode ? "17" : "21"} viewBox="0 0 24 24" fill="none">
+                <rect x="4" y="14" width="3.5" height="7" rx="1" fill="#00f0ff" fillOpacity="0.75" />
+                <rect x="10.25" y="10" width="3.5" height="11" rx="1" fill="#38bdf8" fillOpacity="0.85" />
+                <rect x="16.5" y="5" width="3.5" height="16" rx="1" fill="#10b981" />
+                <path d="M4 11L10.5 6L14 8.5L20 3" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M16.5 3H20V6.5" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
 
