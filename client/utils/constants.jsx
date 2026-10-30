@@ -255,15 +255,23 @@ export const COGNITIVE_QUESTIONS = [
     id: 'q_ref_4',
     domain: 'reflexes_and_focus',
     difficulty: 2,
-    title: 'Audio-Visual Sync',
-    text: 'You hear a HIGH beep while seeing a DOWN arrow. The correct pairing is HIGH-UP or LOW-DOWN. Is the current signal valid?',
-    visual: <div style={{display:'flex', justifyContent:'center', gap:'20px', fontSize:'2rem', padding:'20px', fontWeight:'bold'}}><span>[HIGH BEEP]</span><span>DOWN</span></div>,
-    correctAnswer: 'B',
+    title: 'Eriksen Flanker Filter',
+    text: 'TARGET OVERRIDE: Focus ONLY on the CENTER arrow. Disregard all surrounding distractor arrows. Which direction is the center arrow pointing?',
+    visual: (
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <img 
+          src="/assessments/flanker_arrows.png" 
+          alt="Flanker Arrow Task" 
+          style={{ maxHeight: '180px', maxWidth: '100%', borderRadius: '10px', border: '1px solid rgba(0, 240, 255, 0.3)', boxShadow: '0 0 20px rgba(0, 240, 255, 0.15)' }} 
+        />
+      </div>
+    ),
+    correctAnswer: 'A',
     options: [
-      {key: 'A', text: 'Yes, valid'},
-      {key: 'B', text: 'No, invalid'},
-      {key: 'C', text: 'Need more info'},
-      {key: 'D', text: 'Warning: Signal lost'},
+      { key: 'A', text: 'Right (→)' },
+      { key: 'B', text: 'Left (←)' },
+      { key: 'C', text: 'Up (↑)' },
+      { key: 'D', text: 'Down (↓)' },
     ],
   },
   {
@@ -285,15 +293,23 @@ export const COGNITIVE_QUESTIONS = [
     id: 'q_spat_1',
     domain: 'spatial_visual_memory',
     difficulty: 1,
-    title: 'Dot Tracker',
-    text: 'A dot starts in the center of a 3x3 grid. It moves: UP, LEFT, RIGHT. Where is it relative to the center?',
-    visual: <div style={{display:'flex', justifyContent:'center', gap:'18px', fontSize:'2rem', padding:'20px', fontWeight:'bold'}}><span>UP</span><span>LEFT</span><span>RIGHT</span></div>,
+    title: 'Matrix Pattern Completion',
+    text: 'Analyze the 2x2 progressive matrix. Which geometric shape logically replaces the question mark (?) in the bottom-right cell?',
+    visual: (
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <img 
+          src="/assessments/matrix_pattern.png" 
+          alt="Matrix Pattern Completion" 
+          style={{ maxHeight: '220px', maxWidth: '100%', borderRadius: '10px', border: '1px solid rgba(0, 240, 255, 0.3)', boxShadow: '0 0 20px rgba(0, 240, 255, 0.15)' }} 
+        />
+      </div>
+    ),
     correctAnswer: 'A',
     options: [
-      {key: 'A', text: 'Top Center'},
-      {key: 'B', text: 'Center'},
-      {key: 'C', text: 'Top Right'},
-      {key: 'D', text: 'Top Left'},
+      { key: 'A', text: 'Circle completely filled (4/4)' },
+      { key: 'B', text: 'Empty circle outline' },
+      { key: 'C', text: 'Square completely filled' },
+      { key: 'D', text: 'Half circle rotated' },
     ],
   },
   {
@@ -375,15 +391,23 @@ export const COGNITIVE_QUESTIONS = [
     id: 'q_log_2',
     domain: 'logical_mathematical',
     difficulty: 1,
-    title: 'Basic Algebra',
-    text: 'If 3x + 5 = 20, what is the value of x?',
-    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'3rem', padding:'20px', fontFamily:'monospace'}}>3x + 5 = 20</div>,
-    correctAnswer: 'A',
+    title: 'Equilibrium Weight Logic',
+    text: 'The digital scale is currently in perfect equilibrium. Based on the diagram, 1 Cyan Cube is equal in weight to how many Purple Spheres?',
+    visual: (
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <img 
+          src="/assessments/balance_scale.png" 
+          alt="Digital Balance Scale" 
+          style={{ maxHeight: '200px', maxWidth: '100%', borderRadius: '10px', border: '1px solid rgba(0, 240, 255, 0.3)', boxShadow: '0 0 20px rgba(0, 240, 255, 0.15)' }} 
+        />
+      </div>
+    ),
+    correctAnswer: 'B',
     options: [
-      {key: 'A', text: '5'},
-      {key: 'B', text: '15'},
-      {key: 'C', text: '25/3'},
-      {key: 'D', text: '10'},
+      { key: 'A', text: '1 Sphere' },
+      { key: 'B', text: '2 Spheres' },
+      { key: 'C', text: '3 Spheres' },
+      { key: 'D', text: '4 Spheres' },
     ],
   },
   {
@@ -495,15 +519,23 @@ export const COGNITIVE_QUESTIONS = [
     id: 'q_exe_5',
     domain: 'executive_strategy',
     difficulty: 3,
-    title: 'Multi-Constraint Optimization',
-    text: 'Ship A needs to leave before Ship B. Ship C needs to leave after Ship B but before Ship D. What is the only valid departure sequence?',
-    visual: <div style={{display:'flex', justifyContent:'space-around', fontSize:'1.5rem', padding:'20px', fontWeight:'bold'}}>SHIP A &nbsp; SHIP B &nbsp; SHIP C &nbsp; SHIP D</div>,
+    title: 'Optimal Pathfinding',
+    text: 'You must route telemetry packets from Node A (Start) to Node D (Target) with the lowest total latency cost. Which route is optimal?',
+    visual: (
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <img 
+          src="/assessments/network_route.png" 
+          alt="Network Routing Diagram" 
+          style={{ maxHeight: '210px', maxWidth: '100%', borderRadius: '10px', border: '1px solid rgba(0, 240, 255, 0.3)', boxShadow: '0 0 20px rgba(0, 240, 255, 0.15)' }} 
+        />
+      </div>
+    ),
     correctAnswer: 'A',
     options: [
-      {key: 'A', text: 'A, B, C, D'},
-      {key: 'B', text: 'B, A, C, D'},
-      {key: 'C', text: 'A, C, B, D'},
-      {key: 'D', text: 'D, C, B, A'},
+      { key: 'A', text: 'Route A → B → D (Total Cost: 6)' },
+      { key: 'B', text: 'Route A → C → D (Total Cost: 8)' },
+      { key: 'C', text: 'Route A → C → B → D (Total Cost: 10)' },
+      { key: 'D', text: 'Both paths have equal cost' },
     ],
   },
 ];
