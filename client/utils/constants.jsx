@@ -563,11 +563,11 @@ export const COGNITIVE_QUESTIONS = [
     title: 'Schedule Conflict Resolution',
     text: 'Analyze the timeline schedule. Meeting X runs 2:00–3:00 PM, Meeting Y runs 2:30–3:15 PM, and Meeting Z runs 3:00–4:00 PM. Which two meetings can be fully attended without overlap?',
     visual: (
-      <div style={{ display: 'flex', justifyContent: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
         <img 
           src="/assessments/schedule_timeline.png" 
           alt="Schedule Timeline Conflict" 
-          style={{ maxHeight: '200px', maxWidth: '100%', borderRadius: '10px', border: '1px solid rgba(0, 240, 255, 0.3)', boxShadow: '0 0 20px rgba(0, 240, 255, 0.15)' }} 
+          style={{ width: '100%', maxHeight: '235px', objectFit: 'contain', borderRadius: '10px', border: '1px solid rgba(0, 240, 255, 0.35)', boxShadow: '0 0 20px rgba(0, 240, 255, 0.2)' }} 
         />
       </div>
     ),
