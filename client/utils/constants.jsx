@@ -483,15 +483,23 @@ export const COGNITIVE_QUESTIONS = [
     id: 'q_exe_1',
     domain: 'executive_strategy',
     difficulty: 1,
-    title: 'Triage Sorting',
-    text: 'You are organizing files. Rule: Docs go left, Images go right. You get a .JPG file. Where does it go?',
-    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'1.5rem', padding:'20px', fontWeight:'bold'}}>DOCUMENT &lt;- | -&gt; IMAGE</div>,
+    title: 'Triage File Sorting',
+    text: 'You are organizing files. Rule: Docs go left (←), Images go right (→). An incoming .JPG file is detected. Where does it go?',
+    visual: (
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <img 
+          src="/assessments/triage_sorting.png" 
+          alt="Triage File Sorting" 
+          style={{ maxHeight: '190px', maxWidth: '100%', borderRadius: '10px', border: '1px solid rgba(0, 240, 255, 0.3)', boxShadow: '0 0 20px rgba(0, 240, 255, 0.15)' }} 
+        />
+      </div>
+    ),
     correctAnswer: 'B',
     options: [
-      {key: 'A', text: 'Left'},
-      {key: 'B', text: 'Right'},
-      {key: 'C', text: 'Archive'},
-      {key: 'D', text: 'Delete'},
+      { key: 'A', text: 'Left (Documents Folder)' },
+      { key: 'B', text: 'Right (Images Folder)' },
+      { key: 'C', text: 'Archive Quarantine' },
+      { key: 'D', text: 'Delete File' },
     ],
   },
   {
@@ -513,15 +521,23 @@ export const COGNITIVE_QUESTIONS = [
     id: 'q_exe_3',
     domain: 'executive_strategy',
     difficulty: 2,
-    title: 'Resource Allocation',
-    text: 'You have $100. Task A costs $60 (High Priority). Task B costs $50 (Medium). Task C costs $30 (Low). Which combination maximizes priority without overspending?',
-    visual: <div style={{display:'flex', justifyContent:'center', fontSize:'2rem', padding:'20px'}}>REWARD: $100</div>,
+    title: 'Resource Budget Optimization',
+    text: 'You have a fixed budget of $100. Task A costs $60 (High Priority), Task B costs $50 (Medium Priority), and Task C costs $30 (Low Priority). Which combination maximizes priority without overspending?',
+    visual: (
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <img 
+          src="/assessments/resource_allocation.png" 
+          alt="Resource Budget Optimization" 
+          style={{ maxHeight: '200px', maxWidth: '100%', borderRadius: '10px', border: '1px solid rgba(0, 240, 255, 0.3)', boxShadow: '0 0 20px rgba(0, 240, 255, 0.15)' }} 
+        />
+      </div>
+    ),
     correctAnswer: 'B',
     options: [
-      {key: 'A', text: 'A and B'},
-      {key: 'B', text: 'A and C'},
-      {key: 'C', text: 'B and C'},
-      {key: 'D', text: 'Only A'},
+      { key: 'A', text: 'Task A and Task B ($110)' },
+      { key: 'B', text: 'Task A and Task C ($90)' },
+      { key: 'C', text: 'Task B and Task C ($80)' },
+      { key: 'D', text: 'Only Task A ($60)' },
     ],
   },
   {
