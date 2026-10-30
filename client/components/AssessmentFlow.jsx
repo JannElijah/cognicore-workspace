@@ -14,7 +14,7 @@ const CyberCorner = ({ color = '#00f0ff', size = 8 }) => (
 
 // Front-facing Vector Icons matching Cyber-HUD
 const ReflexesIcon = ({ color = '#00f0ff' }) => (
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
     <path d="M4 18C4 15 5 13 6 12C6 9 7 5 12 5C17 5 18 8 18 11C18 13.5 17 15 15.5 16.5C14.5 17.5 14 19 14 20" stroke={color} strokeWidth="1.6" strokeLinecap="round" />
     <path d="M4 18C4 19.5 5 20.5 7 21H13" stroke={color} strokeWidth="1.6" strokeLinecap="round" />
     <path d="M9 10L10.5 8L12 12L13.5 9L15 11" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
@@ -24,7 +24,7 @@ const ReflexesIcon = ({ color = '#00f0ff' }) => (
 );
 
 const MemoryIcon = ({ color = '#818cf8' }) => (
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
     <rect x="3" y="3" width="7.5" height="7.5" rx="1.5" stroke={color} strokeWidth="1.6" fill="rgba(129, 140, 248, 0.15)"/>
     <rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5" stroke={color} strokeWidth="1.6" strokeDasharray="2 2"/>
     <rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5" stroke={color} strokeWidth="1.6" strokeDasharray="2 2"/>
@@ -33,7 +33,7 @@ const MemoryIcon = ({ color = '#818cf8' }) => (
 );
 
 const LogicIcon = ({ color = '#38bdf8' }) => (
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
     <circle cx="8" cy="8" r="3.5" stroke={color} strokeWidth="1.5" fill="rgba(56, 189, 248, 0.12)"/>
     <path d="M8 2.5V4M8 12V13.5M2.5 8H4M12 8H13.5" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
     <circle cx="15.5" cy="13.5" r="3" stroke={color} strokeWidth="1.5" fill="rgba(56, 189, 248, 0.12)"/>
@@ -45,7 +45,7 @@ const LogicIcon = ({ color = '#38bdf8' }) => (
 );
 
 const StrategyIcon = ({ color = '#f43f5e' }) => (
-  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+  <svg width="34" height="34" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
     <circle cx="5.5" cy="18.5" r="2.5" stroke={color} strokeWidth="1.6"/>
     <path d="M15.5 5.5L19.5 9.5M19.5 5.5L15.5 9.5" stroke={color} strokeWidth="1.6" strokeLinecap="round"/>
     <path d="M8 16.5C11 14 11 10 14 8H16" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeDasharray="2 2"/>
@@ -323,12 +323,12 @@ export default function AssessmentFlow({
       <div 
         className="assessment-hud-container" 
         style={{ 
-          maxWidth: '1180px', 
-          margin: '0.1rem auto', 
-          padding: isMobile ? '0.25rem' : '0.25rem 0.65rem', 
+          maxWidth: '1240px', 
+          margin: isMobile ? '0.5rem auto' : '0.4rem auto', 
+          padding: isMobile ? '0.5rem' : '0.5rem 1rem', 
           display: 'flex',
           flexDirection: isMobile ? 'column' : 'row',
-          gap: isMobile ? '0.65rem' : '1rem',
+          gap: isMobile ? '1rem' : '1.35rem',
           alignItems: 'stretch',
           animation: 'fadeIn 0.4s ease-out',
           boxSizing: 'border-box'
@@ -338,12 +338,12 @@ export default function AssessmentFlow({
         <div 
           style={{
             flex: '1',
-            maxWidth: isMobile ? '100%' : '360px',
-            minWidth: isMobile ? '100%' : '300px',
+            maxWidth: isMobile ? '100%' : '370px',
+            minWidth: isMobile ? '100%' : '310px',
             background: 'radial-gradient(circle at 15% 15%, rgba(15, 23, 42, 0.96) 0%, rgba(6, 12, 26, 0.98) 100%)',
             border: '1.5px solid rgba(0, 240, 255, 0.35)',
-            borderRadius: '12px',
-            padding: '0.45rem 0.7rem',
+            borderRadius: '14px',
+            padding: '0.85rem 1rem',
             boxShadow: '0 0 25px rgba(0, 240, 255, 0.12), inset 0 0 20px rgba(0, 240, 255, 0.04)',
             position: 'relative',
             display: 'flex',
@@ -365,7 +365,7 @@ export default function AssessmentFlow({
             background: activeDetail.accentBg,
             border: `1.5px solid ${activeDetail.color}`,
             borderRadius: '8px',
-            padding: '0.3rem 0.6rem',
+            padding: '0.45rem 0.75rem',
             color: activeDetail.color,
             fontWeight: '900',
             fontSize: '1rem',
@@ -379,21 +379,22 @@ export default function AssessmentFlow({
           {/* Clinical Description */}
           <p style={{
             color: '#cbd5e1',
-            fontSize: '0.74rem',
-            lineHeight: '1.35',
-            marginTop: '0.4rem',
-            marginBottom: '0.15rem',
-            minHeight: isMobile ? 'auto' : '44px'
+            fontSize: '0.82rem',
+            lineHeight: '1.45',
+            marginTop: '0.65rem',
+            marginBottom: '0.35rem',
+            minHeight: isMobile ? 'auto' : '55px'
           }}>
             {activeDetail.clinicalDescription}
           </p>
 
           {/* TARGET METRICS */}
-          <div style={{ marginTop: '0.25rem' }}>
+          <div style={{ marginTop: '0.35rem' }}>
             <div style={{ color: '#00f0ff', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '0.08em', marginBottom: '0.2rem' }}>
               TARGET METRICS
             </div>
-            <ul style={{ margin: 0, paddingLeft: '1.1rem', color: '#e2e8f0', fontSize: '0.7rem', lineHeight: '1.3' }}>
+            <ul style={{ margin: 0, paddingLeft: '1.1rem', color: '#e2e8f0', fontSize: '0.72rem',
+              lineHeight: '1.35' }}>
               {activeDetail.metrics.map((m, idx) => (
                 <li key={idx} style={{ color: '#cbd5e1' }}>
                   <span style={{ color: '#f1f5f9' }}>{m}</span>
@@ -403,7 +404,7 @@ export default function AssessmentFlow({
           </div>
 
           {/* MAPPED MINI-GAMES */}
-          <div style={{ marginTop: '0.25rem' }}>
+          <div style={{ marginTop: '0.45rem' }}>
             <div style={{ color: '#00f0ff', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '0.08em', marginBottom: '0.25rem' }}>
               MAPPED MINI-GAMES
             </div>
@@ -415,9 +416,9 @@ export default function AssessmentFlow({
                     background: 'rgba(2, 6, 23, 0.85)',
                     border: '1px solid rgba(56, 189, 248, 0.35)',
                     borderRadius: '6px',
-                    padding: '0.18rem 0.4rem',
+                    padding: '0.2rem 0.45rem',
                     color: '#f1f5f9',
-                    fontSize: '0.62rem',
+                    fontSize: '0.66rem',
                     fontWeight: '800',
                     letterSpacing: '0.04em',
                     boxShadow: '0 2px 6px rgba(0,0,0,0.4)'
@@ -432,7 +433,7 @@ export default function AssessmentFlow({
           {/* TESTING GUIDELINES (Participant Instructions) */}
           <div style={{
             marginTop: 'auto',
-            paddingTop: '0.25rem',
+            paddingTop: '0.45rem',
             borderTop: '1px solid rgba(0, 240, 255, 0.15)'
           }}>
             <div style={{
@@ -470,34 +471,43 @@ export default function AssessmentFlow({
               background: 'rgba(2, 6, 23, 0.75)',
               border: '1px solid rgba(0, 240, 255, 0.2)',
               borderRadius: '8px',
-              padding: '0.35rem 0.55rem',
+              padding: '0.55rem 0.75rem',
               display: 'flex',
               flexDirection: 'column',
-              gap: '0.2rem'
+              gap: '0.35rem'
             }}>
               <div>
-                <div style={{ color: '#f1f5f9', fontSize: '0.68rem', fontWeight: '800', marginBottom: '0.02rem' }}>
+                <div style={{ color: '#f1f5f9', fontSize: '0.72rem',
+                  fontWeight: '800',
+                  marginBottom: '0.05rem' }}>
                   1. Pacing &amp; Time Limit
                 </div>
-                <div style={{ color: '#94a3b8', fontSize: '0.64rem', lineHeight: '1.25' }}>
+                <div style={{ color: '#94a3b8', fontSize: '0.66rem',
+                  lineHeight: '1.3' }}>
                   You have 30 seconds per item. Answer promptly to reflect natural cognitive processing.
                 </div>
               </div>
 
               <div>
-                <div style={{ color: '#f1f5f9', fontSize: '0.68rem', fontWeight: '800', marginBottom: '0.02rem' }}>
+                <div style={{ color: '#f1f5f9', fontSize: '0.72rem',
+                  fontWeight: '800',
+                  marginBottom: '0.05rem' }}>
                   2. Confidence Rating
                 </div>
-                <div style={{ color: '#94a3b8', fontSize: '0.64rem', lineHeight: '1.25' }}>
+                <div style={{ color: '#94a3b8', fontSize: '0.66rem',
+                  lineHeight: '1.3' }}>
                   After each answer, rate your certainty to measure metacognitive self-awareness.
                 </div>
               </div>
 
               <div>
-                <div style={{ color: '#f1f5f9', fontSize: '0.68rem', fontWeight: '800', marginBottom: '0.02rem' }}>
+                <div style={{ color: '#f1f5f9', fontSize: '0.72rem',
+                  fontWeight: '800',
+                  marginBottom: '0.05rem' }}>
                   3. Dynamic Calibration
                 </div>
-                <div style={{ color: '#94a3b8', fontSize: '0.64rem', lineHeight: '1.25' }}>
+                <div style={{ color: '#94a3b8', fontSize: '0.66rem',
+                  lineHeight: '1.3' }}>
                   Questions adapt dynamically to your skill level. There is no penalty for unfamiliar patterns.
                 </div>
               </div>
@@ -512,9 +522,9 @@ export default function AssessmentFlow({
             flex: '1.6',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'flex-start',
-            gap: '0.35rem',
-            minWidth: isMobile ? '100%' : '480px',
+            justifyContent: 'space-between',
+            gap: '0.75rem',
+            minWidth: isMobile ? '100%' : '520px',
             boxSizing: 'border-box'
           }}
         >
@@ -522,9 +532,9 @@ export default function AssessmentFlow({
           <div>
             <h1 style={{ 
               color: '#ffffff', 
-              fontSize: isMobile ? '1.25rem' : '1.4rem',
+              fontSize: isMobile ? '1.4rem' : '1.75rem',
               fontWeight: '900',
-              margin: '0 0 0.1rem 0',
+              margin: '0 0 0.25rem 0',
               letterSpacing: '0.02em',
               textAlign: isMobile ? 'center' : 'left'
             }}>
@@ -532,8 +542,8 @@ export default function AssessmentFlow({
             </h1>
             <p style={{ 
               color: '#94a3b8', 
-              fontSize: '0.78rem',
-              margin: '0 0 0.25rem 0',
+              fontSize: '0.88rem',
+              margin: '0 0 0.45rem 0',
               textAlign: isMobile ? 'center' : 'left'
             }}>
               Select which domains you wish to test
@@ -556,7 +566,7 @@ export default function AssessmentFlow({
                 ? '0 0 20px rgba(0, 240, 255, 0.3), inset 0 0 15px rgba(0, 240, 255, 0.08)' 
                 : 'none',
               borderRadius: '12px',
-              padding: '0.45rem 0.75rem',
+              padding: '0.65rem 0.95rem',
               cursor: 'pointer',
               position: 'relative',
               transition: 'all 0.2s ease',
@@ -566,7 +576,9 @@ export default function AssessmentFlow({
             {selectedDomainFilter === 'all' && <CyberCorner color="#00f0ff" size={9} />}
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
-              <div style={{ color: '#00f0ff', fontWeight: '900', fontSize: '0.85rem', letterSpacing: '0.02em' }}>
+              <div style={{ color: '#00f0ff',
+                fontWeight: '900',
+                fontSize: '0.98rem', letterSpacing: '0.02em' }}>
                 Comprehensive (All Domains) — RECOMMENDED
               </div>
               <div style={{ 
@@ -585,7 +597,9 @@ export default function AssessmentFlow({
                 )}
               </div>
             </div>
-            <div style={{ color: '#cbd5e1', fontSize: '0.72rem', lineHeight: '1.25' }}>
+            <div style={{ color: '#cbd5e1',
+              fontSize: '0.8rem',
+              lineHeight: '1.35' }}>
               A full baseline test covering all 4 cognitive domains. Recommended for first-time users.
             </div>
           </div>
@@ -594,8 +608,8 @@ export default function AssessmentFlow({
           <div style={{
             display: 'grid',
             gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-            gap: '0.35rem',
-            margin: '0.15rem 0'
+            gap: '0.65rem',
+            margin: '0.25rem 0'
           }}>
             {[
               {
@@ -645,7 +659,7 @@ export default function AssessmentFlow({
                       ? `0 0 18px ${d.color}50, inset 0 0 12px ${d.color}15` 
                       : 'none',
                     borderRadius: '12px',
-                    padding: '0.45rem 0.65rem',
+                    padding: '0.7rem 0.95rem',
                     cursor: 'pointer',
                     position: 'relative',
                     display: 'flex',
@@ -707,9 +721,9 @@ export default function AssessmentFlow({
             background: 'rgba(239, 68, 68, 0.08)', 
             border: '1px solid rgba(239, 68, 68, 0.35)', 
             color: '#f87171',
-            padding: '0.3rem 0.75rem',
+            padding: '0.55rem 1rem',
             borderRadius: '8px',
-            fontSize: '0.74rem',
+            fontSize: '0.84rem',
             fontWeight: '700',
             display: 'flex',
             alignItems: 'center',
@@ -722,7 +736,7 @@ export default function AssessmentFlow({
           </div>
 
           {/* Action Button */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.15rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.35rem' }}>
             <button 
               onClick={handleStart}
               style={{ 
@@ -730,8 +744,8 @@ export default function AssessmentFlow({
                 color: '#020617', 
                 border: 'none', 
                 borderRadius: '8px', 
-                padding: '0.45rem 2.5rem',
-                fontSize: '0.92rem', 
+                padding: '0.75rem 3.5rem',
+                fontSize: '1.1rem', 
                 fontWeight: '900', 
                 cursor: 'pointer', 
                 transition: 'all 0.2s ease', 

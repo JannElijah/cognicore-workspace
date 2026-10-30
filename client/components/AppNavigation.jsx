@@ -24,7 +24,7 @@ const AppNavigation = memo(function AppNavigation({
   return (
     <>
       <header className="portal-header">
-        <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', gap: isMobile ? '0.5rem' : '1.25rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
           <div className="logo-glow" onClick={() => { setActiveGame(null); setShowDashboard(false); setPortalView('participant'); }} style={{ cursor: 'pointer', alignSelf: 'flex-start', display: 'flex', alignItems: 'center' }}>
             <img src="/logo.png" alt="CogniCore" style={{ height: '42px', width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 2px 12px rgba(var(--rgb-secondary), 0.45))' }} />
           </div>
