@@ -7,17 +7,35 @@ const SeizureDisclaimerModal = () => {
   const { setReduceFlashes } = useCogniStore();
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const forceShow = params.get('disclaimer') === 'true' || params.has('disclaimer');
     const accepted = localStorage.getItem('cognicore_seizure_disclaimer');
-    if (!accepted) {
+    if (!accepted || forceShow) {
       setShow(true);
     }
   }, []);
 
   const handleAccept = (safeMode) => {
-    if (safeMode) {
-      setReduceFlashes(true);
+    try {
+      if (safeMode) {
+        if (typeof setReduceFlashes === 'function') {
+          setReduceFlashes(true);
+        }
+        localStorage.setItem('cognicore_reduce_flashes', 'true');
+      }
+      localStorage.setItem('cognicore_seizure_disclaimer', 'true');
+
+      // Clear ?disclaimer query param if present
+      if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has('disclaimer')) {
+          url.searchParams.delete('disclaimer');
+          window.history.replaceState({}, document.title, url.pathname + (url.search ? url.search : ''));
+        }
+      }
+    } catch (err) {
+      console.error('Error in handleAccept:', err);
     }
-    localStorage.setItem('cognicore_seizure_disclaimer', 'true');
     setShow(false);
   };
 
@@ -50,8 +68,9 @@ const SeizureDisclaimerModal = () => {
         border: '1px solid rgba(239, 68, 68, 0.45)',
         borderRadius: '16px',
         width: '100%',
-        maxWidth: '480px',
-        maxHeight: 'min(92vh, 560px)',
+        maxWidth: '520px',
+        maxHeight: '94vh',
+        overflowY: 'auto',
         boxShadow: '0 25px 50px -12px rgba(239, 68, 68, 0.35), 0 0 30px rgba(239, 68, 68, 0.12)',
         display: 'flex',
         flexDirection: 'column',
@@ -65,7 +84,7 @@ const SeizureDisclaimerModal = () => {
         <div style={{
           display: 'flex',
           justifyContent: 'center',
-          marginBottom: '0.625rem',
+          marginBottom: '0.75rem',
           flexShrink: 0
         }}>
           <div style={{
@@ -85,23 +104,20 @@ const SeizureDisclaimerModal = () => {
         </div>
 
         <h2 style={{
-          fontSize: 'clamp(1.2rem, 2.5vw, 1.45rem)',
+          fontSize: 'clamp(1.25rem, 2.5vw, 1.5rem)',
           fontWeight: '700',
           color: '#f8fafc',
-          margin: '0 0 0.75rem 0',
+          margin: '0 0 1rem 0',
           letterSpacing: '0.015em',
           flexShrink: 0
         }}>
           Photosensitivity Warning
         </h2>
 
-        {/* Scrollable text container */}
+        {/* Text Container with natural height to prevent clipping */}
         <div style={{
-          flex: '1 1 auto',
-          overflowY: 'auto',
-          minHeight: 0,
-          paddingRight: '0.25rem',
-          marginBottom: '1.125rem',
+          width: '100%',
+          marginBottom: '1.25rem',
           textAlign: 'left'
         }}>
           <div style={{
@@ -109,24 +125,23 @@ const SeizureDisclaimerModal = () => {
             border: '1px solid rgba(239, 68, 68, 0.25)',
             borderRadius: '10px',
             padding: '0.875rem 1rem',
-            marginBottom: '0.625rem'
+            marginBottom: '0.75rem'
           }}>
             <p style={{ color: '#f1f5f9', fontSize: '0.85rem', lineHeight: '1.55', margin: 0 }}>
               CogniCore contains intense visual patterns, rapidly flashing colors, and animations that may trigger seizures in people with photosensitive epilepsy.
             </p>
           </div>
-          <p style={{ color: '#94a3b8', fontSize: '0.825rem', lineHeight: '1.5', margin: 0 }}>
+          <p style={{ color: '#cbd5e1', fontSize: '0.825rem', lineHeight: '1.55', margin: 0 }}>
             If you or anyone in your family has an epileptic condition, consult your physician before playing. If you experience dizziness, altered vision, eye or muscle twitches, or involuntary movements, <strong style={{ color: '#f87171' }}>stop playing immediately</strong>.
           </p>
         </div>
 
-        {/* Action Buttons - Always visible at bottom */}
+        {/* Action Buttons */}
         <div style={{
           display: 'flex',
           flexDirection: 'column',
           gap: '0.625rem',
-          flexShrink: 0,
-          marginTop: 'auto'
+          flexShrink: 0
         }}>
           <button
             onClick={() => handleAccept(false)}

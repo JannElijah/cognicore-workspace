@@ -46,3 +46,6 @@ server/cognitive_model.pkl
 server/clustering_model.pkl
 server/scaler.pkl
 server/model_versions/
+
+# Scratch test files
+scratch/

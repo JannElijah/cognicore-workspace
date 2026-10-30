@@ -28,6 +28,7 @@ export interface CogniStore {
   cognitiveProfile: CognitiveProfile;
   login: (userData: User, token: string) => void;
   logout: () => void;
+  setReduceFlashes: (val: boolean) => void;
   setCognitiveProfile: (profileData: CognitiveProfile) => void;
   fetchInventory: () => Promise<void>;
 }
@@ -53,11 +54,13 @@ const useCogniStore = create<CogniStore>((set, get) => ({
     coins: 0, 
     totalXp: 0, 
     inventory: [],
-  stats: null, 
+    stats: null, 
     reduceFlashes: false, 
     cognitiveProfile: { archetype: null, confidence_score: 0.0 } 
   }),
   
+  setReduceFlashes: (val: boolean) => set({ reduceFlashes: val }),
+
   setCognitiveProfile: (profileData) => set({ cognitiveProfile: profileData }),
 
   fetchInventory: async () => {
