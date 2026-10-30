@@ -354,22 +354,9 @@ export default function AssessmentFlow({
           <CyberCorner color="#00f0ff" size={10} />
 
           {/* HUD Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
-            <span style={{ color: '#00f0ff', fontSize: '0.72rem', fontWeight: '800', letterSpacing: '0.07em' }}>
+          <div style={{ marginBottom: '0.85rem' }}>
+            <span style={{ color: '#00f0ff', fontSize: '0.74rem', fontWeight: '800', letterSpacing: '0.07em' }}>
               DOMAIN SPECIFICATION &amp; CLINICAL BREAKDOWN
-            </span>
-            <span style={{ 
-              background: 'rgba(16, 185, 129, 0.15)', 
-              border: '1px solid #10b981', 
-              color: '#10b981', 
-              fontSize: '0.62rem', 
-              fontWeight: '800', 
-              padding: '2px 8px', 
-              borderRadius: '9999px',
-              letterSpacing: '0.04em',
-              boxShadow: '0 0 8px rgba(16, 185, 129, 0.4)'
-            }}>
-              NODE ACTIVE
             </span>
           </div>
 
@@ -442,56 +429,6 @@ export default function AssessmentFlow({
             </div>
           </div>
 
-          {/* NEURAL PULSE WAVEFORM */}
-          <div style={{ marginTop: '0.9rem' }}>
-            <div style={{ color: '#00f0ff', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '0.08em', marginBottom: '0.45rem' }}>
-              NEURAL PULSE WAVEFORM
-            </div>
-            <div style={{
-              backgroundImage: 'linear-gradient(rgba(0, 240, 255, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 240, 255, 0.08) 1px, transparent 1px)',
-              backgroundSize: '14px 14px',
-              backgroundColor: 'rgba(2, 6, 23, 0.75)',
-              border: '1px solid rgba(0, 240, 255, 0.25)',
-              borderRadius: '8px',
-              padding: '0.4rem 0.25rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              <svg width="100%" height="52" viewBox="0 0 300 52" fill="none">
-                <path 
-                  d="M0 26 H55 L67 8 L77 44 L87 14 L97 34 L107 26 H165 L177 6 L187 46 L197 12 L207 36 L217 26 H300" 
-                  stroke="#00f0ff" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  fill="none" 
-                  style={{ filter: 'drop-shadow(0 0 6px #00f0ff)' }} 
-                />
-              </svg>
-            </div>
-
-            {/* Bottom Telemetry Footer */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.65rem' }}>
-              <span style={{ 
-                background: 'rgba(16, 185, 129, 0.12)', 
-                border: '1px solid #10b981', 
-                color: '#10b981', 
-                fontSize: '0.58rem', 
-                fontWeight: '800', 
-                padding: '2px 6px', 
-                borderRadius: '4px' 
-              }}>
-                NODE ACTIVE
-              </span>
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: '14px' }}>
-                <div style={{ width: '3px', height: '6px', background: '#00f0ff', borderRadius: '1px' }} />
-                <div style={{ width: '3px', height: '12px', background: '#00f0ff', borderRadius: '1px' }} />
-                <div style={{ width: '3px', height: '14px', background: '#38bdf8', borderRadius: '1px' }} />
-                <div style={{ width: '3px', height: '8px', background: '#38bdf8', borderRadius: '1px' }} />
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* ================= RIGHT COLUMN: COGNITIVE EVALUATION SELECTOR ================= */}
