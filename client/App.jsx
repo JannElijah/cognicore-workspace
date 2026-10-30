@@ -2272,11 +2272,13 @@ export default function App() {
             assessmentLoading={assessmentLoading}
           />
         ) : assessmentStage === 'pre-test-results' ? (
-          <div style={{ maxWidth: '900px', margin: '2rem auto', animation: 'fadeIn 0.5s ease-out' }}>
+          <div style={{ maxWidth: '1360px', width: '100%', margin: '0.75rem auto', padding: '0 1rem', animation: 'fadeIn 0.5s ease-out' }}>
             <PretestResults 
               preTestScores={preTestScores} 
               weakestDomain={weakestDomain} 
               prescribedGame={prescribedGame}
+              personalizedReport={personalizedReport}
+              onProceedToDashboard={() => setAssessmentStage('none')}
               onStartPrescribedGame={() => {
                 setAssessmentStage('none');
                 if (isMobile) {
@@ -2291,27 +2293,6 @@ export default function App() {
               }}
               isMobile={isMobile}
             />
-            <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-               <button 
-                 onClick={() => setAssessmentStage('none')}
-                 style={{
-                   padding: '1rem 2.5rem',
-                   background: 'linear-gradient(to right, var(--color-primary), var(--color-secondary))',
-                   color: '#fff',
-                   border: 'none',
-                   borderRadius: '30px',
-                   fontWeight: 'bold',
-                   fontSize: '1.2rem',
-                   cursor: 'pointer',
-                   boxShadow: '0 4px 15px rgba(var(--rgb-primary), 0.4)',
-                   transition: 'all 0.2s'
-                 }}
-                 onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-                 onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
-               >
-                 Proceed to Dashboard
-               </button>
-            </div>
           </div>
         ) : (activeGame && !isMobile) ? (
 
