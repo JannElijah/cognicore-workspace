@@ -233,15 +233,23 @@ export const COGNITIVE_QUESTIONS = [
     id: 'q_ref_2',
     domain: 'reflexes_and_focus',
     difficulty: 1,
-    title: 'Reaction Match',
-    text: 'Target is YELLOW. The sequence flashes: PURPLE, YELLOW, YELLOW. How many times did the target appear?',
-    visual: <div style={{display:'flex', justifyContent:'center', gap:'12px', fontSize:'1.5rem', padding:'20px', fontWeight:'bold'}}><span style={{color:'#a855f7'}}>[PURPLE]</span><span style={{color:'#facc15'}}>[YELLOW]</span><span style={{color:'#facc15'}}>[YELLOW]</span></div>,
-    correctAnswer: 'C',
+    title: 'Radar Target Discrimination',
+    text: 'RADAR SCAN OVERRIDE: Three quadrants transmit standard cyan circle signals, while one rogue quadrant transmits an anomalous amber warning triangle. In which quadrant is the rogue target located?',
+    visual: (
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <img 
+          src="/assessments/radar_discrimination.png" 
+          alt="Radar Target Discrimination" 
+          style={{ maxHeight: '190px', maxWidth: '100%', borderRadius: '10px', border: '1px solid rgba(0, 240, 255, 0.3)', boxShadow: '0 0 20px rgba(0, 240, 255, 0.15)' }} 
+        />
+      </div>
+    ),
+    correctAnswer: 'B',
     options: [
-      {key: 'A', text: '0'},
-      {key: 'B', text: '1'},
-      {key: 'C', text: '2'},
-      {key: 'D', text: '3'},
+      { key: 'A', text: 'Top-Left (Quadrant I)' },
+      { key: 'B', text: 'Top-Right (Quadrant II)' },
+      { key: 'C', text: 'Bottom-Left (Quadrant III)' },
+      { key: 'D', text: 'Bottom-Right (Quadrant IV)' },
     ],
   },
   {
@@ -385,15 +393,23 @@ export const COGNITIVE_QUESTIONS = [
     id: 'q_spat_5',
     domain: 'spatial_visual_memory',
     difficulty: 3,
-    title: '3D Cube Fold',
-    text: 'A cross-shaped flat net of 6 squares is folded into a cube. If the RED square is on the bottom, and the BLUE square is adjacent to it, can the BLUE square ever be on top?',
-    visual: <div style={{display:'flex', justifyContent:'center', gap:'16px', fontSize:'1.5rem', padding:'20px', fontWeight:'bold'}}><span>[CUBE]</span><span style={{color:'#ef4444'}}>[RED]</span><span style={{color:'#3b82f6'}}>[BLUE]</span></div>,
+    title: '3D Cube Net Folding',
+    text: 'A 2D cross-shaped flat net of 6 squares is folded along its seams into a 3D cube. If the RED square forms the bottom (base), and the BLUE square is directly adjacent to it, can the BLUE square ever form the top face?',
+    visual: (
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <img 
+          src="/assessments/cube_net_fold.png" 
+          alt="3D Cube Net Folding" 
+          style={{ maxHeight: '200px', maxWidth: '100%', borderRadius: '10px', border: '1px solid rgba(0, 240, 255, 0.3)', boxShadow: '0 0 20px rgba(0, 240, 255, 0.15)' }} 
+        />
+      </div>
+    ),
     correctAnswer: 'B',
     options: [
-      {key: 'A', text: 'Yes, always'},
-      {key: 'B', text: 'No, never'},
-      {key: 'C', text: 'Only if rotated'},
-      {key: 'D', text: 'Depends on the other colors'},
+      { key: 'A', text: 'Yes, always' },
+      { key: 'B', text: 'No, never (It folds into a side wall)' },
+      { key: 'C', text: 'Only if rotated 90 degrees' },
+      { key: 'D', text: 'Depends on folding sequence' },
     ],
   },
   {
