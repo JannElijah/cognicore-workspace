@@ -1,5 +1,141 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { DOMAIN_INFO, COGNITIVE_QUESTIONS, DOMAINS_LIST } from '../utils/constants';
+import useDeviceDetect from '../hooks/useDeviceDetect';
+
+// Tech Corner Brackets for Cyber-HUD Aesthetic
+const CyberCorner = ({ color = '#00f0ff', size = 8 }) => (
+  <>
+    <div style={{ position: 'absolute', top: -1, left: -1, width: size, height: size, borderTop: `2px solid ${color}`, borderLeft: `2px solid ${color}`, pointerEvents: 'none' }} />
+    <div style={{ position: 'absolute', top: -1, right: -1, width: size, height: size, borderTop: `2px solid ${color}`, borderRight: `2px solid ${color}`, pointerEvents: 'none' }} />
+    <div style={{ position: 'absolute', bottom: -1, left: -1, width: size, height: size, borderBottom: `2px solid ${color}`, borderLeft: `2px solid ${color}`, pointerEvents: 'none' }} />
+    <div style={{ position: 'absolute', bottom: -1, right: -1, width: size, height: size, borderBottom: `2px solid ${color}`, borderRight: `2px solid ${color}`, pointerEvents: 'none' }} />
+  </>
+);
+
+// Front-facing Vector Icons matching Cyber-HUD
+const ReflexesIcon = ({ color = '#00f0ff' }) => (
+  <svg width="38" height="38" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+    <path d="M4 18C4 15 5 13 6 12C6 9 7 5 12 5C17 5 18 8 18 11C18 13.5 17 15 15.5 16.5C14.5 17.5 14 19 14 20" stroke={color} strokeWidth="1.6" strokeLinecap="round" />
+    <path d="M4 18C4 19.5 5 20.5 7 21H13" stroke={color} strokeWidth="1.6" strokeLinecap="round" />
+    <path d="M9 10L10.5 8L12 12L13.5 9L15 11" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="10.5" cy="8" r="1" fill={color} />
+    <circle cx="13.5" cy="9" r="1" fill={color} />
+  </svg>
+);
+
+const MemoryIcon = ({ color = '#818cf8' }) => (
+  <svg width="38" height="38" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+    <rect x="3" y="3" width="7.5" height="7.5" rx="1.5" stroke={color} strokeWidth="1.6" fill="rgba(129, 140, 248, 0.15)"/>
+    <rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5" stroke={color} strokeWidth="1.6" strokeDasharray="2 2"/>
+    <rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5" stroke={color} strokeWidth="1.6" strokeDasharray="2 2"/>
+    <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5" stroke={color} strokeWidth="1.6" fill="rgba(129, 140, 248, 0.35)"/>
+  </svg>
+);
+
+const LogicIcon = ({ color = '#38bdf8' }) => (
+  <svg width="38" height="38" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+    <circle cx="8" cy="8" r="3.5" stroke={color} strokeWidth="1.5" fill="rgba(56, 189, 248, 0.12)"/>
+    <path d="M8 2.5V4M8 12V13.5M2.5 8H4M12 8H13.5" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
+    <circle cx="15.5" cy="13.5" r="3" stroke={color} strokeWidth="1.5" fill="rgba(56, 189, 248, 0.12)"/>
+    <path d="M15.5 9V10.2M15.5 16.8V18M11 13.5H12.2M18.8 13.5H20" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
+    <text x="3.5" y="21" fill={color} fontSize="7" fontWeight="bold" fontFamily="monospace">∑</text>
+    <text x="8.5" y="21" fill={color} fontSize="7" fontWeight="bold" fontFamily="monospace">√</text>
+    <text x="13.5" y="21" fill={color} fontSize="7" fontWeight="bold" fontFamily="monospace">+</text>
+  </svg>
+);
+
+const StrategyIcon = ({ color = '#f43f5e' }) => (
+  <svg width="38" height="38" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+    <circle cx="5.5" cy="18.5" r="2.5" stroke={color} strokeWidth="1.6"/>
+    <path d="M15.5 5.5L19.5 9.5M19.5 5.5L15.5 9.5" stroke={color} strokeWidth="1.6" strokeLinecap="round"/>
+    <path d="M8 16.5C11 14 11 10 14 8H16" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeDasharray="2 2"/>
+    <path d="M14 6L16.5 8L14 10" stroke={color} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const DOMAIN_DETAILS = {
+  all: {
+    id: 'all',
+    title: 'Comprehensive (All Domains)',
+    badgeTitle: 'ALL DOMAINS COMPREHENSIVE',
+    color: '#00f0ff',
+    glowColor: 'rgba(0, 240, 255, 0.4)',
+    accentBg: 'rgba(0, 240, 255, 0.12)',
+    clinicalDescription: 'Executes a standardized 4-domain psychometric battery to calibrate baseline ability parameters (θ) for closed-loop IRT difficulty modulation.',
+    metrics: [
+      'Global Baseline Ability (θ)',
+      'Item Response Latency (ms)',
+      'Cross-Domain Cognitive Variance'
+    ],
+    games: ['SPEED TAP', 'MEMORY MATCH', 'EQUATION BALANCE', 'ROUTE OPTIMIZER'],
+    gamesCount: '12 PHASER GAMES'
+  },
+  reflexes_and_focus: {
+    id: 'reflexes_and_focus',
+    title: 'Reflexes & Focus',
+    badgeTitle: 'REFLEXES & FOCUS',
+    color: '#00f0ff',
+    glowColor: 'rgba(0, 240, 255, 0.4)',
+    accentBg: 'rgba(0, 240, 255, 0.12)',
+    clinicalDescription: 'Measures psychomotor reaction speed, sustained attention, and inhibitory control under high-speed visual stimuli.',
+    metrics: [
+      'Reaction Latency (ms)',
+      'Distractor Suppression',
+      'Decision Accuracy'
+    ],
+    games: ['SPEED TAP', 'FOCUS FINDER', 'STROOP SHIFT'],
+    gamesCount: '3 PHASER GAMES'
+  },
+  spatial_visual_memory: {
+    id: 'spatial_visual_memory',
+    title: 'Spatial-Visual Memory',
+    badgeTitle: 'SPATIAL-VISUAL MEMORY',
+    color: '#818cf8',
+    glowColor: 'rgba(129, 140, 248, 0.4)',
+    accentBg: 'rgba(129, 140, 248, 0.12)',
+    clinicalDescription: 'Assesses ability to recall patterns, shapes, and grid locations under working memory cognitive load.',
+    metrics: [
+      'Span Recall Capacity',
+      'Visuospatial Accuracy',
+      'Error Latency Variance'
+    ],
+    games: ['MEMORY MATCH', 'MATRIX RECALL', 'NEURO MAZE'],
+    gamesCount: '3 PHASER GAMES'
+  },
+  logical_mathematical: {
+    id: 'logical_mathematical',
+    title: 'Logical Reasoning',
+    badgeTitle: 'LOGICAL REASONING',
+    color: '#38bdf8',
+    glowColor: 'rgba(56, 189, 248, 0.4)',
+    accentBg: 'rgba(56, 189, 248, 0.12)',
+    clinicalDescription: 'Tests quantitative problem-solving, arithmetic logic, and inductive mathematical extrapolation.',
+    metrics: [
+      'Quantitative Accuracy',
+      'Mathematical Extrapolation',
+      'Logical Pattern Induction'
+    ],
+    games: ['EQUATION BALANCE', 'SEQUENCE DECODER', 'LOGIC LINK'],
+    gamesCount: '3 PHASER GAMES'
+  },
+  executive_strategy: {
+    id: 'executive_strategy',
+    title: 'Executive Strategy',
+    badgeTitle: 'EXECUTIVE STRATEGY',
+    color: '#f43f5e',
+    glowColor: 'rgba(244, 63, 94, 0.4)',
+    accentBg: 'rgba(244, 63, 94, 0.12)',
+    clinicalDescription: 'Evaluates cognitive flexibility, multi-step planning, resource allocation, and adaptive decision making.',
+    metrics: [
+      'Multi-Step Path Efficiency',
+      'Cognitive Shift Latency',
+      'Strategic Resource Optimization'
+    ],
+    games: ['ROUTE OPTIMIZER', 'PRIORITY QUEUE', 'MENTAL FLEX'],
+    gamesCount: '3 PHASER GAMES'
+  }
+};
+
 
 export default function AssessmentFlow({
   assessmentStage,
@@ -8,6 +144,9 @@ export default function AssessmentFlow({
   currentUser,
   assessmentLoading
 }) {
+  const device = useDeviceDetect();
+  const isMobile = device.isMobile;
+  const [hoveredDomain, setHoveredDomain] = useState(null);
   const [queue, setQueue] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [results, setResults] = useState({});
@@ -177,49 +316,432 @@ export default function AssessmentFlow({
   const confidenceLabels = {1: 'Guessing', 2: 'Unsure', 3: 'Somewhat Sure', 4: 'Confident', 5: 'Certain'};
 
   if (!hasStarted) {
+    const activeDomainKey = hoveredDomain || selectedDomainFilter || 'all';
+    const activeDetail = DOMAIN_DETAILS[activeDomainKey] || DOMAIN_DETAILS.all;
+
     return (
-      <div className="assessment-flow-card" style={{ maxWidth: '650px', margin: '4rem auto', padding: '3rem', background: 'rgba(15, 23, 42, 0.85)', backdropFilter: 'blur(20px)', border: '1px solid rgba(var(--rgb-primary), 0.4)', borderRadius: '16px', boxShadow: '0 12px 40px rgba(0,0,0,0.6)', textAlign: 'center', animation: 'fadeIn 0.5s ease-out', boxSizing: 'border-box' }}>
-        <h1 style={{ color: '#fff', fontSize: '2rem', marginBottom: '1rem' }}>Cognitive Evaluation</h1>
-        <p style={{ color: '#cbd5e1', fontSize: '1.1rem', lineHeight: '1.6', marginBottom: '2rem' }}>
-          This assessment measures your baseline cognitive capacity. Select which domains you wish to test.
-        </p>
-        
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '1rem', marginBottom: '2rem', textAlign: 'left' }}>
-          {[
-            { id: 'all', title: 'Comprehensive (All Domains)', desc: 'A full baseline test covering all 4 cognitive areas. Recommended for first-time users.', color: 'var(--color-primary)' },
-            { id: 'reflexes_and_focus', title: 'Reflexes & Focus', desc: 'Measures your reaction time and ability to ignore rapid visual distractions.', color: 'var(--color-secondary)' },
-            { id: 'spatial_visual_memory', title: 'Spatial-Visual Memory', desc: 'Assesses your ability to recall patterns, shapes, and grid locations.', color: '#4ade80' },
-            { id: 'logical_mathematical', title: 'Logical Reasoning', desc: 'Tests your quantitative problem-solving and mathematical extrapolation.', color: '#f59e0b' },
-            { id: 'executive_strategy', title: 'Executive Strategy', desc: 'Evaluates cognitive flexibility, multi-step planning, and adaptive decision making.', color: '#10b981' }
-          ].map(d => (
-             <label key={d.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '15px', background: selectedDomainFilter === d.id ? `${d.color}20` : 'rgba(255,255,255,0.05)', padding: '1.25rem', borderRadius: '8px', cursor: 'pointer', border: `1px solid ${selectedDomainFilter === d.id ? d.color : 'rgba(255,255,255,0.1)'}`, transition: 'all 0.2s' }}>
-                <input 
-                  type="radio" 
-                  name="domainSelect" 
-                  value={d.id} 
-                  checked={selectedDomainFilter === d.id} 
-                  onChange={() => setSelectedDomainFilter(d.id)} 
-                  style={{ accentColor: d.color, width: '18px', height: '18px', marginTop: '4px' }}
-                />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ color: selectedDomainFilter === d.id ? '#fff' : '#e2e8f0', fontSize: '1.1rem', fontWeight: selectedDomainFilter === d.id ? 'bold' : '600' }}>{d.title}</span>
-                  <span style={{ color: selectedDomainFilter === d.id ? '#cbd5e1' : '#94a3b8', fontSize: '0.85rem', lineHeight: '1.4' }}>{d.desc}</span>
+      <div 
+        className="assessment-hud-container" 
+        style={{ 
+          maxWidth: '1240px', 
+          margin: isMobile ? '0.75rem auto' : '1.15rem auto', 
+          padding: isMobile ? '0.75rem' : '1.5rem',
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? '1.25rem' : '1.75rem',
+          alignItems: 'stretch',
+          animation: 'fadeIn 0.4s ease-out',
+          boxSizing: 'border-box'
+        }}
+      >
+        {/* ================= LEFT COLUMN: DOMAIN SPECIFICATION & CLINICAL BREAKDOWN ================= */}
+        <div 
+          style={{
+            flex: '1',
+            maxWidth: isMobile ? '100%' : '380px',
+            minWidth: isMobile ? '100%' : '320px',
+            background: 'radial-gradient(circle at 15% 15%, rgba(15, 23, 42, 0.96) 0%, rgba(6, 12, 26, 0.98) 100%)',
+            border: '1.5px solid rgba(0, 240, 255, 0.35)',
+            borderRadius: '14px',
+            padding: '1.1rem 1.25rem',
+            boxShadow: '0 0 25px rgba(0, 240, 255, 0.12), inset 0 0 20px rgba(0, 240, 255, 0.04)',
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            boxSizing: 'border-box'
+          }}
+        >
+          <CyberCorner color="#00f0ff" size={10} />
+
+          {/* HUD Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
+            <span style={{ color: '#00f0ff', fontSize: '0.72rem', fontWeight: '800', letterSpacing: '0.07em' }}>
+              DOMAIN SPECIFICATION &amp; CLINICAL BREAKDOWN
+            </span>
+            <span style={{ 
+              background: 'rgba(16, 185, 129, 0.15)', 
+              border: '1px solid #10b981', 
+              color: '#10b981', 
+              fontSize: '0.62rem', 
+              fontWeight: '800', 
+              padding: '2px 8px', 
+              borderRadius: '9999px',
+              letterSpacing: '0.04em',
+              boxShadow: '0 0 8px rgba(16, 185, 129, 0.4)'
+            }}>
+              NODE ACTIVE
+            </span>
+          </div>
+
+          {/* Active Domain Title Banner */}
+          <div style={{
+            background: activeDetail.accentBg,
+            border: `1.5px solid ${activeDetail.color}`,
+            borderRadius: '8px',
+            padding: '0.6rem 0.85rem',
+            color: activeDetail.color,
+            fontWeight: '900',
+            fontSize: '1rem',
+            letterSpacing: '0.06em',
+            boxShadow: `0 0 14px ${activeDetail.glowColor}`,
+            transition: 'all 0.25s ease'
+          }}>
+            {activeDetail.badgeTitle}
+          </div>
+
+          {/* Clinical Description */}
+          <p style={{
+            color: '#cbd5e1',
+            fontSize: '0.82rem',
+            lineHeight: '1.55',
+            marginTop: '0.85rem',
+            marginBottom: '0.5rem',
+            minHeight: isMobile ? 'auto' : '65px'
+          }}>
+            {activeDetail.clinicalDescription}
+          </p>
+
+          {/* TARGET METRICS */}
+          <div style={{ marginTop: '0.75rem' }}>
+            <div style={{ color: '#00f0ff', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '0.08em', marginBottom: '0.4rem' }}>
+              TARGET METRICS
+            </div>
+            <ul style={{ margin: 0, paddingLeft: '1.1rem', color: '#e2e8f0', fontSize: '0.8rem', lineHeight: '1.6' }}>
+              {activeDetail.metrics.map((m, idx) => (
+                <li key={idx} style={{ color: '#cbd5e1' }}>
+                  <span style={{ color: '#f1f5f9' }}>{m}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* MAPPED MINI-GAMES */}
+          <div style={{ marginTop: '0.8rem' }}>
+            <div style={{ color: '#00f0ff', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>
+              MAPPED MINI-GAMES
+            </div>
+            <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap' }}>
+              {activeDetail.games.map((g, idx) => (
+                <div 
+                  key={idx}
+                  style={{
+                    background: 'rgba(2, 6, 23, 0.85)',
+                    border: '1px solid rgba(56, 189, 248, 0.35)',
+                    borderRadius: '6px',
+                    padding: '0.4rem 0.6rem',
+                    color: '#f1f5f9',
+                    fontSize: '0.68rem',
+                    fontWeight: '800',
+                    letterSpacing: '0.04em',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.4)'
+                  }}
+                >
+                  {g}
                 </div>
-             </label>
-          ))}
+              ))}
+            </div>
+          </div>
+
+          {/* NEURAL PULSE WAVEFORM */}
+          <div style={{ marginTop: '0.9rem' }}>
+            <div style={{ color: '#00f0ff', fontSize: '0.7rem', fontWeight: '800', letterSpacing: '0.08em', marginBottom: '0.45rem' }}>
+              NEURAL PULSE WAVEFORM
+            </div>
+            <div style={{
+              backgroundImage: 'linear-gradient(rgba(0, 240, 255, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 240, 255, 0.08) 1px, transparent 1px)',
+              backgroundSize: '14px 14px',
+              backgroundColor: 'rgba(2, 6, 23, 0.75)',
+              border: '1px solid rgba(0, 240, 255, 0.25)',
+              borderRadius: '8px',
+              padding: '0.4rem 0.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <svg width="100%" height="52" viewBox="0 0 300 52" fill="none">
+                <path 
+                  d="M0 26 H55 L67 8 L77 44 L87 14 L97 34 L107 26 H165 L177 6 L187 46 L197 12 L207 36 L217 26 H300" 
+                  stroke="#00f0ff" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  fill="none" 
+                  style={{ filter: 'drop-shadow(0 0 6px #00f0ff)' }} 
+                />
+              </svg>
+            </div>
+
+            {/* Bottom Telemetry Footer */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.65rem' }}>
+              <span style={{ 
+                background: 'rgba(16, 185, 129, 0.12)', 
+                border: '1px solid #10b981', 
+                color: '#10b981', 
+                fontSize: '0.58rem', 
+                fontWeight: '800', 
+                padding: '2px 6px', 
+                borderRadius: '4px' 
+              }}>
+                NODE ACTIVE
+              </span>
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: '14px' }}>
+                <div style={{ width: '3px', height: '6px', background: '#00f0ff', borderRadius: '1px' }} />
+                <div style={{ width: '3px', height: '12px', background: '#00f0ff', borderRadius: '1px' }} />
+                <div style={{ width: '3px', height: '14px', background: '#38bdf8', borderRadius: '1px' }} />
+                <div style={{ width: '3px', height: '8px', background: '#38bdf8', borderRadius: '1px' }} />
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #ef4444', color: '#ef4444', padding: '1rem', borderRadius: '8px', marginBottom: '2rem', fontWeight: 'bold' }}>
-          ⏱️ You have exactly 30 seconds per question. 
-        </div>
-        <button 
-          onClick={handleStart}
-          style={{ background: 'linear-gradient(to right, var(--color-primary), var(--color-secondary))', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '1rem 3rem', fontSize: '1.2rem', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 15px rgba(var(--rgb-primary), 0.4)' }}
-          onMouseOver={(e) => e.target.style.filter = 'brightness(1.15)'}
-          onMouseOut={(e) => e.target.style.filter = 'brightness(1.0)'}
+        {/* ================= RIGHT COLUMN: COGNITIVE EVALUATION SELECTOR ================= */}
+        <div 
+          style={{
+            flex: '1.6',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            gap: '1rem',
+            minWidth: isMobile ? '100%' : '520px',
+            boxSizing: 'border-box'
+          }}
         >
-          Begin Assessment
-        </button>
+          {/* Main Title & Subtitle */}
+          <div>
+            <h1 style={{ 
+              color: '#ffffff', 
+              fontSize: isMobile ? '1.5rem' : '1.9rem', 
+              fontWeight: '900', 
+              margin: '0 0 0.35rem 0',
+              letterSpacing: '0.02em',
+              textAlign: isMobile ? 'center' : 'left'
+            }}>
+              Cognitive Evaluation
+            </h1>
+            <p style={{ 
+              color: '#94a3b8', 
+              fontSize: '0.92rem', 
+              margin: '0 0 0.75rem 0',
+              textAlign: isMobile ? 'center' : 'left'
+            }}>
+              Select which domains you wish to test
+            </p>
+          </div>
+
+          {/* Top Hero Option: Comprehensive (All Domains) */}
+          <div 
+            onClick={() => setSelectedDomainFilter('all')}
+            onMouseEnter={() => setHoveredDomain('all')}
+            onMouseLeave={() => setHoveredDomain(null)}
+            style={{
+              background: selectedDomainFilter === 'all' 
+                ? 'linear-gradient(135deg, rgba(0, 240, 255, 0.16) 0%, rgba(15, 23, 42, 0.95) 100%)' 
+                : 'rgba(15, 23, 42, 0.65)',
+              border: selectedDomainFilter === 'all' 
+                ? '1.5px solid #00f0ff' 
+                : '1px solid rgba(0, 240, 255, 0.3)',
+              boxShadow: selectedDomainFilter === 'all' 
+                ? '0 0 20px rgba(0, 240, 255, 0.3), inset 0 0 15px rgba(0, 240, 255, 0.08)' 
+                : 'none',
+              borderRadius: '12px',
+              padding: '0.9rem 1.25rem',
+              cursor: 'pointer',
+              position: 'relative',
+              transition: 'all 0.2s ease',
+              boxSizing: 'border-box'
+            }}
+          >
+            {selectedDomainFilter === 'all' && <CyberCorner color="#00f0ff" size={9} />}
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+              <div style={{ color: '#00f0ff', fontWeight: '900', fontSize: '1.05rem', letterSpacing: '0.03em' }}>
+                Comprehensive (All Domains) — RECOMMENDED
+              </div>
+              <div style={{ 
+                width: '18px', 
+                height: '18px', 
+                borderRadius: '50%', 
+                border: '1.5px solid #00f0ff', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                background: selectedDomainFilter === 'all' ? 'rgba(0, 240, 255, 0.2)' : 'transparent',
+                boxShadow: selectedDomainFilter === 'all' ? '0 0 8px #00f0ff' : 'none'
+              }}>
+                {selectedDomainFilter === 'all' && (
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#00f0ff' }} />
+                )}
+              </div>
+            </div>
+            <div style={{ color: '#cbd5e1', fontSize: '0.84rem', lineHeight: '1.45' }}>
+              A full baseline test covering all 4 cognitive domains. Recommended for first-time users.
+            </div>
+          </div>
+
+          {/* 2x2 Domain Cards Grid */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+            gap: '0.75rem',
+            margin: '0.35rem 0'
+          }}>
+            {[
+              {
+                id: 'reflexes_and_focus',
+                title: 'Reflexes & Focus',
+                desc: 'Trains reaction speed, sustained attention, and resistance to visual interference.',
+                icon: <ReflexesIcon color={selectedDomainFilter === 'reflexes_and_focus' ? '#00f0ff' : '#38bdf8'} />,
+                color: '#00f0ff'
+              },
+              {
+                id: 'spatial_visual_memory',
+                title: 'Spatial-Visual Memory',
+                desc: 'Assesses ability to recall patterns, shapes, and grid locations.',
+                icon: <MemoryIcon color={selectedDomainFilter === 'spatial_visual_memory' ? '#818cf8' : '#64748b'} />,
+                color: '#818cf8'
+              },
+              {
+                id: 'logical_mathematical',
+                title: 'Logical Reasoning',
+                desc: 'Tests quantitative problem-solving and mathematical extrapolation.',
+                icon: <LogicIcon color={selectedDomainFilter === 'logical_mathematical' ? '#38bdf8' : '#64748b'} />,
+                color: '#38bdf8'
+              },
+              {
+                id: 'executive_strategy',
+                title: 'Executive Strategy',
+                desc: 'Evaluates cognitive flexibility, multi-step planning, and adaptive decision making.',
+                icon: <StrategyIcon color={selectedDomainFilter === 'executive_strategy' ? '#f43f5e' : '#64748b'} />,
+                color: '#f43f5e'
+              }
+            ].map((d) => {
+              const isSelected = selectedDomainFilter === d.id;
+              return (
+                <div
+                  key={d.id}
+                  onClick={() => setSelectedDomainFilter(d.id)}
+                  onMouseEnter={() => setHoveredDomain(d.id)}
+                  onMouseLeave={() => setHoveredDomain(null)}
+                  style={{
+                    background: isSelected 
+                      ? 'radial-gradient(circle at 10% 10%, rgba(15, 23, 42, 0.98) 0%, rgba(6, 12, 26, 0.98) 100%)' 
+                      : 'rgba(15, 23, 42, 0.5)',
+                    border: isSelected 
+                      ? `1.5px solid ${d.color}` 
+                      : '1px solid rgba(255, 255, 255, 0.1)',
+                    boxShadow: isSelected 
+                      ? `0 0 18px ${d.color}50, inset 0 0 12px ${d.color}15` 
+                      : 'none',
+                    borderRadius: '12px',
+                    padding: '0.85rem 1.1rem',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    transition: 'all 0.2s ease',
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  {isSelected && <CyberCorner color={d.color} size={8} />}
+                  
+                  {/* Icon */}
+                  {d.icon}
+
+                  {/* Text Container */}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ 
+                      color: isSelected ? '#ffffff' : '#e2e8f0', 
+                      fontSize: '1rem', 
+                      fontWeight: isSelected ? '800' : '700',
+                      marginBottom: '0.25rem',
+                      letterSpacing: '0.02em'
+                    }}>
+                      {d.title}
+                    </div>
+                    <div style={{ 
+                      color: isSelected ? '#cbd5e1' : '#94a3b8', 
+                      fontSize: '0.8rem', 
+                      lineHeight: '1.4' 
+                    }}>
+                      {d.desc}
+                    </div>
+                  </div>
+
+                  {/* Radio Indicator */}
+                  <div style={{ 
+                    width: '16px', 
+                    height: '16px', 
+                    borderRadius: '50%', 
+                    border: `1.5px solid ${isSelected ? d.color : 'rgba(255, 255, 255, 0.25)'}`, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    background: isSelected ? `${d.color}25` : 'transparent',
+                    boxShadow: isSelected ? `0 0 8px ${d.color}` : 'none'
+                  }}>
+                    {isSelected && (
+                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: d.color }} />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Time Notice Strip */}
+          <div style={{ 
+            background: 'rgba(239, 68, 68, 0.08)', 
+            border: '1px solid rgba(239, 68, 68, 0.35)', 
+            color: '#f87171', 
+            padding: '0.75rem 1rem', 
+            borderRadius: '8px', 
+            fontSize: '0.86rem',
+            fontWeight: '700',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem',
+            textAlign: 'center'
+          }}>
+            <span style={{ fontSize: '1rem' }}>⏱️</span>
+            You have exactly 30 seconds per question.
+          </div>
+
+          {/* Action Button */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0.5rem' }}>
+            <button 
+              onClick={handleStart}
+              style={{ 
+                background: 'linear-gradient(to right, #38bdf8 0%, #818cf8 100%)', 
+                color: '#020617', 
+                border: 'none', 
+                borderRadius: '8px', 
+                padding: '0.8rem 3rem', 
+                fontSize: '1.15rem', 
+                fontWeight: '900', 
+                cursor: 'pointer', 
+                transition: 'all 0.2s ease', 
+                boxShadow: '0 4px 20px rgba(56, 189, 248, 0.35)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                letterSpacing: '0.02em'
+              }}
+              onMouseOver={(e) => {
+                e.currentTarget.style.filter = 'brightness(1.15)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }}
+              onMouseOut={(e) => {
+                e.currentTarget.style.filter = 'brightness(1.0)';
+                e.currentTarget.style.transform = 'none';
+              }}
+            >
+              Begin Assessment →
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -303,7 +825,7 @@ export default function AssessmentFlow({
           {showCheckmark ? (
             <div style={{ fontSize: '5rem', color: dom.color, animation: 'scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)' }}>
               ✓
-              <h3 style={{ color: '#fff', fontSize: '1.5rem', marginTop: '1rem' }}>Recorded</h3>
+              <h3 style={{ color: '#fff', fontSize: '1.5rem', marginTop: '0.8rem' }}>Recorded</h3>
             </div>
           ) : (
             <>
