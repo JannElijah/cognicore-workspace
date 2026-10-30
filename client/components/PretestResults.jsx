@@ -114,14 +114,14 @@ const PretestResults = ({
 
   // Custom Radar Chart Geometry (Matching Image 4)
   // Top: Executive Strategy | Right: Logical Reasoning | Bottom: Reflexes & Focus | Left: Memory & Recall
-  const cx = 190;
-  const cy = 135;
-  const R = 85;
+  const cx = 220;
+  const cy = 155;
+  const R = 110;
 
-  const pt_top = { x: cx, y: cy - Math.max(12, (scores.executive_strategy / 100) * R) };
-  const pt_right = { x: cx + Math.max(12, (scores.logical_mathematical / 100) * R), y: cy };
-  const pt_bottom = { x: cx, y: cy + Math.max(12, (scores.reflexes_and_focus / 100) * R) };
-  const pt_left = { x: cx - Math.max(12, (scores.spatial_visual_memory / 100) * R), y: cy };
+  const pt_top = { x: cx, y: cy - Math.max(16, (scores.executive_strategy / 100) * R) };
+  const pt_right = { x: cx + Math.max(16, (scores.logical_mathematical / 100) * R), y: cy };
+  const pt_bottom = { x: cx, y: cy + Math.max(16, (scores.reflexes_and_focus / 100) * R) };
+  const pt_left = { x: cx - Math.max(16, (scores.spatial_visual_memory / 100) * R), y: cy };
 
   const polygonPoints = `${pt_top.x},${pt_top.y} ${pt_right.x},${pt_right.y} ${pt_bottom.x},${pt_bottom.y} ${pt_left.x},${pt_left.y}`;
 
@@ -287,27 +287,7 @@ const PretestResults = ({
             </div>
           </div>
 
-          {/* Mini-telemetries bottom strip */}
-          <div style={{
-            background: 'rgba(8, 14, 28, 0.65)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            borderRadius: '10px',
-            padding: '0.6rem 0.9rem',
-            fontSize: '0.74rem',
-            color: '#94a3b8',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <div>
-              <div style={{ fontSize: '0.66rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Mini-Telemetry</div>
-              <div>Cognitive Status: <span style={{ color: '#4ade80', fontWeight: '700' }}>Active</span></div>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '0.66rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Diagnostic Input</div>
-              <span style={{ color: '#38bdf8', fontWeight: '700' }}>Ready</span>
-            </div>
-          </div>
+
         </div>
 
         {/* ================= COLUMN 2: SKILL BREAKDOWN & RADAR HUD ================= */}
@@ -350,69 +330,89 @@ const PretestResults = ({
           <div style={{
             position: 'relative',
             width: '100%',
-            height: '240px',
-            background: 'rgba(3, 7, 18, 0.6)',
-            borderRadius: '10px',
-            border: '1px solid rgba(0, 240, 255, 0.12)',
+            height: '315px',
+            background: 'rgba(3, 7, 18, 0.75)',
+            borderRadius: '12px',
+            border: '1px solid rgba(0, 240, 255, 0.2)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            boxShadow: 'inset 0 0 25px rgba(0, 0, 0, 0.6)'
           }}>
             {/* Fine Cyber Grid Texture */}
             <div style={{
               position: 'absolute',
               inset: 0,
-              backgroundImage: 'linear-gradient(rgba(0, 240, 255, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 240, 255, 0.04) 1px, transparent 1px)',
-              backgroundSize: '20px 20px',
+              backgroundImage: 'linear-gradient(rgba(0, 240, 255, 0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 240, 255, 0.06) 1px, transparent 1px)',
+              backgroundSize: '24px 24px',
               pointerEvents: 'none'
             }} />
 
-            <svg width="100%" height="100%" viewBox="0 0 380 270" style={{ overflow: 'visible', position: 'relative', zIndex: 1 }}>
+            <svg width="100%" height="100%" viewBox="0 0 440 310" style={{ overflow: 'visible', position: 'relative', zIndex: 1 }}>
               <defs>
                 <radialGradient id="radarFillGrad" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="rgba(0, 240, 255, 0.45)" />
-                  <stop offset="60%" stopColor="rgba(56, 189, 248, 0.25)" />
-                  <stop offset="100%" stopColor="rgba(34, 197, 94, 0.12)" />
+                  <stop offset="0%" stopColor="rgba(0, 240, 255, 0.55)" />
+                  <stop offset="60%" stopColor="rgba(56, 189, 248, 0.3)" />
+                  <stop offset="100%" stopColor="rgba(34, 197, 94, 0.15)" />
                 </radialGradient>
                 <filter id="neonRadarGlow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="2.5" result="blur" />
+                  <feGaussianBlur stdDeviation="3" result="blur" />
                   <feMerge>
                     <feMergeNode in="blur" />
                     <feMergeNode in="SourceGraphic" />
                   </feMerge>
                 </filter>
+                <filter id="badgeShadow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="1" stdDeviation="2" floodColor="#000000" floodOpacity="0.85" />
+                </filter>
               </defs>
 
-              {/* Concentric Coordinate Rings */}
-              {[0.25, 0.5, 0.75, 1.0].map((frac, i) => (
-                <circle 
-                  key={i} 
-                  cx={cx} 
-                  cy={cy} 
-                  r={R * frac} 
-                  fill="none" 
-                  stroke="rgba(0, 240, 255, 0.18)" 
-                  strokeWidth="1" 
-                  strokeDasharray={frac < 1.0 ? "2 3" : "none"} 
-                />
+              {/* Concentric Coordinate Rings & Percentages */}
+              {[
+                { frac: 0.25, label: '25' },
+                { frac: 0.50, label: '50' },
+                { frac: 0.75, label: '75' },
+                { frac: 1.00, label: '100' }
+              ].map(({ frac, label }, i) => (
+                <g key={i}>
+                  <circle 
+                    cx={cx} 
+                    cy={cy} 
+                    r={R * frac} 
+                    fill="none" 
+                    stroke={frac === 1.0 ? "rgba(0, 240, 255, 0.42)" : "rgba(0, 240, 255, 0.2)"} 
+                    strokeWidth={frac === 1.0 ? "1.5" : "1"} 
+                    strokeDasharray={frac < 1.0 ? "3 3" : "none"} 
+                  />
+                  <text 
+                    x={cx + 5} 
+                    y={cy - R * frac + 3} 
+                    fill={frac === 1.0 ? "rgba(0, 240, 255, 0.95)" : "rgba(148, 163, 184, 0.8)"} 
+                    fontSize="9" 
+                    fontWeight="700" 
+                    fontFamily="monospace"
+                  >
+                    {label}
+                  </text>
+                </g>
               ))}
 
               {/* Crosshair Axes */}
-              <line x1={cx - R - 15} y1={cy} x2={cx + R + 15} y2={cy} stroke="rgba(0, 240, 255, 0.25)" strokeWidth="1" />
-              <line x1={cx} y1={cy - R - 15} x2={cx} y2={cy + R + 15} stroke="rgba(0, 240, 255, 0.25)" strokeWidth="1" />
+              <line x1={cx - R - 20} y1={cy} x2={cx + R + 20} y2={cy} stroke="rgba(0, 240, 255, 0.35)" strokeWidth="1.2" />
+              <line x1={cx} y1={cy - R - 20} x2={cx} y2={cy + R + 20} stroke="rgba(0, 240, 255, 0.35)" strokeWidth="1.2" />
 
-              {/* Axis Labels (Positioned exactly as in Image 4) */}
-              <text x={cx} y={cy - R - 12} textAnchor="middle" fill="#22c55e" fontSize="11" fontWeight="800" letterSpacing="0.04em">
+              {/* Axis Labels (High-contrast, bold, clear) */}
+              <text x={cx} y={cy - R - 14} textAnchor="middle" fill="#22c55e" fontSize="13" fontWeight="900" letterSpacing="0.04em" filter="url(#badgeShadow)">
                 Executive Strategy
               </text>
-              <text x={cx + R + 12} y={cy + 4} textAnchor="start" fill="#38bdf8" fontSize="11" fontWeight="800" letterSpacing="0.04em">
+              <text x={cx + R + 14} y={cy - 4} textAnchor="start" fill="#38bdf8" fontSize="13" fontWeight="900" letterSpacing="0.04em" filter="url(#badgeShadow)">
                 Logical Reasoning
               </text>
-              <text x={cx} y={cy + R + 20} textAnchor="middle" fill="#f43f5e" fontSize="11" fontWeight="800" letterSpacing="0.04em">
+              <text x={cx} y={cy + R + 24} textAnchor="middle" fill="#f43f5e" fontSize="13" fontWeight="900" letterSpacing="0.04em" filter="url(#badgeShadow)">
                 Reflexes & Focus
               </text>
-              <text x={cx - R - 12} y={cy + 4} textAnchor="end" fill="#00f0ff" fontSize="11" fontWeight="800" letterSpacing="0.04em">
+              <text x={cx - R - 14} y={cy - 4} textAnchor="end" fill="#00f0ff" fontSize="13" fontWeight="900" letterSpacing="0.04em" filter="url(#badgeShadow)">
                 Memory & Recall
               </text>
 
@@ -420,16 +420,30 @@ const PretestResults = ({
               <polygon
                 points={polygonPoints}
                 fill="url(#radarFillGrad)"
-                stroke="rgba(0, 240, 255, 0.95)"
-                strokeWidth="2.2"
+                stroke="rgba(0, 240, 255, 1)"
+                strokeWidth="2.8"
                 filter="url(#neonRadarGlow)"
               />
 
-              {/* Colored Vertex Dots matching Image 4 */}
-              <circle cx={pt_top.x} cy={pt_top.y} r="4.5" fill="#22c55e" stroke="#ffffff" strokeWidth="1.5" />
-              <circle cx={pt_right.x} cy={pt_right.y} r="4.5" fill="#38bdf8" stroke="#ffffff" strokeWidth="1.5" />
-              <circle cx={pt_bottom.x} cy={pt_bottom.y} r="4.5" fill="#f43f5e" stroke="#ffffff" strokeWidth="1.5" />
-              <circle cx={pt_left.x} cy={pt_left.y} r="4.5" fill="#00f0ff" stroke="#ffffff" strokeWidth="1.5" />
+              {/* Colored Vertex Dots with Glow */}
+              <circle cx={pt_top.x} cy={pt_top.y} r="5.5" fill="#22c55e" stroke="#ffffff" strokeWidth="2" filter="url(#badgeShadow)" />
+              <circle cx={pt_right.x} cy={pt_right.y} r="5.5" fill="#38bdf8" stroke="#ffffff" strokeWidth="2" filter="url(#badgeShadow)" />
+              <circle cx={pt_bottom.x} cy={pt_bottom.y} r="5.5" fill="#f43f5e" stroke="#ffffff" strokeWidth="2" filter="url(#badgeShadow)" />
+              <circle cx={pt_left.x} cy={pt_left.y} r="5.5" fill="#00f0ff" stroke="#ffffff" strokeWidth="2" filter="url(#badgeShadow)" />
+
+              {/* Real Score Badges Right on Vertices for Instant Readability */}
+              <text x={pt_top.x} y={pt_top.y - 9} textAnchor="middle" fill="#4ade80" fontSize="12" fontWeight="900" filter="url(#badgeShadow)">
+                {Math.round(scores.executive_strategy)}%
+              </text>
+              <text x={pt_right.x + 10} y={pt_right.y + 13} textAnchor="start" fill="#38bdf8" fontSize="12" fontWeight="900" filter="url(#badgeShadow)">
+                {Math.round(scores.logical_mathematical)}%
+              </text>
+              <text x={pt_bottom.x} y={pt_bottom.y + 17} textAnchor="middle" fill="#fb7185" fontSize="12" fontWeight="900" filter="url(#badgeShadow)">
+                {Math.round(scores.reflexes_and_focus)}%
+              </text>
+              <text x={pt_left.x - 10} y={pt_left.y + 13} textAnchor="end" fill="#22d3ee" fontSize="12" fontWeight="900" filter="url(#badgeShadow)">
+                {Math.round(scores.spatial_visual_memory)}%
+              </text>
             </svg>
           </div>
 
