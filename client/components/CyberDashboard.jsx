@@ -253,9 +253,9 @@ const CyberDashboard = ({
 
   return (
     <div style={{
-      maxWidth: '100%',
+      maxWidth: '1480px',
       width: '100%',
-      margin: '0',
+      margin: '0 auto',
       boxSizing: 'border-box',
       color: '#f8fafc',
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"

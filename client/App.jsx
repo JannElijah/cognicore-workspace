@@ -2120,7 +2120,7 @@ export default function App() {
       />
 
       {/* Main Container */}
-      <main className="portal-main" style={{ maxWidth: '100%', width: '100%', padding: '0.75rem 1.5rem', boxSizing: 'border-box' }} key={(activeGame && !isMobile) ? 'game' : showDashboard ? 'dash' : portalView === 'admin' ? 'admin' : 'select'}>
+      <main className="portal-main" style={{ maxWidth: '1480px', width: '100%', margin: '0 auto', padding: '0.75rem 1rem', boxSizing: 'border-box' }} key={(activeGame && !isMobile) ? 'game' : showDashboard ? 'dash' : portalView === 'admin' ? 'admin' : 'select'}>
         {showSoundTuner && (
           <div className="game-card" style={{
             padding: '1.5rem',
