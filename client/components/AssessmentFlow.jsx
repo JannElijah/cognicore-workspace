@@ -429,7 +429,7 @@ export default function AssessmentFlow({
             </div>
           </div>
 
-          {/* ADAPTIVE CALIBRATION PROTOCOL (IRT Engine) */}
+          {/* TESTING GUIDELINES (Participant Instructions) */}
           <div style={{
             marginTop: 'auto',
             paddingTop: '0.85rem',
@@ -450,7 +450,7 @@ export default function AssessmentFlow({
                 alignItems: 'center',
                 gap: '0.35rem'
               }}>
-                <span style={{ fontSize: '0.85rem' }}>⚙️</span> ADAPTIVE CALIBRATION PROTOCOL
+                <span style={{ fontSize: '0.85rem' }}>📋</span> TESTING GUIDELINES
               </span>
               <span style={{
                 background: 'rgba(56, 189, 248, 0.12)',
@@ -462,7 +462,7 @@ export default function AssessmentFlow({
                 borderRadius: '4px',
                 letterSpacing: '0.03em'
               }}>
-                2-PL IRT
+                STANDARDIZED
               </span>
             </div>
 
@@ -477,28 +477,28 @@ export default function AssessmentFlow({
             }}>
               <div>
                 <div style={{ color: '#f1f5f9', fontSize: '0.75rem', fontWeight: '800', marginBottom: '0.12rem' }}>
-                  Item Response Theory (IRT)
+                  1. Pacing &amp; Time Limit
                 </div>
                 <div style={{ color: '#94a3b8', fontSize: '0.7rem', lineHeight: '1.4' }}>
-                  Continuous dynamic ability estimation (<span style={{ color: '#00f0ff', fontWeight: 'bold' }}>θ</span>) modulates item difficulty in real time.
+                  You have 30 seconds per item. Answer promptly to reflect natural cognitive processing.
                 </div>
               </div>
 
               <div>
                 <div style={{ color: '#f1f5f9', fontSize: '0.75rem', fontWeight: '800', marginBottom: '0.12rem' }}>
-                  Cognitive Latency Telemetry
+                  2. Confidence Rating
                 </div>
                 <div style={{ color: '#94a3b8', fontSize: '0.7rem', lineHeight: '1.4' }}>
-                  Millisecond reaction tracking distinguishes cognitive processing speed from random guessing.
+                  After each answer, rate your certainty to measure metacognitive self-awareness.
                 </div>
               </div>
 
               <div>
                 <div style={{ color: '#f1f5f9', fontSize: '0.75rem', fontWeight: '800', marginBottom: '0.12rem' }}>
-                  Bayesian Posterior Ingest
+                  3. Dynamic Calibration
                 </div>
                 <div style={{ color: '#94a3b8', fontSize: '0.7rem', lineHeight: '1.4' }}>
-                  Reduces estimation error variance to establish accurate baseline skill vectors.
+                  Questions adapt dynamically to your skill level. There is no penalty for unfamiliar patterns.
                 </div>
               </div>
             </div>
