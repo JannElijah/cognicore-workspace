@@ -779,6 +779,52 @@ export default function AssessmentFlow({
 
   return (
     <div className="assessment-flow-card" style={{ maxWidth: '800px', margin: '3rem auto', padding: '2.5rem', background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(20px)', border: '1px solid rgba(var(--rgb-secondary), 0.4)', borderRadius: '16px', boxShadow: '0 12px 40px rgba(0,0,0,0.6)', animation: 'fadeIn 0.4s ease-out', opacity: isTransitioning ? 0 : 1, transition: 'opacity 0.2s ease-in-out' }}>
+      {/* Top Navigation: Exit / Back to Domain Selection */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '0.75rem' }}>
+        <button
+          onClick={() => {
+            if (timerRef.current) clearInterval(timerRef.current);
+            setHasStarted(false);
+            setSelectedAnswer(null);
+            setShowConfidence(false);
+          }}
+          title="Return to Domain Selection"
+          style={{
+            background: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            color: '#cbd5e1',
+            borderRadius: '8px',
+            padding: '0.4rem 0.85rem',
+            fontSize: '0.8rem',
+            fontWeight: '700',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.45rem',
+            transition: 'all 0.2s ease',
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.color = '#00f0ff';
+            e.currentTarget.style.borderColor = 'rgba(0, 240, 255, 0.5)';
+            e.currentTarget.style.background = 'rgba(0, 240, 255, 0.1)';
+            e.currentTarget.style.boxShadow = '0 0 10px rgba(0, 240, 255, 0.2)';
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.color = '#cbd5e1';
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
+        >
+          <span style={{ fontSize: '0.95rem' }}>←</span> Exit to Domain Selection
+        </button>
+
+        <span style={{ color: '#00f0ff', fontSize: '0.72rem', fontWeight: '800', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00f0ff', boxShadow: '0 0 6px #00f0ff' }} />
+          SESSION ACTIVE
+        </span>
+      </div>
+
       <div style={{ marginBottom: '1.5rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
           <h2 style={{ color: '#ffffff', margin: 0, textTransform: 'uppercase', fontSize: '1.4rem', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
