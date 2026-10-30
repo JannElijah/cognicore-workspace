@@ -707,36 +707,7 @@ const PretestResults = ({
             </div>
           </div>
 
-          {/* Platform Evaluation Status Card */}
-          <div style={{
-            background: 'rgba(8, 14, 28, 0.65)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            borderRadius: '10px',
-            padding: '0.65rem 0.95rem',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <div>
-              <div style={{ fontSize: '0.74rem', color: '#94a3b8' }}>Platform evaluation</div>
-              <div style={{ fontSize: '0.78rem', color: '#22c55e', fontWeight: '800' }}>ISO 25010 active</div>
-            </div>
-            {/* Cyber Pixel Matrix Decor */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 6px)', gap: '4px' }}>
-              {[1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0].map((on, i) => (
-                <div 
-                  key={i} 
-                  style={{ 
-                    width: 6, 
-                    height: 6, 
-                    borderRadius: '1px', 
-                    background: on ? '#00f0ff' : 'rgba(255, 255, 255, 0.08)', 
-                    boxShadow: on ? '0 0 5px #00f0ff' : 'none' 
-                  }} 
-                />
-              ))}
-            </div>
-          </div>
+
 
         </div>
 
