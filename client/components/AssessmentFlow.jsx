@@ -772,15 +772,38 @@ export default function AssessmentFlow({
     );
   }
 
-  const dom = DOMAIN_INFO[currentQ.domain];
-  const textMatch = currentQ.text.match(/(.*)(?:\s+)([^.]*\?)$/);
+  const dom = DOMAIN_INFO[currentQ.domain] || {
+    title: 'Cognitive Evaluation',
+    color: '#00f0ff',
+    icon: '🧠'
+  };
+
+  const textMatch = currentQ.text ? currentQ.text.match(/(.*)(?:\s+)([^.]*\?)$/) : null;
   const scenarioText = textMatch ? textMatch[1] : currentQ.text;
   const questionText = textMatch ? textMatch[2] : '';
 
   return (
-    <div className="assessment-flow-card" style={{ maxWidth: '800px', margin: '3rem auto', padding: '2.5rem', background: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(20px)', border: '1px solid rgba(var(--rgb-secondary), 0.4)', borderRadius: '16px', boxShadow: '0 12px 40px rgba(0,0,0,0.6)', animation: 'fadeIn 0.4s ease-out', opacity: isTransitioning ? 0 : 1, transition: 'opacity 0.2s ease-in-out' }}>
-      {/* Top Navigation: Exit / Back to Domain Selection */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '0.75rem' }}>
+    <div 
+      className="assessment-hud-session-container" 
+      style={{ 
+        maxWidth: '1360px', 
+        margin: '0.15rem auto 0.6rem auto', 
+        padding: isMobile ? '0.35rem' : '0.2rem 1rem', 
+        animation: 'fadeIn 0.3s ease-out', 
+        opacity: isTransitioning ? 0 : 1, 
+        transition: 'opacity 0.2s ease-in-out',
+        boxSizing: 'border-box'
+      }}
+    >
+      {/* Top Navigation Strip: Exit / Back to Domain Selection & Active Indicator */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '0.4rem',
+        paddingBottom: '0.3rem',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+      }}>
         <button
           onClick={() => {
             if (timerRef.current) clearInterval(timerRef.current);
@@ -790,12 +813,12 @@ export default function AssessmentFlow({
           }}
           title="Return to Domain Selection"
           style={{
-            background: 'rgba(255, 255, 255, 0.05)',
+            background: 'rgba(255, 255, 255, 0.04)',
             border: '1px solid rgba(255, 255, 255, 0.15)',
             color: '#cbd5e1',
             borderRadius: '8px',
-            padding: '0.4rem 0.85rem',
-            fontSize: '0.8rem',
+            padding: '0.3rem 0.8rem',
+            fontSize: '0.78rem',
             fontWeight: '700',
             cursor: 'pointer',
             display: 'inline-flex',
@@ -812,133 +835,595 @@ export default function AssessmentFlow({
           onMouseOut={(e) => {
             e.currentTarget.style.color = '#cbd5e1';
             e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
             e.currentTarget.style.boxShadow = 'none';
           }}
         >
-          <span style={{ fontSize: '0.95rem' }}>←</span> Exit to Domain Selection
+          <span style={{ fontSize: '0.9rem' }}>←</span> Exit to Domain Selection
         </button>
 
-        <span style={{ color: '#00f0ff', fontSize: '0.72rem', fontWeight: '800', letterSpacing: '0.06em', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00f0ff', boxShadow: '0 0 6px #00f0ff' }} />
-          SESSION ACTIVE
+        <span style={{
+          color: '#00f0ff',
+          fontSize: '0.72rem',
+          fontWeight: '800',
+          letterSpacing: '0.06em',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.4rem'
+        }}>
+          <span style={{
+            width: '6px',
+            height: '6px',
+            borderRadius: '50%',
+            background: '#00f0ff',
+            boxShadow: '0 0 8px #00f0ff',
+            display: 'inline-block'
+          }} />
+          SECURE PROTOCOL ACTIVE
         </span>
       </div>
 
-      <div style={{ marginBottom: '1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
-          <h2 style={{ color: '#ffffff', margin: 0, textTransform: 'uppercase', fontSize: '1.4rem', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span>🧠</span> {assessmentStage === 'pre-test' ? 'Adaptive Pre-Test Evaluation' : 'Adaptive Post-Test Evaluation'}
-          </h2>
-          <div style={{ color: '#94a3b8', fontSize: '0.9rem', fontWeight: 'bold' }}>
-            Scenario {currentIndex + 1} of {expectedTotal}
-          </div>
-        </div>
-        <div style={{ height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${(currentIndex / expectedTotal) * 100}%`, background: 'linear-gradient(to right, var(--color-primary), var(--color-secondary))', transition: 'width 0.4s ease-out' }}></div>
-        </div>
-      </div>
-      
-      {!showConfidence ? (
-        <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-              <div style={{ background: dom.color + '20', color: dom.color, padding: '4px 10px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 'bold', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '0.25rem', border: `1px solid ${dom.color}40` }}>
-                {dom.icon} {DOMAINS_LIST.find(d => d.id === currentQ.domain)?.title || dom.title}
+      {/* Main 2-Column Split Layout */}
+      <div style={{
+        display: 'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? '0.85rem' : '1.35rem',
+        alignItems: 'stretch'
+      }}>
+        {/* ================= LEFT COLUMN: STIMULUS & SCENARIO CARD ================= */}
+        <div 
+          style={{
+            flex: isMobile ? '1' : '1.25',
+            background: 'radial-gradient(circle at 15% 15%, rgba(15, 23, 42, 0.96) 0%, rgba(6, 12, 26, 0.98) 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            borderRadius: '16px',
+            padding: isMobile ? '0.85rem' : '1rem 1.4rem',
+            boxShadow: '0 12px 35px rgba(0, 0, 0, 0.6)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            position: 'relative',
+            boxSizing: 'border-box'
+          }}
+        >
+          <div>
+            {/* Top Row: Title + Scenario count + Mini Timer Ring */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '0.3rem'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                <span style={{ fontSize: '1.15rem' }}>🧠</span>
+                <span style={{
+                  color: '#ffffff',
+                  fontSize: isMobile ? '0.92rem' : '1.08rem',
+                  fontWeight: '800',
+                  letterSpacing: '0.04em',
+                  textTransform: 'uppercase'
+                }}>
+                  {assessmentStage === 'pre-test' ? 'Adaptive Pre-Test Evaluation' : 'Adaptive Post-Test Evaluation'}
+                </span>
               </div>
-              <span style={{ color: '#fff', fontSize: '1.2rem', fontWeight: 'bold' }}>
-                {currentQ.title}
-              </span>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <span style={{ color: '#94a3b8', fontSize: '0.82rem', fontWeight: '700' }}>
+                  Scenario {currentIndex + 1} of {expectedTotal}
+                </span>
+
+                {/* Mini Timer Ring synced with countdown */}
+                <div style={{
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  border: `2px solid ${timeLeft <= 5 ? '#ef4444' : timeLeft <= 15 ? '#f97316' : '#00f0ff'}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: timeLeft <= 5 ? '#ef4444' : timeLeft <= 15 ? '#f97316' : '#00f0ff',
+                  fontSize: '0.7rem',
+                  fontWeight: '900',
+                  boxShadow: `0 0 6px ${timeLeft <= 5 ? 'rgba(239, 68, 68, 0.5)' : timeLeft <= 15 ? 'rgba(249, 115, 22, 0.4)' : 'rgba(0, 240, 255, 0.4)'}`
+                }}>
+                  {timeLeft}
+                </div>
+              </div>
             </div>
-            
-            <div style={{ position: 'relative', width: '50px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg width="50" height="50" viewBox="0 0 50 50" style={{ position: 'absolute', transform: 'rotate(-90deg)', animation: timeLeft <= 10 ? 'pulse 1s infinite' : 'none' }}>
-                <circle cx="25" cy="25" r="22" fill="rgba(0,0,0,0.3)" stroke="rgba(255,255,255,0.1)" strokeWidth="4" />
-                <circle cx="25" cy="25" r="22" fill="none" stroke={timeLeft <= 10 ? '#ef4444' : dom.color} strokeWidth="4" strokeDasharray="138" strokeDashoffset={138 - (timeLeft / 30) * 138} style={{ transition: 'stroke-dashoffset 1s linear, stroke 0.5s ease' }} strokeLinecap="round" />
-              </svg>
-              <span style={{ color: timeLeft <= 10 ? '#ef4444' : '#fff', fontWeight: 'bold', fontSize: '1.1rem', zIndex: 2 }}>{timeLeft}</span>
+
+            {/* Gradient Progress Bar */}
+            <div style={{
+              height: '4px',
+              background: 'rgba(255, 255, 255, 0.08)',
+              borderRadius: '2px',
+              overflow: 'hidden',
+              marginBottom: '0.65rem'
+            }}>
+              <div style={{
+                height: '100%',
+                width: `${((currentIndex + 1) / expectedTotal) * 100}%`,
+                background: 'linear-gradient(90deg, #00f0ff 0%, #a855f7 100%)',
+                boxShadow: '0 0 10px #00f0ff',
+                transition: 'width 0.35s ease'
+              }} />
             </div>
+
+            {/* Domain Pill Badge */}
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: `${dom.color}18`,
+              border: `1px solid ${dom.color}55`,
+              color: dom.color,
+              padding: '2px 9px',
+              borderRadius: '16px',
+              fontSize: '0.7rem',
+              fontWeight: '800',
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              marginBottom: '0.45rem'
+            }}>
+              <span>{dom.icon}</span>
+              <span>{DOMAINS_LIST.find(d => d.id === currentQ.domain)?.title || dom.title}</span>
+            </div>
+
+            {/* Question Title */}
+            <h2 style={{
+              color: '#ffffff',
+              fontSize: isMobile ? '1.1rem' : '1.25rem',
+              fontWeight: '800',
+              margin: '0 0 0.35rem 0',
+              letterSpacing: '0.02em'
+            }}>
+              {currentQ.title}
+            </h2>
+
+            {/* Scenario & Question Prompt */}
+            <p style={{
+              color: '#cbd5e1',
+              fontSize: isMobile ? '0.82rem' : '0.88rem',
+              lineHeight: '1.45',
+              margin: '0 0 0.65rem 0'
+            }}>
+              {scenarioText} {questionText && <strong style={{ color: '#ffffff' }}>{questionText}</strong>}
+            </p>
           </div>
-          
-          <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.25rem', borderRadius: '10px', borderLeft: `4px solid ${dom.color}`, marginBottom: '1.5rem' }}>
-            <div style={{ fontSize: '1rem', color: '#cbd5e1', lineHeight: '1.6', marginBottom: questionText ? '1rem' : '0' }}>
-              {scenarioText}
-            </div>
-            {questionText && (
-              <div style={{ fontSize: '1.15rem', color: '#fff', fontWeight: 'bold', lineHeight: '1.4' }}>
-                {questionText}
+
+          {/* Visual Stimulus Frame */}
+          <div style={{
+            background: 'rgba(2, 6, 23, 0.75)',
+            border: '1px solid rgba(0, 240, 255, 0.22)',
+            borderRadius: '12px',
+            padding: '0.5rem',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            minHeight: '180px',
+            maxHeight: isMobile ? '220px' : '260px',
+            boxShadow: 'inset 0 0 20px rgba(0, 0, 0, 0.6), 0 0 15px rgba(0, 240, 255, 0.05)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <CyberCorner color="rgba(0, 240, 255, 0.4)" size={7} />
+            {currentQ.visual ? (
+              <div style={{ width: '100%', height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                {currentQ.visual}
+              </div>
+            ) : (
+              <div style={{
+                color: '#94a3b8',
+                fontSize: '0.82rem',
+                fontFamily: 'monospace',
+                letterSpacing: '0.05em'
+              }}>
+                [ STANDARDIZED SYMBOLIC COGNITIVE PROBE ]
               </div>
             )}
           </div>
-          
-          {currentQ.visual && (
-            <div className="assessment-question-visual" style={{ marginBottom: '2rem' }}>
-              {currentQ.visual}
-            </div>
-          )}
+        </div>
 
-          <div className="eval-inputs-grid" style={{ display: 'grid', gap: '1rem' }}>
-            {currentQ.options.map((opt) => (
-              <button 
-                key={opt.key} 
-                onClick={() => handleSelectAnswer(opt.key)}
-                style={{ textAlign: 'left', display: 'flex', alignItems: 'flex-start', gap: '0.8rem', color: (isHighlighting && selectedAnswer === opt.key) ? '#000' : '#cbd5e1', fontSize: '0.95rem', cursor: 'pointer', padding: '1rem', borderRadius: '10px', background: (isHighlighting && selectedAnswer === opt.key) ? dom.color : 'rgba(255,255,255,0.03)', border: `1px solid ${(isHighlighting && selectedAnswer === opt.key) ? dom.color : 'rgba(255,255,255,0.1)'}`, transition: 'all 0.15s ease-out', outline: 'none', transform: (isHighlighting && selectedAnswer === opt.key) ? 'scale(1.02)' : 'scale(1)' }}
-                onMouseOver={(e) => { if(!isHighlighting) { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = dom.color; } }}
-                onMouseOut={(e) => { if(!isHighlighting) { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; } }}
-              >
-                <strong style={{ color: (isHighlighting && selectedAnswer === opt.key) ? '#000' : dom.color, fontSize: '1.1rem', marginTop: '-2px' }}>{opt.key}</strong> 
-                <span style={{ lineHeight: '1.4', fontWeight: (isHighlighting && selectedAnswer === opt.key) ? 'bold' : 'normal' }}>{opt.text}</span>
-              </button>
-            ))}
+        {/* ================= RIGHT COLUMN: DECISION CONSOLE ================= */}
+        <div 
+          style={{
+            flex: isMobile ? '1' : '1',
+            background: 'radial-gradient(circle at 80% 15%, rgba(15, 23, 42, 0.96) 0%, rgba(6, 12, 26, 0.98) 100%)',
+            border: '1px solid rgba(0, 240, 255, 0.28)',
+            borderRadius: '16px',
+            padding: isMobile ? '0.85rem' : '1rem 1.4rem',
+            boxShadow: '0 12px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 240, 255, 0.08)',
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            boxSizing: 'border-box'
+          }}
+        >
+          {/* Cyber HUD Corner Brackets */}
+          <CyberCorner color="#00f0ff" size={12} />
+
+          {/* Decorative Monospace HUD metadata */}
+          <div style={{
+            position: 'absolute',
+            top: '8px',
+            left: '12px',
+            fontFamily: 'monospace',
+            fontSize: '0.52rem',
+            color: 'rgba(0, 240, 255, 0.45)',
+            letterSpacing: '0.05em',
+            pointerEvents: 'none'
+          }}>
+            [ 0F18 SEQ {currentIndex + 1}01 ]
+          </div>
+
+          <div style={{
+            position: 'absolute',
+            top: '8px',
+            right: '12px',
+            fontFamily: 'monospace',
+            fontSize: '0.52rem',
+            color: 'rgba(0, 240, 255, 0.45)',
+            letterSpacing: '0.05em',
+            pointerEvents: 'none'
+          }}>
+            HUD: ACTIVE
+          </div>
+
+          <div>
+            {/* Header: DECISION CONSOLE */}
+            <div style={{ textAlign: 'center', marginTop: '0.2rem', marginBottom: '0.65rem' }}>
+              <div style={{
+                color: '#00f0ff',
+                fontSize: '1.2rem',
+                fontWeight: '900',
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                textShadow: '0 0 12px rgba(0, 240, 255, 0.6)'
+              }}>
+                {showConfidence ? 'CONFIDENCE CALIBRATION' : 'DECISION CONSOLE'}
+              </div>
+            </div>
+
+            {/* Cybernetic Countdown Gauge Widget */}
+            {!showConfidence && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '1.1rem',
+                marginBottom: '0.75rem',
+                background: 'rgba(2, 6, 23, 0.55)',
+                border: '1px solid rgba(255, 255, 255, 0.06)',
+                borderRadius: '12px',
+                padding: '0.45rem 0.75rem'
+              }}>
+                {/* Left Label */}
+                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                  <span style={{
+                    color: timeLeft <= 5 ? '#ef4444' : timeLeft <= 15 ? '#f97316' : '#00f0ff',
+                    fontSize: '0.6rem',
+                    fontWeight: '900',
+                    letterSpacing: '0.08em'
+                  }}>
+                    CYBERNETIC
+                  </span>
+                  <span style={{
+                    color: timeLeft <= 5 ? '#ef4444' : timeLeft <= 15 ? '#f97316' : '#00f0ff',
+                    fontSize: '0.6rem',
+                    fontWeight: '900',
+                    letterSpacing: '0.08em'
+                  }}>
+                    COUNTDOWN
+                  </span>
+                </div>
+
+                {/* Center SVG Progress Ring */}
+                <div style={{ position: 'relative', width: '68px', height: '68px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="68" height="68" viewBox="0 0 80 80" style={{ transform: 'rotate(-90deg)' }}>
+                    <circle cx="40" cy="40" r="32" fill="none" stroke="rgba(255, 255, 255, 0.08)" strokeWidth="5" />
+                    <circle 
+                      cx="40" 
+                      cy="40" 
+                      r="32" 
+                      fill="none" 
+                      stroke={timeLeft <= 5 ? '#ef4444' : timeLeft <= 15 ? '#f97316' : '#00f0ff'} 
+                      strokeWidth="5" 
+                      strokeDasharray="201" 
+                      strokeDashoffset={201 - (timeLeft / 30) * 201} 
+                      strokeLinecap="round"
+                      style={{
+                        transition: 'stroke-dashoffset 1s linear, stroke 0.4s ease',
+                        filter: `drop-shadow(0 0 6px ${timeLeft <= 5 ? '#ef4444' : timeLeft <= 15 ? '#f97316' : '#00f0ff'})`
+                      }} 
+                    />
+                  </svg>
+                  <span style={{ 
+                    position: 'absolute', 
+                    color: '#ffffff', 
+                    fontWeight: '900', 
+                    fontSize: '1.35rem', 
+                    letterSpacing: '-0.02em',
+                    textShadow: `0 0 10px ${timeLeft <= 5 ? 'rgba(239, 68, 68, 0.8)' : timeLeft <= 15 ? 'rgba(249, 115, 22, 0.8)' : 'rgba(0, 240, 255, 0.8)'}` 
+                  }}>
+                    {timeLeft}s
+                  </span>
+                </div>
+
+                {/* Right Label */}
+                <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '2px', fontFamily: 'monospace' }}>
+                  <span style={{ color: '#94a3b8', fontSize: '0.6rem', fontWeight: '800', letterSpacing: '0.04em' }}>
+                    CYBERNETIC COUNTDOWN
+                  </span>
+                  <span style={{ color: '#64748b', fontSize: '0.52rem' }}>
+                    TIMER: T0 - 30S
+                  </span>
+                  <span style={{ color: '#64748b', fontSize: '0.52rem' }}>
+                    COUNTEES: 2.00-45TS/02S
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Prompt Subheading */}
+            <div style={{
+              color: '#94a3b8',
+              fontSize: '0.72rem',
+              fontWeight: '800',
+              letterSpacing: '0.09em',
+              textTransform: 'uppercase',
+              marginBottom: '0.6rem'
+            }}>
+              {showConfidence ? 'SELECT YOUR CERTAINTY (1-5 LIKERT)' : 'SELECT YOUR RESPONSE'}
+            </div>
+
+            {/* Choice Options Stack or Confidence Rating */}
+            {!showConfidence ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+                {currentQ.options.map((opt) => {
+                  const isSelected = selectedAnswer === opt.key;
+                  return (
+                    <div
+                      key={opt.key}
+                      className="assessment-option-row"
+                      onClick={() => setSelectedAnswer(opt.key)}
+                      style={{
+                        background: isSelected 
+                          ? 'linear-gradient(135deg, rgba(0, 240, 255, 0.16) 0%, rgba(168, 85, 247, 0.12) 100%)' 
+                          : 'rgba(255, 255, 255, 0.03)',
+                        border: isSelected 
+                          ? '1.5px solid #00f0ff' 
+                          : '1px solid rgba(255, 255, 255, 0.12)',
+                        boxShadow: isSelected 
+                          ? '0 0 16px rgba(0, 240, 255, 0.4), 0 0 24px rgba(168, 85, 247, 0.25), inset 0 0 10px rgba(0, 240, 255, 0.12)' 
+                          : 'none',
+                        borderRadius: '11px',
+                        padding: '0.65rem 0.95rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '0.8rem',
+                        transition: 'all 0.18s ease',
+                        boxSizing: 'border-box'
+                      }}
+                      onMouseOver={(e) => {
+                        if (!isSelected) {
+                          e.currentTarget.style.borderColor = 'rgba(0, 240, 255, 0.4)';
+                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                        }
+                      }}
+                      onMouseOut={(e) => {
+                        if (!isSelected) {
+                          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+                        }
+                      }}
+                    >
+                      {/* Left: Key Badge & Text */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1 }}>
+                        <span style={{
+                          color: isSelected ? '#00f0ff' : '#38bdf8',
+                          fontSize: '1.05rem',
+                          fontWeight: '900',
+                          minWidth: '18px',
+                          textShadow: isSelected ? '0 0 10px #00f0ff' : 'none'
+                        }}>
+                          {opt.key}
+                        </span>
+                        <span style={{
+                          color: isSelected ? '#ffffff' : '#cbd5e1',
+                          fontSize: '0.88rem',
+                          fontWeight: isSelected ? '700' : '500',
+                          lineHeight: '1.35'
+                        }}>
+                          {opt.text}
+                        </span>
+                      </div>
+
+                      {/* Right Indicator: Radio dot or Checkmark */}
+                      <div style={{
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '50%',
+                        border: isSelected ? 'none' : '1.5px solid rgba(255, 255, 255, 0.25)',
+                        background: isSelected ? '#00f0ff' : 'transparent',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                        boxShadow: isSelected ? '0 0 10px #00f0ff' : 'none',
+                        color: '#020617',
+                        fontWeight: '900',
+                        fontSize: '0.8rem'
+                      }}>
+                        {isSelected && '✓'}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              /* Metacognitive Confidence Rating inside Decision Console */
+              <div style={{ textAlign: 'center', padding: '0.4rem 0' }}>
+                {showCheckmark ? (
+                  <div style={{ fontSize: '3.2rem', color: '#00f0ff', padding: '1.25rem 0', animation: 'scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)' }}>
+                    ✓
+                    <div style={{ color: '#ffffff', fontSize: '1.1rem', marginTop: '0.4rem', fontWeight: '800' }}>Response Recorded</div>
+                  </div>
+                ) : (
+                  <>
+                    <p style={{ color: '#cbd5e1', fontSize: '0.82rem', marginBottom: '1rem', lineHeight: '1.4' }}>
+                      Rate your certainty in the response chosen for this scenario:
+                    </p>
+
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '0.85rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+                      {[1, 2, 3, 4, 5].map(val => (
+                        <div key={val} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.35rem', width: '62px' }}>
+                          <button
+                            onClick={() => setConfidence(val)}
+                            style={{
+                              width: '38px',
+                              height: '38px',
+                              borderRadius: '50%',
+                              background: confidence === val ? '#00f0ff' : 'rgba(255,255,255,0.05)',
+                              color: confidence === val ? '#020617' : '#ffffff',
+                              border: `2px solid ${confidence === val ? '#00f0ff' : 'rgba(255,255,255,0.2)'}`,
+                              fontSize: '1.05rem',
+                              fontWeight: '900',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                              transform: confidence === val ? 'scale(1.12)' : 'scale(1)',
+                              boxShadow: confidence === val ? '0 0 12px #00f0ff' : 'none'
+                            }}
+                          >
+                            {val}
+                          </button>
+                          <span style={{
+                            color: confidence === val ? '#00f0ff' : '#64748b',
+                            fontSize: '0.6rem',
+                            fontWeight: '800',
+                            textTransform: 'uppercase',
+                            textAlign: 'center'
+                          }}>
+                            {confidenceLabels[val]}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={submitConfidence}
+                      style={{
+                        background: 'linear-gradient(135deg, #00f0ff 0%, #6366f1 100%)',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '9px',
+                        padding: '0.65rem 2.2rem',
+                        fontSize: '0.95rem',
+                        fontWeight: '800',
+                        cursor: 'pointer',
+                        boxShadow: '0 0 18px rgba(0, 240, 255, 0.4)',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseOver={(e) => e.currentTarget.style.filter = 'brightness(1.15)'}
+                      onMouseOut={(e) => e.currentTarget.style.filter = 'brightness(1.0)'}
+                    >
+                      Lock Response &amp; Proceed →
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Decorative Monospace HUD metadata at bottom */}
+          <div style={{
+            fontFamily: 'monospace',
+            fontSize: '0.52rem',
+            color: 'rgba(0, 240, 255, 0.35)',
+            letterSpacing: '0.05em',
+            marginTop: '0.6rem',
+            textAlign: 'right',
+            pointerEvents: 'none'
+          }}>
+            TEL: CONSOLE // IRT CALIBRATION MODE
           </div>
         </div>
-      ) : (
-        <div style={{ animation: 'fadeIn 0.3s ease-out', textAlign: 'center', padding: '3rem 1rem' }}>
-          {showCheckmark ? (
-            <div style={{ fontSize: '5rem', color: dom.color, animation: 'scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)' }}>
-              ✓
-              <h3 style={{ color: '#fff', fontSize: '1.5rem', marginTop: '0.45rem' }}>Recorded</h3>
-            </div>
-          ) : (
-            <>
-              <h3 style={{ color: '#fff', fontSize: '1.5rem', marginBottom: '1rem' }}>How confident are you?</h3>
-              <p style={{ color: '#94a3b8', marginBottom: '2.5rem' }}>Rate your certainty in the answer you just selected.</p>
-              
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '1.5rem', marginBottom: '3rem', flexWrap: 'wrap' }}>
-                {[1, 2, 3, 4, 5].map(val => (
-                  <div key={val} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', width: '80px' }}>
-                    <button
-                      onClick={() => setConfidence(val)}
-                      style={{ width: '50px', height: '50px', borderRadius: '25px', background: confidence === val ? dom.color : 'rgba(255,255,255,0.05)', color: confidence === val ? '#000' : '#fff', border: `2px solid ${confidence === val ? dom.color : 'rgba(255,255,255,0.2)'}`, fontSize: '1.2rem', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', transform: confidence === val ? 'scale(1.1)' : 'scale(1)' }}
-                    >
-                      {val}
-                    </button>
-                    <span style={{ color: confidence === val ? '#fff' : '#64748b', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase', textAlign: 'center', transition: 'color 0.2s' }}>
-                      {confidenceLabels[val]}
-                    </span>
-                  </div>
-                ))}
-              </div>
+      </div>
 
-              <button
-                onClick={submitConfidence}
-                style={{ background: 'linear-gradient(to right, var(--color-primary), var(--color-secondary))', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '1rem 3rem', fontSize: '1.1rem', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.2s', boxShadow: '0 4px 15px rgba(var(--rgb-secondary), 0.4)' }}
-                onMouseOver={(e) => e.target.style.filter = 'brightness(1.15)'}
-                onMouseOut={(e) => e.target.style.filter = 'brightness(1.0)'}
-              >
-                Lock Response
-              </button>
-            </>
-          )}
+      {/* ================= BOTTOM BAR: TELEMETRY & SUBMIT ANSWER ACTION ================= */}
+      <div style={{
+        marginTop: '0.65rem',
+        padding: '0.55rem 0.4rem',
+        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '0.85rem'
+      }}>
+        {/* Telemetry Indicators (matches screenshot) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem', flexWrap: 'wrap' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#00f0ff', fontSize: '0.76rem', fontWeight: '800' }}>
+            <span style={{ fontSize: '0.9rem' }}>((•))</span> LATENCY: 240ms
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#cbd5e1', fontSize: '0.76rem', fontWeight: '800' }}>
+            <span style={{ border: '1px solid #64748b', borderRadius: '3px', padding: '0 4px', fontSize: '0.68rem' }}>0</span> PANIC FRICTION: 0
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#10b981', fontSize: '0.76rem', fontWeight: '800' }}>
+            <span>✓</span> SECURE TELEMETRY ACTIVE
+          </span>
+        </div>
+
+        {/* Submit Answer Button (matches screenshot) */}
+        {!showConfidence && (
+          <button
+            disabled={!selectedAnswer}
+            onClick={() => {
+              if (!selectedAnswer) return;
+              clearInterval(timerRef.current);
+              setShowConfidence(true);
+            }}
+            style={{
+              background: selectedAnswer 
+                ? 'linear-gradient(135deg, #00f0ff 0%, #6366f1 100%)' 
+                : 'rgba(255, 255, 255, 0.06)',
+              color: selectedAnswer ? '#ffffff' : '#64748b',
+              border: 'none',
+              borderRadius: '9px',
+              padding: '0.65rem 2rem',
+              fontSize: '0.96rem',
+              fontWeight: '800',
+              cursor: selectedAnswer ? 'pointer' : 'not-allowed',
+              boxShadow: selectedAnswer ? '0 0 20px rgba(0, 240, 255, 0.45)' : 'none',
+              transition: 'all 0.2s ease',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              letterSpacing: '0.02em'
+            }}
+            onMouseOver={(e) => {
+              if (selectedAnswer) e.currentTarget.style.filter = 'brightness(1.15)';
+            }}
+            onMouseOut={(e) => {
+              if (selectedAnswer) e.currentTarget.style.filter = 'brightness(1.0)';
+            }}
+          >
+            Submit Answer →
+          </button>
+        )}
+      </div>
+
+      {assessmentError && (
+        <div style={{ color: '#f87171', fontSize: '0.88rem', fontWeight: 'bold', marginTop: '0.75rem', textAlign: 'center' }}>
+          ⚠️ {assessmentError}
         </div>
       )}
-
-      {assessmentError && <div style={{ color: '#f87171', fontSize: '0.9rem', fontWeight: 'bold', marginTop: '1.5rem', textAlign: 'center' }}>⚠️ {assessmentError}</div>}
       
       {assessmentLoading && (
-        <div style={{ marginTop: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ width: '30px', height: '30px', border: '3px solid rgba(96, 165, 250, 0.2)', borderTop: '3px solid #60a5fa', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-          <div style={{ color: '#60a5fa', fontSize: '0.95rem', fontWeight: 'bold' }}>Analyzing your results...</div>
+        <div style={{ marginTop: '1.25rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.65rem' }}>
+          <div style={{ width: '26px', height: '26px', border: '3px solid rgba(0, 240, 255, 0.2)', borderTop: '3px solid #00f0ff', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+          <div style={{ color: '#00f0ff', fontSize: '0.88rem', fontWeight: 'bold' }}>Calibrating Baseline Ability Parameters (θ)...</div>
         </div>
       )}
       <style>{`
