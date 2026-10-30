@@ -155,6 +155,7 @@ export default function AssessmentFlow({
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [confidence, setConfidence] = useState(3);
   const [showConfidence, setShowConfidence] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isHighlighting, setIsHighlighting] = useState(false);
@@ -235,10 +236,13 @@ export default function AssessmentFlow({
   const currentQ = queue[currentIndex];
 
   useEffect(() => {
-    if (!currentQ || showConfidence || !hasStarted) return;
-    
+    if (!currentQ || !hasStarted) return;
     setTimeLeft(30);
     setStartTime(Date.now());
+  }, [currentIndex, currentQ, hasStarted]);
+
+  useEffect(() => {
+    if (!currentQ || showConfidence || !hasStarted || showExitConfirm) return;
     
     timerRef.current = setInterval(() => {
       setTimeLeft(prev => {
@@ -252,7 +256,7 @@ export default function AssessmentFlow({
     }, 1000);
 
     return () => clearInterval(timerRef.current);
-  }, [currentIndex, currentQ, showConfidence, hasStarted]);
+  }, [showConfidence, hasStarted, showExitConfirm, currentQ]);
 
   const handleTimeUp = () => {
     setSelectedAnswer('TIMEOUT');
@@ -805,12 +809,7 @@ export default function AssessmentFlow({
         borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
       }}>
         <button
-          onClick={() => {
-            if (timerRef.current) clearInterval(timerRef.current);
-            setHasStarted(false);
-            setSelectedAnswer(null);
-            setShowConfidence(false);
-          }}
+          onClick={() => setShowExitConfirm(true)}
           title="Return to Domain Selection"
           style={{
             background: 'rgba(255, 255, 255, 0.04)',
@@ -911,23 +910,6 @@ export default function AssessmentFlow({
                 <span style={{ color: '#94a3b8', fontSize: '0.82rem', fontWeight: '700' }}>
                   Scenario {currentIndex + 1} of {expectedTotal}
                 </span>
-
-                {/* Mini Timer Ring synced with countdown */}
-                <div style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  border: `2px solid ${timeLeft <= 5 ? '#ef4444' : timeLeft <= 15 ? '#f97316' : '#00f0ff'}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: timeLeft <= 5 ? '#ef4444' : timeLeft <= 15 ? '#f97316' : '#00f0ff',
-                  fontSize: '0.7rem',
-                  fontWeight: '900',
-                  boxShadow: `0 0 6px ${timeLeft <= 5 ? 'rgba(239, 68, 68, 0.5)' : timeLeft <= 15 ? 'rgba(249, 115, 22, 0.4)' : 'rgba(0, 240, 255, 0.4)'}`
-                }}>
-                  {timeLeft}
-                </div>
               </div>
             </div>
 
@@ -1098,18 +1080,10 @@ export default function AssessmentFlow({
                 padding: '0.45rem 0.75rem'
               }}>
                 {/* Left Label */}
-                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                   <span style={{
                     color: timeLeft <= 5 ? '#ef4444' : timeLeft <= 15 ? '#f97316' : '#00f0ff',
-                    fontSize: '0.6rem',
-                    fontWeight: '900',
-                    letterSpacing: '0.08em'
-                  }}>
-                    CYBERNETIC
-                  </span>
-                  <span style={{
-                    color: timeLeft <= 5 ? '#ef4444' : timeLeft <= 15 ? '#f97316' : '#00f0ff',
-                    fontSize: '0.6rem',
+                    fontSize: '0.72rem',
                     fontWeight: '900',
                     letterSpacing: '0.08em'
                   }}>
@@ -1152,13 +1126,10 @@ export default function AssessmentFlow({
                 {/* Right Label */}
                 <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '2px', fontFamily: 'monospace' }}>
                   <span style={{ color: '#94a3b8', fontSize: '0.6rem', fontWeight: '800', letterSpacing: '0.04em' }}>
-                    CYBERNETIC COUNTDOWN
+                    PACE LIMIT
                   </span>
                   <span style={{ color: '#64748b', fontSize: '0.52rem' }}>
                     TIMER: T0 - 30S
-                  </span>
-                  <span style={{ color: '#64748b', fontSize: '0.52rem' }}>
-                    COUNTEES: 2.00-45TS/02S
                   </span>
                 </div>
               </div>
@@ -1351,32 +1322,15 @@ export default function AssessmentFlow({
         </div>
       </div>
 
-      {/* ================= BOTTOM BAR: TELEMETRY & SUBMIT ANSWER ACTION ================= */}
-      <div style={{
-        marginTop: '0.65rem',
-        padding: '0.55rem 0.4rem',
-        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: '0.85rem'
-      }}>
-        {/* Telemetry Indicators (matches screenshot) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem', flexWrap: 'wrap' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#00f0ff', fontSize: '0.76rem', fontWeight: '800' }}>
-            <span style={{ fontSize: '0.9rem' }}>((•))</span> LATENCY: 240ms
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#cbd5e1', fontSize: '0.76rem', fontWeight: '800' }}>
-            <span style={{ border: '1px solid #64748b', borderRadius: '3px', padding: '0 4px', fontSize: '0.68rem' }}>0</span> PANIC FRICTION: 0
-          </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#10b981', fontSize: '0.76rem', fontWeight: '800' }}>
-            <span>✓</span> SECURE TELEMETRY ACTIVE
-          </span>
-        </div>
-
-        {/* Submit Answer Button (matches screenshot) */}
-        {!showConfidence && (
+      {/* ================= BOTTOM BAR: SUBMIT ANSWER ACTION ================= */}
+      {!showConfidence && (
+        <div style={{
+          marginTop: '0.65rem',
+          padding: '0.45rem 0.2rem',
+          display: 'flex',
+          justifyContent: 'flex-end',
+          alignItems: 'center'
+        }}>
           <button
             disabled={!selectedAnswer}
             onClick={() => {
@@ -1391,7 +1345,7 @@ export default function AssessmentFlow({
               color: selectedAnswer ? '#ffffff' : '#64748b',
               border: 'none',
               borderRadius: '9px',
-              padding: '0.65rem 2rem',
+              padding: '0.65rem 2.2rem',
               fontSize: '0.96rem',
               fontWeight: '800',
               cursor: selectedAnswer ? 'pointer' : 'not-allowed',
@@ -1411,8 +1365,129 @@ export default function AssessmentFlow({
           >
             Submit Answer →
           </button>
-        )}
-      </div>
+        </div>
+      )}
+
+            {/* Exit Confirmation Modal */}
+      {showExitConfirm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(2, 6, 23, 0.85)',
+          backdropFilter: 'blur(8px)',
+          zIndex: 9999,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          animation: 'fadeIn 0.2s ease-out',
+          padding: '1rem'
+        }}>
+          <div style={{
+            background: 'radial-gradient(circle at 50% 20%, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%)',
+            border: '1.5px solid rgba(239, 68, 68, 0.45)',
+            borderRadius: '16px',
+            padding: '1.75rem 2rem',
+            maxWidth: '430px',
+            width: '100%',
+            textAlign: 'center',
+            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(239, 68, 68, 0.2)',
+            position: 'relative',
+            animation: 'scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
+          }}>
+            <CyberCorner color="#ef4444" size={10} />
+
+            <div style={{
+              width: '52px',
+              height: '52px',
+              borderRadius: '50%',
+              background: 'rgba(239, 68, 68, 0.12)',
+              border: '1.5px solid rgba(239, 68, 68, 0.4)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 1rem auto',
+              color: '#ef4444',
+              fontSize: '1.5rem',
+              boxShadow: '0 0 16px rgba(239, 68, 68, 0.25)'
+            }}>
+              ⚠️
+            </div>
+
+            <h3 style={{
+              color: '#ffffff',
+              fontSize: '1.25rem',
+              fontWeight: '800',
+              margin: '0 0 0.5rem 0',
+              letterSpacing: '0.02em'
+            }}>
+              Exit to Domain Selection?
+            </h3>
+
+            <p style={{
+              color: '#cbd5e1',
+              fontSize: '0.88rem',
+              lineHeight: '1.5',
+              margin: '0 0 1.5rem 0'
+            }}>
+              Are you sure you want to return to domain selection? Your current evaluation session and response latencies will be lost.
+            </p>
+
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '0.85rem'
+            }}>
+              <button
+                onClick={() => setShowExitConfirm(false)}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  color: '#ffffff',
+                  padding: '0.65rem 1.4rem',
+                  borderRadius: '8px',
+                  fontSize: '0.9rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)'}
+                onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'}
+              >
+                Cancel (Resume)
+              </button>
+
+              <button
+                onClick={() => {
+                  if (timerRef.current) clearInterval(timerRef.current);
+                  setShowExitConfirm(false);
+                  setHasStarted(false);
+                  setSelectedAnswer(null);
+                  setShowConfidence(false);
+                }}
+                style={{
+                  background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                  border: 'none',
+                  color: '#ffffff',
+                  padding: '0.65rem 1.4rem',
+                  borderRadius: '8px',
+                  fontSize: '0.9rem',
+                  fontWeight: '800',
+                  cursor: 'pointer',
+                  boxShadow: '0 0 16px rgba(239, 68, 68, 0.45)',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.filter = 'brightness(1.15)'}
+                onMouseOut={(e) => e.currentTarget.style.filter = 'brightness(1.0)'}
+              >
+                Yes, Exit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {assessmentError && (
         <div style={{ color: '#f87171', fontSize: '0.88rem', fontWeight: 'bold', marginTop: '0.75rem', textAlign: 'center' }}>
