@@ -114,9 +114,9 @@ const PretestResults = ({
 
   // Custom Radar Chart Geometry (Matching Image 4)
   // Top: Executive Strategy | Right: Logical Reasoning | Bottom: Reflexes & Focus | Left: Memory & Recall
-  const cx = 220;
+  const cx = 250;
   const cy = 155;
-  const R = 110;
+  const R = 96;
 
   const pt_top = { x: cx, y: cy - Math.max(16, (scores.executive_strategy / 100) * R) };
   const pt_right = { x: cx + Math.max(16, (scores.logical_mathematical / 100) * R), y: cy };
@@ -349,7 +349,7 @@ const PretestResults = ({
               pointerEvents: 'none'
             }} />
 
-            <svg width="100%" height="100%" viewBox="0 0 440 310" style={{ overflow: 'visible', position: 'relative', zIndex: 1 }}>
+            <svg width="100%" height="100%" viewBox="0 0 500 310" style={{ overflow: 'visible', position: 'relative', zIndex: 1 }}>
               <defs>
                 <radialGradient id="radarFillGrad" cx="50%" cy="50%" r="50%">
                   <stop offset="0%" stopColor="rgba(0, 240, 255, 0.55)" />
@@ -402,19 +402,32 @@ const PretestResults = ({
               <line x1={cx - R - 20} y1={cy} x2={cx + R + 20} y2={cy} stroke="rgba(0, 240, 255, 0.35)" strokeWidth="1.2" />
               <line x1={cx} y1={cy - R - 20} x2={cx} y2={cy + R + 20} stroke="rgba(0, 240, 255, 0.35)" strokeWidth="1.2" />
 
-              {/* Axis Labels (High-contrast, bold, clear) */}
+              {/* Axis Labels (Two-line stacked side labels to ensure perfect fit without edge clipping) */}
               <text x={cx} y={cy - R - 14} textAnchor="middle" fill="#22c55e" fontSize="13" fontWeight="900" letterSpacing="0.04em" filter="url(#badgeShadow)">
                 Executive Strategy
               </text>
-              <text x={cx + R + 14} y={cy - 4} textAnchor="start" fill="#38bdf8" fontSize="13" fontWeight="900" letterSpacing="0.04em" filter="url(#badgeShadow)">
-                Logical Reasoning
-              </text>
-              <text x={cx} y={cy + R + 24} textAnchor="middle" fill="#f43f5e" fontSize="13" fontWeight="900" letterSpacing="0.04em" filter="url(#badgeShadow)">
+
+              <g filter="url(#badgeShadow)">
+                <text x={cx + R + 14} y={cy - 6} textAnchor="start" fill="#38bdf8" fontSize="12" fontWeight="900" letterSpacing="0.03em">
+                  Logical
+                </text>
+                <text x={cx + R + 14} y={cy + 10} textAnchor="start" fill="#38bdf8" fontSize="12" fontWeight="900" letterSpacing="0.03em">
+                  Reasoning
+                </text>
+              </g>
+
+              <text x={cx} y={cy + R + 26} textAnchor="middle" fill="#f43f5e" fontSize="13" fontWeight="900" letterSpacing="0.04em" filter="url(#badgeShadow)">
                 Reflexes & Focus
               </text>
-              <text x={cx - R - 14} y={cy - 4} textAnchor="end" fill="#00f0ff" fontSize="13" fontWeight="900" letterSpacing="0.04em" filter="url(#badgeShadow)">
-                Memory & Recall
-              </text>
+
+              <g filter="url(#badgeShadow)">
+                <text x={cx - R - 14} y={cy - 6} textAnchor="end" fill="#00f0ff" fontSize="12" fontWeight="900" letterSpacing="0.03em">
+                  Memory
+                </text>
+                <text x={cx - R - 14} y={cy + 10} textAnchor="end" fill="#00f0ff" fontSize="12" fontWeight="900" letterSpacing="0.03em">
+                  & Recall
+                </text>
+              </g>
 
               {/* Shaded Radar Data Polygon */}
               <polygon
@@ -431,17 +444,17 @@ const PretestResults = ({
               <circle cx={pt_bottom.x} cy={pt_bottom.y} r="5.5" fill="#f43f5e" stroke="#ffffff" strokeWidth="2" filter="url(#badgeShadow)" />
               <circle cx={pt_left.x} cy={pt_left.y} r="5.5" fill="#00f0ff" stroke="#ffffff" strokeWidth="2" filter="url(#badgeShadow)" />
 
-              {/* Real Score Badges Right on Vertices for Instant Readability */}
-              <text x={pt_top.x} y={pt_top.y - 9} textAnchor="middle" fill="#4ade80" fontSize="12" fontWeight="900" filter="url(#badgeShadow)">
+              {/* Real Score Badges Cleanly Positioned on/above Vertices */}
+              <text x={pt_top.x} y={pt_top.y - 10} textAnchor="middle" fill="#4ade80" fontSize="12" fontWeight="900" filter="url(#badgeShadow)">
                 {Math.round(scores.executive_strategy)}%
               </text>
-              <text x={pt_right.x + 10} y={pt_right.y + 13} textAnchor="start" fill="#38bdf8" fontSize="12" fontWeight="900" filter="url(#badgeShadow)">
+              <text x={pt_right.x} y={pt_right.y - 10} textAnchor="middle" fill="#38bdf8" fontSize="12" fontWeight="900" filter="url(#badgeShadow)">
                 {Math.round(scores.logical_mathematical)}%
               </text>
-              <text x={pt_bottom.x} y={pt_bottom.y + 17} textAnchor="middle" fill="#fb7185" fontSize="12" fontWeight="900" filter="url(#badgeShadow)">
+              <text x={pt_bottom.x} y={pt_bottom.y + 18} textAnchor="middle" fill="#fb7185" fontSize="12" fontWeight="900" filter="url(#badgeShadow)">
                 {Math.round(scores.reflexes_and_focus)}%
               </text>
-              <text x={pt_left.x - 10} y={pt_left.y + 13} textAnchor="end" fill="#22d3ee" fontSize="12" fontWeight="900" filter="url(#badgeShadow)">
+              <text x={pt_left.x} y={pt_left.y - 10} textAnchor="middle" fill="#22d3ee" fontSize="12" fontWeight="900" filter="url(#badgeShadow)">
                 {Math.round(scores.spatial_visual_memory)}%
               </text>
             </svg>
