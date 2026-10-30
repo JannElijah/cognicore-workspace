@@ -210,15 +210,23 @@ export const COGNITIVE_QUESTIONS = [
     id: 'q_ref_1',
     domain: 'reflexes_and_focus',
     difficulty: 1,
-    title: 'Focus Finder: Neon Grid',
-    text: 'SECURITY PROTOCOL: You must ONLY approve entry for a RED CIRCLE. The scanner detects a shape with 4 equal sides, colored RED. Do you approve entry?',
-    visual: <div style={{display:'flex', justifyContent:'center', gap:'12px', fontSize:'1.5rem', padding:'20px', fontWeight:'bold'}}><span>[ALERT]</span><span style={{color:'#ef4444'}}>[RED SQUARE]</span><span>[STOP]</span></div>,
+    title: 'Security Protocol Override',
+    text: 'SECURITY PROTOCOL: You must ONLY approve entry for a RED CIRCLE. The scanner detects the displayed shape. Do you approve entry?',
+    visual: (
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <img 
+          src="/assessments/security_scanner.png" 
+          alt="Biometric Security Scanner" 
+          style={{ maxHeight: '200px', maxWidth: '100%', borderRadius: '10px', border: '1px solid rgba(0, 240, 255, 0.3)', boxShadow: '0 0 20px rgba(0, 240, 255, 0.15)' }} 
+        />
+      </div>
+    ),
     correctAnswer: 'B',
     options: [
-      {key: 'A', text: 'Yes, it is RED'},
-      {key: 'B', text: 'No, it is not a CIRCLE'},
-      {key: 'C', text: 'Yes, it has 4 sides'},
-      {key: 'D', text: 'Cannot be determined'},
+      { key: 'A', text: 'Yes, approve entry' },
+      { key: 'B', text: 'No, reject (It is not a circle)' },
+      { key: 'C', text: 'Yes, it is RED' },
+      { key: 'D', text: 'Bypass security scanner' },
     ],
   },
   {
@@ -316,30 +324,46 @@ export const COGNITIVE_QUESTIONS = [
     id: 'q_spat_2',
     domain: 'spatial_visual_memory',
     difficulty: 1,
-    title: 'Shape Rotation',
-    text: 'Imagine a letter "L". Rotate it 90 degrees clockwise. Which way does the long stem point?',
-    visual: <div style={{display:'flex', justifyContent:'center', gap:'20px', fontSize:'3rem', padding:'20px'}}>L <span style={{fontSize:'1.5rem'}}>[ROTATE]</span></div>,
-    correctAnswer: 'C',
+    title: 'Mental Rotation: Letter F',
+    text: 'If the reference shape "F" is rotated 90° clockwise as indicated by the arrow, which direction will its two horizontal arms point?',
+    visual: (
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <img 
+          src="/assessments/shape_rotation_f.png" 
+          alt="Letter F 90 Degree Rotation" 
+          style={{ maxHeight: '190px', maxWidth: '100%', borderRadius: '10px', border: '1px solid rgba(0, 240, 255, 0.3)', boxShadow: '0 0 20px rgba(0, 240, 255, 0.15)' }} 
+        />
+      </div>
+    ),
+    correctAnswer: 'B',
     options: [
-      {key: 'A', text: 'Up'},
-      {key: 'B', text: 'Down'},
-      {key: 'C', text: 'Right'},
-      {key: 'D', text: 'Left'},
+      { key: 'A', text: 'Pointing Up (↑)' },
+      { key: 'B', text: 'Pointing Down (↓)' },
+      { key: 'C', text: 'Pointing Left (←)' },
+      { key: 'D', text: 'Unchanged (→)' },
     ],
   },
   {
     id: 'q_spat_3',
     domain: 'spatial_visual_memory',
     difficulty: 2,
-    title: 'Pathfinder',
-    text: 'A mouse is in a maze. It goes Forward 2 spaces, turns Left, goes Forward 1 space, turns Right, and goes Forward 2 spaces. If it turns around (180 degrees), what is its sequence back to the start?',
-    visual: <div style={{display:'flex', justifyContent:'center', gap:'10px', fontSize:'1.5rem', padding:'20px', fontWeight:'bold'}}>MOUSE: UP UP, LEFT, UP, RIGHT, UP UP</div>,
-    correctAnswer: 'D',
+    title: '3x3 Grid Dot Tracker',
+    text: 'A tracking dot begins in the center cell of the 3x3 grid. It moves: 1 step UP, 1 step LEFT, and 1 step RIGHT. Which cell is it currently occupying?',
+    visual: (
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <img 
+          src="/assessments/dot_tracker_grid.png" 
+          alt="3x3 Grid Dot Tracker" 
+          style={{ maxHeight: '190px', maxWidth: '100%', borderRadius: '10px', border: '1px solid rgba(0, 240, 255, 0.3)', boxShadow: '0 0 20px rgba(0, 240, 255, 0.15)' }} 
+        />
+      </div>
+    ),
+    correctAnswer: 'A',
     options: [
-      {key: 'A', text: 'F2, L, F1, R, F2'},
-      {key: 'B', text: 'F2, R, F1, L, F2'},
-      {key: 'C', text: 'F2, L, F2, R, F1'},
-      {key: 'D', text: 'F2, L, F1, R, F2'},
+      { key: 'A', text: 'Top Center' },
+      { key: 'B', text: 'Center' },
+      { key: 'C', text: 'Top Right' },
+      { key: 'D', text: 'Top Left' },
     ],
   },
   {
@@ -504,15 +528,23 @@ export const COGNITIVE_QUESTIONS = [
     id: 'q_exe_4',
     domain: 'executive_strategy',
     difficulty: 2,
-    title: 'Scheduling Conflict',
-    text: 'Meeting X is at 2:00 PM (1 hr). Meeting Y is at 2:30 PM (30 mins). Meeting Z is at 3:00 PM (1 hr). Which meetings can you attend fully?',
-    visual: <div style={{display:'flex', justifyContent:'center', gap:'18px', fontSize:'1.5rem', padding:'20px', fontWeight:'bold'}}>DATE + TIME</div>,
+    title: 'Schedule Conflict Resolution',
+    text: 'Analyze the timeline schedule. Meeting X runs 2:00–3:00 PM, Meeting Y runs 2:30–3:15 PM, and Meeting Z runs 3:00–4:00 PM. Which two meetings can be fully attended without overlap?',
+    visual: (
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <img 
+          src="/assessments/schedule_timeline.png" 
+          alt="Schedule Timeline Conflict" 
+          style={{ maxHeight: '200px', maxWidth: '100%', borderRadius: '10px', border: '1px solid rgba(0, 240, 255, 0.3)', boxShadow: '0 0 20px rgba(0, 240, 255, 0.15)' }} 
+        />
+      </div>
+    ),
     correctAnswer: 'C',
     options: [
-      {key: 'A', text: 'X and Y'},
-      {key: 'B', text: 'Y and Z'},
-      {key: 'C', text: 'X and Z'},
-      {key: 'D', text: 'All of them'},
+      { key: 'A', text: 'Meeting X and Meeting Y' },
+      { key: 'B', text: 'Meeting Y and Meeting Z' },
+      { key: 'C', text: 'Meeting X and Meeting Z' },
+      { key: 'D', text: 'All three meetings simultaneously' },
     ],
   },
   {
