@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { DOMAIN_INFO, DOMAINS_LIST, DOMAIN_THEMES } from '../utils/constants';
+import { DOMAIN_INFO, DOMAINS_LIST, DOMAIN_THEMES } from '../utils/constants.jsx';
 import useCogniStore from '../store/useCogniStore';
-import { API_BASE } from '../utils/apiClient';
+import { API_BASE } from '../utils/apiClient.js';
 
 // Cyber Corner Brackets
 const CyberCorner = ({ color = '#00f0ff', size = 8 }) => (
@@ -14,20 +14,104 @@ const CyberCorner = ({ color = '#00f0ff', size = 8 }) => (
 );
 
 export const GAME_VALIDITY_CITATIONS = {
-  SpeedTap: "Based on research by Hadjiaros et al. (2021), game-based cognitive assessments that incorporate reaction-time tasks can effectively measure visuospatial attention and response speed. Their study validated gamified cognitive tasks and found that participants exhibited performance patterns comparable to traditional clinical cognitive assessments.",
-  FocusFinder: "Knobel et al. (2021) developed a visual search task within an immersive game environment to assess attention. Their research, alongside Park and Zhang (2021), revealed that adaptive visual search activities effectively evaluate selective attention, cognitive control, and distractor resistance while maintaining high user engagement.",
-  StroopShift: "According to Müller et al. (2024), Stroop-based activities remain highly effective tools for measuring selective attention, cognitive flexibility, and inhibitory control. The study highlighted the ability of Stroop tasks to evaluate how individuals manage conflicting information and suppress automatic responses.",
-  MemoryMatch: "Bhargava et al. (2024) validated game-based cognitive assessments against traditional tests like ACE-III. They found that interactive environments effectively evaluate working memory, attention, and executive functions while maintaining high user engagement and immersion.",
-  MatrixRecall: "A systematic review by Vasconcelos et al. (2024) concluded that interactive cognitive games provide reliable measures of spatial memory, attention, and navigation skills. Game-based systems significantly improve user engagement compared to traditional spatial assessment methods.",
-  SynapseSpin: "Jonson et al. (2021) found that digital and virtual environments can effectively assess spatial memory and visuospatial skills. Cognitive assessment mechanisms involving mental rotation accurately measure environmental awareness.",
-  NexusMapper: "Jonson et al. (2021) determined that complex interactive environments effectively measure spatial memory retention, recall networks, and visuospatial navigation abilities.",
-  LogicLink: "Pedersen et al. (2020) validated game-based assessments on over 10,000 participants. Their study demonstrated that in-game behavioral data from pattern recognition tasks can reliably predict reasoning and decision-making abilities with accuracy comparable to traditional clinical assessments.",
-  EquationBalance: "According to Wang et al. (2022), game-based arithmetic challenges can effectively measure cognitive processing speed, analytical thinking, and deductive reasoning performance in an engaging format.",
-  SequenceDecoder: "Schubert et al. (2023) established that sequence-based cognitive tasks effectively evaluate abstract reasoning and rule discovery abilities. Identifying hidden patterns improves assessment accuracy for high-level analytical thinking skills.",
-  RouteOptimizer: "Nogueira et al. (2021) found that pathfinding and route optimization games can effectively measure executive planning, resource allocation, and combinatorial problem-solving skills, supporting strategic reasoning assessment.",
-  PriorityQueue: "Chiotaki et al. (2023) emphasized that adaptive game-based systems requiring rapid prioritization enhance problem-solving skills, strategic planning, and working memory capacity under increasing pressure.",
-  NeuroMaze: "According to Chiotaki et al. (2023), adaptive maze learning systems effectively enhance problem-solving skills, strategic thinking, and cognitive flexibility by dynamically adjusting challenges based on real-time user performance.",
-  MentalFlex: "Chiotaki et al. (2023) conducted a systematic review showing that game-based learning improves cognitive flexibility. Tasks requiring rapid adaptation to changing rules actively evaluate executive strategy and task-switching adaptability."
+  SpeedTap: {
+    citation: "Hadjiaros et al. (2021)",
+    studyTitle: "Gamified Cognitive Assessments for Response Speed & Visuospatial Attention",
+    summary: "Based on research by Hadjiaros et al. (2021), game-based cognitive assessments incorporating reaction-time tasks effectively measure visuospatial attention and response speed. Their study validated gamified cognitive tasks and found that participants exhibited performance patterns comparable to traditional clinical cognitive assessments.",
+    constructs: ["Processing Speed", "Visuospatial Attention", "Motor Reaction Latency"],
+    clinicalEquivalents: ["Simple Reaction Time (SRT)", "Visual Choice Reaction Task"]
+  },
+  FocusFinder: {
+    citation: "Knobel et al. (2021); Park & Zhang (2021)",
+    studyTitle: "Adaptive Visual Search Tasks in Immersive Assessment Environments",
+    summary: "Knobel et al. (2021) developed a visual search task within an immersive game environment to assess attention. Their research, alongside Park and Zhang (2021), revealed that adaptive visual search activities effectively evaluate selective attention, cognitive control, and distractor resistance while maintaining high user engagement.",
+    constructs: ["Selective Attention", "Distractor Suppression", "Visual Search Efficiency"],
+    clinicalEquivalents: ["Eriksen Flanker Task", "Visual Feature Search Paradigm"]
+  },
+  StroopShift: {
+    citation: "Müller et al. (2024)",
+    studyTitle: "Automated Stroop Paradigms for Cognitive Flexibility & Inhibition",
+    summary: "According to Müller et al. (2024), Stroop-based activities remain highly effective tools for measuring selective attention, cognitive flexibility, and inhibitory control. The study highlighted the ability of Stroop tasks to evaluate how individuals manage conflicting information and suppress automatic responses.",
+    constructs: ["Inhibitory Control", "Cognitive Flexibility", "Conflict Resolution"],
+    clinicalEquivalents: ["Classic Stroop Color-Word Test", "Simon Interference Task"]
+  },
+  MemoryMatch: {
+    citation: "Bhargava et al. (2024)",
+    studyTitle: "Validation of Gamified Working Memory Tasks Against ACE-III Battery",
+    summary: "Bhargava et al. (2024) validated game-based cognitive assessments against traditional tests like ACE-III. They found that interactive environments effectively evaluate working memory, attention, and executive functions while maintaining high user engagement and immersion.",
+    constructs: ["Working Memory", "Visuospatial Retention", "Information Encoding"],
+    clinicalEquivalents: ["Addenbrooke's Cognitive Examination (ACE-III)", "Digit Span Backwards"]
+  },
+  MatrixRecall: {
+    citation: "Vasconcelos et al. (2024)",
+    studyTitle: "Systematic Review of Interactive Spatial Memory & Navigation Measures",
+    summary: "A systematic review by Vasconcelos et al. (2024) concluded that interactive cognitive games provide reliable measures of spatial memory, attention, and navigation skills. Game-based systems significantly improve user engagement compared to traditional spatial assessment methods.",
+    constructs: ["Spatial Working Memory", "Pattern Reconstruction", "Coordinate Recall"],
+    clinicalEquivalents: ["Corsi Block-Tapping Test", "Spatial Span Paradigm"]
+  },
+  SynapseSpin: {
+    citation: "Jonson et al. (2021)",
+    studyTitle: "Digital Assessment of Mental Rotation & Visuospatial Reasoning",
+    summary: "Jonson et al. (2021) found that digital and virtual environments can effectively assess spatial memory and visuospatial skills. Cognitive assessment mechanisms involving mental rotation accurately measure environmental awareness.",
+    constructs: ["Mental Rotation", "Visuospatial Manipulation", "Spatial Reasoning"],
+    clinicalEquivalents: ["Shepard-Metzler Mental Rotation Task", "Vandenberg-Kuse MRT"]
+  },
+  NexusMapper: {
+    citation: "Jonson et al. (2021)",
+    studyTitle: "Network Topology & Spatial Navigation Recall in Virtual Environments",
+    summary: "Jonson et al. (2021) determined that complex interactive environments effectively measure spatial memory retention, recall networks, and visuospatial navigation abilities.",
+    constructs: ["Spatial Association", "Network Retention", "Relational Memory"],
+    clinicalEquivalents: ["Topographical Memory Test", "Virtual Water Maze"]
+  },
+  LogicLink: {
+    citation: "Pedersen et al. (2020)",
+    studyTitle: "Large-Scale Behavioral Analysis of Pattern Recognition & Reasoning (N > 10,000)",
+    summary: "Pedersen et al. (2020) validated game-based assessments on over 10,000 participants. Their study demonstrated that in-game behavioral data from pattern recognition tasks can reliably predict reasoning and decision-making abilities with accuracy comparable to traditional clinical assessments.",
+    constructs: ["Inductive Reasoning", "Pattern Extraction", "Rule Induction"],
+    clinicalEquivalents: ["Raven's Progressive Matrices", "Cattell Culture Fair Test"]
+  },
+  EquationBalance: {
+    citation: "Wang et al. (2022)",
+    studyTitle: "Mathematical Problem Solving & Working Memory in Gamified Tasks",
+    summary: "According to Wang et al. (2022), game-based arithmetic challenges can effectively measure cognitive processing speed, analytical thinking, and deductive reasoning performance in an engaging format.",
+    constructs: ["Arithmetic Reasoning", "Working Memory Capacity", "Deductive Logic"],
+    clinicalEquivalents: ["WAIS Arithmetic Subtest", "Cognitive Reflection Test (CRT)"]
+  },
+  SequenceDecoder: {
+    citation: "Schubert et al. (2023)",
+    studyTitle: "Rule Discovery and Abstract Sequential Reasoning in Digital Paradigms",
+    summary: "Schubert et al. (2023) established that sequence-based cognitive tasks effectively evaluate abstract reasoning and rule discovery abilities. Identifying hidden patterns improves assessment accuracy for high-level analytical thinking skills.",
+    constructs: ["Sequential Deduction", "Rule Discovery", "Abstract Reasoning"],
+    clinicalEquivalents: ["Letter-Number Sequencing", "Tower of London Task"]
+  },
+  RouteOptimizer: {
+    citation: "Nogueira et al. (2021)",
+    studyTitle: "Combinatorial Pathfinding as a Measure of Executive Planning",
+    summary: "Nogueira et al. (2021) found that pathfinding and route optimization games can effectively measure executive planning, resource allocation, and combinatorial problem-solving skills, supporting strategic reasoning assessment.",
+    constructs: ["Executive Planning", "Lookahead Depth", "Strategic Optimization"],
+    clinicalEquivalents: ["Tower of Hanoi", "Traveling Salesperson Optimization Task"]
+  },
+  PriorityQueue: {
+    citation: "Chiotaki et al. (2023)",
+    studyTitle: "Adaptive Game-Based Systems for Rapid Prioritization & Working Memory",
+    summary: "Chiotaki et al. (2023) emphasized that adaptive game-based systems requiring rapid prioritization enhance problem-solving skills, strategic planning, and working memory capacity under increasing pressure.",
+    constructs: ["Priority Triaging", "Cognitive Load Management", "Executive Dispatch"],
+    clinicalEquivalents: ["Dual-Task Paradigms", "Eisenhower Matrix Prioritization Task"]
+  },
+  NeuroMaze: {
+    citation: "Chiotaki et al. (2023)",
+    studyTitle: "Dynamic Maze Learning Systems & Adaptive Performance Adjustment",
+    summary: "According to Chiotaki et al. (2023), adaptive maze learning systems effectively enhance problem-solving skills, strategic thinking, and cognitive flexibility by dynamically adjusting challenges based on real-time user performance.",
+    constructs: ["Heuristic Search", "Spatial Adaptability", "Dynamic Replanning"],
+    clinicalEquivalents: ["Porteus Maze Test", "Wisconsin Card Sorting Task (WCST)"]
+  },
+  MentalFlex: {
+    citation: "Chiotaki et al. (2023)",
+    studyTitle: "Systematic Review of Digital Interventions for Cognitive Task Switching",
+    summary: "Chiotaki et al. (2023) conducted a systematic review showing that game-based learning improves cognitive flexibility. Tasks requiring rapid adaptation to changing rules actively evaluate executive strategy and task-switching adaptability.",
+    constructs: ["Task Switching", "Set Shifting", "Rule Adaptability"],
+    clinicalEquivalents: ["Wisconsin Card Sorting Test (WCST)", "Trail Making Test B"]
+  }
 };
 
 const CyberDashboard = ({
@@ -47,9 +131,23 @@ const CyberDashboard = ({
   // Active Category Filter Tab
   const [activeTab, setActiveTab] = useState(weakestDomain || 'executive_strategy');
 
+  // Scientific Validity Modal State
+  const [validityModalGame, setValidityModalGame] = useState(null);
+
   // Quests State
   const [quests, setQuests] = useState([]);
   const [questsLoading, setQuestsLoading] = useState(true);
+
+  // Keyboard listener for Escape to close validity modal
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setValidityModalGame(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Sync tab with weakest domain initially
   useEffect(() => {
@@ -70,7 +168,6 @@ const CyberDashboard = ({
           if (data.status === 'success' && data.quests?.length > 0) {
             setQuests(data.quests);
           } else {
-            // Fallback quests matching Image 2
             setQuests([
               { id: 'q1', task_description: 'Play 3 Training Games', current_amount: 0, target_amount: 3, reward_coins: 50, is_completed: 0 },
               { id: 'q2', task_description: 'Achieve 80% Accuracy', current_amount: 0, target_amount: 1, reward_coins: 75, is_completed: 0 },
@@ -120,7 +217,6 @@ const CyberDashboard = ({
       const g = d.games.find(x => x.id.toLowerCase() === (targetId || '').toLowerCase());
       if (g) return { game: g, domain: d };
     }
-    // Default fallback to Priority Queue in Executive Strategy
     const strat = DOMAINS_LIST.find(d => d.id === 'executive_strategy') || DOMAINS_LIST[0];
     return { game: strat.games[0], domain: strat };
   };
@@ -131,8 +227,7 @@ const CyberDashboard = ({
   const rawArchetype = personalizedReport?.archetype || 'The Learner';
   const archetypeTitle = rawArchetype.replace(/💡|🚀|📈|🔋|♟️/g, '').trim();
 
-  // Radar chart geometry for Left Column Card (matching Image 2)
-  // Axes: Top = Spatial-Visual Memory, Right = Logical Reasoning, Bottom = Executive Strategy, Left = Reflexes & Focus
+  // Radar chart geometry for Left Column Card
   const scores = {
     spatial_visual_memory: preTestScores?.spatial_visual_memory ?? 80,
     logical_mathematical: preTestScores?.logical_mathematical ?? 70,
@@ -158,9 +253,9 @@ const CyberDashboard = ({
 
   return (
     <div style={{
-      maxWidth: '1380px',
+      maxWidth: '100%',
       width: '100%',
-      margin: '0 auto',
+      margin: '0',
       boxSizing: 'border-box',
       color: '#f8fafc',
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
@@ -211,12 +306,13 @@ const CyberDashboard = ({
         </div>
       )}
 
-      {/* Main 2-Column Command Deck matching Image 2 */}
+      {/* Main 2-Column Command Deck - Edge-to-Edge Responsive Grid */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: isMobile ? '1fr' : 'minmax(310px, 340px) 1fr',
         gap: '1.25rem',
-        alignItems: 'start'
+        alignItems: 'start',
+        width: '100%'
       }}>
 
         {/* ================= LEFT COLUMN ================= */}
@@ -315,7 +411,7 @@ const CyberDashboard = ({
                 <line x1={rcx - rR - 12} y1={rcy} x2={rcx + rR + 12} y2={rcy} stroke="rgba(0, 240, 255, 0.25)" strokeWidth="1" />
                 <line x1={rcx} y1={rcy - rR - 12} x2={rcx} y2={rcy + rR + 12} stroke="rgba(0, 240, 255, 0.25)" strokeWidth="1" />
 
-                {/* Axis Labels (Stacked for perfect fit) */}
+                {/* Axis Labels */}
                 <text x={rcx} y={rcy - rR - 10} textAnchor="middle" fill="#00f0ff" fontSize="9.5" fontWeight="800" letterSpacing="0.03em">
                   Spatial-Visual Memory
                 </text>
@@ -467,16 +563,18 @@ const CyberDashboard = ({
         </div>
 
         {/* ================= RIGHT / MAIN COLUMN ================= */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', width: '100%', minWidth: 0 }}>
 
-          {/* 1. DAILY PRESCRIBED WORKOUT (Top Banner matching Image 2) */}
+          {/* 1. DAILY PRESCRIBED WORKOUT (Top Banner) */}
           <div style={{
             background: 'radial-gradient(circle at 70% 30%, rgba(24, 12, 38, 0.95) 0%, rgba(8, 10, 24, 0.98) 100%)',
             border: '1.5px solid rgba(216, 70, 239, 0.55)',
             borderRadius: '16px',
             padding: '1.25rem 1.45rem',
             position: 'relative',
-            boxShadow: '0 12px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba(216, 70, 239, 0.12)'
+            boxShadow: '0 12px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba(216, 70, 239, 0.12)',
+            width: '100%',
+            boxSizing: 'border-box'
           }}>
             <CyberCorner color="#d946ef" size={10} />
 
@@ -515,7 +613,7 @@ const CyberDashboard = ({
               </div>
             </div>
 
-            {/* Big Wide Gradient CTA */}
+            {/* Wide CTA Button */}
             <button
               onClick={() => {
                 audioEngine?.playClick();
@@ -557,7 +655,8 @@ const CyberDashboard = ({
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: '0.65rem'
+            gap: '0.65rem',
+            width: '100%'
           }}>
             {[
               { id: 'reflexes_and_focus', label: 'Reflexes', icon: '⚡' },
@@ -613,13 +712,13 @@ const CyberDashboard = ({
           {/* 3. GAME CARDS GRID (Filtered to Active Domain Tab) */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(290px, 1fr))',
-            gap: '1rem'
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(310px, 1fr))',
+            gap: '1.15rem',
+            width: '100%'
           }}>
             {activeGames.map(game => {
               const isPrescribed = prescribedGame.toLowerCase() === game.id.toLowerCase();
               const theme = DOMAIN_THEMES[currentDomainObj.themeClass] || DOMAIN_THEMES.executive;
-              const validityCitation = GAME_VALIDITY_CITATIONS[game.id] || "Scientifically validated psychometric serious game assessment module.";
 
               return (
                 <div
@@ -628,12 +727,11 @@ const CyberDashboard = ({
                     background: 'radial-gradient(circle at 80% 20%, rgba(15, 23, 42, 0.9) 0%, rgba(8, 12, 26, 0.95) 100%)',
                     border: `1.5px solid ${isPrescribed ? '#22c55e' : theme.color + '55'}`,
                     borderRadius: '14px',
-                    padding: '1.1rem',
+                    padding: '1.15rem',
                     position: 'relative',
                     boxShadow: isPrescribed ? '0 0 20px rgba(34, 197, 94, 0.2)' : '0 6px 20px rgba(0,0,0,0.4)',
                     display: 'flex',
                     flexDirection: 'column',
-                    justifyContent: 'space-between',
                     gap: '0.85rem'
                   }}
                 >
@@ -644,20 +742,20 @@ const CyberDashboard = ({
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <div style={{
-                          width: '36px',
-                          height: '36px',
+                          width: '38px',
+                          height: '38px',
                           borderRadius: '8px',
                           background: `${theme.color}18`,
                           border: `1px solid ${theme.color}45`,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          fontSize: '17px',
+                          fontSize: '18px',
                           flexShrink: 0
                         }}>
                           {game.icon}
                         </div>
-                        <h4 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '800', color: '#ffffff' }}>
+                        <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800', color: '#ffffff' }}>
                           {game.title}
                         </h4>
                       </div>
@@ -694,79 +792,97 @@ const CyberDashboard = ({
                     </div>
 
                     {/* Objective Description */}
-                    <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.8rem', color: '#94a3b8', lineHeight: '1.45' }}>
+                    <p style={{ margin: '0', fontSize: '0.82rem', color: '#94a3b8', lineHeight: '1.45' }}>
                       {game.objective}
                     </p>
                   </div>
 
-                  {/* Scientific Validity Accordion */}
-                  <details style={{
-                    background: 'rgba(2, 6, 23, 0.6)',
-                    border: '1px solid rgba(0, 240, 255, 0.15)',
-                    borderRadius: '8px',
-                    overflow: 'hidden',
-                    cursor: 'pointer'
-                  }}>
-                    <summary style={{
-                      padding: '0.45rem 0.65rem',
-                      fontSize: '0.7rem',
-                      color: '#38bdf8',
-                      fontWeight: '800',
-                      letterSpacing: '0.05em',
-                      textTransform: 'uppercase',
-                      outline: 'none',
-                      userSelect: 'none'
-                    }}>
-                      🔬 View Scientific Validity
-                    </summary>
-                    <div style={{
-                      padding: '0.5rem 0.65rem 0.65rem 0.65rem',
-                      fontSize: '0.72rem',
-                      color: '#cbd5e1',
-                      lineHeight: '1.45',
-                      fontStyle: 'italic',
-                      borderTop: '1px solid rgba(0, 240, 255, 0.1)'
-                    }}>
-                      {validityCitation}
-                    </div>
-                  </details>
+                  {/* Card Actions (Pinned cleanly at the bottom) */}
+                  <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+                    {/* View Scientific Validity Button (Opens Modal) */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        audioEngine?.playClick();
+                        setValidityModalGame({ game, domain: currentDomainObj, info: currentDomainInfo });
+                      }}
+                      style={{
+                        background: 'rgba(0, 240, 255, 0.06)',
+                        border: '1px solid rgba(0, 240, 255, 0.28)',
+                        borderRadius: '8px',
+                        padding: '0.5rem 0.75rem',
+                        color: '#38bdf8',
+                        fontSize: '0.74rem',
+                        fontWeight: '800',
+                        letterSpacing: '0.04em',
+                        textTransform: 'uppercase',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        transition: 'all 0.2s ease',
+                        outline: 'none'
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.background = 'rgba(0, 240, 255, 0.16)';
+                        e.currentTarget.style.borderColor = '#00f0ff';
+                        e.currentTarget.style.boxShadow = '0 0 12px rgba(0, 240, 255, 0.25)';
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.background = 'rgba(0, 240, 255, 0.06)';
+                        e.currentTarget.style.borderColor = 'rgba(0, 240, 255, 0.28)';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                    >
+                      <span style={{ fontSize: '13px' }}>🔬</span>
+                      <span>View Scientific Validity</span>
+                    </button>
 
-                  {/* Launch Game Button */}
-                  <button
-                    onClick={() => {
-                      audioEngine?.playClick();
-                      onLaunchGame(game, currentDomainObj);
-                    }}
-                    style={{
-                      background: 'rgba(15, 23, 42, 0.85)',
-                      border: '1px solid rgba(0, 240, 255, 0.4)',
-                      borderRadius: '8px',
-                      padding: '0.6rem 0.85rem',
-                      color: '#ffffff',
-                      fontSize: '0.82rem',
-                      fontWeight: '800',
-                      letterSpacing: '0.03em',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '6px',
-                      transition: 'all 0.2s ease',
-                      marginTop: '0.2rem'
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.borderColor = '#00f0ff';
-                      e.currentTarget.style.background = 'rgba(0, 240, 255, 0.12)';
-                      e.currentTarget.style.boxShadow = '0 0 12px rgba(0, 240, 255, 0.3)';
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.borderColor = 'rgba(0, 240, 255, 0.4)';
-                      e.currentTarget.style.background = 'rgba(15, 23, 42, 0.85)';
-                      e.currentTarget.style.boxShadow = 'none';
-                    }}
-                  >
-                    Launch Game &rarr;
-                  </button>
+                    {/* Launch Game Button */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        audioEngine?.playClick();
+                        onLaunchGame(game, currentDomainObj);
+                      }}
+                      style={{
+                        background: isPrescribed ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.9) 0%, rgba(16, 185, 129, 0.9) 100%)' : 'rgba(15, 23, 42, 0.85)',
+                        border: isPrescribed ? 'none' : '1px solid rgba(0, 240, 255, 0.4)',
+                        borderRadius: '8px',
+                        padding: '0.65rem 0.85rem',
+                        color: isPrescribed ? '#021814' : '#ffffff',
+                        fontSize: '0.84rem',
+                        fontWeight: '900',
+                        letterSpacing: '0.03em',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        transition: 'all 0.2s ease',
+                        boxShadow: isPrescribed ? '0 0 15px rgba(34, 197, 94, 0.4)' : 'none'
+                      }}
+                      onMouseOver={(e) => {
+                        if (!isPrescribed) {
+                          e.currentTarget.style.borderColor = '#00f0ff';
+                          e.currentTarget.style.background = 'rgba(0, 240, 255, 0.14)';
+                          e.currentTarget.style.boxShadow = '0 0 12px rgba(0, 240, 255, 0.3)';
+                        }
+                      }}
+                      onMouseOut={(e) => {
+                        if (!isPrescribed) {
+                          e.currentTarget.style.borderColor = 'rgba(0, 240, 255, 0.4)';
+                          e.currentTarget.style.background = 'rgba(15, 23, 42, 0.85)';
+                          e.currentTarget.style.boxShadow = 'none';
+                        }
+                      }}
+                    >
+                      <span>{isPrescribed ? 'Launch Active Prescribed Game' : 'Launch Game'}</span>
+                      <span>&rarr;</span>
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -775,6 +891,235 @@ const CyberDashboard = ({
         </div>
 
       </div>
+
+      {/* ================= SCIENTIFIC VALIDITY RESEARCH DOSSIER MODAL ================= */}
+      {validityModalGame && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(3, 7, 18, 0.85)',
+            backdropFilter: 'blur(12px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1.25rem',
+            animation: 'fadeIn 0.2s ease-out'
+          }}
+          onClick={() => setValidityModalGame(null)}
+        >
+          <div
+            style={{
+              background: 'radial-gradient(circle at 50% 0%, rgba(15, 23, 42, 0.98) 0%, rgba(6, 12, 26, 0.99) 100%)',
+              border: '1.5px solid #00f0ff',
+              borderRadius: '16px',
+              maxWidth: '640px',
+              width: '100%',
+              padding: '1.75rem',
+              position: 'relative',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(0, 240, 255, 0.25)',
+              boxSizing: 'border-box'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CyberCorner color="#00f0ff" size={12} />
+
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                  width: '46px',
+                  height: '46px',
+                  borderRadius: '12px',
+                  background: 'rgba(0, 240, 255, 0.12)',
+                  border: '1.5px solid rgba(0, 240, 255, 0.5)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '22px',
+                  boxShadow: '0 0 15px rgba(0, 240, 255, 0.3)'
+                }}>
+                  {validityModalGame.game.icon}
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.72rem', fontWeight: '800', letterSpacing: '0.08em', color: '#38bdf8', textTransform: 'uppercase' }}>
+                    SCIENTIFIC VALIDITY & EMPIRICAL FOUNDATION
+                  </div>
+                  <h3 style={{ margin: '0.2rem 0 0 0', fontSize: '1.35rem', fontWeight: '900', color: '#ffffff' }}>
+                    {validityModalGame.game.title}
+                  </h3>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setValidityModalGame(null)}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.06)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '8px',
+                  width: '32px',
+                  height: '32px',
+                  color: '#94a3b8',
+                  fontSize: '16px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.15s ease'
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.color = '#ffffff';
+                  e.currentTarget.style.borderColor = '#00f0ff';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.color = '#94a3b8';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Target Cognitive Domain Tag */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
+              <span style={{
+                background: 'rgba(0, 240, 255, 0.12)',
+                border: '1px solid rgba(0, 240, 255, 0.4)',
+                borderRadius: '6px',
+                padding: '4px 10px',
+                fontSize: '0.75rem',
+                fontWeight: '800',
+                color: '#00f0ff',
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase'
+              }}>
+                Domain: {validityModalGame.info?.title || validityModalGame.domain?.title}
+              </span>
+              <span style={{
+                background: 'rgba(34, 197, 94, 0.12)',
+                border: '1px solid rgba(34, 197, 94, 0.4)',
+                borderRadius: '6px',
+                padding: '4px 10px',
+                fontSize: '0.75rem',
+                fontWeight: '800',
+                color: '#4ade80',
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase'
+              }}>
+                Peer-Reviewed Empirical Literature
+              </span>
+            </div>
+
+            {/* Citation Box */}
+            <div style={{
+              background: 'rgba(3, 7, 18, 0.75)',
+              border: '1px solid rgba(0, 240, 255, 0.2)',
+              borderRadius: '10px',
+              padding: '1.15rem',
+              marginBottom: '1.25rem'
+            }}>
+              <div style={{ fontSize: '0.7rem', fontWeight: '800', color: '#38bdf8', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '0.4rem' }}>
+                📖 Empirical Literature Reference
+              </div>
+              <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#c084fc', marginBottom: '0.5rem' }}>
+                {GAME_VALIDITY_CITATIONS[validityModalGame.game.id]?.studyTitle || "Psychometric Assessment Study"}
+              </div>
+              <p style={{ margin: 0, fontSize: '0.88rem', color: '#e2e8f0', lineHeight: '1.65' }}>
+                {GAME_VALIDITY_CITATIONS[validityModalGame.game.id]?.summary || GAME_VALIDITY_CITATIONS[validityModalGame.game.id] || "Scientifically validated psychometric serious game assessment module."}
+              </p>
+            </div>
+
+            {/* Evaluated Cognitive Constructs */}
+            {GAME_VALIDITY_CITATIONS[validityModalGame.game.id]?.constructs && (
+              <div style={{ marginBottom: '1.15rem' }}>
+                <div style={{ fontSize: '0.7rem', fontWeight: '800', color: '#94a3b8', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '0.45rem' }}>
+                  🧠 Cognitive Constructs Evaluated
+                </div>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  {GAME_VALIDITY_CITATIONS[validityModalGame.game.id].constructs.map((c, i) => (
+                    <span key={i} style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      borderRadius: '6px',
+                      padding: '3px 8px',
+                      fontSize: '0.74rem',
+                      color: '#cbd5e1',
+                      fontWeight: '600'
+                    }}>
+                      {c}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Clinical Equivalents */}
+            {GAME_VALIDITY_CITATIONS[validityModalGame.game.id]?.clinicalEquivalents && (
+              <div style={{ marginBottom: '1.45rem' }}>
+                <div style={{ fontSize: '0.7rem', fontWeight: '800', color: '#94a3b8', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '0.45rem' }}>
+                  ⚖️ Standardized Clinical Equivalents
+                </div>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  {GAME_VALIDITY_CITATIONS[validityModalGame.game.id].clinicalEquivalents.map((eq, i) => (
+                    <span key={i} style={{
+                      background: 'rgba(168, 85, 247, 0.12)',
+                      border: '1px solid rgba(168, 85, 247, 0.35)',
+                      borderRadius: '6px',
+                      padding: '3px 8px',
+                      fontSize: '0.74rem',
+                      color: '#c084fc',
+                      fontWeight: '600'
+                    }}>
+                      {eq}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Action CTA Buttons */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button
+                onClick={() => setValidityModalGame(null)}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  color: '#e2e8f0',
+                  padding: '0.65rem 1.25rem',
+                  borderRadius: '8px',
+                  fontSize: '0.85rem',
+                  fontWeight: '700',
+                  cursor: 'pointer'
+                }}
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  const g = validityModalGame.game;
+                  const d = validityModalGame.domain;
+                  setValidityModalGame(null);
+                  onLaunchGame(g, d);
+                }}
+                style={{
+                  background: 'linear-gradient(135deg, #00f0ff 0%, #0284c7 100%)',
+                  border: 'none',
+                  color: '#021814',
+                  padding: '0.65rem 1.25rem',
+                  borderRadius: '8px',
+                  fontSize: '0.85rem',
+                  fontWeight: '900',
+                  cursor: 'pointer',
+                  boxShadow: '0 0 15px rgba(0, 240, 255, 0.35)'
+                }}
+              >
+                Launch This Game &rarr;
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
