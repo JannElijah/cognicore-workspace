@@ -429,6 +429,81 @@ export default function AssessmentFlow({
             </div>
           </div>
 
+          {/* ADAPTIVE CALIBRATION PROTOCOL (IRT Engine) */}
+          <div style={{
+            marginTop: 'auto',
+            paddingTop: '0.85rem',
+            borderTop: '1px solid rgba(0, 240, 255, 0.15)'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '0.55rem'
+            }}>
+              <span style={{
+                color: '#00f0ff',
+                fontSize: '0.7rem',
+                fontWeight: '800',
+                letterSpacing: '0.07em',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem'
+              }}>
+                <span style={{ fontSize: '0.85rem' }}>⚙️</span> ADAPTIVE CALIBRATION PROTOCOL
+              </span>
+              <span style={{
+                background: 'rgba(56, 189, 248, 0.12)',
+                border: '1px solid rgba(56, 189, 248, 0.35)',
+                color: '#38bdf8',
+                fontSize: '0.58rem',
+                fontWeight: '800',
+                padding: '1px 6px',
+                borderRadius: '4px',
+                letterSpacing: '0.03em'
+              }}>
+                2-PL IRT
+              </span>
+            </div>
+
+            <div style={{
+              background: 'rgba(2, 6, 23, 0.75)',
+              border: '1px solid rgba(0, 240, 255, 0.2)',
+              borderRadius: '8px',
+              padding: '0.7rem 0.85rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.5rem'
+            }}>
+              <div>
+                <div style={{ color: '#f1f5f9', fontSize: '0.75rem', fontWeight: '800', marginBottom: '0.12rem' }}>
+                  Item Response Theory (IRT)
+                </div>
+                <div style={{ color: '#94a3b8', fontSize: '0.7rem', lineHeight: '1.4' }}>
+                  Continuous dynamic ability estimation (<span style={{ color: '#00f0ff', fontWeight: 'bold' }}>θ</span>) modulates item difficulty in real time.
+                </div>
+              </div>
+
+              <div>
+                <div style={{ color: '#f1f5f9', fontSize: '0.75rem', fontWeight: '800', marginBottom: '0.12rem' }}>
+                  Cognitive Latency Telemetry
+                </div>
+                <div style={{ color: '#94a3b8', fontSize: '0.7rem', lineHeight: '1.4' }}>
+                  Millisecond reaction tracking distinguishes cognitive processing speed from random guessing.
+                </div>
+              </div>
+
+              <div>
+                <div style={{ color: '#f1f5f9', fontSize: '0.75rem', fontWeight: '800', marginBottom: '0.12rem' }}>
+                  Bayesian Posterior Ingest
+                </div>
+                <div style={{ color: '#94a3b8', fontSize: '0.7rem', lineHeight: '1.4' }}>
+                  Reduces estimation error variance to establish accurate baseline skill vectors.
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
 
         {/* ================= RIGHT COLUMN: COGNITIVE EVALUATION SELECTOR ================= */}
