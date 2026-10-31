@@ -124,9 +124,16 @@ def get_user_analytics(current_user_id, current_username, username):
         try:
             cur = c.cursor()
             cur.execute("""
-                SELECT game_sessions.game_type, game_sessions.start_time, performance_metrics.accuracy_rate, performance_metrics.reaction_time, performance_metrics.difficulty_level
-                FROM game_sessions LEFT JOIN performance_metrics ON game_sessions.id = performance_metrics.session_id
-                WHERE game_sessions.user_id = %s ORDER BY game_sessions.start_time DESC LIMIT 5
+                SELECT game_sessions.id, game_sessions.game_type, game_sessions.start_time,
+                       COALESCE(AVG(performance_metrics.accuracy_rate), 0.0) as accuracy_rate,
+                       COALESCE(AVG(performance_metrics.reaction_time), 0.0) as reaction_time,
+                       COALESCE(MAX(performance_metrics.difficulty_level), 1) as difficulty_level
+                FROM game_sessions
+                LEFT JOIN performance_metrics ON game_sessions.id = performance_metrics.session_id
+                WHERE game_sessions.user_id = %s
+                GROUP BY game_sessions.id, game_sessions.game_type, game_sessions.start_time
+                ORDER BY game_sessions.start_time DESC
+                LIMIT 5
             """, (target_uid,))
             return cur.fetchall()
         finally:
@@ -137,30 +144,67 @@ def get_user_analytics(current_user_id, current_username, username):
         try:
             cur = c.cursor()
             cur.execute("""
-                SELECT COUNT(game_sessions.id) as total_games, MAX(performance_metrics.difficulty_level) as highest_level, AVG(performance_metrics.accuracy_rate) as overall_accuracy
-                FROM game_sessions LEFT JOIN performance_metrics ON game_sessions.id = performance_metrics.session_id WHERE game_sessions.user_id = %s
+                SELECT COUNT(DISTINCT game_sessions.id) as total_games, 
+                       COALESCE(MAX(performance_metrics.difficulty_level), 1) as highest_level, 
+                       COALESCE(AVG(performance_metrics.accuracy_rate), 0.0) as overall_accuracy
+                FROM game_sessions 
+                LEFT JOIN performance_metrics ON game_sessions.id = performance_metrics.session_id 
+                WHERE game_sessions.user_id = %s
             """, (target_uid,))
             return cur.fetchone()
         finally:
             c.close()
 
-    with ThreadPoolExecutor(max_workers=5) as executor:
+    def fetch_user_profile():
+        c = get_db_connection()
+        try:
+            cur = c.cursor()
+            cur.execute("SELECT xp, level, coins FROM user_profiles WHERE user_id = %s", (target_uid,))
+            return cur.fetchone()
+        finally:
+            c.close()
+
+    def fetch_user_streak():
+        c = get_db_connection()
+        try:
+            cur = c.cursor()
+            cur.execute("SELECT current_streak, longest_streak FROM user_streaks WHERE user_id = %s", (target_uid,))
+            return cur.fetchone()
+        finally:
+            c.close()
+
+    with ThreadPoolExecutor(max_workers=7) as executor:
         f_domain = executor.submit(fetch_domain_stats)
         f_time = executor.submit(fetch_timeline_stats)
         f_arch = executor.submit(fetch_latest_archetype)
         f_recent = executor.submit(fetch_recent_activity)
         f_kpi = executor.submit(fetch_kpis)
+        f_prof = executor.submit(fetch_user_profile)
+        f_streak = executor.submit(fetch_user_streak)
 
         domain_stats = f_domain.result()
         timeline_stats = f_time.result()
         latest_archetype_row = f_arch.result()
         recent_activity_rows = f_recent.result()
         kpi_row = f_kpi.result()
+        prof_row = f_prof.result()
+        streak_row = f_streak.result()
 
     kpis = {
         "total_games": kpi_row["total_games"] if kpi_row and kpi_row["total_games"] else 0,
         "highest_level": kpi_row["highest_level"] if kpi_row and kpi_row["highest_level"] else 1,
         "overall_accuracy": float(kpi_row["overall_accuracy"]) if kpi_row and kpi_row["overall_accuracy"] else 0.0
+    }
+
+    user_profile = {
+        "xp": prof_row["xp"] if prof_row and prof_row["xp"] is not None else 0,
+        "level": prof_row["level"] if prof_row and prof_row["level"] is not None else 1,
+        "coins": prof_row["coins"] if prof_row and prof_row["coins"] is not None else 0
+    }
+
+    streak_info = {
+        "current_streak": streak_row["current_streak"] if streak_row and streak_row["current_streak"] is not None else 1,
+        "longest_streak": streak_row["longest_streak"] if streak_row and streak_row["longest_streak"] is not None else 1
     }
 
     domain_list = [dict(row) for row in domain_stats]
@@ -210,6 +254,8 @@ def get_user_analytics(current_user_id, current_username, username):
     return jsonify({
         "status": "success",
         "kpis": kpis,
+        "user_profile": user_profile,
+        "streak": streak_info,
         "domain_stats": domain_list,
         "timeline_stats": [dict(row) for row in timeline_stats],
         "cognitive_profile": cognitive_profile,

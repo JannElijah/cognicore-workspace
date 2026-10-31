@@ -26,6 +26,7 @@ const ProfileModal = ({ onClose }) => {
   const [hoveredBadge, setHoveredBadge] = useState(null);
   const [metricToggle, setMetricToggle] = useState('accuracy'); // 'accuracy' or 'reactionTime'
   const [kpis, setKpis] = useState({ total_games: 0, highest_level: 1, overall_accuracy: 0 });
+  const [streakData, setStreakData] = useState({ current_streak: 1, longest_streak: 1 });
   const [loading, setLoading] = useState(true);
 
   // Settings State
@@ -39,7 +40,7 @@ const ProfileModal = ({ onClose }) => {
   const [course, setCourse] = useState('');
   const [age, setAge] = useState('');
   const [gender, setGender] = useState('');
-  const [pwdStatus, setPwdStatus] = useState('');
+  const [pwdStatus, setPwdStatus] = useState('None');
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [demoMsg, setDemoMsg] = useState({ text: '', type: '' });
@@ -56,7 +57,7 @@ const ProfileModal = ({ onClose }) => {
           setCourse(data.profile.course || '');
           setAge(data.profile.age || '');
           setGender(data.profile.gender || '');
-          setPwdStatus(data.profile.pwd_status || '');
+          setPwdStatus(data.profile.pwd_status && data.profile.pwd_status !== '' ? data.profile.pwd_status : 'None');
           setDemoLoaded(true);
         }
       });
@@ -167,16 +168,23 @@ const ProfileModal = ({ onClose }) => {
          if (me) setProfileData(me);
       }).catch(e => console.error(e));
 
+    if (fetchInventory) {
+      fetchInventory();
+    }
+
     fetch(`${API_BASE}/api/user-analytics/${username}`, { headers: { 'Authorization': `Bearer ${token}` } })
       .then(res => res.json())
       .then(anData => {
          if (anData.status === 'success') {
+           if (anData.kpis) setKpis(anData.kpis);
+           if (anData.user_profile) setProfileData(prev => ({ ...prev, ...anData.user_profile }));
+           if (anData.streak) setStreakData(anData.streak);
            setTimelineStats(anData.timeline_stats || []);
            setDomainStats(anData.domain_stats || []);
            if (anData.cognitive_profile) setCognitiveProfile(anData.cognitive_profile);
-           if (anData.recent_activity) setActivityLog(anData.recent_activity);
+           if (anData.recent_activity) setRecentActivity(anData.recent_activity);
          }
-      }).catch(e => console.error(e));
+      }).catch(e => console.error('Failed to fetch user analytics:', e));
 
     fetch(API_BASE + '/api/achievements', { headers: { 'Authorization': `Bearer ${token}` } })
       .then(res => res.json())
@@ -218,18 +226,48 @@ const ProfileModal = ({ onClose }) => {
   };
   const headerBg = equippedBanner && bannerBackgrounds[equippedBanner] ? bannerBackgrounds[equippedBanner] : 'transparent';
 
+  const DOMAIN_LABEL_MAP = {
+    'reflexes_and_focus': ['Reflexes &', 'Focus'],
+    'spatial_visual_memory': ['Spatial', 'Memory'],
+    'logical_mathematical': ['Logical', 'Math'],
+    'executive_strategy': ['Executive', 'Strategy']
+  };
+
   const radarData = useMemo(() => ({
-    labels: domainStats.map(d => (d.cognitive_domain || '').split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')),
+    labels: domainStats.map(d => {
+      const raw = d.cognitive_domain || '';
+      return DOMAIN_LABEL_MAP[raw] || raw.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+    }),
     datasets: [{
       label: 'Accuracy %',
       data: domainStats.map(d => (d.avg_accuracy * 100).toFixed(1)),
-      backgroundColor: 'rgba(56, 189, 248, 0.4)',
+      backgroundColor: 'rgba(56, 189, 248, 0.35)',
       borderColor: '#38bdf8',
       borderWidth: 2,
       pointBackgroundColor: '#38bdf8',
     }]
   }), [domainStats]);
-  const radarOptions = { scales: { r: { angleLines: { color: 'rgba(255, 255, 255, 0.1)' }, grid: { color: 'rgba(255, 255, 255, 0.1)' }, pointLabels: { color: '#e2e8f0', font: { size: 11 } }, ticks: { backdropColor: 'transparent', color: '#94a3b8', min: 0, max: 100 } } }, plugins: { legend: { display: false } }, maintainAspectRatio: false };
+
+  const radarOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    layout: {
+      padding: { top: 10, bottom: 10, left: 14, right: 14 }
+    },
+    scales: {
+      r: {
+        angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+        pointLabels: {
+          color: '#e2e8f0',
+          font: { size: 11, weight: 'bold' },
+          padding: 6
+        },
+        ticks: { backdropColor: 'transparent', color: '#94a3b8', min: 0, max: 100, stepSize: 25 }
+      }
+    },
+    plugins: { legend: { display: false } }
+  };
 
   const lineData = useMemo(() => ({
     labels: timelineStats.map(d => {
@@ -245,7 +283,15 @@ const ProfileModal = ({ onClose }) => {
       tension: 0.4 
     }]
   }), [timelineStats, metricToggle]);
-  const lineOptions = { scales: { x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } }, y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' }, min: metricToggle === 'accuracy' ? 0 : undefined, max: metricToggle === 'accuracy' ? 100 : undefined } }, plugins: { legend: { display: false } }, maintainAspectRatio: false };
+  const lineOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } },
+      y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' }, min: metricToggle === 'accuracy' ? 0 : undefined, max: metricToggle === 'accuracy' ? 100 : undefined }
+    },
+    plugins: { legend: { display: false } }
+  };
 
   const scatterData = useMemo(() => ({
     datasets: [
@@ -314,7 +360,7 @@ const ProfileModal = ({ onClose }) => {
 
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(2, 6, 23, 0.85)', backdropFilter: 'blur(8px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ background: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(148, 163, 184, 0.2)', borderRadius: '16px', width: '95%', maxWidth: '800px', height: '80vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }}>
+      <div style={{ background: 'rgba(15, 23, 42, 0.95)', border: '1px solid rgba(148, 163, 184, 0.2)', borderRadius: '16px', width: 'min(940px, 95vw)', height: '82vh', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }}>
         
         <div style={{ display: 'flex', flexDirection: 'column', borderBottom: '1px solid rgba(148, 163, 184, 0.1)', background: headerBg }}>
           <div style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -343,7 +389,7 @@ const ProfileModal = ({ onClose }) => {
                   })()}
                 </div>
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                  <span style={{ color: '#fbbf24', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><svg width="16" height="16" viewBox="0 0 24 24" style={{ filter: 'drop-shadow(0 0 4px rgba(251,191,36,0.7))', flexShrink: 0 }} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="11" fill="#fbbf24"/><circle cx="12" cy="12" r="8" fill="#f59e0b"/><text x="12" y="16.5" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#78350f" fontFamily="Arial">C</text></svg> {coins} Coins</span>
+                  <span style={{ color: '#fbbf24', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><svg width="16" height="16" viewBox="0 0 24 24" style={{ filter: 'drop-shadow(0 0 4px rgba(251,191,36,0.7))', flexShrink: 0 }} xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="11" fill="#fbbf24"/><circle cx="12" cy="12" r="8" fill="#f59e0b"/><text x="12" y="16.5" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#78350f" fontFamily="Arial">C</text></svg> {profileData?.coins !== undefined ? profileData.coins : coins} Coins</span>
                   <span style={{ color: 'var(--color-secondary)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--color-secondary)" style={{ filter: 'drop-shadow(0 0 4px rgba(var(--rgb-secondary),0.8))', flexShrink: 0 }} xmlns="http://www.w3.org/2000/svg">
                       <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="var(--color-secondary)"/>
@@ -370,7 +416,7 @@ const ProfileModal = ({ onClose }) => {
           </div>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
+        <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '1.5rem', width: '100%', boxSizing: 'border-box' }}>
           {loading ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', opacity: 0.7 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
@@ -386,10 +432,13 @@ const ProfileModal = ({ onClose }) => {
           ) : (
             <>
               {activeTab === 'overview' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px' }}>
-                      <h3 style={{ margin: '0 0 1rem 0', color: '#f8fafc' }}>Level Progression</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', width: '100%', boxSizing: 'border-box' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '1.25rem', width: '100%', boxSizing: 'border-box' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <h3 style={{ margin: '0 0 1rem 0', color: '#f8fafc', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-secondary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        Level Progression
+                      </h3>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#94a3b8' }}>
                         <span>Level {level}</span>
                         <span>Level {level + 1}</span>
@@ -402,14 +451,39 @@ const ProfileModal = ({ onClose }) => {
                       </div>
                     </div>
                     
+                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <h3 style={{ margin: 0, color: '#f8fafc', fontSize: '1.05rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10h-10V2z"/></svg>
+                          Training Snapshot
+                        </h3>
+                        <span style={{ fontSize: '0.8rem', padding: '3px 8px', borderRadius: '6px', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', fontWeight: 'bold' }}>
+                          {cognitiveProfile?.archetype_name || 'Steady Focus'}
+                        </span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginTop: '0.75rem' }}>
+                        <div style={{ background: 'rgba(0,0,0,0.25)', padding: '0.65rem 0.5rem', borderRadius: '8px', textAlign: 'center' }}>
+                          <div style={{ color: '#94a3b8', fontSize: '0.75rem', marginBottom: '0.2rem' }}>Total Sessions</div>
+                          <div style={{ color: '#f8fafc', fontWeight: 'bold', fontSize: '1.25rem' }}>{kpis.total_games}</div>
+                        </div>
+                        <div style={{ background: 'rgba(0,0,0,0.25)', padding: '0.65rem 0.5rem', borderRadius: '8px', textAlign: 'center' }}>
+                          <div style={{ color: '#94a3b8', fontSize: '0.75rem', marginBottom: '0.2rem' }}>Overall Acc</div>
+                          <div style={{ color: '#10b981', fontWeight: 'bold', fontSize: '1.25rem' }}>{(kpis.overall_accuracy * 100).toFixed(1)}%</div>
+                        </div>
+                        <div style={{ background: 'rgba(0,0,0,0.25)', padding: '0.65rem 0.5rem', borderRadius: '8px', textAlign: 'center' }}>
+                          <div style={{ color: '#94a3b8', fontSize: '0.75rem', marginBottom: '0.2rem' }}>Peak Tier</div>
+                          <div style={{ color: '#fbbf24', fontWeight: 'bold', fontSize: '1.25rem' }}>Lvl {kpis.highest_level}</div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.5rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: '1.25rem', width: '100%', boxSizing: 'border-box' }}>
                     <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', minWidth: 0 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                         <h3 style={{ margin: 0, color: '#f8fafc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Training Consistency</h3>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#fbbf24', fontWeight: 'bold', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>
-                          <span style={{ display: 'flex', marginRight: '4px' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2c0 0-4.5 5.5-4.5 9.5a4.5 4.5 0 0 0 9 0C16.5 7.5 12 2 12 2z"/><path d="M12 11c-1 0-2 1-2 2a2 2 0 0 0 4 0c0-1-1-2-2-2z"/></svg></span> {timelineStats.length > 0 ? timelineStats.length : 0} Days
+                          <span style={{ display: 'flex', marginRight: '4px' }}><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2c0 0-4.5 5.5-4.5 9.5a4.5 4.5 0 0 0 9 0C16.5 7.5 12 2 12 2z"/><path d="M12 11c-1 0-2 1-2 2a2 2 0 0 0 4 0c0-1-1-2-2-2z"/></svg></span> {streakData?.current_streak || (timelineStats.length > 0 ? timelineStats.length : 1)} Day Streak
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '0.5rem' }}>
@@ -526,76 +600,76 @@ const ProfileModal = ({ onClose }) => {
               )}
 
               {activeTab === 'stats' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', width: '100%', boxSizing: 'border-box' }}>
                   
                   {/* KPI Cards Row */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '1.25rem', width: '100%', boxSizing: 'border-box' }}>
                     <HoverTooltip text="Total number of valid neuro-training sessions recorded." delay={200}>
-                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', textAlign: 'center', border: '1px solid rgba(var(--rgb-primary), 0.1)' }}>
-                      <div style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Total Games Played</div>
-                      <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#f8fafc' }}>{kpis.total_games}</div>
+                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.25rem', borderRadius: '12px', textAlign: 'center', border: '1px solid rgba(var(--rgb-primary), 0.1)', minWidth: 0, boxSizing: 'border-box' }}>
+                      <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '0.4rem' }}>Total Games Played</div>
+                      <div style={{ fontSize: '1.85rem', fontWeight: 'bold', color: '#f8fafc' }}>{kpis.total_games}</div>
                     </div>
                     </HoverTooltip>
                     <HoverTooltip text="The maximum difficulty tier you have achieved across all games." delay={200}>
-                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', textAlign: 'center', border: '1px solid rgba(var(--rgb-secondary), 0.1)' }}>
-                      <div style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Highest Level Reached</div>
-                      <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#f8fafc' }}>{kpis.highest_level}</div>
+                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.25rem', borderRadius: '12px', textAlign: 'center', border: '1px solid rgba(var(--rgb-secondary), 0.1)', minWidth: 0, boxSizing: 'border-box' }}>
+                      <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '0.4rem' }}>Highest Level Reached</div>
+                      <div style={{ fontSize: '1.85rem', fontWeight: 'bold', color: '#f8fafc' }}>{kpis.highest_level}</div>
                     </div>
                     </HoverTooltip>
                     <HoverTooltip text="Average precision rate across all cognitive domains." delay={200}>
-                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', textAlign: 'center', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
-                      <div style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '0.5rem' }}>Overall Accuracy</div>
-                      <div style={{ fontSize: '2rem', fontWeight: 'bold', color: '#f8fafc' }}>{(kpis.overall_accuracy * 100).toFixed(1)}%</div>
+                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.25rem', borderRadius: '12px', textAlign: 'center', border: '1px solid rgba(16, 185, 129, 0.1)', minWidth: 0, boxSizing: 'border-box' }}>
+                      <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginBottom: '0.4rem' }}>Overall Accuracy</div>
+                      <div style={{ fontSize: '1.85rem', fontWeight: 'bold', color: '#f8fafc' }}>{(kpis.overall_accuracy * 100).toFixed(1)}%</div>
                     </div>
                     </HoverTooltip>
                   </div>
 
                   {/* Charts Row */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '1.25rem', width: '100%', boxSizing: 'border-box' }}>
                     
                     {/* Radar Chart */}
-                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', minHeight: '350px' }}>
-                      <h3 style={{ margin: '0 0 1rem 0', color: '#f8fafc', textAlign: 'center' }}>Cognitive Strengths</h3>
-                      <div style={{ width: '100%', height: '250px' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.25rem', borderRadius: '12px', minHeight: '340px', minWidth: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
+                      <h3 style={{ margin: '0 0 0.75rem 0', color: '#f8fafc', textAlign: 'center', fontSize: '1.05rem' }}>Cognitive Strengths</h3>
+                      <div style={{ width: '100%', height: '260px', position: 'relative' }}>
                         {domainStats.length > 0 ? <Radar data={radarData} options={radarOptions} /> : <div style={{ color: '#94a3b8', textAlign: 'center', marginTop: '100px' }}>No data</div>}
                       </div>
                     </div>
 
                     {/* Timeline Line Chart */}
-                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px', minHeight: '350px', display: 'flex', flexDirection: 'column' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                        <h3 style={{ margin: 0, color: '#f8fafc' }}>Performance Trend</h3>
-                        <div style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '4px' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.25rem', borderRadius: '12px', minHeight: '340px', minWidth: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        <h3 style={{ margin: 0, color: '#f8fafc', fontSize: '1.05rem' }}>Performance Trend</h3>
+                        <div style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '3px' }}>
                           <button 
                             onClick={() => setMetricToggle('accuracy')}
-                            style={{ background: metricToggle === 'accuracy' ? 'var(--color-primary)' : 'transparent', color: metricToggle === 'accuracy' ? '#0f172a' : '#94a3b8', border: 'none', padding: '4px 12px', borderRadius: '6px', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 'bold' }}
+                            style={{ background: metricToggle === 'accuracy' ? 'var(--color-primary)' : 'transparent', color: metricToggle === 'accuracy' ? '#0f172a' : '#94a3b8', border: 'none', padding: '4px 10px', borderRadius: '6px', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}
                           >
                             Accuracy
                           </button>
                           <button 
                             onClick={() => setMetricToggle('reactionTime')}
-                            style={{ background: metricToggle === 'reactionTime' ? 'var(--color-secondary)' : 'transparent', color: metricToggle === 'reactionTime' ? '#f8fafc' : '#94a3b8', border: 'none', padding: '4px 12px', borderRadius: '6px', fontSize: '0.85rem', cursor: 'pointer', fontWeight: 'bold' }}
+                            style={{ background: metricToggle === 'reactionTime' ? 'var(--color-secondary)' : 'transparent', color: metricToggle === 'reactionTime' ? '#f8fafc' : '#94a3b8', border: 'none', padding: '4px 10px', borderRadius: '6px', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 'bold' }}
                           >
                             Reaction Time
                           </button>
                         </div>
                       </div>
-                      <div style={{ width: '100%', height: '250px' }}>
+                      <div style={{ width: '100%', height: '260px', position: 'relative' }}>
                         {timelineStats.length > 0 ? <Line data={lineData} options={lineOptions} /> : <div style={{ color: '#94a3b8', textAlign: 'center', marginTop: '100px' }}>No data</div>}
                       </div>
                     </div>
                   </div>
 
                   {/* Detailed Domain Breakdown */}
-                  <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.5rem', borderRadius: '12px' }}>
-                    <h3 style={{ margin: '0 0 1rem 0', color: '#f8fafc' }}>Domain Breakdown</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                  <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.25rem', borderRadius: '12px', width: '100%', boxSizing: 'border-box' }}>
+                    <h3 style={{ margin: '0 0 1rem 0', color: '#f8fafc', fontSize: '1.05rem' }}>Domain Breakdown</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '1.25rem', width: '100%', boxSizing: 'border-box' }}>
                       {domainStats.map(d => {
                         const score = d.avg_accuracy * 100;
                         const domainName = (d.cognitive_domain || '').split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
                         return (
-                          <div key={d.cognitive_domain} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#cbd5e1', fontSize: '0.95rem' }}>
+                          <div key={d.cognitive_domain} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', minWidth: 0 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', color: '#cbd5e1', fontSize: '0.9rem' }}>
                               <span>{domainName}</span>
                               <span style={{ fontWeight: 'bold', color: score >= 80 ? '#10b981' : score >= 50 ? '#fbbf24' : '#ef4444' }}>{score.toFixed(1)}%</span>
                             </div>
@@ -775,27 +849,38 @@ const ProfileModal = ({ onClose }) => {
                   <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '1.5rem', borderRadius: '12px' }}>
                     <h3 style={{ color: '#f8fafc', margin: '0 0 1rem 0' }}>Edit Demographics</h3>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      <input type="text" placeholder="Course / Program (e.g. BSCS)" value={course} onChange={e=>setCourse(e.target.value)} style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem', width: '100%', boxSizing: 'border-box' }} />
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <input type="number" placeholder="Age" value={age} onChange={e=>setAge(e.target.value)} style={{ flex: 1, background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem' }} />
-                        <select value={gender} onChange={e=>setGender(e.target.value)} style={{ flex: 1, background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem' }}>
-                          <option value="" disabled>Select Gender</option>
-                          <option value="Male">Male</option>
-                          <option value="Female">Female</option>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                        <label style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Course / Program</label>
+                        <input type="text" placeholder="e.g. BSCS" value={course} onChange={e=>setCourse(e.target.value)} style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem', width: '100%', boxSizing: 'border-box' }} />
+                      </div>
+                      <div style={{ display: 'flex', gap: '1rem' }}>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                          <label style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Age</label>
+                          <input type="number" placeholder="e.g. 21" value={age} onChange={e=>setAge(e.target.value)} style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem', width: '100%', boxSizing: 'border-box' }} />
+                        </div>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                          <label style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>Gender</label>
+                          <select value={gender} onChange={e=>setGender(e.target.value)} style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem', width: '100%', boxSizing: 'border-box' }}>
+                            <option value="" disabled>Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                            <option value="Prefer not to say">Prefer not to say</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                        <label style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>PWD Status (Person with Disability)</label>
+                        <select value={pwdStatus || 'None'} onChange={e=>setPwdStatus(e.target.value)} style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem', width: '100%', boxSizing: 'border-box' }}>
+                          <option value="None">None (No Disability)</option>
+                          <option value="Visual Impairment">Visual Impairment</option>
+                          <option value="Hearing Impairment">Hearing Impairment</option>
+                          <option value="Motor/Physical Disability">Motor/Physical Disability</option>
+                          <option value="Cognitive/Learning Disability">Cognitive/Learning Disability</option>
                           <option value="Other">Other</option>
                           <option value="Prefer not to say">Prefer not to say</option>
                         </select>
                       </div>
-                      <select value={pwdStatus} onChange={e=>setPwdStatus(e.target.value)} style={{ background: '#09090b', border: '1px solid rgba(255,255,255,0.2)', borderRadius: '8px', color: '#ffffff', padding: '0.7rem', width: '100%' }}>
-                        <option value="" disabled>PWD Status (Person with Disability)</option>
-                        <option value="None">None</option>
-                        <option value="Visual Impairment">Visual Impairment</option>
-                        <option value="Hearing Impairment">Hearing Impairment</option>
-                        <option value="Motor/Physical Disability">Motor/Physical Disability</option>
-                        <option value="Cognitive/Learning Disability">Cognitive/Learning Disability</option>
-                        <option value="Other">Other</option>
-                        <option value="Prefer not to say">Prefer not to say</option>
-                      </select>
                       <button onClick={handleUpdateProfile} style={{ background: 'var(--color-primary)', color: '#fff', border: 'none', padding: '0.75rem', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '0.5rem' }}>Save Demographics</button>
                       {demoMsg.text && (
                         <div style={{ background: demoMsg.type === 'error' ? 'rgba(239,68,68,0.1)' : 'rgba(74,222,128,0.1)', color: demoMsg.type === 'error' ? '#fca5a5' : '#4ade80', padding: '0.75rem', borderRadius: '8px', textAlign: 'center', fontSize: '0.85rem' }}>
