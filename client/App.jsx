@@ -2491,7 +2491,7 @@ export default function App() {
           // ==========================================
           <div className="lobby-content">
             
-            {assessmentStage === 'completed' && (
+            {assessmentStage === 'completed' ? (
               <PostTestResults 
                 preScores={preTestScores} 
                 postScores={postTestScores} 
@@ -2510,38 +2510,38 @@ export default function App() {
                   if (targetGame) setActiveGame(targetGame);
                 }}
               />
+            ) : (
+              <CyberDashboard
+                currentUser={currentUser}
+                preTestScores={preTestScores}
+                weakestDomain={weakestDomain}
+                prescribedGame={prescribedGame}
+                personalizedReport={personalizedReport}
+                hasPlayedPrescribed={hasPlayedPrescribed}
+                onStartPostTest={() => {
+                  setAssessmentAnswers({
+                    q1: '', q2: '', q3: '', q4: '',
+                    q5: '', q6: '', q7: '', q8: '',
+                    q9: '', q10: '', q11: '', q12: ''
+                  });
+                  setAssessmentStage('post-test');
+                }}
+                onLaunchGame={(game, domain) => {
+                  if (isMobile) {
+                    handleMobileGameAttempt(game.title);
+                    return;
+                  }
+                  setPendingGameToLaunch({
+                    id: game.id,
+                    title: game.title,
+                    themeClass: domain?.themeClass || 'executive',
+                    icon: game.icon
+                  });
+                }}
+                isMobile={isMobile}
+                audioEngine={audioEngine}
+              />
             )}
-            
-            <CyberDashboard
-              currentUser={currentUser}
-              preTestScores={preTestScores}
-              weakestDomain={weakestDomain}
-              prescribedGame={prescribedGame}
-              personalizedReport={personalizedReport}
-              hasPlayedPrescribed={hasPlayedPrescribed}
-              onStartPostTest={() => {
-                setAssessmentAnswers({
-                  q1: '', q2: '', q3: '', q4: '',
-                  q5: '', q6: '', q7: '', q8: '',
-                  q9: '', q10: '', q11: '', q12: ''
-                });
-                setAssessmentStage('post-test');
-              }}
-              onLaunchGame={(game, domain) => {
-                if (isMobile) {
-                  handleMobileGameAttempt(game.title);
-                  return;
-                }
-                setPendingGameToLaunch({
-                  id: game.id,
-                  title: game.title,
-                  themeClass: domain?.themeClass || 'executive',
-                  icon: game.icon
-                });
-              }}
-              isMobile={isMobile}
-              audioEngine={audioEngine}
-            />
 
             {/* Dynamic Game Launcher & Mode Config Selector Modal Overlay */}
             {pendingGameToLaunch && (
