@@ -1,15 +1,5 @@
 import useCogniStore from '../store/useCogniStore';
 import { API_BASE } from '../utils/apiClient.js';
-/**
- * ================================================================================
- * Chapter 2 Methodology Compliance: Software Engineering Architecture Patterns
- * - Pattern: Model-View-Controller (MVC) / Client-Server Communication (Bridge Pattern)
- * - Component: View & Controller (Phaser Game Loop) / Data Dispatcher (Service Bridge)
- * - Modular Independence: Self-contained Logic Link sequencing game scene.
- * - Dynamic Difficulty Adjustment (DDA): Implements hot-swapping game variables
- *   (grid_size, sequence_length, distractors count) updated via REST API.
- * ================================================================================
- */
 import Phaser from 'phaser';
 import { CogniTheme } from '../utils/theme';
 import BaseCognitiveScene from './BaseCognitiveScene';
@@ -26,12 +16,14 @@ export default class LogicLinkScene extends BaseCognitiveScene {
         this.apiUrl = data.apiUrl || API_BASE;
         this.onGameOver = data.onGameOver || null;
 
-        // DDA variables (Reasoning & Problem Solving)
+        // DDA variables (Hybrid Trail Making + Memory Masking)
         const dda = data.ddaParameters || {};
         this.difficultyLevel = dda.difficulty_level || 1;
-        this.gridSize = dda.grid_size || 3;
-        this.sequenceLength = dda.sequence_length || 3;
-        this.distractorsCount = dda.distractors || 0;
+        this.gridSize = dda.grid_size || 4;
+        this.sequenceLength = dda.sequence_length || 4;
+        this.distractorsCount = dda.distractors !== undefined ? dda.distractors : 3;
+        this.sequenceMode = dda.sequence_mode || (this.difficultyLevel === 2 || this.difficultyLevel === 3 || this.difficultyLevel === 5 ? 'alternating' : 'numbers');
+        this.memoryMask = dda.memory_mask !== undefined ? dda.memory_mask : (this.difficultyLevel >= 4);
 
         // Cognitive Profile Archetype
         const profile = data.cognitiveProfile || {};
@@ -42,17 +34,18 @@ export default class LogicLinkScene extends BaseCognitiveScene {
         this.score = 0;
         this.hits = 0;
         this.misses = 0;
+        this.consecutiveHits = 0;
         this.totalAttempts = 0;
         this.accuracy = 1.0;
-        this.gameDuration = 45000; // 45 seconds
+        this.gameDuration = 45000; // 45 seconds session
         this.timeLeft = this.gameDuration;
 
-        this.gridCells = [];      // Stores container grid nodes
-        this.sequenceNodes = [];   // Stores correct sequence node indexes in order
-        this.clickedSequence = []; // Stores node coordinates clicked by user
-        this.gamePhase = 'PLAYING'; // PLAYING | FEEDBACK | GAMEOVER
+        this.gridCells = [];
+        this.sequenceTokens = [];
+        this.clickedSequence = [];
+        this.isMasked = false;
+        this.gamePhase = 'PLAYING';
         this.puzzleStartTime = 0;
-
         this.countdownTimer = null;
 
         // Micro-behavior metrics
@@ -72,8 +65,7 @@ export default class LogicLinkScene extends BaseCognitiveScene {
         const width = this.scale.width;
         const height = this.scale.height;
 
-        // Gradient dark background
-        this.createStandardBackground();// Grid lines decoration
+        this.createStandardBackground();
         const grid = this.add.grid(width / 2, height / 2, width, height, 80, 80, 0x000000, 0, 0x3b82f6, 0.03);
         grid.setOrigin(0.5);
 
@@ -82,7 +74,7 @@ export default class LogicLinkScene extends BaseCognitiveScene {
             fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
             fontWeight: 'bold',
-            fill: '#f59e0b' // gold color for logic theme
+            fill: '#f59e0b'
         });
 
         this.accuracyText = this.add.text(20, 50, 'ACCURACY: 100%', {
@@ -105,18 +97,19 @@ export default class LogicLinkScene extends BaseCognitiveScene {
             fill: '#ffffff'
         }).setOrigin(0.5, 0);
 
-        this.statusText = this.add.text(width / 2, 90, 'LINK IN ASCENDING ORDER!', {
+        // Dynamic Status/Guidance Prompt
+        this.statusText = this.add.text(width / 2, 80, 'INITIALIZING LOGIC PATHWAY...', {
             fontFamily: CogniTheme.fonts.body,
-            fontSize: '22px',
+            fontSize: '20px',
             fontWeight: '800',
-            fill: '#e2e8f0',
-            letterSpacing: '0.05em'
+            fill: '#f59e0b',
+            letterSpacing: '0.04em'
         }).setOrigin(0.5, 0);
 
         // Graphics Layer for drawing glowing paths
         this.lineGraphics = this.add.graphics();
 
-        // 3. Pointer tracking
+        // Pointer tracking listeners
         this.input.on('pointerdown', (pointer, gameObjects) => {
             if (this.isTutorialActive) return;
             this.registerFirstInteraction();
@@ -137,15 +130,102 @@ export default class LogicLinkScene extends BaseCognitiveScene {
         // Setup ML HUD & Tutorial Overlay
         createMlHud(this, 0xf59e0b);
         createTutorialOverlay(this, {
-            title: "LOGIC LINK",
+            title: "LOGIC LINK: HYBRID",
             domain: "logical_mathematical",
-            instructions: "• Connect the glowing numbered nodes in ascending order (1 → 2 → 3).\n\n• Hover close to nodes to visually trigger the magnetic snapping scale-up.\n\n• Click/tap the correct next node in the sequence to draw connections.\n\n• Mismatch clicks or incorrect sequencing breaks the logic pathway.",
+            instructions: "• Connect targets in strict sequence:\n  - Lvl 1: Numbers (1 -> 2 -> 3 -> 4)\n  - Lvl 2-3: Alternating Trail (1 -> A -> 2 -> B -> 3 -> C)\n  - Lvl 4-5: Memory Mask (memorize board, tiles turn to '?' on first click!)\n\n• Beware of Decoy Traps: Fake numbers and letters are scattered across the board — ignore them!\n\n• Speed Bonus: Plan your path before clicking to rack up huge combo points.",
             themeColorHex: 0xf59e0b,
             onStart: () => this.startGameplay()
         });
+
+        // Bottom Legend (hidden until gameplay starts)
+        this.createLegend(width, height);
     }
 
-updateTimer() {
+    createLegend(width, height) {
+        const legendY = 625;
+        this.legendContainer = this.add.container(width / 2, legendY);
+        this.legendContainer.setVisible(false);
+
+        const bg = this.add.graphics();
+        bg.fillStyle(0x1e293b, 0.96);
+        bg.lineStyle(2, 0x475569, 1.0);
+        bg.fillRoundedRect(-410, -32, 820, 64, 14);
+        bg.strokeRoundedRect(-410, -32, 820, 64, 14);
+        this.legendContainer.add(bg);
+
+        // 1. Target node legend
+        const targetBg = this.add.graphics();
+        targetBg.fillStyle(0x312e81, 1.0);
+        targetBg.lineStyle(3, 0xf59e0b, 1.0);
+        targetBg.fillCircle(-340, 0, 18);
+        targetBg.strokeCircle(-340, 0, 18);
+        const targetTxt = this.add.text(-340, 0, '1', {
+            fontFamily: CogniTheme.fonts.body,
+            fontSize: '16px',
+            fontWeight: '900',
+            fill: '#ffffff'
+        }).setOrigin(0.5);
+        this.legendTargetLbl = this.add.text(-310, 0, 'Target: 1 -> A -> 2 -> B', {
+            fontFamily: CogniTheme.fonts.body,
+            fontSize: '16px',
+            fontWeight: '800',
+            fill: '#fef08a'
+        }).setOrigin(0, 0.5);
+
+        // 2. Decoy trap legend
+        const distractorBg = this.add.graphics();
+        distractorBg.fillStyle(0x1e293b, 1.0);
+        distractorBg.lineStyle(2, 0x64748b, 0.9);
+        distractorBg.fillCircle(-50, 0, 17);
+        distractorBg.strokeCircle(-50, 0, 17);
+        const distractorTxt = this.add.text(-50, 0, 'X', {
+            fontFamily: CogniTheme.fonts.body,
+            fontSize: '15px',
+            fontWeight: '900',
+            fill: '#94a3b8'
+        }).setOrigin(0.5);
+        this.legendDecoyLbl = this.add.text(-22, 0, 'Decoys: Fake labels (Avoid)', {
+            fontFamily: CogniTheme.fonts.body,
+            fontSize: '16px',
+            fontWeight: '800',
+            fill: '#fca5a5'
+        }).setOrigin(0, 0.5);
+
+        // 3. Empty cell legend
+        const emptyBg = this.add.graphics();
+        emptyBg.fillStyle(0x0f172a, 0.9);
+        emptyBg.lineStyle(1.5, 0x475569, 0.7);
+        emptyBg.fillCircle(240, 0, 15);
+        emptyBg.strokeCircle(240, 0, 15);
+        const emptyLbl = this.add.text(268, 0, 'Empty: Skip', {
+            fontFamily: CogniTheme.fonts.body,
+            fontSize: '16px',
+            fontWeight: '800',
+            fill: '#cbd5e1'
+        }).setOrigin(0, 0.5);
+
+        this.legendContainer.add([
+            targetBg, targetTxt, this.legendTargetLbl,
+            distractorBg, distractorTxt, this.legendDecoyLbl,
+            emptyBg, emptyLbl
+        ]);
+    }
+
+    updateLegendLabels() {
+        if (!this.legendTargetLbl || !this.legendDecoyLbl) return;
+        if (this.memoryMask) {
+            this.legendTargetLbl.setText('Mode: Memorize & Recall (?)');
+            this.legendDecoyLbl.setText('Traps: Fake labels');
+        } else if (this.sequenceMode === 'alternating') {
+            this.legendTargetLbl.setText('Mode: Alternate (1 -> A -> 2)');
+            this.legendDecoyLbl.setText('Decoys: Fake labels');
+        } else {
+            this.legendTargetLbl.setText('Mode: Numbers (1 -> 2 -> 3)');
+            this.legendDecoyLbl.setText('Decoys: Fake numbers');
+        }
+    }
+
+    updateTimer() {
         if (!this.sessionStartTime || this.isGameOver) return;
         
         const elapsed = this.getTime() - this.sessionStartTime;
@@ -162,11 +242,69 @@ updateTimer() {
         }
     }
 
+    drawNodeCell(bg, cellSize, data, state = 'default') {
+        bg.clear();
+        const { isTarget, isDistractor } = data;
+
+        if (state === 'hover') {
+            if (isTarget) {
+                bg.fillStyle(0x312e81, 0.95);
+                bg.lineStyle(3.5, 0xfbbf24, 1.0);
+                bg.fillCircle(0, 0, cellSize * 0.42);
+                bg.strokeCircle(0, 0, cellSize * 0.42);
+            } else if (isDistractor) {
+                bg.fillStyle(0x1e293b, 0.7);
+                bg.lineStyle(2, 0x64748b, 0.6);
+                bg.fillCircle(0, 0, cellSize * 0.4);
+                bg.strokeCircle(0, 0, cellSize * 0.4);
+            } else {
+                bg.fillStyle(0x0f172a, 0.4);
+                bg.lineStyle(1.5, 0x334155, 0.3);
+                bg.fillCircle(0, 0, cellSize * 0.4);
+                bg.strokeCircle(0, 0, cellSize * 0.4);
+            }
+        } else if (state === 'connected') {
+            bg.fillStyle(0x064e3b, 0.92);
+            bg.lineStyle(3.5, 0x10b981, 1.0);
+            bg.fillCircle(0, 0, cellSize * 0.42);
+            bg.strokeCircle(0, 0, cellSize * 0.42);
+        } else if (state === 'failed') {
+            bg.fillStyle(0x7f1d1d, 0.92);
+            bg.lineStyle(3.5, 0xef4444, 1.0);
+            bg.fillCircle(0, 0, cellSize * 0.42);
+            bg.strokeCircle(0, 0, cellSize * 0.42);
+        } else if (state === 'masked') {
+            bg.fillStyle(0x0a1024, 0.9);
+            bg.lineStyle(2.5, 0x38bdf8, 0.85);
+            bg.fillCircle(0, 0, cellSize * 0.4);
+            bg.strokeCircle(0, 0, cellSize * 0.4);
+        } else {
+            // Default idle state
+            if (isTarget) {
+                bg.fillStyle(0x1e1b4b, 0.85);
+                bg.lineStyle(2.5, 0xf59e0b, 0.95);
+                bg.fillCircle(0, 0, cellSize * 0.4);
+                bg.strokeCircle(0, 0, cellSize * 0.4);
+            } else if (isDistractor) {
+                bg.fillStyle(0x1e293b, 0.6);
+                bg.lineStyle(2, 0x475569, 0.5);
+                bg.fillCircle(0, 0, cellSize * 0.4);
+                bg.strokeCircle(0, 0, cellSize * 0.4);
+            } else {
+                bg.fillStyle(0x0f172a, 0.35);
+                bg.lineStyle(1.5, 0x334155, 0.2);
+                bg.fillCircle(0, 0, cellSize * 0.4);
+                bg.strokeCircle(0, 0, cellSize * 0.4);
+            }
+        }
+    }
+
     startNewPuzzle() {
         if (this.timeLeft <= 0) return;
 
         this.gamePhase = 'PLAYING';
         this.clickedSequence = [];
+        this.isMasked = false;
         this.lineGraphics.clear();
 
         this.stimulusSpawnTime = this.getTime();
@@ -174,19 +312,44 @@ updateTimer() {
         this.firstInteractionLatency = 0;
         this.puzzleClicksCount = 0;
         this.ruleShiftLatency = 0;
-        this.statusText.setText('LINK IN ASCENDING ORDER!').setFill('#e2e8f0');
 
         const width = this.scale.width;
-        const height = this.scale.height;
+
+        // Generate Target Sequence Tokens
+        if (this.sequenceMode === 'alternating') {
+            const altPool = ['1', 'A', '2', 'B', '3', 'C', '4', 'D', '5', 'E'];
+            this.sequenceTokens = altPool.slice(0, this.sequenceLength);
+        } else {
+            const numPool = ['1', '2', '3', '4', '5', '6', '7', '8'];
+            this.sequenceTokens = numPool.slice(0, this.sequenceLength);
+        }
+
+        // Set Header Prompt & Legend
+        const seqPreview = this.sequenceTokens.join(' -> ');
+        if (this.memoryMask) {
+            this.statusText.setText(`MEMORIZE: [ ${seqPreview} ] | TILES MASK ON FIRST CLICK!`).setFill('#38bdf8');
+        } else if (this.sequenceMode === 'alternating') {
+            this.statusText.setText(`ALTERNATE: [ ${seqPreview} ] | CLICK: [ ${this.sequenceTokens[0]} ]`).setFill('#f59e0b');
+        } else {
+            this.statusText.setText(`LINK IN ORDER: [ ${seqPreview} ] | CLICK: [ 1 ]`).setFill('#f59e0b');
+        }
+        this.updateLegendLabels();
+
+        // Generate Decoy / Distractor Tokens
+        const decoyPool = this.sequenceMode === 'alternating'
+            ? ['X', 'Z', '9', '8', 'K', '7', 'W', 'M', 'Y', '6', 'J', 'Q']
+            : ['8', '9', '7', '10', '12', '15', '18', '20', '25'];
+        Phaser.Utils.Array.Shuffle(decoyPool);
+        const activeDecoys = decoyPool.slice(0, this.distractorsCount);
 
         // Sizing logic
-        const gridAreaSize = Math.min(360, width - 40);
-        const spacing = 12;
+        const gridAreaSize = this.gridSize >= 5 ? Math.min(440, width - 60) : Math.min(410, width - 60);
+        const spacing = this.gridSize >= 5 ? 10 : 14;
         const totalSpacing = spacing * (this.gridSize - 1);
         const cellSize = (gridAreaSize - totalSpacing) / this.gridSize;
 
         const startX = (width - gridAreaSize) / 2 + cellSize / 2;
-        const startY = 160 + (gridAreaSize - cellSize * this.gridSize - totalSpacing) / 2 + cellSize / 2;
+        const startY = 110 + cellSize / 2;
 
         // Clean up previous cells
         this.gridCells.forEach(cell => {
@@ -195,16 +358,31 @@ updateTimer() {
         });
         this.gridCells = [];
 
-        // Generate indexes list
+        // Pick available random positions on the grid
         const totalNodes = this.gridSize * this.gridSize;
         const availableIndexes = Array.from({ length: totalNodes }, (_, idx) => idx);
         Phaser.Utils.Array.Shuffle(availableIndexes);
 
-        // Pick sequence cells
-        this.sequenceNodes = availableIndexes.slice(0, this.sequenceLength);
+        this.sequenceIndexes = availableIndexes.slice(0, this.sequenceLength);
+        const distractorIndexes = availableIndexes.slice(this.sequenceLength, this.sequenceLength + this.distractorsCount);
 
-        // Pick distractor cells
-        const distractorNodes = availableIndexes.slice(this.sequenceLength, this.sequenceLength + this.distractorsCount);
+        const cellDataMap = {};
+        this.sequenceIndexes.forEach((gridIdx, seqIdx) => {
+            cellDataMap[gridIdx] = {
+                token: this.sequenceTokens[seqIdx],
+                seqOrder: seqIdx,
+                isTarget: true,
+                isDistractor: false
+            };
+        });
+        distractorIndexes.forEach((gridIdx, dIdx) => {
+            cellDataMap[gridIdx] = {
+                token: activeDecoys[dIdx] || '?',
+                seqOrder: -1,
+                isTarget: false,
+                isDistractor: true
+            };
+        });
 
         // Draw grid
         for (let row = 0; row < this.gridSize; row++) {
@@ -216,145 +394,144 @@ updateTimer() {
                 const bg = this.add.graphics();
                 bg.setPosition(x, y);
 
-                // Default empty style
-                bg.fillStyle(0x1e293b, 0.45);
-                bg.lineStyle(1.5, 0xffffff, 0.08);
-                bg.fillCircle(0, 0, cellSize * 0.4);
-                bg.strokeCircle(0, 0, cellSize * 0.4);
+                const data = cellDataMap[index] || {
+                    token: '',
+                    seqOrder: -1,
+                    isTarget: false,
+                    isDistractor: false
+                };
 
-                let numberVal = 0;
                 let txt = null;
-
-                // If it is in the sequence list
-                if (this.sequenceNodes.includes(index)) {
-                    numberVal = this.sequenceNodes.indexOf(index) + 1;
-
-                    // Redraw active numbered node style
-                    bg.clear();
-                    bg.fillStyle(0x1e1b4b, 0.7);
-                    bg.lineStyle(2.5, 0xf59e0b, 0.8); // Glowing gold border
-                    bg.fillCircle(0, 0, cellSize * 0.4);
-                    bg.strokeCircle(0, 0, cellSize * 0.4);
-
-                    // Add label
-                    txt = this.add.text(x, y, numberVal.toString(), {
+                if (data.token) {
+                    const fontSize = this.gridSize >= 5 ? `${cellSize * 0.38}px` : `${cellSize * 0.40}px`;
+                    txt = this.add.text(x, y, data.token, {
                         fontFamily: CogniTheme.fonts.body,
-                        fontSize: `${cellSize * 0.35}px`,
+                        fontSize: fontSize,
                         fontWeight: '900',
-                        fill: '#ffffff'
+                        fill: data.isTarget ? '#ffffff' : '#94a3b8'
                     }).setOrigin(0.5);
                 }
-                // If it is a distractor
-                else if (distractorNodes.includes(index)) {
-                    numberVal = -1; // -1 represents distractor
 
-                    bg.clear();
-                    bg.fillStyle(0x334155, 0.5); // flat gray
-                    bg.lineStyle(1.5, 0xffffff, 0.1);
-                    bg.fillCircle(0, 0, cellSize * 0.4);
-                    bg.strokeCircle(0, 0, cellSize * 0.4);
-                }
+                this.drawNodeCell(bg, cellSize, data, 'default');
 
-                // Interactive click bounds
+                // Interactive bounds
                 bg.setInteractive(new Phaser.Geom.Circle(0, 0, cellSize * 0.45), Phaser.Geom.Circle.Contains);
                 bg.on('pointerdown', (pointer, localX, localY, event) => {
                     if (this.isTutorialActive) return;
                     if (event) event.stopPropagation();
-                    this.handleNodeClick(index, numberVal, x, y, bg, txt, cellSize);
+                    this.handleNodeClick(index, data, x, y, bg, txt, cellSize);
                 });
 
-                // Hover triggers (visual magnetic snapping expansion)
+                // Hover triggers
                 bg.on('pointerover', () => {
                     if (this.isTutorialActive) return;
                     if (this.gamePhase === 'PLAYING') {
-                        this.tweens.add({
-                            targets: [bg, txt].filter(Boolean),
-                            scale: 1.15,
-                            duration: 100,
-                            ease: 'Back.easeOut'
-                        });
-                        bg.lineStyle(3.5, numberVal > 0 ? 0xf59e0b : 0xef4444, 0.95);
-                        bg.strokeCircle(0, 0, cellSize * 0.45);
+                        const isConnected = this.clickedSequence.some(item => item.index === index);
+                        if (!isConnected) {
+                            const hoverState = this.isMasked && !isConnected ? 'masked' : 'hover';
+                            this.drawNodeCell(bg, cellSize, data, hoverState);
+                            this.tweens.add({
+                                targets: [bg, txt].filter(Boolean),
+                                scale: 1.08,
+                                duration: 80,
+                                ease: 'Quad.easeOut'
+                            });
+                        }
                     }
                 });
 
                 bg.on('pointerout', () => {
                     if (this.isTutorialActive) return;
                     if (this.gamePhase === 'PLAYING') {
-                        this.tweens.add({
-                            targets: [bg, txt].filter(Boolean),
-                            scale: 1.0,
-                            duration: 100,
-                            ease: 'Power1'
-                        });
-                        bg.lineStyle(
-                            numberVal > 0 ? 2.5 : 1.5,
-                            numberVal > 0 ? 0xf59e0b : 0xffffff,
-                            numberVal > 0 ? 0.8 : 0.08
-                        );
-                        bg.strokeCircle(0, 0, cellSize * 0.45);
+                        const isConnected = this.clickedSequence.some(item => item.index === index);
+                        if (!isConnected) {
+                            const idleState = this.isMasked ? 'masked' : 'default';
+                            this.drawNodeCell(bg, cellSize, data, idleState);
+                            this.tweens.add({
+                                targets: [bg, txt].filter(Boolean),
+                                scale: 1.0,
+                                duration: 80,
+                                ease: 'Quad.easeOut'
+                            });
+                        }
                     }
                 });
 
-                const cellObj = {
+                this.gridCells.push({
                     index,
                     x,
                     y,
                     bg,
                     txt,
-                    numberVal,
+                    data,
                     cellSize
-                };
-                this.gridCells.push(cellObj);
+                });
             }
         }
 
         this.puzzleStartTime = this.getTime();
     }
 
-    handleNodeClick(index, value, x, y, bg, txt, cellSize) {
+    handleNodeClick(index, data, x, y, bg, txt, cellSize) {
         if (this.gamePhase !== 'PLAYING') return;
         if (this.isTutorialActive) return;
 
         this.puzzleClicksCount++;
-
-        // Track latency from puzzle start to first node interaction
         if (this.puzzleClicksCount === 1) {
             this.ruleShiftLatency = this.getTime() - this.puzzleStartTime;
         }
 
-        const correctNextVal = this.clickedSequence.length + 1;
+        const expectedSeqIdx = this.clickedSequence.length;
+        const isCorrectTarget = data.isTarget && data.seqOrder === expectedSeqIdx;
 
-        if (value === correctNextVal) {
-            // Correct click in sequence
-            this.clickedSequence.push({ x, y, index, bg, txt, cellSize });
+        if (isCorrectTarget) {
+            this.clickedSequence.push({ x, y, index, bg, txt, cellSize, token: data.token });
 
-            // Animate node green border pop
-            bg.clear();
-            bg.fillStyle(0x064e3b, 0.7);
-            bg.lineStyle(3, 0x10b981, 0.95); // Green border
-            bg.fillCircle(0, 0, cellSize * 0.4);
-            bg.strokeCircle(0, 0, cellSize * 0.4);
+            // Mark node green & restore real token
+            this.drawNodeCell(bg, cellSize, data, 'connected');
+            if (txt) {
+                txt.setText(data.token);
+                txt.setFill('#34d399');
+            }
 
-            // Re-draw glowing path connection line
             this.redrawLines(0x10b981);
 
-            // Pop scaling animation
             this.tweens.add({
                 targets: txt ? [bg, txt] : bg,
-                scale: 1.1,
-                duration: 100,
+                scale: 1.12,
+                duration: 90,
                 yoyo: true,
                 ease: 'Quad.easeOut'
             });
 
-            // If sequence completed successfully
+            // Trigger Memory Masking on first correct tap
+            if (this.memoryMask && this.clickedSequence.length === 1 && !this.isMasked) {
+                this.isMasked = true;
+                this.cameras.main.flash(90, 56, 189, 248, 0.15);
+
+                this.gridCells.forEach(cell => {
+                    const isAlreadyConnected = this.clickedSequence.some(item => item.index === cell.index);
+                    if (!isAlreadyConnected && cell.data.token) {
+                        this.drawNodeCell(cell.bg, cell.cellSize, cell.data, 'masked');
+                        if (cell.txt) {
+                            cell.txt.setText('?').setFill('#7dd3fc');
+                        }
+                    }
+                });
+            }
+
             if (this.clickedSequence.length === this.sequenceLength) {
                 this.handleSuccessfulPath();
+            } else {
+                const nextExpectedToken = this.sequenceTokens[this.clickedSequence.length];
+                if (this.isMasked) {
+                    this.statusText.setText(`RECALL: CLICK WHERE [ ${nextExpectedToken} ] WAS!`).setFill('#38bdf8');
+                } else {
+                    this.statusText.setText(`NEXT TARGET: [ ${nextExpectedToken} ]`).setFill('#38bdf8');
+                }
             }
         } else {
-            // Mistake clicked (clicked distractor or wrong order node)
-            this.handleFailedPath(index, x, y, bg, txt, cellSize);
+            this.handleFailedPath(index, data, x, y, bg, txt, cellSize);
         }
     }
 
@@ -379,71 +556,68 @@ updateTimer() {
             this.showParticleBurst(px, py, 0xf59e0b);
         }
         this.hits++;
+        this.consecutiveHits++;
         this.totalAttempts++;
 
         const solveTime = this.getTime() - this.puzzleStartTime;
 
-        // Calculate dynamic reward
-        const baseReward = 150 * this.sequenceLength;
+        // Dynamic reward
+        const baseReward = 180 * this.sequenceLength;
         const speedBonus = Math.max(0, Math.round((15000 - solveTime) / 10));
         const roundScore = baseReward + speedBonus;
         this.score += roundScore;
 
         this.showFloatingFeedback(`+${roundScore} PERFECT LINK!`, '#10b981');
-        this.statusText.setText('LOGIC SOLVED!').setFill('#10b981');
-        this.cameras.main.flash(100, 16, 185, 129, 0.15); // soft green splash
+        this.statusText.setText('PATHWAY SOLVED!').setFill('#10b981');
+        this.cameras.main.flash(100, 16, 185, 129, 0.15);
 
         this.updateHUD();
-
-        // Dispatch telemetry
         this.dispatchMetricTelemetry(solveTime, 1.0);
-
-        // Schedule next round
         this.scheduleNextPuzzle();
     }
 
-    handleFailedPath(wrongIndex, x, y, bg, txt, cellSize) {
+    handleFailedPath(wrongIndex, data, x, y, bg, txt, cellSize) {
         this.gamePhase = 'FEEDBACK';
         this.misses++;
+        this.consecutiveHits = 0;
         this.totalAttempts++;
 
         const solveTime = this.getTime() - this.puzzleStartTime;
 
-        // Turn line connections red
         this.redrawLines(0xef4444);
+        this.drawNodeCell(bg, cellSize, data, 'failed');
+        if (txt) txt.setFill('#f87171');
 
-        // Highlight clicked wrong node in red
-        bg.clear();
-        bg.fillStyle(0x7f1d1d, 0.7);
-        bg.lineStyle(3, 0xef4444, 0.95);
-        bg.fillCircle(0, 0, cellSize * 0.4);
-        bg.strokeCircle(0, 0, cellSize * 0.4);
+        // Reveal all masked tokens so player sees true positions
+        if (this.isMasked) {
+            this.gridCells.forEach(cell => {
+                if (cell.data.token && cell.txt) {
+                    cell.txt.setText(cell.data.token);
+                    if (cell.data.isTarget) {
+                        cell.txt.setFill('#fde047');
+                    }
+                }
+            });
+        }
 
-        // Shake camera
-        this.cameras.main.shake(150, 0.008);
-
+        this.cameras.main.shake(140, 0.008);
         this.showFloatingFeedback('LINK BROKEN!', '#ef4444');
-        this.statusText.setText('PATHWAY CONFLICT!').setFill('#ef4444');
+        this.statusText.setText('PATHWAY CONFLICT! WRONG NODE').setFill('#ef4444');
 
         this.updateHUD();
-
-        // Dispatch telemetry with 0 accuracy
         this.dispatchMetricTelemetry(solveTime, 0.0);
-
-        // Schedule next round
         this.scheduleNextPuzzle();
     }
 
     scheduleNextPuzzle() {
-        this.time.delayedCall(1600, () => {
+        this.time.delayedCall(1200, async () => {
             if (this.timeLeft <= 0) return;
 
-            // Query DDA adaptations every 3 puzzles
-            if (this.totalAttempts % 3 === 0) {
-                this.adaptDifficulty();
-            } else {
-                this.startNewPuzzle();
+            // Fast-track DDA check: adapt after every 2 puzzles or on high streaks
+            if (this.totalAttempts % 2 === 0 || this.consecutiveHits >= 2) {
+                await this.adaptDifficulty();
             }
+            this.startNewPuzzle();
         });
     }
 
@@ -466,44 +640,45 @@ updateTimer() {
     async dispatchMetricTelemetry(solveTimeMs, roundAccuracy) {
         if (!this.sessionId) return;
 
-        const efficiency = this.puzzleClicksCount > 0 ? Math.min(1.0, this.sequenceLength / this.puzzleClicksCount) : 1.0;
-
         const payload = {
             session_id: this.sessionId,
             cognitive_domain: "logical_mathematical",
-            game_type: "logic_link",
+            game_type: "LogicLink",
             reaction_time: solveTimeMs,
             accuracy_rate: roundAccuracy,
             difficulty: this.difficultyLevel,
             error_count: roundAccuracy === 1.0 ? 0 : 1,
             hesitation_ms: this.firstInteractionLatency || 0,
             spam_click_count: this.spamClickCount,
-            path_efficiency: efficiency,
             rule_shift_latency_ms: this.ruleShiftLatency || 0.0
         };
 
         try {
-            console.log('[Telemetry Dispatch] Sending logic metrics...', payload);
+            console.log('[Telemetry Dispatch] Sending LogicLink metrics...', payload);
             await fetch(`${this.apiUrl}/api/submit-metrics`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${useCogniStore.getState().token}`},
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${useCogniStore.getState().token}`
+                },
                 body: JSON.stringify(payload)
             });
-        } catch (e) {
-            console.warn('[Telemetry Dispatch] Connection failed, logging locally.', e);
+        } catch (err) {
+            console.warn('[Telemetry Dispatch Error]:', err);
         }
     }
 
     async adaptDifficulty() {
-        this.startNewPuzzle(); // Fire-and-forget: start next round immediately
         if (!this.sessionId) return;
-try {
-            console.log('[DDA Bridge] Checking logic scaling profiles...');
+
+        try {
+            console.log('[DDA Bridge] Querying LogicLink DDA adaptation for session', this.sessionId);
             const response = await fetch(`${this.apiUrl}/api/dda`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${useCogniStore.getState().token}`},
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${useCogniStore.getState().token}`
+                },
                 body: JSON.stringify({ session_id: this.sessionId })
             });
 
@@ -511,42 +686,40 @@ try {
                 const data = await response.json();
                 if (data.status === 'success' && data.dda_parameters) {
                     const params = data.dda_parameters;
-                    const difficultyChanged = this.difficultyLevel !== params.difficulty_level;
+                    const oldLvl = this.difficultyLevel;
+                    const newLvl = params.difficulty_level !== undefined ? params.difficulty_level : oldLvl;
 
-                    this.difficultyLevel = params.difficulty_level !== undefined ? params.difficulty_level : this.difficultyLevel;
+                    this.difficultyLevel = newLvl;
                     this.gridSize = params.grid_size !== undefined ? params.grid_size : this.gridSize;
                     this.sequenceLength = params.sequence_length !== undefined ? params.sequence_length : this.sequenceLength;
                     this.distractorsCount = params.distractors !== undefined ? params.distractors : this.distractorsCount;
+                    this.sequenceMode = params.sequence_mode !== undefined ? params.sequence_mode : (this.difficultyLevel === 2 || this.difficultyLevel === 3 || this.difficultyLevel === 5 ? 'alternating' : 'numbers');
+                    this.memoryMask = params.memory_mask !== undefined ? params.memory_mask : (this.difficultyLevel >= 4);
 
                     this.difficultyText.setText(`DIFFICULTY: LEVEL ${this.difficultyLevel}`);
                     if (data.cognitive_profile) {
                         this.archetype = data.cognitive_profile.archetype || this.archetype;
                         this.archetypeConfidence = data.cognitive_profile.confidence_score || this.archetypeConfidence;
-                    }
-                    updateMlHud(this);
-
-                    if (difficultyChanged) {
-                        this.showFloatingFeedback(`DIFFICULTY ADJUSTED: LEVEL ${this.difficultyLevel}`, (getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7'));
-                    }
-
-                    if (data.cognitive_profile) {
-                        this.archetype = data.cognitive_profile.archetype || this.archetype;
-                        this.archetypeConfidence = data.cognitive_profile.confidence_score || this.archetypeConfidence;
                         updateMlHud(this);
+                    }
+
+                    if (newLvl !== oldLvl) {
+                        const direction = newLvl > oldLvl ? 'INCREASED' : 'ADAPTED';
+                        this.showFloatingFeedback(`DIFFICULTY ${direction}! LEVEL ${this.difficultyLevel}`, '#a855f7');
                     }
                 }
             }
-        } catch (e) {
-            console.warn('[DDA Bridge] Connection failed, using current configurations.', e);
+        } catch (err) {
+            console.warn('[DDA Adaptation Error]:', err);
         }
-
-        }
+    }
 
     endGame() {
         if (this.timerText && this.timerText.active) {
             this.timerText.setText('00:00');
         }
         if (this.countdownTimer) this.countdownTimer.remove();
+        if (this.legendContainer) this.legendContainer.destroy();
 
         this.gridCells.forEach(cell => {
             if (cell.bg) cell.bg.destroy();
@@ -577,6 +750,9 @@ try {
     }
 
     startGameplay() {
+        if (this.legendContainer) {
+            this.legendContainer.setVisible(true);
+        }
         this.sessionStartTime = this.getTime();
         this.isGameOver = false;
         this.countdownTimer = this.time.addEvent({

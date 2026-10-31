@@ -210,9 +210,7 @@ updateTimer() {
         this.isMoving = false;
         this.playerGridX = 0;
         this.playerGridY = 0;
-        this.movesLeft = this.maxMoves;
         this.statusText.setText('NAVIGATE THE NEURAL NETWORK!').setFill('#e2e8f0');
-        this.updateHUD();
 
         this.stimulusSpawnTime = this.getTime();
         this.firstInteractionRegistered = false;
@@ -221,10 +219,10 @@ updateTimer() {
         const width = this.scale.width;
 
         // Maze sizing & centering
-        const gridAreaSize = Math.min(360, width - 40);
+        const gridAreaSize = Math.min(500, width - 60);
         const cellSize = gridAreaSize / this.gridSize;
         const startX = (width - gridAreaSize) / 2 + cellSize / 2;
-        const startY = 160 + cellSize / 2;
+        const startY = 140 + cellSize / 2;
 
         // Destroy previous maze grid
         this.gridCells.forEach(row => {
@@ -242,6 +240,10 @@ updateTimer() {
             walkSteps.push([0, 1]); // down
         }
         Phaser.Utils.Array.Shuffle(walkSteps);
+
+        // Budget moves dynamically based on path length and level
+        this.movesLeft = Math.min(this.maxMoves, Math.max(10, walkSteps.length + Math.max(1, 4 - this.difficultyLevel)));
+        this.updateHUD();
 
         const guaranteedSet = new Set();
         guaranteedSet.add('0,0');
@@ -272,17 +274,25 @@ updateTimer() {
                 const bg = this.add.graphics();
                 bg.setPosition(x, y);
 
-                // Styling
+                // High-Contrast High-Visibility Styling
                 if (isBlocked) {
-                    bg.fillStyle(0x064e3b, 0.45); // Dark green blocked
-                    bg.lineStyle(1.5, 0x10b981, 0.2); // Green border
-                    bg.fillRoundedRect(-cellSize / 2 + 1, -cellSize / 2 + 1, cellSize - 2, cellSize - 2, 4);
-                    bg.strokeRoundedRect(-cellSize / 2 + 1, -cellSize / 2 + 1, cellSize - 2, cellSize - 2, 4);
+                    // Solid cyber barrier wall
+                    bg.fillStyle(0x380b0b, 0.95);
+                    bg.lineStyle(2, 0xef4444, 0.9);
+                    bg.fillRoundedRect(-cellSize / 2 + 2, -cellSize / 2 + 2, cellSize - 4, cellSize - 4, 6);
+                    bg.strokeRoundedRect(-cellSize / 2 + 2, -cellSize / 2 + 2, cellSize - 4, cellSize - 4, 6);
+
+                    // Inner barrier cross
+                    bg.lineStyle(1.5, 0xef4444, 0.5);
+                    const ins = cellSize * 0.22;
+                    bg.lineBetween(-ins, -ins, ins, ins);
+                    bg.lineBetween(-ins, ins, ins, -ins);
                 } else {
-                    bg.fillStyle(0x111827, 0.45); // Deep slate space
-                    bg.lineStyle(1, 0xffffff, 0.05); // Subtle border
-                    bg.fillRoundedRect(-cellSize / 2 + 1, -cellSize / 2 + 1, cellSize - 2, cellSize - 2, 4);
-                    bg.strokeRoundedRect(-cellSize / 2 + 1, -cellSize / 2 + 1, cellSize - 2, cellSize - 2, 4);
+                    // Open walkable cyber floor
+                    bg.fillStyle(0x0a1628, 0.9);
+                    bg.lineStyle(1.5, 0x1e293b, 0.7);
+                    bg.fillRoundedRect(-cellSize / 2 + 2, -cellSize / 2 + 2, cellSize - 4, cellSize - 4, 6);
+                    bg.strokeRoundedRect(-cellSize / 2 + 2, -cellSize / 2 + 2, cellSize - 4, cellSize - 4, 6);
                 }
 
                 // Add special elements for start and exit

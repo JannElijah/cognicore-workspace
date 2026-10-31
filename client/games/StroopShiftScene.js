@@ -114,19 +114,19 @@ export default class StroopShiftScene extends BaseCognitiveScene {
             fill: '#ffffff'
         }).setOrigin(0.5, 0);
 
-        // Guide text below header
-        this.add.text(width / 2, 95, 'SELECT THE FONT/INK COLOR (IGNORE THE WORD)', {
+        // Guide text below header (high-contrast & bold)
+        this.add.text(width / 2, 95, 'SELECT THE FONT / INK COLOR (IGNORE THE WORD MEANING)', {
             fontFamily: CogniTheme.fonts.body,
-            fontSize: '14px',
-            fontWeight: '700',
-            fill: '#64748b',
-            letterSpacing: '1.5px'
+            fontSize: '18px',
+            fontWeight: '800',
+            fill: '#cbd5e1',
+            letterSpacing: '2px'
         }).setOrigin(0.5);
 
         // 3. Option Selection Buttons (Laid out horizontally at the bottom)
-        const btnWidth = 140;
-        const btnHeight = 60;
-        const spacing = 30;
+        const btnWidth = 150;
+        const btnHeight = 68;
+        const spacing = 26;
         const totalBtnsWidth = 4 * btnWidth + 3 * spacing;
         const startX = (width - totalBtnsWidth) / 2 + btnWidth / 2;
         const buttonsY = height - 120;
@@ -145,8 +145,8 @@ export default class StroopShiftScene extends BaseCognitiveScene {
             
             const btnTxt = this.add.text(0, 0, color.name, {
                 fontFamily: CogniTheme.fonts.body,
-                fontSize: '18px',
-                fontWeight: '800',
+                fontSize: '20px',
+                fontWeight: '900',
                 fill: color.hexStr
             }).setOrigin(0.5);
 
@@ -211,7 +211,7 @@ export default class StroopShiftScene extends BaseCognitiveScene {
         createTutorialOverlay(this, {
             title: "STROOP SHIFT",
             domain: "reflexes_and_focus",
-            instructions: "• Identify matching ink color vs word text meaning.\n\n• Respond according to the dynamic command rule on screen.\n\n• Shift attention quickly as rules invert in real-time.",
+            instructions: "• Focus on the glowing word in the center of the screen.\n\n• Click the button that matches the INK / FONT COLOR of the word (ignore the word meaning!).\n\n• React quickly before the reaction timeout expires.\n\n• At higher difficulty levels, rotating angles and dynamic spin distractors challenge your focus.",
             themeColorHex: 0xa855f7,
             onStart: () => this.startGameplay()
         });

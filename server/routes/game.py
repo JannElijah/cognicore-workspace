@@ -362,7 +362,7 @@ def dda(current_user_id, current_username):
         game_type = session_obj.game_type
         domain = GAME_TO_DOMAIN.get(game_type, "reflexes_and_focus")
         
-        k = 10 if game_type in ("SpeedTap", "StroopShift", "speed_tap", "stroop_shift") else (3 if game_type in ("MazeEscape", "RouteOptimizer", "maze_escape", "route_optimizer", "PriorityQueue", "priority_queue") else 5)
+        k = 10 if game_type in ("SpeedTap", "StroopShift", "speed_tap", "stroop_shift") else (2 if game_type in ("LogicLink", "logic_link", "EquationBalance", "equation_balance", "MazeEscape", "RouteOptimizer", "maze_escape", "route_optimizer", "PriorityQueue", "priority_queue") else 3)
         
         metrics = PerformanceMetric.query.join(GameSession).filter(
             PerformanceMetric.session_id == session_id,

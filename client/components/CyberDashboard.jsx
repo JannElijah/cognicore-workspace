@@ -211,6 +211,24 @@ const CyberDashboard = ({
     }
   };
 
+  // User-controllable Prescribed Game State
+  const [currentPrescribedGame, setCurrentPrescribedGame] = useState(() => {
+    return localStorage.getItem('cognicore_custom_prescribed') || prescribedGame || 'PriorityQueue';
+  });
+
+  useEffect(() => {
+    if (prescribedGame) {
+      const saved = localStorage.getItem('cognicore_custom_prescribed');
+      if (!saved) setCurrentPrescribedGame(prescribedGame);
+    }
+  }, [prescribedGame]);
+
+  const handleSetPrescribedGame = (gameId) => {
+    audioEngine?.playClick();
+    setCurrentPrescribedGame(gameId);
+    localStorage.setItem('cognicore_custom_prescribed', gameId);
+  };
+
   // Find prescribed game details
   const findGameById = (targetId) => {
     for (const d of DOMAINS_LIST) {
@@ -221,7 +239,7 @@ const CyberDashboard = ({
     return { game: strat.games[0], domain: strat };
   };
 
-  const { game: prescribedGameObj, domain: prescribedDomainObj } = findGameById(prescribedGame);
+  const { game: prescribedGameObj, domain: prescribedDomainObj } = findGameById(currentPrescribedGame);
 
   // Archetype
   const rawArchetype = personalizedReport?.archetype || 'The Learner';
@@ -717,7 +735,7 @@ const CyberDashboard = ({
             width: '100%'
           }}>
             {activeGames.map(game => {
-              const isPrescribed = prescribedGame.toLowerCase() === game.id.toLowerCase();
+              const isPrescribed = (currentPrescribedGame || '').toLowerCase() === game.id.toLowerCase();
               const theme = DOMAIN_THEMES[currentDomainObj.themeClass] || DOMAIN_THEMES.executive;
 
               return (
@@ -775,19 +793,55 @@ const CyberDashboard = ({
                           Prescribed
                         </span>
                       ) : (
-                        <span style={{
-                          fontSize: '0.62rem',
-                          fontWeight: '800',
-                          background: `${theme.color}18`,
-                          color: theme.color,
-                          border: `1px solid ${theme.color}45`,
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                          letterSpacing: '0.04em',
-                          textTransform: 'uppercase'
-                        }}>
-                          {currentDomainInfo.title.split(' ')[0]}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <span style={{
+                            fontSize: '0.62rem',
+                            fontWeight: '800',
+                            background: `${theme.color}18`,
+                            color: theme.color,
+                            border: `1px solid ${theme.color}45`,
+                            padding: '2px 6px',
+                            borderRadius: '4px',
+                            letterSpacing: '0.04em',
+                            textTransform: 'uppercase'
+                          }}>
+                            {currentDomainInfo.title.split(' ')[0]}
+                          </span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSetPrescribedGame(game.id);
+                            }}
+                            title="Set this game as your active daily prescribed target"
+                            style={{
+                              background: 'rgba(255, 255, 255, 0.05)',
+                              border: '1px solid rgba(255, 255, 255, 0.2)',
+                              color: '#94a3b8',
+                              borderRadius: '4px',
+                              padding: '2px 6px',
+                              fontSize: '0.62rem',
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '3px',
+                              transition: 'all 0.15s ease'
+                            }}
+                            onMouseOver={(e) => {
+                              e.currentTarget.style.borderColor = '#22c55e';
+                              e.currentTarget.style.color = '#4ade80';
+                              e.currentTarget.style.background = 'rgba(34, 197, 94, 0.15)';
+                            }}
+                            onMouseOut={(e) => {
+                              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                              e.currentTarget.style.color = '#94a3b8';
+                              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                            }}
+                          >
+                            <span>📌</span>
+                            <span>Prescribe</span>
+                          </button>
+                        </div>
                       )}
                     </div>
 

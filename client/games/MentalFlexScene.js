@@ -259,8 +259,8 @@ export default class MentalFlexScene extends BaseCognitiveScene {
         container.add(cardBg);
 
         // Drawing shape icons based on count
-        const spacing = 28;
-        const iconSize = 14;
+        const spacing = 34;
+        const iconSize = 20;
         const positions = [];
 
         if (cardData.count === 1) {
@@ -335,16 +335,16 @@ export default class MentalFlexScene extends BaseCognitiveScene {
         const width = this.scale.width;
         const height = this.scale.height;
 
-        // 1. Spawn query card in the center top
+        // 1. Spawn query card in the center top (Clear below rule shift banner)
         const qData = this.generateCardData();
-        this.queryCard = this.drawCard(qData, width / 2, 275, 130, 180);
+        this.queryCard = this.drawCard(qData, width / 2, 290, 150, 200);
         
         // Add rule overlay highlighting
         this.queryCard.cardBg.clear();
-        this.queryCard.cardBg.fillStyle(0x1e293b, 0.85);
-        this.queryCard.cardBg.lineStyle(3, 0xeab308, 0.8);
-        this.queryCard.cardBg.fillRoundedRect(-65, -90, 130, 180, 12);
-        this.queryCard.cardBg.strokeRoundedRect(-65, -90, 130, 180, 12);
+        this.queryCard.cardBg.fillStyle(0x1e293b, 0.90);
+        this.queryCard.cardBg.lineStyle(3.5, 0xeab308, 0.9);
+        this.queryCard.cardBg.fillRoundedRect(-75, -100, 150, 200, 14);
+        this.queryCard.cardBg.strokeRoundedRect(-75, -100, 150, 200, 14);
 
         // 2. Generate choice cards choices
         const choices = [];
@@ -368,13 +368,13 @@ export default class MentalFlexScene extends BaseCognitiveScene {
         // Shuffle choices so correct answer is not always first
         Phaser.Utils.Array.Shuffle(choices);
 
-        // Render choice cards horizontally at the bottom
-        const cardW = 110;
-        const cardH = 150;
-        const cardSpacing = 35;
+        // Render choice cards horizontally at the bottom (Larger, accessible scale)
+        const cardW = 135;
+        const cardH = 180;
+        const cardSpacing = 38;
         const totalW = this.choicesCount * cardW + (this.choicesCount - 1) * cardSpacing;
         const startX = (width - totalW) / 2 + cardW / 2;
-        const choicesY = height - 115;
+        const choicesY = height - 120;
 
         choices.forEach((cData, index) => {
             const x = startX + index * (cardW + cardSpacing);
@@ -576,18 +576,21 @@ export default class MentalFlexScene extends BaseCognitiveScene {
             
             this.updateRuleDisplay();
 
-            // Flash Rule Shift Banner in Center of Screen
+            // Flash Rule Shift Banner in Dedicated Top Bar (Zero Overlap with Cards)
             const width = this.scale.width;
             const height = this.scale.height;
 
             const bannerBg = this.add.graphics();
-            bannerBg.fillStyle(0xeab308, 0.12);
-            bannerBg.fillRect(0, height / 2 - 160, width, 80);
+            bannerBg.fillStyle(0xeab308, 0.25);
+            bannerBg.fillRect(0, 115, width, 55);
+            bannerBg.lineStyle(2, 0xeab308, 0.9);
+            bannerBg.lineBetween(0, 115, width, 115);
+            bannerBg.lineBetween(0, 170, width, 170);
 
-            const textVal = `RULE SHIFT: MATCH ${this.currentRule.toUpperCase()}!`;
-            const bannerTxt = this.add.text(width / 2, height / 2 - 120, textVal, {
-                fontFamily: CogniTheme.fonts.body,
-                fontSize: '28px',
+            const textVal = `⚡ RULE SHIFT: MATCH ${this.currentRule.toUpperCase()}! ⚡`;
+            const bannerTxt = this.add.text(width / 2, 142, textVal, {
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                fontSize: '26px',
                 fontWeight: '900',
                 fill: '#ffffff'
             }).setOrigin(0.5);

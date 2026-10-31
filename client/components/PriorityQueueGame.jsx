@@ -214,6 +214,10 @@ export default function PriorityQueueGame({
                 <div style={S.badge}><GameIcon name="compass" inline />EXECUTIVE STRATEGY · TRIAGE TRAINING</div>
 
                 <div style={S.featureGrid}>
+                    <div style={S.featureItem}><span style={S.featureIcon}>👆</span>Tactile Drag &amp; Drop Triage</div>
+                    <div style={S.featureItem}><span style={S.featureIcon}>🎯</span>Rapid Decision-Making Under Pressure</div>
+                    <div style={S.featureItem}><span style={S.featureIcon}>🚨</span>Crisis cards &amp; streak multipliers</div>
+                    <div style={S.featureItem}><span style={S.featureIcon}>📈</span>Adaptive IRT dynamic speed</div>
                     <div style={S.featureItem}><span style={S.featureIcon}><GameIcon name="run" /></span>Animated conveyor belt</div>
                     <div style={S.featureItem}><span style={S.featureIcon}><GameIcon name="hand" /></span>Drag &amp; drop sorting</div>
                     <div style={S.featureItem}><span style={S.featureIcon}><GameIcon name="target" /></span>Eisenhower matrix logic</div>
@@ -274,7 +278,7 @@ export default function PriorityQueueGame({
                             ['check',  'Correct Triage',      finalStats?.hits,               '#22c55e'],
                             ['x',      'Missed / Wrong Bin',  finalStats?.misses,             '#ef4444'],
                             ['target', 'Triage Accuracy',     `${acc}%`,                      grade],
-                            ['trend',  'Peak DDA Level',      `Level ${finalStats?.difficultyLevel}`, '#22c55e'],
+                            ['trend',  'Peak DDA Level',      `Level ${finalStats?.peakDifficulty ?? finalStats?.difficultyLevel ?? finalStats?.difficulty ?? 1}`, '#22c55e'],
                         ].map(([icon, label, val, col]) => (
                             <div key={label} style={S.statRow}>
                                 <span><GameIcon name={icon} inline /> {label}</span>

@@ -140,38 +140,48 @@ def calculate_dda_parameters(difficulty_level, game_type='SpeedTap', user_avg_rt
                 "similarity": "high"
             }
         }
-    elif game_type == 'LogicLink':
-        # Map levels to game-specific variables for the Logic Link game (Problem Solving)
+    elif game_type in ['LogicLink', 'logic_link']:
+        # Map levels to game-specific variables for the Logic Link hybrid combo game
         configs = {
             1: {
                 "difficulty_level": 1,
-                "grid_size": 3,
-                "sequence_length": 3,
-                "distractors": 0
+                "grid_size": 4,
+                "sequence_mode": "numbers",       # 1 -> 2 -> 3 -> 4
+                "sequence_length": 4,
+                "distractors": 3,
+                "memory_mask": False
             },
             2: {
                 "difficulty_level": 2,
-                "grid_size": 3,
+                "grid_size": 4,
+                "sequence_mode": "alternating",   # 1 -> A -> 2 -> B
                 "sequence_length": 4,
-                "distractors": 1
+                "distractors": 3,
+                "memory_mask": False
             },
             3: {
                 "difficulty_level": 3,
                 "grid_size": 4,
-                "sequence_length": 4,
-                "distractors": 2
+                "sequence_mode": "alternating",   # 1 -> A -> 2 -> B -> 3 -> C
+                "sequence_length": 6,
+                "distractors": 4,
+                "memory_mask": False
             },
             4: {
                 "difficulty_level": 4,
                 "grid_size": 4,
+                "sequence_mode": "numbers",       # 1 -> 2 -> 3 -> 4 -> 5
                 "sequence_length": 5,
-                "distractors": 3
+                "distractors": 4,
+                "memory_mask": True               # Ayumu memory mask mode!
             },
             5: {
                 "difficulty_level": 5,
                 "grid_size": 5,
-                "sequence_length": 6,
-                "distractors": 4
+                "sequence_mode": "alternating",   # 1 -> A -> 2 -> B -> 3 -> C -> 4
+                "sequence_length": 7,
+                "distractors": 6,
+                "memory_mask": True               # Grandmaster alternating + memory mask!
             }
         }
     elif game_type == 'MazeEscape':
@@ -209,47 +219,47 @@ def calculate_dda_parameters(difficulty_level, game_type='SpeedTap', user_avg_rt
             }
         }
     elif game_type in ['PriorityQueue', 'priority_queue']:
-        # Priority Queue: conveyor belt triage. Higher difficulty = faster belt,
-        # more concurrent cards, shorter spawn intervals, less label context.
+        # Priority Queue: Cyber Triage conveyor belt. Higher difficulty = faster belt,
+        # more concurrent cards, shorter spawn intervals, multi-card pressure.
         configs = {
             1: {
                 "difficulty_level": 1,
-                "belt_speed": 30,        # px/sec (slow)
-                "spawn_interval": 5000,  # ms between new cards
-                "max_cards": 2,
-                "ambiguity_level": 0,    # full labels shown
-                "time_limit": 75000
+                "belt_speed": 135,       # Balanced accessible speed (~6.5s to breach)
+                "spawn_interval": 2200,  # Comfortable reading interval
+                "max_cards": 4,
+                "ambiguity_level": 0,
+                "time_limit": 60000
             },
             2: {
                 "difficulty_level": 2,
-                "belt_speed": 38,
-                "spawn_interval": 4200,
-                "max_cards": 3,
+                "belt_speed": 175,       # Active triage (~5.0s to breach)
+                "spawn_interval": 1800,
+                "max_cards": 4,
                 "ambiguity_level": 0,
-                "time_limit": 75000
+                "time_limit": 60000
             },
             3: {
                 "difficulty_level": 3,
-                "belt_speed": 48,
-                "spawn_interval": 3500,
-                "max_cards": 3,
-                "ambiguity_level": 1,    # category label hidden
-                "time_limit": 70000
+                "belt_speed": 220,       # Focused flow (~4.0s to breach)
+                "spawn_interval": 1450,
+                "max_cards": 5,
+                "ambiguity_level": 1,
+                "time_limit": 60000
             },
             4: {
                 "difficulty_level": 4,
-                "belt_speed": 60,
-                "spawn_interval": 2800,
-                "max_cards": 4,
+                "belt_speed": 275,       # High tempo (~3.2s to breach)
+                "spawn_interval": 1150,
+                "max_cards": 6,
                 "ambiguity_level": 1,
-                "time_limit": 65000
+                "time_limit": 60000
             },
             5: {
                 "difficulty_level": 5,
-                "belt_speed": 75,
-                "spawn_interval": 2200,
-                "max_cards": 4,
-                "ambiguity_level": 2,    # both dots and category hidden
+                "belt_speed": 340,       # Master executive triage (~2.6s to breach)
+                "spawn_interval": 900,
+                "max_cards": 7,
+                "ambiguity_level": 2,
                 "time_limit": 60000
             }
         }
@@ -259,36 +269,36 @@ def calculate_dda_parameters(difficulty_level, game_type='SpeedTap', user_avg_rt
             1: {
                 "difficulty_level": 1,
                 "grid_size": 6,
-                "max_moves": 20,
-                "blocked_ratio": 0.1,
+                "max_moves": 14,
+                "blocked_ratio": 0.28,
                 "speed_multiplier": 1.0
             },
             2: {
                 "difficulty_level": 2,
                 "grid_size": 7,
-                "max_moves": 25,
-                "blocked_ratio": 0.13,
+                "max_moves": 16,
+                "blocked_ratio": 0.35,
                 "speed_multiplier": 1.2
             },
             3: {
                 "difficulty_level": 3,
-                "grid_size": 8,
-                "max_moves": 30,
-                "blocked_ratio": 0.17,
+                "grid_size": 7,
+                "max_moves": 17,
+                "blocked_ratio": 0.42,
                 "speed_multiplier": 1.4
             },
             4: {
                 "difficulty_level": 4,
-                "grid_size": 9,
-                "max_moves": 35,
-                "blocked_ratio": 0.21,
+                "grid_size": 8,
+                "max_moves": 18,
+                "blocked_ratio": 0.46,
                 "speed_multiplier": 1.6
             },
             5: {
                 "difficulty_level": 5,
-                "grid_size": 10,
-                "max_moves": 40,
-                "blocked_ratio": 0.25,
+                "grid_size": 8,
+                "max_moves": 19,
+                "blocked_ratio": 0.50,
                 "speed_multiplier": 1.8
             }
         }
@@ -379,7 +389,7 @@ def calculate_dda_parameters(difficulty_level, game_type='SpeedTap', user_avg_rt
             },
             3: {
                 "difficulty_level": 3,
-                "spawn_delay": 1500,
+                "spawn_delay": 1600,
                 "conflict_probability": 0.8,
                 "static_text_rotation": False,
                 "dynamic_text_spin": False,
@@ -387,7 +397,7 @@ def calculate_dda_parameters(difficulty_level, game_type='SpeedTap', user_avg_rt
             },
             4: {
                 "difficulty_level": 4,
-                "spawn_delay": 1100,
+                "spawn_delay": 1350,
                 "conflict_probability": 1.0,
                 "static_text_rotation": True,
                 "dynamic_text_spin": False,
@@ -395,7 +405,7 @@ def calculate_dda_parameters(difficulty_level, game_type='SpeedTap', user_avg_rt
             },
             5: {
                 "difficulty_level": 5,
-                "spawn_delay": 800,
+                "spawn_delay": 1200,      # Balanced: fast & intense without impossible auto-timeouts
                 "conflict_probability": 1.0,
                 "static_text_rotation": True,
                 "dynamic_text_spin": True,

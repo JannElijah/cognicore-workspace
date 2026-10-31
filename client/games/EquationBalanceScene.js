@@ -103,18 +103,18 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
 
         this.roundTimerBar = this.add.graphics();
 
-        // Main glowing panel for equation
+        // Main glowing panel for equation (enlarged & high-contrast)
         this.equationPanel = this.add.graphics();
-        this.equationPanel.fillStyle(0x1e293b, 0.4);
-        this.equationPanel.lineStyle(2, 0xf59e0b, 0.45);
-        this.equationPanel.fillRoundedRect(width / 2 - 280, 160, 560, 160, 16);
-        this.equationPanel.strokeRoundedRect(width / 2 - 280, 160, 560, 160, 16);
+        this.equationPanel.fillStyle(0x0f172a, 0.75);
+        this.equationPanel.lineStyle(2.5, 0xf59e0b, 0.7);
+        this.equationPanel.fillRoundedRect(width / 2 - 320, 145, 640, 175, 18);
+        this.equationPanel.strokeRoundedRect(width / 2 - 320, 145, 640, 175, 18);
 
         // Text display for equation
-        this.equationTextDisplay = this.add.text(width / 2, 240, '', {
+        this.equationTextDisplay = this.add.text(width / 2, 232, '', {
             fontFamily: 'Outfit, system-ui, -apple-system, sans-serif',
-            fontSize: '44px',
-            fontWeight: '800',
+            fontSize: '52px',
+            fontWeight: '900',
             fill: '#ffffff'
         }).setOrigin(0.5);
 
@@ -380,6 +380,31 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
         };
     }
 
+        drawButtonState(bg, btnWidth, btnHeight, state = 'default') {
+        bg.clear();
+        if (state === 'hover') {
+            bg.fillStyle(0x1e293b, 0.95);
+            bg.lineStyle(3, 0xf59e0b, 1.0);
+            bg.fillRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 14);
+            bg.strokeRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 14);
+        } else if (state === 'correct') {
+            bg.fillStyle(0x064e3b, 0.85);
+            bg.lineStyle(3, 0x10b981, 1.0);
+            bg.fillRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 14);
+            bg.strokeRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 14);
+        } else if (state === 'wrong') {
+            bg.fillStyle(0x7f1d1d, 0.85);
+            bg.lineStyle(3, 0xef4444, 1.0);
+            bg.fillRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 14);
+            bg.strokeRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 14);
+        } else {
+            bg.fillStyle(0x0f172a, 0.75);
+            bg.lineStyle(2, 0x334155, 0.9);
+            bg.fillRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 14);
+            bg.strokeRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 14);
+        }
+    }
+
     startNewPuzzle() {
         if (this.timeLeft <= 0) return;
 
@@ -402,30 +427,26 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
         // Render options buttons dynamically
         const width = this.scale.width;
         const opts = this.activePuzzle.options;
-        const btnSpacing = 30;
-        const btnWidth = opts.length === 4 ? 110 : 130;
-        const btnHeight = 65;
+        const btnSpacing = 24;
+        const btnWidth = opts.length === 4 ? 145 : 175;
+        const btnHeight = 90;
         const totalWidth = opts.length * btnWidth + (opts.length - 1) * btnSpacing;
         const startX = (width - totalWidth) / 2 + btnWidth / 2;
 
         opts.forEach((val, idx) => {
             const x = startX + idx * (btnWidth + btnSpacing);
-            const y = 410;
+            const y = 430;
 
             const bg = this.add.graphics();
             bg.setPosition(x, y);
 
-            // Glassmorphic option style
-            bg.fillStyle(0x1e293b, 0.6);
-            bg.lineStyle(1.5, 0xffffff, 0.08);
-            bg.fillRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 10);
-            bg.strokeRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 10);
+            this.drawButtonState(bg, btnWidth, btnHeight, 'default');
 
             const txt = this.add.text(x, y, val, {
                 fontFamily: 'Outfit, system-ui, -apple-system, sans-serif',
-                fontSize: '26px',
-                fontWeight: 'bold',
-                fill: '#e2e8f0'
+                fontSize: '38px',
+                fontWeight: '900',
+                fill: '#ffffff'
             }).setOrigin(0.5);
 
             // Click triggers
@@ -436,20 +457,20 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
                 this.handleOptionClick(val, bg, txt);
             });
 
-            // Hover triggers
+            // Hover triggers with guaranteed clear()
             bg.on('pointerover', () => {
                 if (this.gamePhase === 'PLAYING') {
-                    bg.lineStyle(2.5, 0xf59e0b, 0.7); // golden outline
-                    bg.strokeRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 10);
-                    txt.setFill('#ffffff');
+                    this.drawButtonState(bg, btnWidth, btnHeight, 'hover');
+                    txt.setFill('#fbbf24');
+                    txt.setScale(1.08);
                 }
             });
 
             bg.on('pointerout', () => {
                 if (this.gamePhase === 'PLAYING') {
-                    bg.lineStyle(1.5, 0xffffff, 0.08);
-                    bg.strokeRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 10);
-                    txt.setFill('#e2e8f0');
+                    this.drawButtonState(bg, btnWidth, btnHeight, 'default');
+                    txt.setFill('#ffffff');
+                    txt.setScale(1.0);
                 }
             });
 
@@ -476,22 +497,13 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
                 const py = this.input.activePointer.y || this.scale.height / 2;
                 this.showParticleBurst(px, py, 0xf59e0b);
             }
-    
-        if (this.showParticleBurst) {
-            const px = this.input.activePointer.x || this.scale.width / 2;
-            const py = this.input.activePointer.y || this.scale.height / 2;
-            this.showParticleBurst(px, py, 0xf59e0b);
-        }
-        this.hits++;
+            this.hits++;
             this.totalAttempts++;
 
             // Visual feedback: Green fill
-            bg.clear();
-            bg.fillStyle(0x064e3b, 0.7);
-            bg.lineStyle(2.5, 0x10b981, 0.9);
-            bg.fillRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 10);
-            bg.strokeRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 10);
-            txt.setFill('#4ade80');
+            this.drawButtonState(bg, btnWidth, btnHeight, 'correct');
+            txt.setFill('#34d399');
+            txt.setScale(1.08);
 
             // Replace question mark in equation text with correct answer
             const solvedEq = this.activePuzzle.equationText.replace('?', selectedVal);
@@ -514,22 +526,14 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
             this.totalAttempts++;
 
             // Visual feedback: Red fill
-            bg.clear();
-            bg.fillStyle(0x7f1d1d, 0.7);
-            bg.lineStyle(2.5, 0xef4444, 0.9);
-            bg.fillRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 10);
-            bg.strokeRoundedRect(-btnWidth / 2, -btnHeight / 2, btnWidth, btnHeight, 10);
+            this.drawButtonState(bg, btnWidth, btnHeight, 'wrong');
             txt.setFill('#f87171');
 
             // Find the correct button and outline in green to show the user
             this.optionButtons.forEach(btn => {
                 if (btn.val === this.activePuzzle.correctAnswer) {
-                    btn.bg.clear();
-                    btn.bg.fillStyle(0x1e293b, 0.6);
-                    btn.bg.lineStyle(3, 0x10b981, 0.9);
-                    btn.bg.fillRoundedRect(-btn.btnWidth / 2, -btn.btnHeight / 2, btn.btnWidth, btn.btnHeight, 10);
-                    btn.bg.strokeRoundedRect(-btn.btnWidth / 2, -btn.btnHeight / 2, btn.btnWidth, btn.btnHeight, 10);
-                    btn.txt.setFill('#4ade80');
+                    this.drawButtonState(btn.bg, btn.btnWidth, btn.btnHeight, 'correct');
+                    btn.txt.setFill('#34d399');
                 }
             });
 
@@ -551,12 +555,8 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
         // Show correct answer by highlighting it green
         this.optionButtons.forEach(btn => {
             if (btn.val === this.activePuzzle.correctAnswer) {
-                btn.bg.clear();
-                btn.bg.fillStyle(0x1e293b, 0.6);
-                btn.bg.lineStyle(3, 0x10b981, 0.9);
-                btn.bg.fillRoundedRect(-btn.btnWidth / 2, -btn.btnHeight / 2, btn.btnWidth, btn.btnHeight, 10);
-                btn.bg.strokeRoundedRect(-btn.btnWidth / 2, -btn.btnHeight / 2, btn.btnWidth, btn.btnHeight, 10);
-                btn.txt.setFill('#4ade80');
+                this.drawButtonState(btn.bg, btn.btnWidth, btn.btnHeight, 'correct');
+                btn.txt.setFill('#34d399');
             }
         });
 

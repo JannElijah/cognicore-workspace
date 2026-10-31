@@ -11,67 +11,67 @@ import { createTutorialOverlay, createMlHud, updateMlHud } from './seriousGameOv
 const TOPOLOGIES = {
     4: {
         nodes: [
-            { id: 'S', x: 160, y: 330 },
-            { id: 'A', x: 390, y: 210 },
-            { id: 'B', x: 390, y: 450 },
-            { id: 'E', x: 640, y: 330 }
+            { id: 'S', x: 180, y: 320 },
+            { id: 'A', x: 512, y: 190 },
+            { id: 'B', x: 512, y: 450 },
+            { id: 'E', x: 844, y: 320 }
         ],
         edges: [['S','A'], ['S','B'], ['A','E'], ['B','E'], ['A','B']],
         startId: 'S', endId: 'E'
     },
     5: {
         nodes: [
-            { id: 'S', x: 110, y: 330 },
-            { id: 'A', x: 280, y: 210 },
-            { id: 'B', x: 280, y: 450 },
-            { id: 'C', x: 470, y: 330 },
-            { id: 'E', x: 670, y: 330 }
+            { id: 'S', x: 160, y: 320 },
+            { id: 'A', x: 380, y: 190 },
+            { id: 'B', x: 380, y: 450 },
+            { id: 'C', x: 620, y: 320 },
+            { id: 'E', x: 860, y: 320 }
         ],
         edges: [['S','A'], ['S','B'], ['A','C'], ['B','C'], ['C','E'], ['A','E']],
         startId: 'S', endId: 'E'
     },
     6: {
         nodes: [
-            { id: 'S', x: 90,  y: 330 },
-            { id: 'A', x: 250, y: 205 },
-            { id: 'B', x: 430, y: 205 },
-            { id: 'C', x: 250, y: 455 },
-            { id: 'D', x: 430, y: 455 },
-            { id: 'E', x: 620, y: 330 }
+            { id: 'S', x: 150, y: 320 },
+            { id: 'A', x: 370, y: 190 },
+            { id: 'B', x: 620, y: 190 },
+            { id: 'C', x: 370, y: 450 },
+            { id: 'D', x: 620, y: 450 },
+            { id: 'E', x: 860, y: 320 }
         ],
         edges: [['S','A'], ['S','C'], ['A','B'], ['A','D'], ['C','D'], ['B','E'], ['D','E']],
         startId: 'S', endId: 'E'
     },
     7: {
         nodes: [
-            { id: 'S', x: 80,  y: 330 },
-            { id: 'A', x: 210, y: 205 },
-            { id: 'B', x: 360, y: 205 },
-            { id: 'C', x: 210, y: 455 },
-            { id: 'D', x: 360, y: 455 },
-            { id: 'F', x: 510, y: 330 },
-            { id: 'E', x: 660, y: 330 }
+            { id: 'S', x: 140, y: 320 },
+            { id: 'A', x: 330, y: 190 },
+            { id: 'B', x: 530, y: 190 },
+            { id: 'C', x: 330, y: 450 },
+            { id: 'D', x: 530, y: 450 },
+            { id: 'F', x: 710, y: 320 },
+            { id: 'E', x: 880, y: 320 }
         ],
         edges: [['S','A'], ['S','C'], ['A','B'], ['A','D'], ['B','F'], ['C','D'], ['D','F'], ['F','E'], ['C','F'], ['B','E']],
         startId: 'S', endId: 'E'
     },
     8: {
         nodes: [
-            { id: 'S', x: 70,  y: 330 },
-            { id: 'A', x: 190, y: 210 },
-            { id: 'B', x: 330, y: 190 },
-            { id: 'C', x: 190, y: 450 },
-            { id: 'D', x: 330, y: 450 },
-            { id: 'F', x: 480, y: 235 },
-            { id: 'G', x: 480, y: 430 },
-            { id: 'E', x: 640, y: 330 }
+            { id: 'S', x: 130, y: 320 },
+            { id: 'A', x: 310, y: 190 },
+            { id: 'B', x: 490, y: 170 },
+            { id: 'C', x: 310, y: 450 },
+            { id: 'D', x: 490, y: 450 },
+            { id: 'F', x: 690, y: 220 },
+            { id: 'G', x: 690, y: 420 },
+            { id: 'E', x: 890, y: 320 }
         ],
         edges: [['S','A'], ['S','C'], ['A','B'], ['A','D'], ['B','F'], ['C','D'], ['C','G'], ['D','G'], ['F','G'], ['F','E'], ['G','E'], ['D','F']],
         startId: 'S', endId: 'E'
     }
 };
 
-const NODE_RADIUS  = 26;
+const NODE_RADIUS  = 35;
 const C_PRIMARY    = 0x22c55e;   // green-500
 const C_WARN       = 0xef4444;   // red
 const C_AMBER      = 0xf59e0b;
@@ -165,7 +165,7 @@ export default class RouteOptimizerScene extends BaseCognitiveScene {
         }).setOrigin(0.5, 0);
         this.statusText = this.add.text(W / 2, 76, 'FIND THE CHEAPEST ROUTE!', {
             fontFamily: CogniTheme.fonts.body,
-            fontSize: '17px', fontWeight: '800', fill: '#e2e8f0'
+            fontSize: '22px', fontWeight: 'bold', fill: '#38bdf8'
         }).setOrigin(0.5, 0);
 
         // Round timer bar
@@ -177,7 +177,7 @@ export default class RouteOptimizerScene extends BaseCognitiveScene {
         // Cost / route display
         this.costLabel = this.add.text(W / 2, 506, 'ROUTE: S   |   COST: 0', {
             fontFamily: CogniTheme.fonts.body,
-            fontSize: '15px', fontWeight: '600', fill: '#22c55e'
+            fontSize: '20px', fontWeight: 'bold', fill: '#ffffff'
         }).setOrigin(0.5, 0);
 
         // ── Reset button (fixed center-bottom)
@@ -201,11 +201,11 @@ export default class RouteOptimizerScene extends BaseCognitiveScene {
         // Legend
         this.add.circle(72, 558, 7, 0x052e16).setStrokeStyle(2, C_PRIMARY);
         this.add.text(84, 558, 'START', {
-            fontFamily: 'system-ui', fontSize: '10px', fill: '#64748b'
+            fontFamily: 'system-ui', fontSize: '13px', fontWeight: 'bold', fill: '#94a3b8'
         }).setOrigin(0, 0.5);
         this.add.circle(155, 558, 7, 0x431407).setStrokeStyle(2, 0xf97316);
         this.add.text(167, 558, 'END', {
-            fontFamily: 'system-ui', fontSize: '10px', fill: '#64748b'
+            fontFamily: 'system-ui', fontSize: '13px', fontWeight: 'bold', fill: '#94a3b8'
         }).setOrigin(0, 0.5);
         this.add.text(W - 20, 558,
             'Click adjacent nodes to build your route', {
@@ -381,24 +381,26 @@ export default class RouteOptimizerScene extends BaseCognitiveScene {
             const to   = nodes.find(n => n.id === toId);
 
             const line = this.add.graphics();
-            line.lineStyle(2, 0x334155, 0.5);
+            line.lineStyle(3.5, 0x38bdf8, 0.45);
             line.beginPath();
             line.moveTo(from.x, from.y);
             line.lineTo(to.x, to.y);
             line.strokePath();
             this.graphContainer.add(line);
 
-            // Weight label background pill
+            // Weight label background pill (Large, high-contrast, glowing)
             const mx = (from.x + to.x) / 2;
             const my = (from.y + to.y) / 2;
             const pill = this.add.graphics();
-            pill.fillStyle(0x020617, 0.88);
-            pill.fillRoundedRect(mx - 14, my - 10, 28, 20, 5);
+            pill.fillStyle(0x0a1024, 0.96);
+            pill.lineStyle(2, 0x00f0ff, 0.85);
+            pill.fillRoundedRect(mx - 22, my - 16, 44, 32, 8);
+            pill.strokeRoundedRect(mx - 22, my - 16, 44, 32, 8);
             this.graphContainer.add(pill);
 
             const wLbl = this.add.text(mx, my, weight.toString(), {
-                fontFamily: CogniTheme.fonts.body,
-                fontSize: '13px', fontWeight: '700', fill: '#475569'
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                fontSize: '19px', fontWeight: '900', fill: '#00f0ff'
             }).setOrigin(0.5);
             this.graphContainer.add(wLbl);
 
@@ -421,7 +423,7 @@ export default class RouteOptimizerScene extends BaseCognitiveScene {
             const textFill = isStart ? '#4ade80' : isEnd ? '#fb923c' : '#94a3b8';
             const lbl = this.add.text(x, y, id, {
                 fontFamily: CogniTheme.fonts.body,
-                fontSize: '17px', fontWeight: '800', fill: textFill
+                fontSize: '22px', fontWeight: '900', fill: textFill
             }).setOrigin(0.5);
             this.graphContainer.add(lbl);
 
@@ -429,7 +431,7 @@ export default class RouteOptimizerScene extends BaseCognitiveScene {
                 const roleLbl = this.add.text(x, y + NODE_RADIUS + 9,
                     isStart ? 'START' : 'END', {
                     fontFamily: CogniTheme.fonts.body,
-                    fontSize: '9px', fontWeight: '700',
+                    fontSize: '12px', fontWeight: '800',
                     fill: isStart ? '#22c55e' : '#f97316'
                 }).setOrigin(0.5, 0);
                 this.graphContainer.add(roleLbl);
