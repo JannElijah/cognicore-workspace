@@ -601,14 +601,19 @@ def submit_assessment(current_user_id, current_username):
         if assessment_type == 'post-test':
             pre_test = CognitiveAssessment.query.filter_by(user_id=current_user_id, assessment_type='pre-test').order_by(CognitiveAssessment.completed_at.asc()).first()
             if pre_test:
-                pre_scores = {
-                    "spatial_visual_memory": pre_test.spatial_visual_score,
-                    "logical_mathematical": pre_test.logical_math_score,
-                    "reflexes_and_focus": pre_test.attention_score,
-                    "executive_strategy": pre_test.executive_score
-                }
-                ai_feedback_string = generate_post_test_ai_feedback(pre_scores, scores_map, data.get('metadata'))
-                ca.ai_feedback = ai_feedback_string
+                try:
+                    pre_scores = {
+                        "spatial_visual_memory": pre_test.spatial_visual_score,
+                        "logical_mathematical": pre_test.logical_math_score,
+                        "reflexes_and_focus": pre_test.attention_score,
+                        "executive_strategy": pre_test.executive_score
+                    }
+                    ai_feedback_string = generate_post_test_ai_feedback(pre_scores, scores_map, data.get('metadata'))
+                    ca.ai_feedback = ai_feedback_string
+                except Exception as fb_err:
+                    logger.warning(f"Error generating post-test AI feedback: {fb_err}")
+                    ai_feedback_string = "Post-test evaluation completed successfully. Skill deltas recorded."
+                    ca.ai_feedback = ai_feedback_string
 
         db.session.add(ca)
         db.session.commit()

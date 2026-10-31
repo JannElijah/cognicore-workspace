@@ -11,6 +11,8 @@ const AppNavigation = memo(function AppNavigation({
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [portalDropdownOpen, setPortalDropdownOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const closeDrawer = () => setDrawerOpen(false);
 
   const equippedBanner = inventory?.find(i => i.item_type === 'banner' && i.is_equipped)?.item_id;
@@ -283,10 +285,7 @@ const AppNavigation = memo(function AppNavigation({
               <button 
                 className="dashboard-toggle-btn" 
                 title="Sign Out"
-                onClick={() => {
-                  localStorage.clear();
-                  window.location.reload();
-                }}
+                onClick={() => setShowLogoutConfirm(true)}
                 style={{
                   background: 'rgba(255, 255, 255, 0.05)',
                   color: '#ef4444',
@@ -488,13 +487,139 @@ const AppNavigation = memo(function AppNavigation({
 
         <button
           className="mobile-nav-item"
-          onClick={async () => { await supabase.auth.signOut(); localStorage.clear(); window.location.reload(); }}
+          onClick={() => {
+            closeDrawer();
+            setShowLogoutConfirm(true);
+          }}
           style={{ color: '#ef4444' }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 17l5-5-5-5M21 12H9" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="#ef4444" strokeWidth="2" strokeLinecap="round"/></svg>
           Sign Out
         </button>
       </nav>
+      {/* Sign Out Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(3, 7, 18, 0.85)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.25rem',
+            animation: 'fadeIn 0.2s ease-out'
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isLoggingOut) setShowLogoutConfirm(false);
+          }}
+        >
+          <div 
+            style={{
+              background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(24, 30, 48, 0.96))',
+              border: '1px solid rgba(239, 68, 68, 0.35)',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(239, 68, 68, 0.2)',
+              borderRadius: '20px',
+              maxWidth: '440px',
+              width: '100%',
+              padding: '2rem 1.75rem',
+              textAlign: 'center',
+              position: 'relative'
+            }}
+          >
+            <div 
+              style={{
+                width: '56px',
+                height: '56px',
+                background: 'rgba(239, 68, 68, 0.12)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                borderRadius: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 1.25rem auto'
+              }}
+            >
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16 17l5-5-5-5M21 12H9" stroke="#ef4444" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" stroke="#ef4444" strokeWidth="2.2" strokeLinecap="round"/>
+              </svg>
+            </div>
+
+            <h3 style={{ margin: '0 0 0.5rem 0', color: '#f8fafc', fontSize: '1.25rem', fontWeight: '700', letterSpacing: '-0.01em' }}>
+              Confirm Sign Out
+            </h3>
+            <p style={{ margin: '0 0 1.75rem 0', color: '#94a3b8', fontSize: '0.9rem', lineHeight: '1.5' }}>
+              Are you sure you want to end your session? Any unsaved game progress or in-progress session will be closed.
+            </p>
+
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+              <button
+                type="button"
+                disabled={isLoggingOut}
+                onClick={() => setShowLogoutConfirm(false)}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem 1rem',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '10px',
+                  color: '#cbd5e1',
+                  fontWeight: '600',
+                  fontSize: '0.9rem',
+                  cursor: isLoggingOut ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseOver={(e) => { if (!isLoggingOut) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; }}
+                onMouseOut={(e) => { if (!isLoggingOut) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'; }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isLoggingOut}
+                onClick={async () => {
+                  setIsLoggingOut(true);
+                  try {
+                    await supabase.auth.signOut();
+                  } catch (err) {
+                    console.warn("Supabase sign out error:", err);
+                  }
+                  try {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                  } catch (_) {}
+                  window.location.reload();
+                }}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem 1rem',
+                  background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                  border: 'none',
+                  borderRadius: '10px',
+                  color: '#ffffff',
+                  fontWeight: '700',
+                  fontSize: '0.9rem',
+                  cursor: isLoggingOut ? 'not-allowed' : 'pointer',
+                  boxShadow: '0 4px 14px rgba(239, 68, 68, 0.4)',
+                  transition: 'all 0.2s',
+                  opacity: isLoggingOut ? 0.7 : 1
+                }}
+                onMouseOver={(e) => { if (!isLoggingOut) e.currentTarget.style.filter = 'brightness(1.1)'; }}
+                onMouseOut={(e) => { if (!isLoggingOut) e.currentTarget.style.filter = 'none'; }}
+              >
+                {isLoggingOut ? 'Signing out...' : 'Sign Out'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 });

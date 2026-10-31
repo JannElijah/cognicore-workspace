@@ -33,9 +33,11 @@ export interface CogniStore {
   fetchInventory: () => Promise<void>;
 }
 
+const initialToken = typeof window !== 'undefined' ? (localStorage.getItem('token') || null) : null;
+
 const useCogniStore = create<CogniStore>((set, get) => ({
   user: null,
-  token: null,
+  token: initialToken,
   coins: 0,
   totalXp: 0,
   inventory: [],
@@ -46,18 +48,28 @@ const useCogniStore = create<CogniStore>((set, get) => ({
     confidence_score: 0.0,
   },
   
-  login: (userData, token) => set({ user: userData, token }),
+  login: (userData, token) => {
+    if (typeof window !== 'undefined' && token) {
+      localStorage.setItem('token', token);
+    }
+    set({ user: userData, token });
+  },
   
-  logout: () => set({ 
-    user: null, 
-    token: null, 
-    coins: 0, 
-    totalXp: 0, 
-    inventory: [],
-    stats: null, 
-    reduceFlashes: false, 
-    cognitiveProfile: { archetype: null, confidence_score: 0.0 } 
-  }),
+  logout: () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+    }
+    set({ 
+      user: null, 
+      token: null, 
+      coins: 0, 
+      totalXp: 0, 
+      inventory: [],
+      stats: null, 
+      reduceFlashes: false, 
+      cognitiveProfile: { archetype: null, confidence_score: 0.0 } 
+    });
+  },
   
   setReduceFlashes: (val: boolean) => set({ reduceFlashes: val }),
 

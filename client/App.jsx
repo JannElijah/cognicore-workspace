@@ -292,10 +292,27 @@ export default function App() {
     }
   }, [isMobile, currentUser]);
 
+  const getAuthToken = async () => {
+    let token = useCogniStore.getState().token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+    if (!token) {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        token = sessionData?.session?.access_token || null;
+        if (token) {
+          useCogniStore.setState({ token });
+          if (typeof window !== 'undefined') localStorage.setItem('token', token);
+        }
+      } catch (err) {
+        console.warn("Could not retrieve active session token:", err);
+      }
+    }
+    return token || '';
+  };
+
   const handleRetrain = async () => {
     setRetrainLoading(true);
     try {
-      const token = useCogniStore.getState().token || '';
+      const token = await getAuthToken();
       const res = await fetch(`${API_BASE}/api/admin/retrain`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
@@ -351,7 +368,7 @@ export default function App() {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
-                    'Authorization': Bearer 
+                    'Authorization': `Bearer ${token}`
                 }
             });
             if (syncRes.ok) {
@@ -362,7 +379,7 @@ export default function App() {
                 }
             }
             
-            const res = await fetch(`${API_BASE}/api/assessment-status/`);
+            const res = await fetch(`${API_BASE}/api/assessment-status/${username}`);
             if (res.ok) {
                 const asmtData = await res.json();
                 if (asmtData.status === 'success') {
@@ -382,7 +399,9 @@ export default function App() {
                             fetchEvaluationReport(username);
                         } else {
                             setAssessmentStage('none');
-                            const historyRes = await fetch(`${API_BASE}/api/user-session-history/`);
+                            const historyRes = await fetch(`${API_BASE}/api/user-session-history/${username}`, {
+                              headers: { 'Authorization': `Bearer ${token}` }
+                            });
                             if (historyRes.ok) {
                                 const histData = await historyRes.json();
                                 const prescribedDomain = DOMAINS_LIST.find(domain => domain.id === asmtData.weakest_domain);
@@ -582,9 +601,13 @@ export default function App() {
       const attention_score = attentionCount ? (attentionScore / attentionCount) * 100.0 : (prevAttention || 0);
       const executive_score = executiveCount ? (executiveScore / executiveCount) * 100.0 : (prevExecutive || 0);
 
+      const token = await getAuthToken();
       const res = await fetch(`${API_BASE}/api/submit-assessment`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
           username: currentUser,
           assessment_type: type,
@@ -598,7 +621,14 @@ export default function App() {
           metadata: resultsPayload
         })
       });
-      if (!res.ok) throw new Error("Failed to submit assessment.");
+      if (!res.ok) {
+        let errMessage = "Failed to submit assessment.";
+        try {
+          const errData = await res.json();
+          if (errData?.message) errMessage = errData.message;
+        } catch (_) {}
+        throw new Error(errMessage);
+      }
       const data = await res.json();
       if (data.status === 'success') {
         if (type === 'pre-test') {
@@ -632,9 +662,13 @@ export default function App() {
 
   const fetchEvaluationReport = async (username) => {
     try {
+      const token = await getAuthToken();
       const res = await fetch(`${API_BASE}/api/evaluate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({ username })
       });
       if (!res.ok) throw new Error("Failed to evaluate scores.");
@@ -919,12 +953,15 @@ export default function App() {
     }
 
     try {
+      const token = await getAuthToken();
       const response = await fetch(API_BASE + '/api/evaluate', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         },
         body: JSON.stringify({
+          username: activeDashboardUser || currentUser,
           pretest_scores: preArr,
           posttest_scores: postArr
         })
@@ -2458,6 +2495,7 @@ export default function App() {
               <PostTestResults 
                 preScores={preTestScores} 
                 postScores={postTestScores} 
+                evaluationReport={evaluationReport}
                 aiFeedback={aiFeedback}
                 currentUser={currentUser} 
                 onReturn={() => setAssessmentStage('none')}
