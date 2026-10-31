@@ -192,7 +192,7 @@ const AppNavigation = memo(function AppNavigation({
             </div>
           )}
           
-          {activeGame === null && portalView === 'participant' && (
+          {activeGame === null && portalView === 'participant' && currentUser !== '' && (
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button 
                   className="dashboard-toggle-btn" 

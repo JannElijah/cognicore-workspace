@@ -242,7 +242,7 @@ export default function App() {
   const [portalView, setPortalView] = useState('participant'); // 'participant' | 'admin' | 'knowledge'
 
   // Quasi-Experimental Research Pipeline States
-  const [currentUser, setCurrentUser] = useState(() => (typeof window !== 'undefined' && localStorage.getItem('cognicore_user')) || 'subject_demo');
+  const [currentUser, setCurrentUser] = useState(() => (typeof window !== 'undefined' && localStorage.getItem('cognicore_user')) || '');
   const [usernameInput, setUsernameInput] = useState('');
   const [preTestScores, setPreTestScores] = useState(null);
   const [postTestScores, setPostTestScores] = useState(null);
@@ -713,7 +713,7 @@ export default function App() {
   });
 
   // Dashboard Visualizations (Option 2)
-  const [activeDashboardUser, setActiveDashboardUser] = useState(() => (typeof window !== 'undefined' && localStorage.getItem('cognicore_user')) || 'subject_demo');
+  const [activeDashboardUser, setActiveDashboardUser] = useState(() => (typeof window !== 'undefined' && localStorage.getItem('cognicore_user')) || '');
 
   // Keep activeDashboardUser in sync with currentUser
   useEffect(() => {
@@ -799,10 +799,11 @@ export default function App() {
   });
 
   const fetchDashboardData = async (username) => {
+    const targetUser = username || activeDashboardUser || currentUser || (typeof window !== 'undefined' && localStorage.getItem('cognicore_user')) || '';
+    if (!targetUser) return;
     setChartsLoading(true);
     setChartsError(null);
     try {
-      const targetUser = username || activeDashboardUser || currentUser || (typeof window !== 'undefined' && localStorage.getItem('cognicore_user')) || 'subject_demo';
       const token = useCogniStore.getState().token || '';
       const authHeaders = token ? { 'Authorization': `Bearer ${token}` } : {};
       // 1. Fetch user session history, cohort comparison, and archetype progression concurrently
