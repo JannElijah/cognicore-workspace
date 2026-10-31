@@ -1,8 +1,9 @@
 import React, { memo, useState } from 'react';
 import { supabase } from '../utils/supabaseClient';
+import useCogniStore from '../store/useCogniStore';
 
 const AppNavigation = memo(function AppNavigation({
-  currentUser, portalView, setPortalView, setShowProfileModal, activeGame,
+  currentUser, setCurrentUser, portalView, setPortalView, setShowProfileModal, activeGame,
   showDashboard, setShowDashboard, coins, totalXp, level, inventory,
   setActiveGame, currentLevel, dailyRewardData, xpPercent,
   globalMuted, setGlobalMuted, audioDda,
@@ -586,14 +587,25 @@ const AppNavigation = memo(function AppNavigation({
                 disabled={isLoggingOut}
                 onClick={async () => {
                   setIsLoggingOut(true);
+                  if (setCurrentUser) setCurrentUser('');
                   try {
-                    await supabase.auth.signOut();
+                    await supabase.auth.signOut({ scope: 'local' });
                   } catch (err) {
                     console.warn("Supabase sign out error:", err);
                   }
                   try {
-                    localStorage.clear();
-                    sessionStorage.clear();
+                    useCogniStore.getState().logout();
+                    if (typeof window !== 'undefined') {
+                      localStorage.removeItem('cognicore_user');
+                      localStorage.removeItem('token');
+                      Object.keys(localStorage).forEach(key => {
+                        if (key.startsWith('sb-') || key.includes('supabase') || key.includes('cognicore')) {
+                          localStorage.removeItem(key);
+                        }
+                      });
+                      localStorage.clear();
+                      sessionStorage.clear();
+                    }
                   } catch (_) {}
                   window.location.reload();
                 }}

@@ -357,10 +357,25 @@ export default function App() {
   // Session Persistence on Refresh
   useEffect(() => {
     const restoreSession = async () => {
+      const storedUser = typeof window !== 'undefined' ? localStorage.getItem('cognicore_user') : null;
+      if (!storedUser) {
+        try {
+          await supabase.auth.signOut({ scope: 'local' });
+        } catch (_) {}
+        return;
+      }
+
       const { data } = await supabase.auth.getSession();
       if (data && data.session && data.session.user) {
         const user = data.session.user;
         const username = user.user_metadata?.username || user.email.split('@')[0];
+        if (username !== storedUser) {
+          try {
+            await supabase.auth.signOut({ scope: 'local' });
+          } catch (_) {}
+          return;
+        }
+
         const token = data.session.access_token;
         
         try {
@@ -419,6 +434,10 @@ export default function App() {
         } catch (e) {
             console.error("Session restore failed", e);
         }
+      } else {
+        if (typeof window !== 'undefined') localStorage.removeItem('cognicore_user');
+        setCurrentUser('');
+        setActiveDashboardUser('');
       }
     };
     restoreSession();
@@ -518,6 +537,7 @@ export default function App() {
       const data = await res.json();
       if (data.status === 'success') {
         setAssessmentError(null); // Clear waking up message if it appeared
+        if (typeof window !== 'undefined') localStorage.setItem('cognicore_user', trimmedName);
         setCurrentUser(trimmedName);
         setActiveDashboardUser(trimmedName);
         
@@ -2143,6 +2163,7 @@ export default function App() {
       {/* Top Header */}
       <AppNavigation 
         currentUser={currentUser}
+        setCurrentUser={setCurrentUser}
         portalView={portalView}
         setPortalView={setPortalView}
         setShowProfileModal={setShowProfileModal}
