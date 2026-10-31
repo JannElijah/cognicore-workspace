@@ -39,10 +39,10 @@ export default function PostTestResults({
     if (delta > maxGrowth.delta) maxGrowth = { label: d.label, delta, color: d.color };
   });
 
-  // Radar Geometry Constants (Centered at 200, 200 with R = 115)
-  const cx = 200;
+  // Radar Geometry Constants (Centered at 260, 200 with R = 120 in a 520x400 viewBox)
+  const cx = 260;
   const cy = 200;
-  const maxR = 115;
+  const maxR = 120;
 
   const getCoord = (domainIndex, score) => {
     const norm = Math.max(0, Math.min(100, score || 0)) / 100.0;
@@ -517,19 +517,20 @@ export default function PostTestResults({
             </div>
 
             {/* Interactive Mode Filter: Both (Overlay) | Before | After */}
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.35rem', marginBottom: '0.85rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.45rem', marginBottom: '0.85rem' }}>
               <button
                 onClick={() => setRadarViewMode('overlay')}
                 style={{
-                  background: radarViewMode === 'overlay' ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255, 255, 255, 0.04)',
-                  border: `1px solid ${radarViewMode === 'overlay' ? '#38bdf8' : 'rgba(255, 255, 255, 0.1)'}`,
+                  background: radarViewMode === 'overlay' ? 'rgba(56, 189, 248, 0.25)' : 'rgba(255, 255, 255, 0.04)',
+                  border: `1px solid ${radarViewMode === 'overlay' ? '#38bdf8' : 'rgba(255, 255, 255, 0.12)'}`,
                   color: radarViewMode === 'overlay' ? '#ffffff' : '#94a3b8',
-                  borderRadius: '6px',
-                  padding: '0.3rem 0.65rem',
-                  fontSize: '0.72rem',
+                  borderRadius: '8px',
+                  padding: '0.42rem 0.85rem',
+                  fontSize: '0.82rem',
                   fontWeight: '700',
                   cursor: 'pointer',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s',
+                  boxShadow: radarViewMode === 'overlay' ? '0 0 12px rgba(56, 189, 248, 0.3)' : 'none'
                 }}
               >
                 Dual-Layer Overlay
@@ -537,15 +538,16 @@ export default function PostTestResults({
               <button
                 onClick={() => setRadarViewMode('before')}
                 style={{
-                  background: radarViewMode === 'before' ? 'rgba(244, 63, 94, 0.2)' : 'rgba(255, 255, 255, 0.04)',
-                  border: `1px solid ${radarViewMode === 'before' ? '#f43f5e' : 'rgba(255, 255, 255, 0.1)'}`,
+                  background: radarViewMode === 'before' ? 'rgba(244, 63, 94, 0.25)' : 'rgba(255, 255, 255, 0.04)',
+                  border: `1px solid ${radarViewMode === 'before' ? '#f43f5e' : 'rgba(255, 255, 255, 0.12)'}`,
                   color: radarViewMode === 'before' ? '#ffffff' : '#94a3b8',
-                  borderRadius: '6px',
-                  padding: '0.3rem 0.65rem',
-                  fontSize: '0.72rem',
+                  borderRadius: '8px',
+                  padding: '0.42rem 0.85rem',
+                  fontSize: '0.82rem',
                   fontWeight: '700',
                   cursor: 'pointer',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s',
+                  boxShadow: radarViewMode === 'before' ? '0 0 12px rgba(244, 63, 94, 0.3)' : 'none'
                 }}
               >
                 Before (Baseline)
@@ -553,24 +555,25 @@ export default function PostTestResults({
               <button
                 onClick={() => setRadarViewMode('after')}
                 style={{
-                  background: radarViewMode === 'after' ? 'rgba(45, 212, 191, 0.2)' : 'rgba(255, 255, 255, 0.04)',
-                  border: `1px solid ${radarViewMode === 'after' ? '#2dd4bf' : 'rgba(255, 255, 255, 0.1)'}`,
+                  background: radarViewMode === 'after' ? 'rgba(45, 212, 191, 0.25)' : 'rgba(255, 255, 255, 0.04)',
+                  border: `1px solid ${radarViewMode === 'after' ? '#2dd4bf' : 'rgba(255, 255, 255, 0.12)'}`,
                   color: radarViewMode === 'after' ? '#ffffff' : '#94a3b8',
-                  borderRadius: '6px',
-                  padding: '0.3rem 0.65rem',
-                  fontSize: '0.72rem',
+                  borderRadius: '8px',
+                  padding: '0.42rem 0.85rem',
+                  fontSize: '0.82rem',
                   fontWeight: '700',
                   cursor: 'pointer',
-                  transition: 'all 0.2s'
+                  transition: 'all 0.2s',
+                  boxShadow: radarViewMode === 'after' ? '0 0 12px rgba(45, 212, 191, 0.3)' : 'none'
                 }}
               >
                 After (Growth)
               </button>
             </div>
 
-            {/* High-Detail Radar Display with Exact Before/After Metrics */}
+            {/* High-Detail Radar Display with Large Bold Typography & Clear Horizontal Labels */}
             <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <svg viewBox="0 0 400 400" style={{ width: '100%', maxWidth: '375px', height: 'auto', overflow: 'visible' }}>
+              <svg viewBox="0 0 520 400" style={{ width: '100%', maxWidth: '480px', height: 'auto', overflow: 'visible' }}>
                 <defs>
                   <filter id="cyanGlow" x="-20%" y="-20%" width="140%" height="140%">
                     <feGaussianBlur stdDeviation="3.5" result="blur" />
@@ -580,22 +583,25 @@ export default function PostTestResults({
                     <feGaussianBlur stdDeviation="3" result="blur" />
                     <feComposite in="SourceGraphic" in2="blur" operator="over" />
                   </filter>
+                  <filter id="badgeShadow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feDropShadow dx="0" dy="1.5" stdDeviation="2.5" floodColor="#000000" floodOpacity="0.9" />
+                  </filter>
                 </defs>
 
                 {/* Outer Polar Guide Rings */}
                 <circle cx={cx} cy={cy} r={maxR + 14} stroke="rgba(45, 212, 191, 0.35)" strokeWidth="1.2" fill="none" />
                 <circle cx={cx} cy={cy} r={maxR + 20} stroke="rgba(45, 212, 191, 0.15)" strokeWidth="1" strokeDasharray="3 4" fill="none" />
 
-                {/* Concentric Grid Range Rings with Subtle Shading */}
-                {[23, 46, 69, 92, 115].map((r, idx) => (
+                {/* Concentric Grid Range Rings */}
+                {[24, 48, 72, 96, 120].map((r, idx) => (
                   <circle 
                     key={r} 
                     cx={cx} 
                     cy={cy} 
                     r={r} 
-                    stroke={idx === 4 ? 'rgba(45, 212, 191, 0.35)' : 'rgba(45, 212, 191, 0.12)'} 
+                    stroke={idx === 4 ? 'rgba(45, 212, 191, 0.38)' : 'rgba(45, 212, 191, 0.14)'} 
                     strokeWidth="1" 
-                    fill={idx % 2 === 0 ? 'rgba(15, 23, 42, 0.25)' : 'none'} 
+                    fill={idx % 2 === 0 ? 'rgba(15, 23, 42, 0.3)' : 'none'} 
                   />
                 ))}
 
@@ -603,11 +609,12 @@ export default function PostTestResults({
                 <line x1={cx} y1={cy - maxR - 10} x2={cx} y2={cy + maxR + 10} stroke="rgba(45, 212, 191, 0.25)" strokeWidth="1" />
                 <line x1={cx - maxR - 10} y1={cy} x2={cx + maxR + 10} y2={cy} stroke="rgba(45, 212, 191, 0.25)" strokeWidth="1" />
 
-                {/* Grid Scale Marks along Axes */}
-                <text x={cx + 6} y={cy - 23} fill="#64748b" fontSize="7.5" fontFamily="monospace">20</text>
-                <text x={cx + 6} y={cy - 69} fill="#64748b" fontSize="7.5" fontFamily="monospace">60</text>
-                <text x={cx + 6} y={cy - 92} fill="#64748b" fontSize="7.5" fontFamily="monospace">80</text>
-                <text x={cx + 6} y={cy - 115} fill="#2dd4bf" fontSize="8" fontWeight="bold" fontFamily="monospace">100</text>
+                {/* Scale Numbers Along Axis */}
+                <text x={cx + 7} y={cy - 24 + 3.5} fill="#64748b" fontSize="9.5" fontFamily="monospace">20</text>
+                <text x={cx + 7} y={cy - 48 + 3.5} fill="#64748b" fontSize="9.5" fontFamily="monospace">40</text>
+                <text x={cx + 7} y={cy - 72 + 3.5} fill="#64748b" fontSize="9.5" fontFamily="monospace">60</text>
+                <text x={cx + 7} y={cy - 96 + 3.5} fill="#64748b" fontSize="9.5" fontFamily="monospace">80</text>
+                <text x={cx + 7} y={cy - 120 + 3.5} fill="#2dd4bf" fontSize="10.5" fontWeight="bold" fontFamily="monospace">100</text>
 
                 {/* ====================================================== */}
                 {/* 1. BASELINE POLYGON (Rose Dashed Perimeter & Markers) */}
@@ -618,8 +625,8 @@ export default function PostTestResults({
                       d={prePath} 
                       fill="rgba(244, 63, 94, 0.18)" 
                       stroke="#f43f5e" 
-                      strokeWidth="2.4" 
-                      strokeDasharray="5 3"
+                      strokeWidth="2.8" 
+                      strokeDasharray="6 3"
                       strokeLinejoin="round" 
                       filter="url(#roseGlow)"
                     />
@@ -628,10 +635,10 @@ export default function PostTestResults({
                         key={`pre-dot-${idx}`} 
                         cx={p.x} 
                         cy={p.y} 
-                        r="4.5" 
+                        r="5" 
                         fill="#f43f5e" 
                         stroke="#ffffff" 
-                        strokeWidth="1.5" 
+                        strokeWidth="1.8" 
                       />
                     ))}
                   </g>
@@ -644,9 +651,9 @@ export default function PostTestResults({
                   <g>
                     <path 
                       d={postPath} 
-                      fill={radarViewMode === 'after' ? 'rgba(45, 212, 191, 0.35)' : 'rgba(45, 212, 191, 0.22)'} 
+                      fill={radarViewMode === 'after' ? 'rgba(45, 212, 191, 0.35)' : 'rgba(45, 212, 191, 0.24)'} 
                       stroke="#2dd4bf" 
-                      strokeWidth="2.8" 
+                      strokeWidth="3.2" 
                       strokeLinejoin="round" 
                       filter="url(#cyanGlow)" 
                     />
@@ -655,120 +662,186 @@ export default function PostTestResults({
                         key={`post-dot-${idx}`} 
                         cx={p.x} 
                         cy={p.y} 
-                        r="5" 
+                        r="6" 
                         fill="#2dd4bf" 
                         stroke="#ffffff" 
-                        strokeWidth="2" 
+                        strokeWidth="2.2" 
                       />
                     ))}
                   </g>
                 )}
 
                 {/* ====================================================== */}
-                {/* 3. CARDINAL LABELS & BEFORE → AFTER CHIP BADGES        */}
+                {/* 3. CARDINAL LABELS & BEFORE -> AFTER CHIP BADGES        */}
                 {/* ====================================================== */}
 
                 {/* TOP AXIS: Spatial-Visual Memory */}
-                <text x={cx} y={cy - maxR - 26} textAnchor="middle" fill="#f8fafc" fontSize="10.5" fontWeight="700">
+                <text x={cx} y={32} textAnchor="middle" fill="#f8fafc" fontSize="13.5" fontWeight="800" letterSpacing="0.02em" filter="url(#badgeShadow)">
                   Spatial-Visual Memory
                 </text>
-                <g transform={`translate(${cx - 52}, ${cy - maxR - 22})`}>
-                  <rect x="0" y="0" width="104" height="15" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="rgba(74, 222, 128, 0.45)" strokeWidth="1" />
-                  <text x="7" y="11" fill="#f43f5e" fontSize="8.5" fontWeight="700">{dScores.sv.pre}</text>
-                  <text x="25" y="11" fill="#94a3b8" fontSize="8">→</text>
-                  <text x="36" y="11" fill="#2dd4bf" fontSize="8.5" fontWeight="800">{dScores.sv.post}</text>
-                  <text x="65" y="11" fill="#4ade80" fontSize="8.5" fontWeight="800">
+                <g transform={`translate(${cx - 62}, 42)`}>
+                  <rect x="0" y="0" width="124" height="23" rx="6" fill="rgba(15, 23, 42, 0.95)" stroke="rgba(74, 222, 128, 0.45)" strokeWidth="1.2" />
+                  <text x="12" y="16" fill="#f43f5e" fontSize="12" fontWeight="800">{dScores.sv.pre}</text>
+                  <text x="36" y="15.5" fill="#94a3b8" fontSize="11">→</text>
+                  <text x="50" y="16" fill="#2dd4bf" fontSize="12" fontWeight="800">{dScores.sv.post}</text>
+                  <text x="78" y="16" fill="#4ade80" fontSize="12" fontWeight="800">
                     {dScores.sv.post - dScores.sv.pre > 0 ? `+${dScores.sv.post - dScores.sv.pre} ↗` : '0 →'}
                   </text>
                 </g>
 
-                {/* RIGHT AXIS: Logical-Mathematical */}
-                <text 
-                  x={cx + maxR + 22} 
-                  y={cy} 
-                  textAnchor="middle" 
-                  fill="#f8fafc" 
-                  fontSize="10" 
-                  fontWeight="700" 
-                  transform={`rotate(90, ${cx + maxR + 22}, ${cy})`}
-                >
-                  Logical-Mathematical
+                {/* RIGHT AXIS: Logical-Mathematical (Clean horizontal layout) */}
+                <text x={448} y={185} textAnchor="middle" fill="#f8fafc" fontSize="13.5" fontWeight="800" letterSpacing="0.02em" filter="url(#badgeShadow)">
+                  Logical-Math
                 </text>
-                <g transform={`translate(${cx + maxR + 28}, ${cy - 8})`}>
-                  <rect x="0" y="0" width="70" height="16" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="rgba(56, 189, 248, 0.3)" strokeWidth="1" />
-                  <text x="6" y="11.5" fill="#f43f5e" fontSize="8" fontWeight="700">{dScores.lm.pre}</text>
-                  <text x="23" y="11.5" fill="#94a3b8" fontSize="8">→</text>
-                  <text x="33" y="11.5" fill="#2dd4bf" fontSize="8" fontWeight="800">{dScores.lm.post}</text>
-                  <text x="50" y="11.5" fill="#64748b" fontSize="7.5">(=)</text>
+                <g transform="translate(391, 196)">
+                  <rect x="0" y="0" width="114" height="23" rx="6" fill="rgba(15, 23, 42, 0.95)" stroke="rgba(56, 189, 248, 0.35)" strokeWidth="1.2" />
+                  <text x="12" y="16" fill="#f43f5e" fontSize="12" fontWeight="800">{dScores.lm.pre}</text>
+                  <text x="36" y="15.5" fill="#94a3b8" fontSize="11">→</text>
+                  <text x="50" y="16" fill="#2dd4bf" fontSize="12" fontWeight="800">{dScores.lm.post}</text>
+                  <text x="78" y="16" fill={dScores.lm.post > dScores.lm.pre ? '#4ade80' : (dScores.lm.post < dScores.lm.pre ? '#ef4444' : '#94a3b8')} fontSize="11" fontWeight="700">
+                    {dScores.lm.post === dScores.lm.pre ? '(=)' : (dScores.lm.post > dScores.lm.pre ? `+${dScores.lm.post - dScores.lm.pre} ↗` : `${dScores.lm.post - dScores.lm.pre} ↘`)}
+                  </text>
                 </g>
 
                 {/* BOTTOM AXIS: Reflexes & Focus */}
-                <text x={cx} y={cy + maxR + 24} textAnchor="middle" fill="#f8fafc" fontSize="10.5" fontWeight="700">
+                <text x={cx} y={350} textAnchor="middle" fill="#f8fafc" fontSize="13.5" fontWeight="800" letterSpacing="0.02em" filter="url(#badgeShadow)">
                   Reflexes & Focus
                 </text>
-                <g transform={`translate(${cx - 45}, ${cy + maxR + 28})`}>
-                  <rect x="0" y="0" width="90" height="15" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="rgba(56, 189, 248, 0.3)" strokeWidth="1" />
-                  <text x="8" y="11" fill="#f43f5e" fontSize="8.5" fontWeight="700">{dScores.rf.pre}</text>
-                  <text x="28" y="11" fill="#94a3b8" fontSize="8">→</text>
-                  <text x="39" y="11" fill="#2dd4bf" fontSize="8.5" fontWeight="800">{dScores.rf.post}</text>
-                  <text x="63" y="11" fill="#64748b" fontSize="8">(=)</text>
+                <g transform={`translate(${cx - 57}, 360)`}>
+                  <rect x="0" y="0" width="114" height="23" rx="6" fill="rgba(15, 23, 42, 0.95)" stroke="rgba(56, 189, 248, 0.35)" strokeWidth="1.2" />
+                  <text x="12" y="16" fill="#f43f5e" fontSize="12" fontWeight="800">{dScores.rf.pre}</text>
+                  <text x="36" y="15.5" fill="#94a3b8" fontSize="11">→</text>
+                  <text x="50" y="16" fill="#2dd4bf" fontSize="12" fontWeight="800">{dScores.rf.post}</text>
+                  <text x="78" y="16" fill={dScores.rf.post > dScores.rf.pre ? '#4ade80' : (dScores.rf.post < dScores.rf.pre ? '#ef4444' : '#94a3b8')} fontSize="11" fontWeight="700">
+                    {dScores.rf.post === dScores.rf.pre ? '(=)' : (dScores.rf.post > dScores.rf.pre ? `+${dScores.rf.post - dScores.rf.pre} ↗` : `${dScores.rf.post - dScores.rf.pre} ↘`)}
+                  </text>
                 </g>
 
-                {/* LEFT AXIS: Executive Strategy */}
-                <text 
-                  x={cx - maxR - 22} 
-                  y={cy} 
-                  textAnchor="middle" 
-                  fill="#f8fafc" 
-                  fontSize="10" 
-                  fontWeight="700" 
-                  transform={`rotate(-90, ${cx - maxR - 22}, ${cy})`}
-                >
+                {/* LEFT AXIS: Executive Strategy (Clean horizontal layout) */}
+                <text x={72} y={185} textAnchor="middle" fill="#f8fafc" fontSize="13.5" fontWeight="800" letterSpacing="0.02em" filter="url(#badgeShadow)">
                   Executive Strategy
                 </text>
-                <g transform={`translate(${cx - maxR - 98}, ${cy - 8})`}>
-                  <rect x="0" y="0" width="70" height="16" rx="4" fill="rgba(15, 23, 42, 0.85)" stroke="rgba(56, 189, 248, 0.3)" strokeWidth="1" />
-                  <text x="6" y="11.5" fill="#f43f5e" fontSize="8" fontWeight="700">{dScores.es.pre}</text>
-                  <text x="23" y="11.5" fill="#94a3b8" fontSize="8">→</text>
-                  <text x="33" y="11.5" fill="#2dd4bf" fontSize="8" fontWeight="800">{dScores.es.post}</text>
-                  <text x="50" y="11.5" fill="#64748b" fontSize="7.5">(=)</text>
+                <g transform="translate(15, 196)">
+                  <rect x="0" y="0" width="114" height="23" rx="6" fill="rgba(15, 23, 42, 0.95)" stroke="rgba(56, 189, 248, 0.35)" strokeWidth="1.2" />
+                  <text x="12" y="16" fill="#f43f5e" fontSize="12" fontWeight="800">{dScores.es.pre}</text>
+                  <text x="36" y="15.5" fill="#94a3b8" fontSize="11">→</text>
+                  <text x="50" y="16" fill="#2dd4bf" fontSize="12" fontWeight="800">{dScores.es.post}</text>
+                  <text x="78" y="16" fill={dScores.es.post > dScores.es.pre ? '#4ade80' : (dScores.es.post < dScores.es.pre ? '#ef4444' : '#94a3b8')} fontSize="11" fontWeight="700">
+                    {dScores.es.post === dScores.es.pre ? '(=)' : (dScores.es.post > dScores.es.pre ? `+${dScores.es.post - dScores.es.pre} ↗` : `${dScores.es.post - dScores.es.pre} ↘`)}
+                  </text>
                 </g>
               </svg>
             </div>
           </div>
 
-          {/* Bottom Telemetry & Comparison Strip */}
+          {/* Bottom Telemetry HUD: 3 Distinct High-Visibility Metrics */}
           <div style={{ marginTop: '0.85rem' }}>
             <div style={{ 
-              background: 'rgba(15, 23, 42, 0.7)', 
-              border: '1px solid rgba(56, 189, 248, 0.2)', 
-              borderRadius: '8px', 
-              padding: '0.55rem 0.75rem',
-              display: 'flex',
-              justifyContent: 'space-around',
-              alignItems: 'center',
-              fontSize: '0.74rem'
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(3, 1fr)', 
+              gap: '0.65rem' 
             }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <span style={{ width: '12px', height: '3px', background: '#f43f5e', borderTop: '1px dashed #f43f5e', display: 'inline-block' }}></span>
-                <span style={{ color: '#94a3b8' }}>Baseline Avg:</span>
-                <strong style={{ color: '#f43f5e' }}>{avgPre}</strong>
-              </span>
+              {/* Baseline Avg */}
+              <div style={{ 
+                background: 'rgba(15, 23, 42, 0.85)', 
+                border: '1px solid rgba(244, 63, 94, 0.35)', 
+                borderRadius: '10px', 
+                padding: '0.65rem 0.5rem',
+                textAlign: 'center',
+                boxShadow: '0 4px 15px rgba(0, 0, 0, 0.35)'
+              }}>
+                <div style={{ 
+                  color: '#94a3b8', 
+                  fontSize: '0.68rem', 
+                  textTransform: 'uppercase', 
+                  fontWeight: '700', 
+                  letterSpacing: '0.05em',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.35rem'
+                }}>
+                  <span style={{ width: '8px', height: '2px', background: '#f43f5e', borderTop: '1px dashed #f43f5e' }}></span>
+                  Baseline Avg
+                </div>
+                <div style={{ 
+                  color: '#f43f5e', 
+                  fontSize: '1.4rem', 
+                  fontWeight: '800', 
+                  marginTop: '0.25rem',
+                  lineHeight: 1
+                }}>
+                  {avgPre}
+                </div>
+              </div>
 
-              <span style={{ color: '#475569' }}>|</span>
+              {/* Post-Test Avg */}
+              <div style={{ 
+                background: 'rgba(15, 23, 42, 0.85)', 
+                border: '1px solid rgba(45, 212, 191, 0.4)', 
+                borderRadius: '10px', 
+                padding: '0.65rem 0.5rem',
+                textAlign: 'center',
+                boxShadow: '0 4px 15px rgba(0, 0, 0, 0.35)'
+              }}>
+                <div style={{ 
+                  color: '#94a3b8', 
+                  fontSize: '0.68rem', 
+                  textTransform: 'uppercase', 
+                  fontWeight: '700', 
+                  letterSpacing: '0.05em',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.35rem'
+                }}>
+                  <span style={{ width: '8px', height: '2px', background: '#2dd4bf', boxShadow: '0 0 4px #2dd4bf' }}></span>
+                  Post-Test Avg
+                </div>
+                <div style={{ 
+                  color: '#2dd4bf', 
+                  fontSize: '1.4rem', 
+                  fontWeight: '800', 
+                  marginTop: '0.25rem',
+                  lineHeight: 1,
+                  textShadow: '0 0 10px rgba(45, 212, 191, 0.4)'
+                }}>
+                  {avgPost}
+                </div>
+              </div>
 
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <span style={{ width: '12px', height: '3px', background: '#2dd4bf', display: 'inline-block', boxShadow: '0 0 4px #2dd4bf' }}></span>
-                <span style={{ color: '#94a3b8' }}>Post Avg:</span>
-                <strong style={{ color: '#2dd4bf' }}>{avgPost}</strong>
-              </span>
-
-              <span style={{ color: '#475569' }}>|</span>
-
-              <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                <span style={{ color: '#94a3b8' }}>Delta:</span>
-                <strong style={{ color: '#4ade80' }}>+{Math.round(netChange)} pts ({pctChange > 0 ? `+${pctChange}%` : `${pctChange}%`})</strong>
-              </span>
+              {/* Net Growth Delta */}
+              <div style={{ 
+                background: 'rgba(15, 23, 42, 0.85)', 
+                border: '1px solid rgba(74, 222, 128, 0.4)', 
+                borderRadius: '10px', 
+                padding: '0.65rem 0.5rem',
+                textAlign: 'center',
+                boxShadow: '0 4px 15px rgba(0, 0, 0, 0.35)'
+              }}>
+                <div style={{ 
+                  color: '#94a3b8', 
+                  fontSize: '0.68rem', 
+                  textTransform: 'uppercase', 
+                  fontWeight: '700', 
+                  letterSpacing: '0.05em' 
+                }}>
+                  Net Growth
+                </div>
+                <div style={{ 
+                  color: netChange >= 0 ? '#4ade80' : '#ef4444', 
+                  fontSize: '1.4rem', 
+                  fontWeight: '800', 
+                  marginTop: '0.25rem',
+                  lineHeight: 1,
+                  textShadow: netChange > 0 ? '0 0 10px rgba(74, 222, 128, 0.4)' : 'none'
+                }}>
+                  {netChange > 0 ? `+${Math.round(netChange)}` : Math.round(netChange)} <span style={{ fontSize: '0.78rem', fontWeight: '700' }}>pts</span>
+                </div>
+                <div style={{ color: '#4ade80', fontSize: '0.7rem', fontWeight: '700', marginTop: '0.15rem' }}>
+                  ({pctChange > 0 ? `+${pctChange}%` : `${pctChange}%`})
+                </div>
+              </div>
             </div>
           </div>
         </div>
