@@ -653,153 +653,85 @@ export default function PostTestResults({
 
 
 
-            {/* Horizontal Progress Delta Bars with full domain names and vibrant domain colors */}
+            {/* Subtle Divider between Table and Progress Bars */}
+            <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.08)', margin: '0.75rem 0 1rem 0' }}></div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginTop: '0.5rem' }}>
-
+            {/* Horizontal Progress Delta Bars with clean spacing and no label-bar collision */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
               {domains.map(d => {
-
                 const pre = Math.max(0, Math.min(100, Math.round(preScores ? preScores[d.key] : 0)));
-
                 const post = Math.max(0, Math.min(100, Math.round(postScores ? postScores[d.key] : 0)));
-
                 const delta = post - pre;
-
                 return (
-
-                  <div key={d.key} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.82rem' }}>
-
-                    <div style={{ width: '135px', flexShrink: 0, color: d.color, fontWeight: '700', whiteSpace: 'nowrap' }}>
-
+                  <div key={d.key} style={{ display: 'flex', alignItems: 'center', gap: '0.95rem', fontSize: '0.82rem' }}>
+                    {/* Domain Label with generous width to prevent touching progress bar */}
+                    <div style={{ width: '144px', minWidth: '144px', flexShrink: 0, color: d.color, fontWeight: '700', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
                       {d.label}
-
                     </div>
-
                     
-
+                    {/* Progress Bar Track */}
                     <div style={{ 
-
                       flex: 1, 
-
                       position: 'relative', 
-
                       height: '9px', 
-
-                      background: 'rgba(255,255,255,0.06)', 
-
-                      border: '1px solid rgba(255,255,255,0.08)',
-
+                      background: 'rgba(255, 255, 255, 0.06)', 
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
                       borderRadius: '5px', 
-
                       overflow: 'hidden' 
-
                     }}>
-
                       {/* Baseline fill colored by the domain theme */}
-
                       <div style={{ 
-
                         position: 'absolute', 
-
                         left: 0, 
-
                         top: 0, 
-
                         height: '100%', 
-
                         width: `${pre}%`, 
-
                         background: d.color,
-
                         opacity: 0.55
-
                       }}></div>
-
                       
-
                       {/* Positive Improvement Delta */}
-
                       {delta > 0 && (
-
                         <div style={{ 
-
                           position: 'absolute', 
-
                           left: `${pre}%`, 
-
                           top: 0, 
-
                           height: '100%', 
-
                           width: `${Math.min(100 - pre, delta)}%`, 
-
                           background: '#4ade80', 
-
                           boxShadow: '0 0 10px rgba(74, 222, 128, 0.8)' 
-
                         }}></div>
-
                       )}
-
                       
-
                       {/* Negative Regression Delta */}
-
                       {delta < 0 && (
-
                         <div style={{ 
-
                           position: 'absolute', 
-
                           left: `${post}%`, 
-
                           top: 0, 
-
                           height: '100%', 
-
                           width: `${Math.abs(delta)}%`, 
-
                           background: '#ef4444',
-
                           boxShadow: '0 0 10px rgba(239, 68, 68, 0.8)'
-
                         }}></div>
-
                       )}
-
                     </div>
 
-
-
-                    <div style={{ width: '45px', textAlign: 'right', fontWeight: '700', fontSize: '0.82rem', flexShrink: 0 }}>
-
+                    {/* Right-aligned Delta Badge on a single line */}
+                    <div style={{ width: '56px', minWidth: '56px', textAlign: 'right', fontWeight: '700', fontSize: '0.82rem', flexShrink: 0, whiteSpace: 'nowrap' }}>
                       {delta > 0 ? (
-
                         <span style={{ color: '#4ade80' }}>+{delta} ↗</span>
-
                       ) : delta < 0 ? (
-
                         <span style={{ color: '#ef4444' }}>{delta} ↘</span>
-
                       ) : (
-
                         <span style={{ color: '#64748b' }}>0 →</span>
-
                       )}
-
                     </div>
-
                   </div>
-
                 );
-
               })}
-
             </div>
-
           </div>
-
-
 
           {/* Legend */}
 
