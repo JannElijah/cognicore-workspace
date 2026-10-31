@@ -17,7 +17,7 @@ export const GAME_VALIDITY_CITATIONS = {
   SpeedTap: {
     citation: "Hadjiaros et al. (2021)",
     studyTitle: "Gamified Cognitive Assessments for Response Speed & Visuospatial Attention",
-    summary: "Based on research by Hadjiaros et al. (2021), game-based cognitive assessments incorporating reaction-time tasks effectively measure visuospatial attention and response speed. Their study validated gamified cognitive tasks and found that participants exhibited performance patterns comparable to traditional clinical cognitive assessments.",
+    summary: "Based on research by Hadjiaros et al. (2021), game-based cognitive assessments incorporating reaction-time tasks effectively measure visuospatial attention and response speed. Their study validated gamified cognitive tasks and found that participants exhibited performance patterns comparable to traditional standardized cognitive assessments.",
     constructs: ["Processing Speed", "Visuospatial Attention", "Motor Reaction Latency"],
     clinicalEquivalents: ["Simple Reaction Time (SRT)", "Visual Choice Reaction Task"]
   },
@@ -66,7 +66,7 @@ export const GAME_VALIDITY_CITATIONS = {
   LogicLink: {
     citation: "Pedersen et al. (2020)",
     studyTitle: "Large-Scale Behavioral Analysis of Pattern Recognition & Reasoning (N > 10,000)",
-    summary: "Pedersen et al. (2020) validated game-based assessments on over 10,000 participants. Their study demonstrated that in-game behavioral data from pattern recognition tasks can reliably predict reasoning and decision-making abilities with accuracy comparable to traditional clinical assessments.",
+    summary: "Pedersen et al. (2020) validated game-based assessments on over 10,000 participants. Their study demonstrated that in-game behavioral data from pattern recognition tasks can reliably predict reasoning and decision-making abilities with accuracy comparable to traditional psychometric assessments.",
     constructs: ["Inductive Reasoning", "Pattern Extraction", "Rule Induction"],
     clinicalEquivalents: ["Raven's Progressive Matrices", "Cattell Culture Fair Test"]
   },
@@ -1112,7 +1112,7 @@ const CyberDashboard = ({
             {GAME_VALIDITY_CITATIONS[validityModalGame.game.id]?.clinicalEquivalents && (
               <div style={{ marginBottom: '1.45rem' }}>
                 <div style={{ fontSize: '0.7rem', fontWeight: '800', color: '#94a3b8', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '0.45rem' }}>
-                  ⚖️ Standardized Clinical Equivalents
+                  ⚖️ Standardized Psychometric Equivalents
                 </div>
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   {GAME_VALIDITY_CITATIONS[validityModalGame.game.id].clinicalEquivalents.map((eq, i) => (

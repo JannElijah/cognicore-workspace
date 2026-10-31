@@ -211,7 +211,7 @@ export default function Dashboard({
                   type="text" 
                   value={activeDashboardUser} 
                   onChange={(e) => setActiveDashboardUser(e.target.value)} 
-                  placeholder="e.g. player_one" 
+                  placeholder={currentUser || "e.g. subject_demo"} 
                   style={{
                     background: '#09090b',
                     border: '1.5px solid #4c1d95',
@@ -280,7 +280,7 @@ export default function Dashboard({
             )}
 
             {/* Cognitive Skills Score Row */}
-            <h2 className="section-title">Cognitive Domain Profiling <span title="Scoring system based on standard clinical normative baselines for reaction time and accuracy." style={{fontSize: '1rem', cursor: 'help'}}>ⓘ</span></h2>
+            <h2 className="section-title">Cognitive Domain Profiling <span title="Scoring system based on standardized normative psychometric baselines for reaction time and accuracy." style={{fontSize: '1rem', cursor: 'help'}}>ⓘ</span></h2>
             <div className="game-grid" style={{ marginBottom: '3rem' }}>
               
               {/* Spatial-Visual Memory Card */}
@@ -486,7 +486,7 @@ export default function Dashboard({
 
               {/* Cohort Comparison Plot */}
               <div className="game-card" style={{ width: '100%', alignItems: 'stretch', boxSizing: 'border-box' }}>
-                <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(var(--rgb-primary),0.7))',flexShrink:0}} xmlns="http://www.w3.org/2000/svg"><rect x="3" y="12" width="4" height="9" rx="1" fill="var(--color-primary)"/><rect x="10" y="6" width="4" height="15" rx="1" fill="var(--color-primary)"/><rect x="17" y="3" width="4" height="18" rx="1" fill="var(--color-primary)" fillOpacity="0.7"/></svg> Cohort Comparison (vs Clinical)</h3>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{filter:'drop-shadow(0 0 4px rgba(var(--rgb-primary),0.7))',flexShrink:0}} xmlns="http://www.w3.org/2000/svg"><rect x="3" y="12" width="4" height="9" rx="1" fill="var(--color-primary)"/><rect x="10" y="6" width="4" height="15" rx="1" fill="var(--color-primary)"/><rect x="17" y="3" width="4" height="18" rx="1" fill="var(--color-primary)" fillOpacity="0.7"/></svg> Cohort Comparison (vs Normative Benchmark)</h3>
                 <div style={{ position: 'relative', height: '240px', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '8px', padding: '10px' }}>
                   {chartsLoading ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem', height: '100%' }}>
@@ -499,7 +499,7 @@ export default function Dashboard({
                   ) : !cohortComparison || (cohortComparison.user_averages.reaction_time_ms === 0 && cohortComparison.user_averages.accuracy_rate === 0) ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#64748b', fontSize: '0.85rem', textAlign: 'center' }}>
                       <span>No user averages computed yet.</span>
-                      <span style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: '#4b5563' }}>Complete sessions to compare vs clinical database.</span>
+                      <span style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: '#4b5563' }}>Complete sessions to compare vs normative benchmark cohort.</span>
                     </div>
                   ) : (
                     <Bar data={barChartData} options={barChartOptions} />
@@ -716,7 +716,7 @@ export default function Dashboard({
                   <div style={{ fontSize: '0.8rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 'bold' }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{verticalAlign: "middle", marginRight: "6px"}}><path d="M9 21h6"/><path d="M10 21v-2a4 4 0 01-4-4 7 7 0 1112 0 4 4 0 01-4 4v2"/></svg> Personalized Adviser Recommendation</div>
                   {isMobile && (
                     <div style={{ fontSize: '0.8rem', color: '#7dd3fc', margin: '0.4rem 0', lineHeight: '1.4' }}>
-                      💡 <strong>Go to Desktop to unlock potential:</strong> Clinical benchmarks require PC precision.
+                      💡 <strong>Go to Desktop to unlock potential:</strong> Standardized benchmarks require PC precision.
                     </div>
                   )}
                   <button 

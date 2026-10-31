@@ -995,7 +995,7 @@ return (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                       <span style={{ fontSize: '0.95rem' }}>🛡️</span>
                       <span style={{ color: '#c084fc', fontSize: '0.78rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                        Empirical Clinical Verdict
+                        Empirical Psychometric Verdict
                       </span>
                     </div>
                     <span style={{ 

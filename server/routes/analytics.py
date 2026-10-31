@@ -68,6 +68,8 @@ analytics_bp = Blueprint('analytics_bp', __name__)
 @analytics_bp.route('/api/user-analytics/<username>', methods=['GET'])
 @token_required
 def get_user_analytics(current_user_id, current_username, username):
+    if username in ['player_one', '', None]:
+        username = current_username
     if current_username != username:
         return jsonify({'status': 'error', 'message': 'Unauthorized: you can only view your own analytics'}), 403
 
@@ -646,6 +648,8 @@ def get_cohort_analytics():
 @analytics_bp.route('/api/user-session-history/<username>', methods=['GET'])
 @token_required
 def get_user_session_history(current_user_id, current_username, username):
+    if username in ["player_one", "", None]:
+        username = current_username
     if current_username != username:
         return jsonify({"status": "error", "message": "Unauthorized: you can only view your own session history"}), 403
     conn = get_db_connection()
@@ -750,6 +754,8 @@ def get_session_metrics(current_user_id, current_username, session_id):
 @analytics_bp.route('/api/cohort-comparison/<username>', methods=['GET'])
 @token_required
 def get_cohort_comparison(current_user_id, current_username, username):
+    if username in ["player_one", "", None]:
+        username = current_username
     if current_username != username:
         return jsonify({"status": "error", "message": "Unauthorized: you can only view your own cohort comparison"}), 403
     conn = get_db_connection()
@@ -813,6 +819,8 @@ def get_cohort_comparison(current_user_id, current_username, username):
 @analytics_bp.route('/api/archetype-progression/<username>', methods=['GET'])
 @token_required
 def get_archetype_progression(current_user_id, current_username, username):
+    if username in ["player_one", "", None]:
+        username = current_username
     if current_username != username:
         return jsonify({"status": "error", "message": "Unauthorized: you can only view your own archetype progression"}), 403
     conn = get_db_connection()
