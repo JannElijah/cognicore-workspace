@@ -39,6 +39,7 @@ const ProgressRing = ({ radius, stroke, progress, color }) => {
 };
 
 export default function Dashboard({
+  currentUser,
   activeDashboardUser, setActiveDashboardUser, fetchDashboardData, chartsLoading, chartsError,
   cohortComparison, latestSessionMetrics, getRadarChartData, radarOptions, getPerformanceTrendData,
   performanceTrendOptions, getConsistencyTrendData, sessionHistory, archetypeHistory, setActiveGame, prescribedGame,
@@ -211,7 +212,7 @@ export default function Dashboard({
                   type="text" 
                   value={activeDashboardUser} 
                   onChange={(e) => setActiveDashboardUser(e.target.value)} 
-                  placeholder={currentUser || "e.g. subject_demo"} 
+                  placeholder={currentUser || activeDashboardUser || "e.g. subject_demo"} 
                   style={{
                     background: '#09090b',
                     border: '1.5px solid #4c1d95',

@@ -2478,6 +2478,7 @@ export default function App() {
           />
         ) : showDashboard ? (
           <Dashboard 
+            currentUser={currentUser}
             activeDashboardUser={activeDashboardUser}
             setActiveDashboardUser={setActiveDashboardUser}
             fetchDashboardData={fetchDashboardData}
