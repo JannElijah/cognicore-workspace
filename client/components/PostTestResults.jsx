@@ -33,10 +33,10 @@ export default function PostTestResults({
     if (delta > maxGrowth.delta) maxGrowth = { label: d.label, delta, color: d.color };
   });
 
-  // Radar Chart Calculations (Centered at 190, 190 with R = 120)
+  // Radar Chart Calculations (Centered at 190, 190 with R = 115)
   const cx = 190;
   const cy = 190;
-  const maxR = 120;
+  const maxR = 115;
 
   const getCoord = (domainIndex, score) => {
     const norm = Math.max(0, Math.min(100, score || 0)) / 100.0;
@@ -67,21 +67,29 @@ export default function PostTestResults({
   const prePath = `M ${prePts[0].x} ${prePts[0].y} L ${prePts[1].x} ${prePts[1].y} L ${prePts[2].x} ${prePts[2].y} L ${prePts[3].x} ${prePts[3].y} Z`;
   const postPath = `M ${postPts[0].x} ${postPts[0].y} L ${postPts[1].x} ${postPts[1].y} L ${postPts[2].x} ${postPts[2].y} L ${postPts[3].x} ${postPts[3].y} Z`;
 
-  // Markdown parser for AI Profiling Dossier
+  // Enhanced AI Profiling Dossier Parser without duplicated headers
   const renderFeedback = (text) => {
     if (!text) {
       return (
-        <div style={{ color: '#94a3b8', fontSize: '0.86rem', lineHeight: '1.6' }}>
-          <p style={{ margin: '0 0 0.75rem 0' }}>
-            <strong style={{ color: '#38bdf8' }}>Significant Advancements:</strong><br />
+        <div style={{ color: '#cbd5e1', fontSize: '0.84rem', lineHeight: '1.6' }}>
+          <div style={{ color: '#38bdf8', fontWeight: '700', fontSize: '0.88rem', marginBottom: '0.25rem' }}>
+            Significant Advancements:
+          </div>
+          <p style={{ margin: '0 0 0.85rem 0' }}>
             Post-test telemetry reveals robust neural plasticity. The subject demonstrated a massive surge in localized cognitive efficiency. Prescribed neuro-stimulation protocols successfully strengthened target cortical pathways.
           </p>
-          <p style={{ margin: '0 0 0.75rem 0' }}>
-            <strong style={{ color: '#38bdf8' }}>Metacognition & Micro-Behavioral Latency:</strong><br />
+
+          <div style={{ color: '#38bdf8', fontWeight: '700', fontSize: '0.88rem', marginBottom: '0.25rem' }}>
+            Metacognition & Micro-Behavioral Latency:
+          </div>
+          <p style={{ margin: '0 0 0.85rem 0' }}>
             Exceptional pacing consistency. Reaction times demonstrate low deviation, indicating a highly stabilized baseline. Metacognition calibration indicates high confidence-to-accuracy alignment.
           </p>
+
+          <div style={{ color: '#38bdf8', fontWeight: '700', fontSize: '0.88rem', marginBottom: '0.25rem' }}>
+            Final Verdict:
+          </div>
           <p style={{ margin: 0 }}>
-            <strong style={{ color: '#38bdf8' }}>Final Verdict:</strong><br />
             Optimal response to training. The subject exhibits extraordinary adaptive capacity and stable neural elasticity.
           </p>
         </div>
@@ -92,7 +100,7 @@ export default function PostTestResults({
     const elements = [];
     let currentParagraph = [];
 
-    const formatText = (str) => {
+    const formatInline = (str) => {
       let res = str.replace(/\*\*(.*?)\*\*/g, '<strong style="color: #f1f5f9; font-weight: 600">$1</strong>');
       res = res.replace(/(?<!\*)\*(?!\*)(.*?)(?<!\*)\*(?!\*)/g, '<em style="color: #cbd5e1">$1</em>');
       return res;
@@ -103,7 +111,7 @@ export default function PostTestResults({
       if (!trimmed) {
         if (currentParagraph.length > 0) {
           elements.push(
-            <p key={`p-${i}`} style={{ margin: '0 0 0.75rem 0', color: '#cbd5e1', fontSize: '0.86rem', lineHeight: '1.55' }}
+            <p key={`p-${i}`} style={{ margin: '0 0 0.85rem 0', color: '#cbd5e1', fontSize: '0.84rem', lineHeight: '1.6' }}
                dangerouslySetInnerHTML={{ __html: currentParagraph.join(' ') }} />
           );
           currentParagraph = [];
@@ -111,28 +119,43 @@ export default function PostTestResults({
         return;
       }
 
-      if (trimmed.startsWith('### ') || trimmed.startsWith('## ')) {
+      // Filter out duplicate "Micro-Behavioral & Cognitive Profile Analysis" main titles
+      if (trimmed.toLowerCase().includes('micro-behavioral') && trimmed.toLowerCase().includes('cognitive profile analysis')) {
+        return;
+      }
+
+      // Detect sub-headings like "Significant Advancements:", "Metacognition & Micro-Behavioral Latency:", "Final Verdict:"
+      const isHeader = trimmed.startsWith('###') || trimmed.startsWith('##') || 
+                       trimmed.startsWith('**Significant Advancements') || 
+                       trimmed.startsWith('**Metacognition') || 
+                       trimmed.startsWith('**Final Verdict') ||
+                       trimmed.startsWith('Significant Advancements:') ||
+                       trimmed.startsWith('Metacognition & Micro-Behavioral Latency:') ||
+                       trimmed.startsWith('Final Verdict:');
+
+      if (isHeader) {
         if (currentParagraph.length > 0) {
           elements.push(
-            <p key={`p-${i}`} style={{ margin: '0 0 0.75rem 0', color: '#cbd5e1', fontSize: '0.86rem', lineHeight: '1.55' }}
+            <p key={`p-${i}`} style={{ margin: '0 0 0.85rem 0', color: '#cbd5e1', fontSize: '0.84rem', lineHeight: '1.6' }}
                dangerouslySetInnerHTML={{ __html: currentParagraph.join(' ') }} />
           );
           currentParagraph = [];
         }
-        const titleText = trimmed.replace(/^###? /, '');
+
+        const cleanTitle = trimmed.replace(/^###?\s*/, '').replace(/\*\*/g, '').replace(/:$/, '') + ':';
         elements.push(
-          <div key={`h-${i}`} style={{ color: '#38bdf8', fontWeight: '700', fontSize: '0.95rem', margin: '0.75rem 0 0.4rem 0', borderBottom: '1px solid rgba(56, 189, 248, 0.2)', paddingBottom: '0.25rem' }}>
-            {titleText}
+          <div key={`h-${i}`} style={{ color: '#38bdf8', fontWeight: '700', fontSize: '0.88rem', marginTop: '0.65rem', marginBottom: '0.25rem' }}>
+            {cleanTitle}
           </div>
         );
       } else {
-        currentParagraph.push(formatText(trimmed));
+        currentParagraph.push(formatInline(trimmed));
       }
     });
 
     if (currentParagraph.length > 0) {
       elements.push(
-        <p key="p-last" style={{ margin: '0 0 0.5rem 0', color: '#cbd5e1', fontSize: '0.86rem', lineHeight: '1.55' }}
+        <p key="p-last" style={{ margin: '0 0 0.5rem 0', color: '#cbd5e1', fontSize: '0.84rem', lineHeight: '1.6' }}
            dangerouslySetInnerHTML={{ __html: currentParagraph.join(' ') }} />
       );
     }
@@ -149,12 +172,12 @@ export default function PostTestResults({
         boxSizing: 'border-box',
         margin: '0.5rem auto 2rem auto', 
         padding: isMobile ? '1rem' : '1.5rem 2rem', 
-        animation: 'fadeIn 0.4s ease-out'
+        animation: 'fadeIn 0.3s ease-out'
       }}
     >
       
       {/* Top Header Section */}
-      <div style={{ textAlign: 'center', marginBottom: '1.75rem', position: 'relative' }}>
+      <div style={{ textAlign: 'center', marginBottom: '1.5rem', position: 'relative' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
           <h1 
             style={{ 
@@ -222,31 +245,71 @@ export default function PostTestResults({
               </span>
             </div>
 
-            {/* 3 Stat KPI Cards in Top Row */}
+            {/* 3 Stat KPI Cards in Top Row with clean non-cramped typography */}
             <div style={{ 
               display: 'grid', 
               gridTemplateColumns: 'repeat(3, 1fr)', 
-              gap: '0.6rem', 
+              gap: '0.65rem', 
               marginBottom: '1.25rem' 
             }}>
-              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '0.75rem 0.5rem', textAlign: 'center' }}>
-                <div style={{ color: '#94a3b8', fontSize: '0.65rem', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.04em' }}>Net Cognitive Shift</div>
-                <div style={{ color: netChange >= 0 ? '#4ade80' : '#ef4444', fontSize: '1.45rem', fontWeight: '800', marginTop: '0.2rem', lineHeight: 1.1 }}>
-                  {netChange > 0 ? '+' : ''}{Math.round(netChange)} <span style={{ fontSize: '0.75rem' }}>pts</span>
+              <div style={{ 
+                background: 'rgba(15, 23, 42, 0.7)', 
+                border: '1px solid rgba(56, 189, 248, 0.2)', 
+                borderRadius: '10px', 
+                padding: '0.85rem 0.5rem', 
+                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                minHeight: '85px'
+              }}>
+                <div style={{ color: '#94a3b8', fontSize: '0.66rem', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.04em' }}>
+                  Net Cognitive Shift
+                </div>
+                <div style={{ color: netChange >= 0 ? '#4ade80' : '#ef4444', fontSize: '1.45rem', fontWeight: '800', marginTop: '0.25rem', lineHeight: 1 }}>
+                  {netChange > 0 ? '+' : ''}{Math.round(netChange)} <span style={{ fontSize: '0.75rem', fontWeight: '600' }}>pts</span>
                 </div>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '0.75rem 0.5rem', textAlign: 'center' }}>
-                <div style={{ color: '#94a3b8', fontSize: '0.65rem', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.04em' }}>Highest Growth Area</div>
-                <div style={{ color: maxGrowth.color, fontSize: '0.95rem', fontWeight: '700', marginTop: '0.25rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+
+              <div style={{ 
+                background: 'rgba(15, 23, 42, 0.7)', 
+                border: '1px solid rgba(56, 189, 248, 0.2)', 
+                borderRadius: '10px', 
+                padding: '0.85rem 0.5rem', 
+                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                minHeight: '85px'
+              }}>
+                <div style={{ color: '#94a3b8', fontSize: '0.66rem', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.04em' }}>
+                  Highest Growth Area
+                </div>
+                <div style={{ color: maxGrowth.color, fontSize: '0.98rem', fontWeight: '800', marginTop: '0.25rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {maxGrowth.label}
                 </div>
                 <div style={{ color: '#4ade80', fontSize: '0.75rem', fontWeight: '700' }}>
                   +{Math.round(maxGrowth.delta)} pts
                 </div>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '0.75rem 0.5rem', textAlign: 'center' }}>
-                <div style={{ color: '#94a3b8', fontSize: '0.65rem', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.04em' }}>Global Percentile</div>
-                <div style={{ color: '#38bdf8', fontSize: '1.35rem', fontWeight: '800', marginTop: '0.2rem', lineHeight: 1.1 }}>Top 12%</div>
+
+              <div style={{ 
+                background: 'rgba(15, 23, 42, 0.7)', 
+                border: '1px solid rgba(56, 189, 248, 0.2)', 
+                borderRadius: '10px', 
+                padding: '0.85rem 0.5rem', 
+                textAlign: 'center',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                minHeight: '85px'
+              }}>
+                <div style={{ color: '#94a3b8', fontSize: '0.66rem', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '0.04em' }}>
+                  Global Percentile
+                </div>
+                <div style={{ color: '#38bdf8', fontSize: '1.45rem', fontWeight: '800', marginTop: '0.25rem', lineHeight: 1 }}>
+                  Top 12%
+                </div>
               </div>
             </div>
 
@@ -281,26 +344,73 @@ export default function PostTestResults({
               </table>
             </div>
 
-            {/* Horizontal Progress Delta Bars */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginTop: '0.5rem' }}>
+            {/* Horizontal Progress Delta Bars with full domain names and vibrant domain colors */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginTop: '0.5rem' }}>
               {domains.map(d => {
                 const pre = Math.max(0, Math.min(100, Math.round(preScores ? preScores[d.key] : 0)));
                 const post = Math.max(0, Math.min(100, Math.round(postScores ? postScores[d.key] : 0)));
                 const delta = post - pre;
                 return (
-                  <div key={d.key} style={{ display: 'grid', gridTemplateColumns: '110px 1fr 24px', alignItems: 'center', gap: '0.6rem', fontSize: '0.8rem' }}>
-                    <div style={{ color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.label}</div>
-                    <div style={{ position: 'relative', height: '8px', background: 'rgba(255,255,255,0.06)', borderRadius: '4px', overflow: 'hidden' }}>
-                      <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: `${pre}%`, background: 'rgba(255,255,255,0.22)' }}></div>
+                  <div key={d.key} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.82rem' }}>
+                    <div style={{ width: '135px', flexShrink: 0, color: d.color, fontWeight: '700', whiteSpace: 'nowrap' }}>
+                      {d.label}
+                    </div>
+                    
+                    <div style={{ 
+                      flex: 1, 
+                      position: 'relative', 
+                      height: '9px', 
+                      background: 'rgba(255,255,255,0.06)', 
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: '5px', 
+                      overflow: 'hidden' 
+                    }}>
+                      {/* Baseline fill colored by the domain theme */}
+                      <div style={{ 
+                        position: 'absolute', 
+                        left: 0, 
+                        top: 0, 
+                        height: '100%', 
+                        width: `${pre}%`, 
+                        background: d.color,
+                        opacity: 0.55
+                      }}></div>
+                      
+                      {/* Positive Improvement Delta */}
                       {delta > 0 && (
-                        <div style={{ position: 'absolute', left: `${pre}%`, top: 0, height: '100%', width: `${Math.min(100 - pre, delta)}%`, background: '#4ade80', boxShadow: '0 0 8px rgba(74, 222, 128, 0.6)' }}></div>
+                        <div style={{ 
+                          position: 'absolute', 
+                          left: `${pre}%`, 
+                          top: 0, 
+                          height: '100%', 
+                          width: `${Math.min(100 - pre, delta)}%`, 
+                          background: '#4ade80', 
+                          boxShadow: '0 0 10px rgba(74, 222, 128, 0.8)' 
+                        }}></div>
                       )}
+                      
+                      {/* Negative Regression Delta */}
                       {delta < 0 && (
-                        <div style={{ position: 'absolute', left: `${post}%`, top: 0, height: '100%', width: `${Math.abs(delta)}%`, background: '#ef4444' }}></div>
+                        <div style={{ 
+                          position: 'absolute', 
+                          left: `${post}%`, 
+                          top: 0, 
+                          height: '100%', 
+                          width: `${Math.abs(delta)}%`, 
+                          background: '#ef4444',
+                          boxShadow: '0 0 10px rgba(239, 68, 68, 0.8)'
+                        }}></div>
                       )}
                     </div>
-                    <div style={{ textAlign: 'right', color: delta > 0 ? '#4ade80' : (delta < 0 ? '#ef4444' : '#64748b'), fontWeight: '700' }}>
-                      {delta > 0 ? '↗' : (delta < 0 ? '↘' : '→')}
+
+                    <div style={{ width: '45px', textAlign: 'right', fontWeight: '700', fontSize: '0.82rem', flexShrink: 0 }}>
+                      {delta > 0 ? (
+                        <span style={{ color: '#4ade80' }}>+{delta} ↗</span>
+                      ) : delta < 0 ? (
+                        <span style={{ color: '#ef4444' }}>{delta} ↘</span>
+                      ) : (
+                        <span style={{ color: '#64748b' }}>0 →</span>
+                      )}
                     </div>
                   </div>
                 );
@@ -309,15 +419,24 @@ export default function PostTestResults({
           </div>
 
           {/* Legend */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '1.25rem', marginTop: '1.25rem', fontSize: '0.72rem', color: '#64748b' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}><div style={{ width: '10px', height: '3px', background: 'rgba(255,255,255,0.25)' }}></div> Baseline</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}><div style={{ width: '10px', height: '3px', background: '#4ade80' }}></div> Improvement</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}><div style={{ width: '10px', height: '3px', background: '#ef4444' }}></div> Regression</span>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '1.25rem', marginTop: '1.25rem', fontSize: '0.74rem', color: '#94a3b8' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <div style={{ width: '12px', height: '4px', background: 'rgba(148, 163, 184, 0.6)', borderRadius: '2px' }}></div> 
+              Baseline
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <div style={{ width: '12px', height: '4px', background: '#4ade80', borderRadius: '2px', boxShadow: '0 0 6px rgba(74, 222, 128, 0.6)' }}></div> 
+              Improvement
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <div style={{ width: '12px', height: '4px', background: '#ef4444', borderRadius: '2px' }}></div> 
+              Regression
+            </span>
           </div>
         </div>
 
         {/* ======================================================== */}
-        {/* COLUMN 2: COGNITIVE GROWTH MAP (Dual-Layer 360° Radar)   */}
+        {/* COLUMN 2: COGNITIVE GROWTH MAP (Clean Dual-Layer Radar)   */}
         {/* ======================================================== */}
         <div 
           style={{ 
@@ -333,7 +452,7 @@ export default function PostTestResults({
           }}
         >
           {/* Header */}
-          <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
+          <div style={{ textAlign: 'center', marginBottom: '0.75rem' }}>
             <span style={{ 
               fontSize: '0.92rem', 
               fontWeight: '700', 
@@ -348,44 +467,9 @@ export default function PostTestResults({
             </span>
           </div>
 
-          {/* Corner Telemetry Overlay */}
-          <div style={{ position: 'relative', width: '100%', minHeight: '360px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {/* Top-Left Telemetry */}
-            <div style={{ position: 'absolute', top: 0, left: 0, fontSize: '0.62rem', color: '#2dd4bf', opacity: 0.7, fontFamily: 'monospace', lineHeight: '1.2' }}>
-              <div>[10.0, 0/3, 0.03]</div>
-              <div>Label: 92</div>
-              <div>[0.9, 19.2, 18-0]</div>
-            </div>
-
-            {/* Top-Right Telemetry */}
-            <div style={{ position: 'absolute', top: 0, right: 0, textAlign: 'right', fontSize: '0.62rem', color: '#2dd4bf', opacity: 0.7, fontFamily: 'monospace', lineHeight: '1.2' }}>
-              <div>[65, 0.03, 0.120]</div>
-              <div>Label: 20</div>
-              <div>[0.3, 118, -140]</div>
-            </div>
-
-            {/* Bottom-Left Telemetry */}
-            <div style={{ position: 'absolute', bottom: '0.5rem', left: 0, fontSize: '0.62rem', color: '#2dd4bf', opacity: 0.7, fontFamily: 'monospace', lineHeight: '1.2' }}>
-              <div>[00:13:5, 15:48]</div>
-              <div>Layer: 07</div>
-              <div>[0.57, 10, -8-6]</div>
-              <div style={{ marginTop: '0.2rem' }}>
-                <svg width="40" height="10" viewBox="0 0 40 10" fill="none"><path d="M0 5h10l2-4 4 8 3-6 2 4 3-2h16" stroke="#2dd4bf" strokeWidth="1.2" /></svg>
-              </div>
-            </div>
-
-            {/* Bottom-Right Telemetry */}
-            <div style={{ position: 'absolute', bottom: '0.5rem', right: 0, textAlign: 'right', fontSize: '0.62rem', color: '#2dd4bf', opacity: 0.7, fontFamily: 'monospace', lineHeight: '1.2' }}>
-              <div>[30.13, 0, -0.45]</div>
-              <div>Layer: 20</div>
-              <div>[0:57.19, -0-60]</div>
-              <div style={{ marginTop: '0.2rem' }}>
-                <svg width="40" height="10" viewBox="0 0 40 10" fill="none"><path d="M0 5h10l2-4 4 8 3-6 2 4 3-2h16" stroke="#2dd4bf" strokeWidth="1.2" /></svg>
-              </div>
-            </div>
-
-            {/* 360° Circular Radar SVG */}
-            <svg viewBox="0 0 380 380" style={{ width: '100%', maxWidth: '360px', height: 'auto', overflow: 'visible' }}>
+          {/* Clean 360° Circular Radar Display without unneeded corner clutter */}
+          <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.5rem 0' }}>
+            <svg viewBox="0 0 380 380" style={{ width: '100%', maxWidth: '370px', height: 'auto', overflow: 'visible' }}>
               <defs>
                 <filter id="cyanGlow" x="-20%" y="-20%" width="140%" height="140%">
                   <feGaussianBlur stdDeviation="3" result="blur" />
@@ -394,11 +478,11 @@ export default function PostTestResults({
               </defs>
 
               {/* Outer Dashed Polar Ring */}
-              <circle cx={cx} cy={cy} r={maxR + 18} stroke="rgba(45, 212, 191, 0.4)" strokeWidth="1.5" fill="none" />
-              <circle cx={cx} cy={cy} r={maxR + 24} stroke="rgba(45, 212, 191, 0.2)" strokeWidth="1" strokeDasharray="3 4" fill="none" />
+              <circle cx={cx} cy={cy} r={maxR + 15} stroke="rgba(45, 212, 191, 0.35)" strokeWidth="1.5" fill="none" />
+              <circle cx={cx} cy={cy} r={maxR + 22} stroke="rgba(45, 212, 191, 0.15)" strokeWidth="1" strokeDasharray="3 4" fill="none" />
 
               {/* Concentric Grid Rings */}
-              {[24, 48, 72, 96, 120].map((r, idx) => (
+              {[23, 46, 69, 92, 115].map((r, idx) => (
                 <circle 
                   key={r} 
                   cx={cx} 
@@ -411,29 +495,23 @@ export default function PostTestResults({
               ))}
 
               {/* Polar Coordinate Cross Axes */}
-              <line x1={cx} y1={cy - maxR - 15} x2={cx} y2={cy + maxR + 15} stroke="rgba(45, 212, 191, 0.25)" strokeWidth="1" />
-              <line x1={cx - maxR - 15} y1={cy} x2={cx + maxR + 15} y2={cy} stroke="rgba(45, 212, 191, 0.25)" strokeWidth="1" />
+              <line x1={cx} y1={cy - maxR - 12} x2={cx} y2={cy + maxR + 12} stroke="rgba(45, 212, 191, 0.25)" strokeWidth="1" />
+              <line x1={cx - maxR - 12} y1={cy} x2={cx + maxR + 12} y2={cy} stroke="rgba(45, 212, 191, 0.25)" strokeWidth="1" />
 
-              {/* Numerical Axis Ticks */}
-              <text x={cx + 6} y={cy - 24} fill="#64748b" fontSize="8" fontFamily="monospace">20</text>
-              <text x={cx + 6} y={cy - 72} fill="#64748b" fontSize="8" fontFamily="monospace">60</text>
-              <text x={cx + 6} y={cy - 96} fill="#64748b" fontSize="8" fontFamily="monospace">80</text>
-              <text x={cx + 6} y={cy - 120} fill="#2dd4bf" fontSize="8" fontWeight="bold" fontFamily="monospace">100</text>
+              {/* Numerical Axis Scale Ticks */}
+              <text x={cx + 6} y={cy - 23} fill="#64748b" fontSize="8" fontFamily="monospace">20</text>
+              <text x={cx + 6} y={cy - 69} fill="#64748b" fontSize="8" fontFamily="monospace">60</text>
+              <text x={cx + 6} y={cy - 92} fill="#64748b" fontSize="8" fontFamily="monospace">80</text>
+              <text x={cx + 6} y={cy - 115} fill="#2dd4bf" fontSize="8" fontWeight="bold" fontFamily="monospace">100</text>
 
-              <text x={cx + 96} y={cy - 6} fill="#64748b" fontSize="8" fontFamily="monospace">80</text>
-              <text x={cx + 120} y={cy - 6} fill="#2dd4bf" fontSize="8" fontWeight="bold" fontFamily="monospace">100</text>
-
-              {/* Angle Tick Markers */}
-              <text x="64" y="68" fill="#2dd4bf" fontSize="8" opacity="0.6" fontFamily="monospace">225</text>
-              <text x="312" y="68" fill="#2dd4bf" fontSize="8" opacity="0.6" fontFamily="monospace">150</text>
-              <text x="64" y="320" fill="#2dd4bf" fontSize="8" opacity="0.6" fontFamily="monospace">238</text>
-              <text x="312" y="320" fill="#2dd4bf" fontSize="8" opacity="0.6" fontFamily="monospace">3.25</text>
+              <text x={cx + 92} y={cy - 6} fill="#64748b" fontSize="8" fontFamily="monospace">80</text>
+              <text x={cx + 115} y={cy - 6} fill="#2dd4bf" fontSize="8" fontWeight="bold" fontFamily="monospace">100</text>
 
               {/* Cardinal Axis Labels */}
-              <text x={cx} y={cy - maxR - 22} textAnchor="middle" fill="#f8fafc" fontSize="10.5" fontWeight="700" letterSpacing="0.02em">
+              <text x={cx} y={cy - maxR - 22} textAnchor="middle" fill="#f8fafc" fontSize="11" fontWeight="700" letterSpacing="0.02em">
                 Spatial-Visual Memory
               </text>
-              <text x={cx} y={cy + maxR + 32} textAnchor="middle" fill="#f8fafc" fontSize="10.5" fontWeight="700" letterSpacing="0.02em">
+              <text x={cx} y={cy + maxR + 30} textAnchor="middle" fill="#f8fafc" fontSize="11" fontWeight="700" letterSpacing="0.02em">
                 Reflexes & Focus
               </text>
               
@@ -443,7 +521,7 @@ export default function PostTestResults({
                 y={cy} 
                 textAnchor="middle" 
                 fill="#f8fafc" 
-                fontSize="10" 
+                fontSize="10.5" 
                 fontWeight="700" 
                 letterSpacing="0.02em"
                 transform={`rotate(90, ${cx + maxR + 25}, ${cy})`}
@@ -455,7 +533,7 @@ export default function PostTestResults({
                 y={cy} 
                 textAnchor="middle" 
                 fill="#f8fafc" 
-                fontSize="10" 
+                fontSize="10.5" 
                 fontWeight="700" 
                 letterSpacing="0.02em"
                 transform={`rotate(-90, ${cx - maxR - 25}, ${cy})`}
@@ -493,13 +571,13 @@ export default function PostTestResults({
           </div>
 
           {/* Radar Legend */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginTop: '0.75rem', fontSize: '0.78rem', color: '#cbd5e1' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <div style={{ width: '14px', height: '3px', background: '#f43f5e', borderRadius: '1px' }}></div> 
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginTop: '1rem', fontSize: '0.8rem', color: '#cbd5e1' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              <div style={{ width: '14px', height: '4px', background: '#f43f5e', borderRadius: '2px' }}></div> 
               Baseline
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-              <div style={{ width: '14px', height: '3px', background: '#2dd4bf', borderRadius: '1px', boxShadow: '0 0 6px rgba(45, 212, 191, 0.8)' }}></div> 
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              <div style={{ width: '14px', height: '4px', background: '#2dd4bf', borderRadius: '2px', boxShadow: '0 0 6px rgba(45, 212, 191, 0.8)' }}></div> 
               Growth
             </span>
           </div>
@@ -537,14 +615,14 @@ export default function PostTestResults({
               </span>
             </div>
 
-            {/* Dossier Terminal Card */}
+            {/* Dossier Terminal Card - single clean header */}
             <div 
               style={{ 
                 background: 'rgba(8, 14, 26, 0.85)', 
                 border: '1px solid rgba(56, 189, 248, 0.35)', 
                 borderRadius: '12px', 
-                padding: '1.1rem', 
-                maxHeight: isMobile ? '280px' : '330px', 
+                padding: '1.15rem', 
+                maxHeight: isMobile ? '280px' : '345px', 
                 overflowY: 'auto',
                 boxShadow: 'inset 0 0 20px rgba(0, 0, 0, 0.7)'
               }}
@@ -560,15 +638,15 @@ export default function PostTestResults({
           </div>
 
           {/* Action Console & Buttons */}
-          <div style={{ marginTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+          <div style={{ marginTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {onReturn && (
               <button 
                 onClick={onReturn}
                 style={{
-                  background: 'rgba(15, 23, 42, 0.8)',
+                  background: 'rgba(15, 23, 42, 0.85)',
                   border: '1px solid rgba(56, 189, 248, 0.45)',
                   color: '#e2e8f0',
-                  padding: '0.85rem 1rem',
+                  padding: '0.9rem 1rem',
                   borderRadius: '8px',
                   cursor: 'pointer',
                   fontSize: '0.92rem',
@@ -582,7 +660,7 @@ export default function PostTestResults({
                   e.currentTarget.style.borderColor = '#38bdf8';
                 }}
                 onMouseOut={(e) => {
-                  e.currentTarget.style.background = 'rgba(15, 23, 42, 0.8)';
+                  e.currentTarget.style.background = 'rgba(15, 23, 42, 0.85)';
                   e.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.45)';
                 }}
               >
@@ -607,7 +685,7 @@ export default function PostTestResults({
                 background: 'linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%)', 
                 border: 'none', 
                 color: '#ffffff', 
-                padding: '0.85rem 1rem', 
+                padding: '0.9rem 1rem', 
                 borderRadius: '8px', 
                 cursor: 'pointer', 
                 transition: 'all 0.2s', 
@@ -621,11 +699,6 @@ export default function PostTestResults({
             >
               {isMobile ? '🖥️ Desktop Required for Potential' : 'Train Weakest Domain'}
             </button>
-
-            {/* Micro Telemetry Footer */}
-            <div style={{ textAlign: 'center', marginTop: '0.4rem', fontSize: '0.64rem', color: '#64748b', letterSpacing: '0.06em', fontFamily: 'monospace' }}>
-              TELEMETRY SYNCHRONIZED <span style={{ opacity: 0.4 }}>|</span> NODE: POST_TEST_ACTIVE <span style={{ opacity: 0.4 }}>|</span> ISO 25010 QUALITY
-            </div>
           </div>
         </div>
 
