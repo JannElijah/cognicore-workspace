@@ -166,7 +166,7 @@ const OfflineCacheWarningBanner = ({ isVisible, onClose }) => {
 import { DOMAIN_INFO, DOMAIN_THEMES, DOMAINS_LIST, COGNITIVE_QUESTIONS, DOMAIN_LABELS } from './utils/constants.jsx';
 
 export default function App() {
-  const { coins, totalXp, inventory, fetchInventory } = useCogniStore();
+  const { user: storeUser, coins, totalXp, inventory, fetchInventory } = useCogniStore();
   const currentLevel = totalXp ? Math.floor(totalXp / 500) + 1 : 1;
   const currentLevelXp = totalXp ? totalXp % 500 : 0;
   const xpPercent = Math.floor((currentLevelXp / 500) * 100);
@@ -248,6 +248,7 @@ export default function App() {
   const sessionRewardsRef = useRef({ xp: 0, coins: 0, leveled_up: false });
   const [lastGameStats, setLastGameStats] = useState(null);
   const [portalView, setPortalView] = useState('participant'); // 'participant' | 'admin' | 'knowledge'
+  const isAdminUser = Boolean(storeUser?.is_admin || String(storeUser?.role || '').toLowerCase() === 'admin');
 
   // Quasi-Experimental Research Pipeline States
   const [currentUser, setCurrentUser] = useState('');
@@ -255,6 +256,12 @@ export default function App() {
     clearLegacyLocalAuth();
     return Boolean(getStoredUser());
   });
+
+  useEffect(() => {
+    if (portalView === 'admin' && (!currentUser || (storeUser && !isAdminUser))) {
+      setPortalView('participant');
+    }
+  }, [portalView, currentUser, storeUser, isAdminUser]);
   const [usernameInput, setUsernameInput] = useState('');
   const [preTestScores, setPreTestScores] = useState(null);
   const [postTestScores, setPostTestScores] = useState(null);

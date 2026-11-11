@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Radar, Line, Bar, Scatter } from 'react-chartjs-2';
 import HoverTooltip from './HoverTooltip';
 import { API_BASE } from '../utils/apiClient.js';
 import useCogniStore from '../store/useCogniStore';
 import PretestResults from './PretestResults';
 import { formatCohortValidationMetrics } from '../utils/cohortFormatters.js';
+import IsoEvaluationModal from './IsoEvaluationModal';
 
 const ProgressRing = ({ radius, stroke, progress, color }) => {
   const normalizedRadius = radius - stroke * 2;
@@ -96,24 +97,29 @@ export default function Dashboard({
   const [activeTab, setActiveTab] = useState('participant');
   const [cohortData, setCohortData] = useState(null);
   const [cohortLoading, setCohortLoading] = useState(false);
+  const [showIsoModal, setShowIsoModal] = useState(false);
+
+  const fetchCohortData = useCallback(() => {
+    setCohortLoading(true);
+    fetch(`${API_BASE}/api/research/cohort-data`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success') {
+          setCohortData(data);
+        }
+        setCohortLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setCohortLoading(false);
+      });
+  }, []);
 
   useEffect(() => {
     if (activeTab === 'cohort') {
-      setCohortLoading(true);
-      fetch(`${API_BASE}/api/research/cohort-data`)
-        .then(res => res.json())
-        .then(data => {
-          if(data.status === 'success') {
-            setCohortData(data);
-          }
-          setCohortLoading(false);
-        })
-        .catch(err => {
-          console.error(err);
-          setCohortLoading(false);
-        });
+      fetchCohortData();
     }
-  }, [activeTab]);
+  }, [activeTab, fetchCohortData]);
 
   const cohortMetrics = formatCohortValidationMetrics(cohortData);
 
@@ -896,6 +902,22 @@ export default function Dashboard({
               }}>
                 {cohortMetrics.cohortSizeText}
               </span>
+              <button
+                type="button"
+                onClick={() => setShowIsoModal(true)}
+                style={{
+                  background: 'rgba(56, 189, 248, 0.14)',
+                  border: '1px solid rgba(56, 189, 248, 0.4)',
+                  color: '#38bdf8',
+                  fontSize: '0.75rem',
+                  fontWeight: '700',
+                  padding: '0.35rem 0.75rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                Evaluate System (ISO 25010)
+              </button>
             </div>
           </div>
           
@@ -1146,10 +1168,21 @@ export default function Dashboard({
                         <div style={{ color: '#94a3b8', fontSize: '0.65rem', textTransform: 'uppercase', fontWeight: '700' }}>Effect Size</div>
                         <div style={{ color: cohortMetrics.effectSizeColor, fontSize: '1.1rem', fontWeight: '800', marginTop: '0.2rem' }}>{cohortMetrics.effectSizeText}</div>
                       </div>
-                      <div style={{ background: 'rgba(255,255,255,0.04)', padding: '0.55rem 0.4rem', borderRadius: '8px', textAlign: 'center' }}>
+                      <button
+                        type="button"
+                        onClick={() => setShowIsoModal(true)}
+                        style={{
+                          background: 'rgba(56, 189, 248, 0.08)',
+                          border: '1px solid rgba(56, 189, 248, 0.25)',
+                          padding: '0.55rem 0.4rem',
+                          borderRadius: '8px',
+                          textAlign: 'center',
+                          cursor: 'pointer'
+                        }}
+                      >
                         <div style={{ color: '#94a3b8', fontSize: '0.65rem', textTransform: 'uppercase', fontWeight: '700' }}>ISO 25010</div>
                         <div style={{ color: cohortMetrics.isoScoreColor, fontSize: '1.1rem', fontWeight: '800', marginTop: '0.2rem' }}>{cohortMetrics.isoScoreText}</div>
-                      </div>
+                      </button>
                     </div>
                   </div>
 
@@ -1162,6 +1195,12 @@ export default function Dashboard({
             <div style={{ textAlign: 'center', color: '#ef4444', padding: '2rem' }}>Failed to load cohort data.</div>
           )}
         </div>
-      )}  </div>
+      )}
+      <IsoEvaluationModal
+        isOpen={showIsoModal}
+        onClose={() => setShowIsoModal(false)}
+        onSubmitted={fetchCohortData}
+      />
+    </div>
   );
 }

@@ -1,5 +1,4 @@
 import requests as _requests
-import os
 import sys
 import uuid
 from dotenv import load_dotenv
@@ -30,10 +29,21 @@ requests = RequestsWrapper()
 
 API_URL = "http://127.0.0.1:5000"
 
-def test_achievements_unlocking(app):
+def test_achievements_unlocking(app, mock_supabase_auth, request):
     print("=== Start achievements unlocking endpoint tests ===")
     
     unique_user = f"ach_user_{uuid.uuid4().hex[:8]}"
+    mock_user = mock_supabase_auth.auth.get_user.return_value.user
+    orig_id = mock_user.id
+    orig_meta = mock_user.user_metadata
+    mock_user.id = f"uuid-{unique_user}"
+    mock_user.user_metadata = {"username": unique_user}
+
+    def _restore():
+        mock_user.id = orig_id
+        mock_user.user_metadata = orig_meta
+
+    request.addfinalizer(_restore)
     print(f"Creating user: {unique_user}")
     
     # Start a session

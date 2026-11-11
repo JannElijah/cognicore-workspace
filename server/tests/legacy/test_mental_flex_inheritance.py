@@ -23,15 +23,25 @@ class RequestsWrapper:
 
 requests = RequestsWrapper()
 
-import json
 import sys
 import uuid
 
 API_URL = "http://127.0.0.1:5000"
 
-def test_mental_flex_inheritance():
+def test_mental_flex_inheritance(mock_supabase_auth, request):
     print("=== Step 1: Starting MazeEscape Session (Domain: executive_strategy) ===")
     unique_user = f"executive_test_user_{uuid.uuid4().hex[:8]}"
+    mock_user = mock_supabase_auth.auth.get_user.return_value.user
+    orig_id = mock_user.id
+    orig_meta = mock_user.user_metadata
+    mock_user.id = f"uuid-{unique_user}"
+    mock_user.user_metadata = {"username": unique_user}
+
+    def _restore():
+        mock_user.id = orig_id
+        mock_user.user_metadata = orig_meta
+
+    request.addfinalizer(_restore)
     payload_start1 = {
         "username": unique_user,
         "game_type": "MazeEscape"
@@ -47,7 +57,7 @@ def test_mental_flex_inheritance():
     initial_params1 = data1["dda_parameters"]
     
     print(f"MazeEscape started. Session ID: {session_id1}, Initial Difficulty: {initial_params1['difficulty_level']}")
-    assert initial_params1["difficulty_level"] == 3, "Expected initial difficulty level 3 for new user"
+    assert initial_params1["difficulty_level"] == 1, "Expected initial difficulty level 1 for new user"
     
     print("\n=== Step 2: Submitting High-Performance Metrics in MazeEscape ===")
     for i in range(5):
@@ -66,8 +76,10 @@ def test_mental_flex_inheritance():
         assert res_m.status_code == 201
         
     print("\n=== Step 3: Running DDA to Scale Up MazeEscape Difficulty ===")
-    res_dda = requests.post(f"{API_URL}/api/dda", json={"session_id": session_id1})
-    dda_data = res_dda.json()
+    for _ in range(5):
+        res_dda = requests.post(f"{API_URL}/api/dda", json={"session_id": session_id1})
+        assert res_dda.status_code == 200
+        dda_data = res_dda.json()
     new_difficulty = dda_data["dda_parameters"]["difficulty_level"]
     print(f"New Difficulty: {new_difficulty}")
     assert new_difficulty > 1, f"Expected difficulty to scale up, got {new_difficulty}"

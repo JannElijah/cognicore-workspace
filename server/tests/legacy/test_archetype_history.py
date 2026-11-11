@@ -24,22 +24,30 @@ class RequestsWrapper:
 requests = RequestsWrapper()
 
 import json
-import sys
 
 API_URL = "http://127.0.0.1:5000"
 
-def test_archetype_progression_endpoint():
+def test_archetype_progression_endpoint(mock_supabase_auth):
     print("=== Step 1: Testing GET /api/archetype-progression/clinical_subject_05 ===")
+    res_forbidden = requests.get(f"{API_URL}/api/archetype-progression/clinical_subject_05")
+    assert res_forbidden.status_code == 403, (
+        f"Expected 403 when querying another user's progression, got {res_forbidden.status_code}"
+    )
+
+    mock_user = mock_supabase_auth.auth.get_user.return_value.user
+    orig_id = mock_user.id
+    orig_meta = mock_user.user_metadata
     try:
+        mock_user.id = "uuid-clinical-subject-05"
+        mock_user.user_metadata = {"username": "clinical_subject_05"}
         res = requests.get(f"{API_URL}/api/archetype-progression/clinical_subject_05")
-    except Exception as e:
-        print(f"Could not connect to Flask server at {API_URL}: {e}")
-        sys.exit(1)
-        
-    if res.status_code != 200:
-        print(f"FAILED: GET /api/archetype-progression/clinical_subject_05 returned status {res.status_code}")
-        print(res.text)
-        sys.exit(1)
+    finally:
+        mock_user.id = orig_id
+        mock_user.user_metadata = orig_meta
+
+    assert res.status_code == 200, (
+        f"GET /api/archetype-progression/clinical_subject_05 returned {res.status_code}: {res.text}"
+    )
         
     data = res.json()
     print("Response:")

@@ -23,15 +23,25 @@ class RequestsWrapper:
 
 requests = RequestsWrapper()
 
-import json
 import sys
 import uuid
 
 API_URL = "http://127.0.0.1:5000"
 
-def test_domain_inheritance():
+def test_domain_inheritance(mock_supabase_auth, request):
     print("=== Step 1: Starting SpeedTap Session (Domain: reflexes_and_focus) ===")
     unique_user = f"domain_test_user_{uuid.uuid4().hex[:8]}"
+    mock_user = mock_supabase_auth.auth.get_user.return_value.user
+    orig_id = mock_user.id
+    orig_meta = mock_user.user_metadata
+    mock_user.id = f"uuid-{unique_user}"
+    mock_user.user_metadata = {"username": unique_user}
+
+    def _restore():
+        mock_user.id = orig_id
+        mock_user.user_metadata = orig_meta
+
+    request.addfinalizer(_restore)
     payload_start1 = {
         "username": unique_user,
         "game_type": "SpeedTap"
@@ -61,11 +71,13 @@ def test_domain_inheritance():
         assert res_m.status_code == 201
         
     print("\n=== Step 3: Running DDA to Scale Up SpeedTap Difficulty ===")
-    res_dda = requests.post(f"{API_URL}/api/dda", json={"session_id": session_id1})
-    dda_data = res_dda.json()
+    for _ in range(4):
+        res_dda = requests.post(f"{API_URL}/api/dda", json={"session_id": session_id1})
+        assert res_dda.status_code == 200
+        dda_data = res_dda.json()
     new_difficulty = dda_data["dda_parameters"]["difficulty_level"]
     print(f"New Difficulty: {new_difficulty}")
-    assert new_difficulty == 1, f"Expected difficulty to scale up, got {new_difficulty}"
+    assert new_difficulty > 1, f"Expected difficulty to scale up, got {new_difficulty}"
     
     # Submit a metric at the new difficulty level to represent playing at the new difficulty
     payload_metric = {

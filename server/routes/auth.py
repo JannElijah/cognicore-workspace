@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 import bcrypt
-from auth import token_required
+from auth import token_required, is_admin_user
 from database import db
 from extensions import limiter
 from models import User
@@ -142,12 +142,15 @@ def sync_user(current_user_id, current_username):
                 daily_reward = {"granted": True, "streak": 1, "coins": 100}
 
     db.session.commit()
-    
+    is_admin = is_admin_user(current_user_id, current_username)
+
     return jsonify({
         "status": "success",
         "user": {
             "id": current_user_id,
-            "username": current_username
+            "username": current_username,
+            "role": "admin" if is_admin else "participant",
+            "is_admin": is_admin,
         },
         "daily_reward": daily_reward
     })

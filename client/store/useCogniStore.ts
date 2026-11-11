@@ -10,6 +10,8 @@ export interface CognitiveProfile {
 export interface User {
   id?: string;
   username: string;
+  role?: string;
+  is_admin?: boolean;
 }
 
 export interface InventoryItem {
