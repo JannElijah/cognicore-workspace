@@ -1,9 +1,8 @@
 from flask import Blueprint, jsonify, request
 from auth import token_required, is_admin_user
-from database import db, get_db_connection
+from database import get_db_connection
 import logging
-from sqlalchemy import text
-from game_utils import safe_float, safe_int, get_domain_for_game
+from game_utils import safe_float, get_domain_for_game
 from utils import compute_paired_ttest_stats
 
 DOMAIN_NAMES = {
@@ -287,35 +286,45 @@ def get_cohort_analytics(current_user_id, current_username):
     try:
         cursor = conn.cursor()
         
-        # Query matched pre and post scores for all users (using latest pre/post tests)
+        # Query matched pre and post scores for all users (latest pre/post per user, DB-dialect agnostic)
         cursor.execute(
             """
-            WITH latest_pre AS (
-                SELECT DISTINCT ON (user_id) * 
-                FROM cognitive_assessments 
-                WHERE assessment_type = 'pre-test' 
-                ORDER BY user_id, completed_at DESC
-            ),
-            latest_post AS (
-                SELECT DISTINCT ON (user_id) * 
-                FROM cognitive_assessments 
-                WHERE assessment_type = 'post-test' 
-                ORDER BY user_id, completed_at DESC
-            )
-            SELECT 
-                pre.spatial_visual_score AS pre_sv,
-                pre.logical_math_score AS pre_lm,
-                pre.attention_score AS pre_at,
-                pre.executive_score AS pre_ex,
-                post.spatial_visual_score AS post_sv,
-                post.logical_math_score AS post_lm,
-                post.attention_score AS post_at,
-                post.executive_score AS post_ex
-            FROM latest_pre pre
-            JOIN latest_post post ON pre.user_id = post.user_id
+            SELECT
+                user_id,
+                assessment_type,
+                spatial_visual_score,
+                logical_math_score,
+                attention_score,
+                executive_score
+            FROM cognitive_assessments
+            WHERE assessment_type IN ('pre-test', 'post-test')
+            ORDER BY completed_at ASC, id ASC
             """
         )
-        rows = cursor.fetchall()
+        assessment_rows = cursor.fetchall()
+
+        latest_pre = {}
+        latest_post = {}
+        for row in assessment_rows:
+            if row['assessment_type'] == 'pre-test':
+                latest_pre[row['user_id']] = row
+            elif row['assessment_type'] == 'post-test':
+                latest_post[row['user_id']] = row
+
+        paired_uids = sorted(set(latest_pre.keys()) & set(latest_post.keys()))
+        rows = [
+            {
+                'pre_sv': latest_pre[uid]['spatial_visual_score'],
+                'pre_lm': latest_pre[uid]['logical_math_score'],
+                'pre_at': latest_pre[uid]['attention_score'],
+                'pre_ex': latest_pre[uid]['executive_score'],
+                'post_sv': latest_post[uid]['spatial_visual_score'],
+                'post_lm': latest_post[uid]['logical_math_score'],
+                'post_at': latest_post[uid]['attention_score'],
+                'post_ex': latest_post[uid]['executive_score'],
+            }
+            for uid in paired_uids
+        ]
         
         if not rows:
             return jsonify({

@@ -85,7 +85,6 @@ def train_retargeted_classifier():
             avg_rt = row['avg_rt']
             avg_hesitation = row['avg_hes'] if row['avg_hes'] is not None else 0.0
             avg_spam = row['avg_spam'] if row['avg_spam'] is not None else 0.0
-            avg_rule_shift = row['avg_rule'] if row['avg_rule'] is not None else 0.0
             avg_path_eff = row['avg_path'] if row['avg_path'] is not None else 1.0
             
             if current_user != user_id:

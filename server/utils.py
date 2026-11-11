@@ -234,3 +234,33 @@ def compute_paired_ttest_stats(pre_values, post_values):
     }
 
 
+def compute_pearson_correlation(xs, ys):
+    """
+    Compute Pearson correlation coefficient `r` and two-sided `p_value` for
+    paired numeric sequences `(xs, ys)` without database dialect dependencies.
+    """
+    n = min(len(xs), len(ys))
+    if n < 2:
+        return 0.0, 1.0
+
+    mean_x = sum(xs[:n]) / n
+    mean_y = sum(ys[:n]) / n
+    dx = [xs[i] - mean_x for i in range(n)]
+    dy = [ys[i] - mean_y for i in range(n)]
+
+    denom = math.sqrt(sum(val * val for val in dx) * sum(val * val for val in dy))
+    if denom == 0.0:
+        return 0.0, 1.0
+
+    r_coeff = max(-1.0, min(1.0, sum(dx[i] * dy[i] for i in range(n)) / denom))
+    if abs(r_coeff) >= 1.0:
+        return float(r_coeff), 0.0
+
+    p_value = 1.0
+    if n > 2:
+        t_stat = r_coeff * math.sqrt((n - 2) / (1.0 - r_coeff * r_coeff))
+        p_value = calculate_approx_t_p_value(t_stat, n - 2)
+
+    return float(r_coeff), float(p_value)
+
+

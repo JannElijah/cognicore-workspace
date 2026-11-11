@@ -170,7 +170,7 @@ def update_accessibility(current_user_id, current_username):
     try:
         db.session.commit()
         return jsonify({"status": "success", "reduce_flashes": reduce_flashes}), 200
-    except Exception as e:
+    except Exception:
         db.session.rollback()
         return jsonify({"status": "error", "message": "An internal server error occurred."}), 500
 

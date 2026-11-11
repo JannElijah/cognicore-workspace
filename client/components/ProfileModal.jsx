@@ -216,7 +216,45 @@ const ProfileModal = ({ onClose }) => {
   };
 
   const equippedAvatar = (inventory || []).find(i => i.item_type === 'avatar' && i.is_equipped)?.item_id;
-  const avatarIcon = equippedAvatar === 'avatar-robot' ? 'ðŸ¤–' : equippedAvatar === 'avatar-brain' ? 'ðŸ§ ' : equippedAvatar === 'avatar-hacker' ? 'ðŸ‘¨â€ðŸ’»' : <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 0 5px rgba(var(--rgb-primary),0.5))' }}><circle cx="12" cy="8" r="4" fill="var(--color-primary)"/><path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round"/></svg>;
+
+  const renderAvatarIcon = (itemId) => {
+    const stroke = 'var(--color-primary)';
+    if (itemId === 'avatar-robot') {
+      return (
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/>
+        </svg>
+      );
+    }
+    if (itemId === 'avatar-brain') {
+      return (
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9.5 2A2.5 2.5 0 0 0 7 4.5v1A2.5 2.5 0 0 0 4.5 8H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h.5a2.5 2.5 0 0 0 2.5 2.5v1a2.5 2.5 0 0 0 5 0v-1a2.5 2.5 0 0 0 2.5-2.5h.5a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-.5A2.5 2.5 0 0 0 17 5.5v-1A2.5 2.5 0 0 0 14.5 2h-5z"/>
+        </svg>
+      );
+    }
+    if (itemId === 'avatar-hacker') {
+      return (
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><polyline points="8 7 12 11 8 15"/><line x1="13" y1="15" x2="17" y2="15"/>
+        </svg>
+      );
+    }
+    if (itemId === 'avatar-speed-demon') {
+      return (
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke={stroke} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+      );
+    }
+    return (
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: 'drop-shadow(0 0 5px rgba(var(--rgb-primary),0.5))' }}>
+        <circle cx="12" cy="8" r="4" fill="var(--color-primary)"/>
+        <path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="var(--color-primary)" strokeWidth="2" strokeLinecap="round"/>
+      </svg>
+    );
+  };
+  const avatarIcon = renderAvatarIcon(equippedAvatar);
 
   const equippedBanner = (inventory || []).find(i => i.item_type === 'banner' && i.is_equipped)?.item_id;
   const bannerBackgrounds = {
@@ -488,9 +526,10 @@ const ProfileModal = ({ onClose }) => {
                       </div>
                       <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '0.5rem' }}>
                         {Array.from({length: 21}).map((_, i) => {
-                          const hasActivity = timelineStats.length > 0 && i < timelineStats.length; 
-                          const stat = hasActivity ? timelineStats[i] : null;
-                          const intensity = stat ? stat.avg_accuracy : 0;
+                          const streakCount = streakData?.current_streak || 0;
+                          const hasActivity = (timelineStats.length > 0 && i < timelineStats.length) || (i < streakCount);
+                          const stat = (timelineStats.length > 0 && i < timelineStats.length) ? timelineStats[i] : null;
+                          const intensity = stat ? stat.avg_accuracy : (i < streakCount ? 0.75 : 0);
                           
                           const bg = intensity >= 0.8 ? '#10b981' : 
                                      intensity >= 0.5 ? 'rgba(16, 185, 129, 0.6)' : 
@@ -725,7 +764,7 @@ const ProfileModal = ({ onClose }) => {
                         {/* Science Behind Your Profile */}
                         <div style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '8px', marginTop: '0.5rem', marginBottom: '0.5rem' }}>
                           <h4 style={{ margin: '0 0 0.5rem 0', color: '#94a3b8', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            âš™ï¸ The Science Behind Your Profile
+                             The Science Behind Your Profile
                           </h4>
                           <p style={{ margin: 0, color: '#cbd5e1', lineHeight: '1.5', fontSize: '0.85rem' }}>
                             Your cognitive archetype is calculated using Machine Learning. According to Ahmad et al. (2023), AI models that track behavioral gameplay patterns are highly effective at evaluating cognitive clusters beyond traditional point-scoring.

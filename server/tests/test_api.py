@@ -1,5 +1,3 @@
-import pytest
-
 def test_health(client):
     """Test the health check endpoint."""
     response = client.get('/api/health')

@@ -31,7 +31,6 @@ def invalidate_leaderboard_cache():
 
 @leaderboard_bp.route('/api/leaderboard', methods=['GET'])
 def get_leaderboard():
-    global LEADERBOARD_CACHE
     current_time = time.time()
     
     category = request.args.get('category', 'xp')

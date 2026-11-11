@@ -1,13 +1,12 @@
 import csv
 import io
 import logging
-import math
 from flask import Blueprint, jsonify, request, Response
 from auth import token_required, admin_required, is_admin_user
 from database import get_db_connection
 from extensions import limiter
 from game_utils import safe_int
-from utils import calculate_approx_t_p_value, compute_paired_ttest_stats
+from utils import compute_paired_ttest_stats, compute_pearson_correlation
 
 logger = logging.getLogger(__name__)
 
@@ -531,9 +530,7 @@ def get_research_correlations(current_user_id, current_username):
                 SELECT 
                     pm.{var1} AS val1, 
                     pm.{var2} AS val2, 
-                    u.username,
-                    corr(pm.{var2}, pm.{var1}) OVER () AS r_coeff,
-                    COUNT(*) OVER () AS n_points
+                    u.username
                 FROM performance_metrics pm
                 JOIN game_sessions gs ON pm.session_id = gs.id
                 JOIN users u ON gs.user_id = u.id
@@ -555,30 +552,21 @@ def get_research_correlations(current_user_id, current_username):
             conn.close()
 
         data_points = []
-        r_coeff = 0.0
-        n_points = 0
-        
-        if rows:
-            raw_r = rows[0]['r_coeff']
-            r_coeff = float(raw_r) if raw_r is not None else 0.0
-            if math.isnan(r_coeff):
-                r_coeff = 0.0
-            n_points = int(rows[0]['n_points'] or 0)
-            for r in rows:
-                point_username = r["username"] if (is_admin or r["username"] == current_username) else "participant"
-                data_points.append({
-                    "x": float(r['val1']),
-                    "y": float(r['val2']),
-                    "username": point_username
-                })
+        xs = []
+        ys = []
+        for r in rows:
+            x_val = float(r['val1'])
+            y_val = float(r['val2'])
+            xs.append(x_val)
+            ys.append(y_val)
+            point_username = r["username"] if (is_admin or r["username"] == current_username) else "participant"
+            data_points.append({
+                "x": x_val,
+                "y": y_val,
+                "username": point_username
+            })
 
-        # Calculate p-value manually
-        p_value = 1.0
-        if n_points > 2 and abs(r_coeff) < 1.0:
-            t_stat = r_coeff * math.sqrt((n_points - 2) / (1.0 - r_coeff**2))
-            p_value = calculate_approx_t_p_value(t_stat, n_points - 2)
-        elif abs(r_coeff) >= 1.0:
-            p_value = 0.0
+        r_coeff, p_value = compute_pearson_correlation(xs, ys)
 
         r_squared = r_coeff * r_coeff
 

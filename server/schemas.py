@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, constr, conint, ValidationError
+from pydantic import BaseModel, constr, conint, ValidationError
 from typing import Optional, List, Dict, Any, Union
 from functools import wraps
 from flask import request, jsonify
@@ -49,7 +49,7 @@ def validate_json(schema: BaseModel):
                     "message": "Validation Error",
                     "details": e.errors()
                 }), 400
-            except Exception as e:
+            except Exception:
                 return jsonify({
                     "status": "error",
                     "message": "Invalid JSON Payload"

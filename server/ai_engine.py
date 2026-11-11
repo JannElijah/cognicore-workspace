@@ -1,4 +1,3 @@
-import json
 import statistics
 
 def generate_post_test_ai_feedback(pre_scores, post_scores, post_metadata=None):

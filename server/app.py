@@ -21,19 +21,11 @@ import os
 import threading
 import time
 from sqlalchemy import text
-from utils import safe_float, GAME_TO_DOMAIN
 from dotenv import load_dotenv
 
 load_dotenv()
 
 from extensions import limiter
-
-# Try importing scipy.stats for Paired t-test
-try:
-    from scipy import stats
-    SCIPY_AVAILABLE = True
-except ImportError:
-    SCIPY_AVAILABLE = False
 
 def create_app(test_config=None):
     app = Flask(__name__)
@@ -232,14 +224,6 @@ def create_app(test_config=None):
 
     return app
 
-import jwt
-from functools import wraps
-import datetime
-import hashlib
-from schemas import validate_json, StartSessionRequest, SubmitMetricsRequest, DDARequest, SubmitAssessmentRequest, SyncOfflineTelemetryRequest
-
-from auth import token_required
-
 # Auth routes moved to server/routes/auth.py
 
 
@@ -261,7 +245,7 @@ def db_execute_with_retry(cursor, sql, params=(), max_retries=5):
         try:
             cursor.execute(sql, params)
             return  # success
-        except psycopg2.OperationalError as e:
+        except psycopg2.OperationalError:
             if attempt < max_retries - 1:
                 time.sleep(backoff_ms / 1000.0)
                 backoff_ms *= 2  # exponential backoff
