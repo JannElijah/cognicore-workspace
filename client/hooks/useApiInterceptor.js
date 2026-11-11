@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
-import useCogniStore from '../store/useCogniStore';
 import { audioDda } from '../utils/audioSynth';
+import { registerFetchMiddleware } from '../utils/fetchInterceptor';
 
 export default function useApiInterceptor({
   setActiveSessionId,
@@ -16,45 +16,27 @@ export default function useApiInterceptor({
   const prevDdaParamsRef = useRef(null);
 
   useEffect(() => {
-    const originalFetch = window.fetch || globalThis.fetch;
-    if (!originalFetch) return;
-
-    window.fetch = async (...args) => {
-      const url = args[0];
-      let options = args[1] || {};
-      
-      const token = useCogniStore.getState().token;
-      if (token) {
-          options.headers = {
-              ...options.headers,
-              'Authorization': `Bearer ${token}`
-          };
-          args[1] = options;
-      }
-      
-      if (typeof url === 'string' && url.includes('/api/dda')) {
-        const options = args[1] || {};
-        if (options.method === 'POST') {
+    return registerFetchMiddleware({
+      id: 'react-hud-interceptor',
+      priority: 10,
+      beforeRequest: ({ url, options }) => {
+        if (typeof url === 'string' && url.includes('/api/dda') && options?.method === 'POST') {
           try {
-            let body = {};
-            if (options.body) {
-              body = JSON.parse(options.body);
-            }
+            const body = options.body ? JSON.parse(options.body) : {};
             body.smoothing_alpha = smoothingAlphaRef.current;
-            options.body = JSON.stringify(body);
-            args[1] = options;
+            return { options: { ...options, body: JSON.stringify(body) } };
           } catch (e) {
             console.error('[Fetch Interceptor] Failed to inject smoothing_alpha', e);
           }
         }
-      }
+        return null;
+      },
+      afterResponse: ({ url, options, response }) => {
+        if (typeof url !== 'string' || !response) return;
 
-      const response = await originalFetch(...args);
-      if (typeof url === 'string') {
         if (url.includes('/api/start-session') && response.ok) {
           try {
-            const cloned = response.clone();
-            cloned.json().then(data => {
+            response.clone().json().then(data => {
               if (data && data.status === 'success') {
                 setActiveSessionId(data.session_id);
                 setLiveDdaParams(data.dda_parameters);
@@ -63,44 +45,46 @@ export default function useApiInterceptor({
                 setDdaAdvisorLogs([]);
                 setDdaAdvisorMessage(null);
                 prevDdaParamsRef.current = null;
-                
+
                 // Initialize Audio DDA Synthesizer
                 audioDda.init();
                 if (data.dda_parameters && data.dda_parameters.difficulty_level) {
                   audioDda.setDifficulty(data.dda_parameters.difficulty_level);
                 }
               }
-            });
+            }).catch(() => {});
           } catch (e) {
             console.error('[Telemetry HUD] Error parsing start-session', e);
           }
         }
+
         if (url.includes('/api/submit-metrics')) {
           try {
-            const options = args[1] || {};
-            if (options.body) {
+            if (options?.body) {
               const body = JSON.parse(options.body);
               let items = [];
               if (Array.isArray(body)) {
                 items = body;
               } else if (body && Array.isArray(body.metrics)) {
                 items = body.metrics;
+              } else if (body && Array.isArray(body.telemetry)) {
+                items = body.telemetry;
               } else {
                 items = [body];
               }
-              
+
               items.forEach(item => {
                 const accuracy = item.accuracy_rate !== undefined ? item.accuracy_rate : item.accuracy;
                 const rt = item.reaction_time !== undefined ? item.reaction_time : item.reaction_time_ms;
                 const spamClicks = item.spam_click_count || 0;
                 const hesitation = item.hesitation_ms || 0;
-                
+
                 if (accuracy !== undefined && rt !== undefined) {
                   setLiveMetrics(prev => [...prev, { accuracy, rt, spamClicks, hesitation }]);
-                  
+
                   // Play success (blip) / failure (buzz) synthesized audio tones
                   audioDda.playFeedback(accuracy === 1.0);
-                  
+
                   // Trigger low-pass calming mode when player shows panic or high hesitation latency
                   if (spamClicks > 2 || hesitation > 1500) {
                     audioDda.setFrustration(true);
@@ -108,7 +92,7 @@ export default function useApiInterceptor({
                 }
               });
             }
-            
+
             if (response.ok) {
               response.clone().json().then(data => {
                 if (data && data.status === 'success' && data.rewards) {
@@ -116,7 +100,7 @@ export default function useApiInterceptor({
                   sessionRewardsRef.current.coins += data.rewards.coins || 0;
                   if (data.rewards.leveled_up) sessionRewardsRef.current.leveled_up = true;
                 }
-              }).catch(e => {
+              }).catch(() => {
                 // Ignore parse errors if response isn't JSON
               });
             }
@@ -124,10 +108,10 @@ export default function useApiInterceptor({
             console.error('[Telemetry HUD] Error parsing submit-metrics', e);
           }
         }
+
         if (url.includes('/api/dda') && response.ok) {
           try {
-            const cloned = response.clone();
-            cloned.json().then(data => {
+            response.clone().json().then(data => {
               if (data && data.status === 'success') {
                 if (data.dda_parameters) {
                   setLiveDdaParams(data.dda_parameters);
@@ -138,21 +122,17 @@ export default function useApiInterceptor({
                 if (data.cognitive_profile) {
                   setLiveCognitiveProfile(data.cognitive_profile);
                 }
-                
+
                 // Revert low-pass soothing filter back to standard focus mode when difficulty updates
                 audioDda.setFrustration(false);
               }
-            });
+            }).catch(() => {});
           } catch (e) {
             console.error('[Telemetry HUD] Error parsing dda', e);
           }
         }
       }
-      return response;
-    };
-    return () => {
-      window.fetch = originalFetch;
-    };
+    });
   }, [
     setActiveSessionId,
     setLiveDdaParams,
