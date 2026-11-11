@@ -16,6 +16,36 @@ if SUPABASE_URL and SUPABASE_KEY:
 else:
     supabase = None
 
+# Temporary legacy allowlist until Supabase users.role is promoted to 'admin'
+LEGACY_ADMIN_USERNAMES = frozenset({'alyhomie', 'JannElijah', 'Jann'})
+
+
+def get_admin_usernames():
+    env_admins = {
+        name.strip()
+        for name in os.environ.get("ADMIN_USERNAMES", "").split(",")
+        if name.strip()
+    }
+    return LEGACY_ADMIN_USERNAMES | env_admins
+
+
+def is_admin_user(user_id=None, username=None):
+    """Return True if the user holds the 'admin' DB role or is on the admin allowlist."""
+    if username and username in get_admin_usernames():
+        return True
+    user_record = None
+    if user_id is not None:
+        user_record = db.session.get(User, user_id)
+    elif username:
+        user_record = User.query.filter_by(username=username).first()
+    if user_record is not None:
+        if (user_record.role or "").strip().lower() == "admin":
+            return True
+        if user_record.username in get_admin_usernames():
+            return True
+    return False
+
+
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -103,5 +133,16 @@ def token_required(f):
             print(f"Auth error: {e}")
             return jsonify({'status': 'error', 'message': 'Token is invalid or expired!'}), 401
             
+        return f(current_user_id, current_username, *args, **kwargs)
+    return decorated
+
+
+def admin_required(f):
+    """Require both a valid Supabase JWT and admin privileges."""
+    @wraps(f)
+    @token_required
+    def decorated(current_user_id, current_username, *args, **kwargs):
+        if not is_admin_user(current_user_id, current_username):
+            return jsonify({'status': 'error', 'message': 'Forbidden: Admin privileges required.'}), 403
         return f(current_user_id, current_username, *args, **kwargs)
     return decorated

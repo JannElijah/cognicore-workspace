@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from auth import token_required
+from auth import token_required, is_admin_user
 from database import db, get_db_connection
 import logging
 from sqlalchemy import text
@@ -650,7 +650,7 @@ def get_cohort_analytics():
 def get_user_session_history(current_user_id, current_username, username):
     if username in ["player_one", "", None]:
         username = current_username
-    if current_username != username:
+    if current_username != username and not is_admin_user(current_user_id, current_username):
         return jsonify({"status": "error", "message": "Unauthorized: you can only view your own session history"}), 403
     conn = get_db_connection()
     try:
@@ -692,8 +692,8 @@ def get_user_session_history(current_user_id, current_username, username):
                 "game_type": s["game_type"],
                 "game_mode": s["game_mode"] if s["game_mode"] else "timed",
                 "start_time": s["start_time"],
-                "avg_rt": round(s["avg_rt"], 2) if s["avg_rt"] is not None else 0.0,
-                "avg_acc": round(s["avg_acc"], 4) if s["avg_acc"] is not None else 0.0,
+                "avg_rt": round(float(s["avg_rt"]), 2) if s["avg_rt"] is not None else 0.0,
+                "avg_acc": round(float(s["avg_acc"]), 4) if s["avg_acc"] is not None else 0.0,
                 "max_diff": s["max_diff"] if s["max_diff"] is not None else 1,
                 "rounds_count": s["rounds_count"]
             })

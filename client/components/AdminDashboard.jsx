@@ -6,10 +6,42 @@ import {
   Chart as ChartJS, RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend, ArcElement, CategoryScale, LinearScale, BarElement
 } from 'chart.js';
 import { Radar, Bar, Doughnut, Line } from 'react-chartjs-2';
+import useCogniStore from '../store/useCogniStore';
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend, ArcElement, CategoryScale, LinearScale, BarElement);
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+const getAuthHeaders = () => {
+  const token =
+    useCogniStore.getState().token ||
+    (typeof window !== 'undefined' ? localStorage.getItem('token') : '') ||
+    '';
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+const downloadTelemetryCsv = (records, filename) => {
+  if (!Array.isArray(records) || records.length === 0) return false;
+  const headers = Object.keys(records[0]);
+  const escapeCell = (val) => {
+    const str = val === null || val === undefined ? '' : String(val);
+    return `"${str.replace(/"/g, '""')}"`;
+  };
+  const csvLines = [
+    headers.map(escapeCell).join(','),
+    ...records.map((row) => headers.map((h) => escapeCell(row[h])).join(','))
+  ];
+  const blob = new Blob([csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+  return true;
+};
 
 export default function AdminDashboard() {
   const [metrics, setMetrics] = useState(null);
@@ -24,17 +56,21 @@ export default function AdminDashboard() {
   const triggerRetrain = async () => {
     setRetrainStatus('Training...');
     try {
-      const res = await fetch(`${API_BASE}/api/model/retrain`, {
+      const res = await fetch(`${API_BASE}/api/admin/retrain`, {
         method: 'POST',
-        headers: { 'Cron-Secret': 'capstone_cron_secret_789' }
+        headers: { ...getAuthHeaders() }
       });
       const data = await res.json();
       if (res.ok) {
         setRetrainStatus('Success');
-        setRetrainMessage(data.message || 'Model retrained successfully');
+        const msg =
+          typeof data.test_accuracy === 'number'
+            ? `Model retrained (CV accuracy: ${(data.test_accuracy * 100).toFixed(2)}%)`
+            : (data.message || 'Model retrained successfully');
+        setRetrainMessage(msg);
       } else {
         setRetrainStatus('Failed');
-        setRetrainMessage(data.error || 'Failed to retrain');
+        setRetrainMessage(data.message || data.error || 'Failed to retrain');
       }
     } catch (err) {
       setRetrainStatus('Error');
@@ -73,7 +109,9 @@ export default function AdminDashboard() {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/admin/users?search=${searchQuery}`);
+      const res = await fetch(`${API_BASE}/api/admin/users?search=${encodeURIComponent(searchQuery)}`, {
+        headers: { ...getAuthHeaders() }
+      });
       const data = await res.json();
       if (data.status === 'success') {
         setUsers(data.users);
@@ -106,12 +144,15 @@ export default function AdminDashboard() {
 
   const suspendUser = async (username) => {
     try {
-      const res = await fetch(`${API_BASE}/api/admin/users/${username}/suspend`, { method: 'POST' });
+      const res = await fetch(`${API_BASE}/api/admin/users/${encodeURIComponent(username)}/suspend`, {
+        method: 'POST',
+        headers: { ...getAuthHeaders() }
+      });
       const data = await res.json();
       if (data.status === 'success') {
         fetchUsers();
         if (selectedUser === username) {
-          setPlayerData(prev => ({ ...prev, user: { ...prev.user, status: data.new_status }}));
+          setPlayerData(prev => prev && prev.user ? { ...prev, user: { ...prev.user, status: data.new_status } } : prev);
         }
       }
     } catch (e) {
@@ -123,16 +164,18 @@ export default function AdminDashboard() {
     setSelectedUser(username);
     setModalLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/admin/users/${username}`);
+      const headers = getAuthHeaders();
+      const encodedUsername = encodeURIComponent(username);
+      const res = await fetch(`${API_BASE}/api/admin/users/${encodedUsername}`, { headers });
       const data = await res.json();
-      const histRes = await fetch(`${API_BASE}/api/user-session-history/${username}`);
+      const histRes = await fetch(`${API_BASE}/api/user-session-history/${encodedUsername}`, { headers });
       const histData = await histRes.json();
       
       if (data.status === 'success') {
         setPlayerData(data);
       }
-      if (histData.status === 'success') {
-        setPlayerHistory(histData.sessions.reverse());
+      if (histData.status === 'success' && Array.isArray(histData.sessions)) {
+        setPlayerHistory([...histData.sessions].reverse());
       }
     } catch (e) {
       console.error(e);
@@ -148,41 +191,23 @@ export default function AdminDashboard() {
 
   const exportRawTelemetry = async () => {
     try {
-      const token = localStorage.getItem('token') || '';
-      const res = await fetch(`${API_BASE}/api/admin/export-telemetry`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const res = await fetch(`${API_BASE}/api/admin/export-telemetry`, { headers: { ...getAuthHeaders() } });
       const data = await res.json();
-      if (data.status === 'success' && data.telemetry?.length > 0) {
-        const headers = Object.keys(data.telemetry[0]).join(',');
-        const rows = data.telemetry.map(row => Object.values(row).join(','));
-        const csvContent = 'data:text/csv;charset=utf-8,' + headers + '\n' + rows.join('\n');
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement('a');
-        link.setAttribute('href', encodedUri);
-        link.setAttribute('download', 'raw_telemetry_export.csv');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } else { alert('Failed to export telemetry.'); }
+      if (data.status !== 'success' || !downloadTelemetryCsv(data.telemetry, 'raw_telemetry_export.csv')) {
+        alert('Failed to export telemetry.');
+      }
     } catch (e) { console.error('Export error:', e); }
   };
 
   const exportSubjectTelemetry = async () => {
     try {
-      const token = localStorage.getItem('token') || '';
-      const res = await fetch(`${API_BASE}/api/admin/export-telemetry/${selectedUser}`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const res = await fetch(`${API_BASE}/api/admin/export-telemetry/${encodeURIComponent(selectedUser)}`, {
+        headers: { ...getAuthHeaders() }
+      });
       const data = await res.json();
-      if (data.status === 'success' && data.telemetry?.length > 0) {
-        const headers = Object.keys(data.telemetry[0]).join(',');
-        const rows = data.telemetry.map(row => Object.values(row).join(','));
-        const csvContent = 'data:text/csv;charset=utf-8,' + headers + '\n' + rows.join('\n');
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement('a');
-        link.setAttribute('href', encodedUri);
-        link.setAttribute('download', `${selectedUser}_telemetry.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } else { alert('Failed to export telemetry.'); }
+      if (data.status !== 'success' || !downloadTelemetryCsv(data.telemetry, `${selectedUser}_telemetry.csv`)) {
+        alert('Failed to export telemetry.');
+      }
     } catch (e) { console.error('Export error:', e); }
   };
 

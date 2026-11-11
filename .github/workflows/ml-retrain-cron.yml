@@ -11,6 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Render Backend Endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
-          curl -X POST 'https://cognicore-workspace.onrender.com/api/model/retrain' \
-          -H 'X-Cron-Secret: Basta698!!!!!'
+          if [ -z "$CRON_SECRET" ]; then
+            echo "CRON_SECRET repository secret is not set" >&2
+            exit 1
+          fi
+          curl -fsS -X POST 'https://cognicore-workspace.onrender.com/api/model/retrain' \
+            -H "X-Cron-Secret: ${CRON_SECRET}"

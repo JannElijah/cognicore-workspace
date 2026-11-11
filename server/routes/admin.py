@@ -1,13 +1,12 @@
 from flask import Blueprint, request, jsonify
-from auth import token_required
-from database import get_db_connection, db
+from auth import token_required, admin_required
+from database import get_db_connection
 from routes.leaderboard import invalidate_leaderboard_cache
-from models import User, SystemConfig, SystemAnnouncement, AuditLog, BugReport, GameModuleConfig
-from datetime import datetime
 
 admin_bp = Blueprint('admin_bp', __name__)
 
 def log_audit(admin_username, action, target=None):
+    conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -16,12 +15,14 @@ def log_audit(admin_username, action, target=None):
             (admin_username, action, target)
         )
         conn.commit()
-        conn.close()
-    except Exception as e:
+    except Exception:
         pass
+    finally:
+        if conn is not None:
+            conn.close()
 
 @admin_bp.route('/api/admin/users', methods=['GET'])
-@token_required
+@admin_required
 def get_users(current_user_id, current_username):
     # Search / Filter
     search = request.args.get('search', '')
@@ -45,7 +46,7 @@ def get_users(current_user_id, current_username):
         conn.close()
 
 @admin_bp.route('/api/admin/users/<username>', methods=['GET'])
-@token_required
+@admin_required
 def get_user_summary(current_user_id, current_username, username):
     conn = get_db_connection()
     try:
@@ -97,9 +98,9 @@ def get_user_summary(current_user_id, current_username, username):
         conn.close()
 
 @admin_bp.route('/api/admin/users/<username>/status', methods=['PUT'])
-@token_required
+@admin_required
 def update_user_status(current_user_id, current_username, username):
-    data = request.json
+    data = request.get_json(silent=True) or {}
     status = data.get('status')
     if not status:
         return jsonify({"status": "error", "message": "Missing status"}), 400
@@ -108,16 +109,45 @@ def update_user_status(current_user_id, current_username, username):
     try:
         cursor = conn.cursor()
         cursor.execute("UPDATE users SET status = %s WHERE username = %s", (status, username))
+        if cursor.rowcount == 0:
+            return jsonify({"status": "error", "message": "User not found"}), 404
         conn.commit()
         log_audit(current_username, f"Changed status to {status}", username)
-        return jsonify({"status": "success", "message": "Status updated"}), 200
+        return jsonify({"status": "success", "new_status": status, "message": "Status updated"}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
     finally:
         conn.close()
 
+
+@admin_bp.route('/api/admin/users/<username>/suspend', methods=['POST'])
+@admin_required
+def toggle_suspend_user(current_user_id, current_username, username):
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT status FROM users WHERE username = %s", (username,))
+        row = cursor.fetchone()
+        if not row:
+            return jsonify({"status": "error", "message": "User not found"}), 404
+        current_status = (row['status'] or 'active').strip().lower()
+        new_status = 'active' if current_status == 'suspended' else 'suspended'
+        cursor.execute("UPDATE users SET status = %s WHERE username = %s", (new_status, username))
+        conn.commit()
+        log_audit(current_username, f"Changed status to {new_status}", username)
+        return jsonify({
+            "status": "success",
+            "new_status": new_status,
+            "message": f"User {username} status set to {new_status}"
+        }), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+    finally:
+        conn.close()
+
+
 @admin_bp.route('/api/admin/config', methods=['GET', 'POST'])
-@token_required
+@admin_required
 def manage_config(current_user_id, current_username):
     conn = get_db_connection()
     try:
@@ -127,7 +157,7 @@ def manage_config(current_user_id, current_username):
             configs = {row['config_key']: row['config_value'] for row in cursor.fetchall()}
             return jsonify({"status": "success", "config": configs}), 200
         else:
-            data = request.json
+            data = request.get_json(silent=True) or {}
             for key, val in data.items():
                 cursor.execute("""
                     INSERT INTO system_config (config_key, config_value) 
@@ -143,9 +173,9 @@ def manage_config(current_user_id, current_username):
         conn.close()
 
 @admin_bp.route('/api/admin/announcements', methods=['POST'])
-@token_required
+@admin_required
 def create_announcement(current_user_id, current_username):
-    data = request.json
+    data = request.get_json(silent=True) or {}
     message = data.get('message')
     if not message:
         return jsonify({"status": "error", "message": "Missing message"}), 400
@@ -163,7 +193,7 @@ def create_announcement(current_user_id, current_username):
         conn.close()
 
 @admin_bp.route('/api/admin/audit-logs', methods=['GET'])
-@token_required
+@admin_required
 def get_audit_logs(current_user_id, current_username):
     conn = get_db_connection()
     try:
@@ -179,7 +209,7 @@ def get_audit_logs(current_user_id, current_username):
 @admin_bp.route('/api/bug-report', methods=['POST'])
 @token_required
 def submit_bug_report(current_user_id, current_username):
-    data = request.json
+    data = request.get_json(silent=True) or {}
     message = data.get('message')
     if not message:
         return jsonify({"status": "error", "message": "Missing message"}), 400
@@ -196,7 +226,7 @@ def submit_bug_report(current_user_id, current_username):
         conn.close()
 
 @admin_bp.route('/api/admin/bug-reports', methods=['GET'])
-@token_required
+@admin_required
 def get_bug_reports(current_user_id, current_username):
     conn = get_db_connection()
     try:
@@ -215,7 +245,7 @@ def get_bug_reports(current_user_id, current_username):
         conn.close()
 
 @admin_bp.route('/api/admin/leaderboard/invalidate/<int:session_id>', methods=['DELETE'])
-@token_required
+@admin_required
 def invalidate_score(current_user_id, current_username, session_id):
     conn = get_db_connection()
     try:
@@ -237,7 +267,7 @@ def invalidate_score(current_user_id, current_username, session_id):
         
         conn.commit()
         invalidate_leaderboard_cache()
-        log_audit(current_username, f"Invalidated session {session_id} and deducted XP", uid)
+        log_audit(current_username, f"Invalidated session {session_id} and deducted XP", str(uid))
         return jsonify({"status": "success", "message": "Score invalidated successfully"}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -245,7 +275,7 @@ def invalidate_score(current_user_id, current_username, session_id):
         conn.close()
 
 @admin_bp.route('/api/admin/game-modules', methods=['GET', 'POST'])
-@token_required
+@admin_required
 def manage_game_modules(current_user_id, current_username):
     conn = get_db_connection()
     try:
@@ -255,7 +285,7 @@ def manage_game_modules(current_user_id, current_username):
             modules = [dict(row) for row in cursor.fetchall()]
             return jsonify({"status": "success", "modules": modules}), 200
         else:
-            data = request.json
+            data = request.get_json(silent=True) or {}
             game_type = data.get('game_type')
             is_active = data.get('is_active')
             cursor.execute("""
@@ -272,7 +302,7 @@ def manage_game_modules(current_user_id, current_username):
         conn.close()
 
 @admin_bp.route('/api/admin/users/<username>', methods=['DELETE'])
-@token_required
+@admin_required
 def delete_user(current_user_id, current_username, username):
     conn = get_db_connection()
     try:
@@ -290,7 +320,7 @@ def delete_user(current_user_id, current_username, username):
         conn.close()
 
 @admin_bp.route('/api/admin/export-telemetry', methods=['GET'])
-@token_required
+@admin_required
 def export_telemetry(current_user_id, current_username):
     conn = get_db_connection()
     try:
@@ -317,7 +347,7 @@ def export_telemetry(current_user_id, current_username):
 
 
 @admin_bp.route('/api/admin/export-telemetry/<username>', methods=['GET'])
-@token_required
+@admin_required
 def export_subject_telemetry(current_user_id, current_username, username):
     conn = get_db_connection()
     try:
