@@ -22,6 +22,14 @@ import ErrorBoundary from './components/ErrorBoundary';
 import useCogniStore from './store/useCogniStore';
 import useApiInterceptor from './hooks/useApiInterceptor';
 import { supabase } from './utils/supabaseClient';
+import {
+  clearLegacyLocalAuth,
+  clearSessionAuth,
+  getStoredToken,
+  getStoredUser,
+  setStoredToken,
+  setStoredUser,
+} from './utils/authSession.js';
 import Shop from './components/Shop';
 import RewardModal from './components/RewardModal';
 import LeaderboardModal from './components/LeaderboardModal';
@@ -242,7 +250,11 @@ export default function App() {
   const [portalView, setPortalView] = useState('participant'); // 'participant' | 'admin' | 'knowledge'
 
   // Quasi-Experimental Research Pipeline States
-  const [currentUser, setCurrentUser] = useState(() => (typeof window !== 'undefined' && localStorage.getItem('cognicore_user')) || '');
+  const [currentUser, setCurrentUser] = useState('');
+  const [sessionRestoring, setSessionRestoring] = useState(() => {
+    clearLegacyLocalAuth();
+    return Boolean(getStoredUser());
+  });
   const [usernameInput, setUsernameInput] = useState('');
   const [preTestScores, setPreTestScores] = useState(null);
   const [postTestScores, setPostTestScores] = useState(null);
@@ -288,14 +300,14 @@ export default function App() {
   }, [isMobile, currentUser]);
 
   const getAuthToken = async () => {
-    let token = useCogniStore.getState().token || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
+    let token = useCogniStore.getState().token || getStoredToken();
     if (!token) {
       try {
         const { data: sessionData } = await supabase.auth.getSession();
         token = sessionData?.session?.access_token || null;
         if (token) {
           useCogniStore.setState({ token });
-          if (typeof window !== 'undefined') localStorage.setItem('token', token);
+          setStoredToken(token);
         }
       } catch (err) {
         console.warn("Could not retrieve active session token:", err);
@@ -304,92 +316,110 @@ export default function App() {
     return token || '';
   };
 
-  // Session Persistence on Refresh
+  // Tab-scoped session restoration (fresh visits/tabs always open on Login/Sign up)
   useEffect(() => {
+    const resetToLogin = async () => {
+      try {
+        await supabase.auth.signOut({ scope: 'local' });
+      } catch (_) {}
+      useCogniStore.getState().logout();
+      clearSessionAuth();
+      setCurrentUser('');
+      setActiveDashboardUser('');
+    };
+
     const restoreSession = async () => {
-      const storedUser = typeof window !== 'undefined' ? localStorage.getItem('cognicore_user') : null;
+      clearLegacyLocalAuth();
+      const storedUser = getStoredUser();
       if (!storedUser) {
-        try {
-          await supabase.auth.signOut({ scope: 'local' });
-        } catch (_) {}
+        await resetToLogin();
+        setSessionRestoring(false);
         return;
       }
 
-      const { data } = await supabase.auth.getSession();
-      if (data && data.session && data.session.user) {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (!data?.session?.user) {
+          await resetToLogin();
+          return;
+        }
+
         const user = data.session.user;
-        const username = user.user_metadata?.username || user.email.split('@')[0];
-        if (username !== storedUser) {
-          try {
-            await supabase.auth.signOut({ scope: 'local' });
-          } catch (_) {}
+        const username = user.user_metadata?.username || user.email?.split('@')[0];
+        if (!username || username !== storedUser) {
+          await resetToLogin();
           return;
         }
 
         const token = data.session.access_token;
-        
-        try {
-            const syncRes = await fetch(API_BASE + '/api/sync-user', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-            if (syncRes.ok) {
-                const syncData = await syncRes.json();
-                if (syncData.status === 'success') {
-                    useCogniStore.getState().login(syncData.user, token);
-                    useCogniStore.getState().fetchInventory();
-                }
-            }
-            
-            const res = await fetch(`${API_BASE}/api/assessment-status/${username}`, {
+        const syncRes = await fetch(API_BASE + '/api/sync-user', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (!syncRes.ok) {
+          await resetToLogin();
+          return;
+        }
+        const syncData = await syncRes.json();
+        if (syncData?.status !== 'success') {
+          await resetToLogin();
+          return;
+        }
+
+        const res = await fetch(`${API_BASE}/api/assessment-status/${username}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) {
+          await resetToLogin();
+          return;
+        }
+        const asmtData = await res.json();
+        if (asmtData?.status !== 'success') {
+          await resetToLogin();
+          return;
+        }
+
+        useCogniStore.getState().login(syncData.user, token);
+        useCogniStore.getState().fetchInventory();
+        setCurrentUser(username);
+        setActiveDashboardUser(username);
+
+        if (asmtData.exists && asmtData.pre_test) {
+          setPreTestScores(asmtData.pre_test);
+          setWeakestDomain(asmtData.weakest_domain);
+          setPrescribedGame(asmtData.prescribed_game);
+          setPersonalizedReport(asmtData.personalized_report);
+
+          if (asmtData.post_test) {
+            setPostTestScores(asmtData.post_test);
+            setAiFeedback(asmtData.ai_feedback);
+            setAssessmentStage('completed');
+            fetchEvaluationReport(username);
+          } else {
+            setAssessmentStage('none');
+            const historyRes = await fetch(`${API_BASE}/api/user-session-history/${username}`, {
               headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (res.ok) {
-                const asmtData = await res.json();
-                if (asmtData.status === 'success') {
-                    setCurrentUser(username);
-                    setActiveDashboardUser(username);
-                    
-                    if (asmtData.exists && asmtData.pre_test) {
-                        setPreTestScores(asmtData.pre_test);
-                        setWeakestDomain(asmtData.weakest_domain);
-                        setPrescribedGame(asmtData.prescribed_game);
-                        setPersonalizedReport(asmtData.personalized_report);
-                        
-                        if (asmtData.post_test) {
-                            setPostTestScores(asmtData.post_test);
-                            setAiFeedback(asmtData.ai_feedback);
-                            setAssessmentStage('completed');
-                            fetchEvaluationReport(username);
-                        } else {
-                            setAssessmentStage('none');
-                            const historyRes = await fetch(`${API_BASE}/api/user-session-history/${username}`, {
-                              headers: { 'Authorization': `Bearer ${token}` }
-                            });
-                            if (historyRes.ok) {
-                                const histData = await historyRes.json();
-                                const prescribedDomain = DOMAINS_LIST.find(domain => domain.id === asmtData.weakest_domain);
-                                const played = (histData.sessions || []).some(session =>
-                                  prescribedDomain?.games.some(game => game.id === session.game_type)
-                                );
-                                setHasPlayedPrescribed(played);
-                            }
-                        }
-                    } else {
-                        setAssessmentStage('pre-test');
-                    }
-                }
+            if (historyRes.ok) {
+              const histData = await historyRes.json();
+              const prescribedDomain = DOMAINS_LIST.find(domain => domain.id === asmtData.weakest_domain);
+              const played = (histData.sessions || []).some(session =>
+                prescribedDomain?.games.some(game => game.id === session.game_type)
+              );
+              setHasPlayedPrescribed(played);
             }
-        } catch (e) {
-            console.error("Session restore failed", e);
+          }
+        } else {
+          setAssessmentStage('pre-test');
         }
-      } else {
-        if (typeof window !== 'undefined') localStorage.removeItem('cognicore_user');
-        setCurrentUser('');
-        setActiveDashboardUser('');
+      } catch (e) {
+        console.error("Session restore failed", e);
+        await resetToLogin();
+      } finally {
+        setSessionRestoring(false);
       }
     };
     restoreSession();
@@ -491,7 +521,7 @@ export default function App() {
       const data = await res.json();
       if (data.status === 'success') {
         setAssessmentError(null); // Clear waking up message if it appeared
-        if (typeof window !== 'undefined') localStorage.setItem('cognicore_user', trimmedName);
+        setStoredUser(trimmedName);
         setCurrentUser(trimmedName);
         setActiveDashboardUser(trimmedName);
         
@@ -669,12 +699,12 @@ export default function App() {
   });
 
   // Dashboard Visualizations (Option 2)
-  const [activeDashboardUser, setActiveDashboardUser] = useState(() => (typeof window !== 'undefined' && localStorage.getItem('cognicore_user')) || '');
+  const [activeDashboardUser, setActiveDashboardUser] = useState('');
 
   // Keep activeDashboardUser in sync with currentUser
   useEffect(() => {
     if (currentUser) {
-      if (typeof window !== 'undefined') localStorage.setItem('cognicore_user', currentUser);
+      setStoredUser(currentUser);
       if (activeDashboardUser !== currentUser) setActiveDashboardUser(currentUser);
     }
   }, [currentUser]);
@@ -735,7 +765,7 @@ export default function App() {
   });
 
   const fetchDashboardData = async (username) => {
-    const targetUser = username || activeDashboardUser || currentUser || (typeof window !== 'undefined' && localStorage.getItem('cognicore_user')) || '';
+    const targetUser = username || activeDashboardUser || currentUser || getStoredUser() || '';
     if (!targetUser) return;
     setChartsLoading(true);
     setChartsError(null);
@@ -1630,7 +1660,11 @@ export default function App() {
           </div>
         )}
 
-        {currentUser === '' && portalView === 'participant' ? (
+        {sessionRestoring ? (
+          <div style={{ textAlign: 'center', padding: '4rem 1rem', color: '#94a3b8' }}>
+            Restoring session...
+          </div>
+        ) : currentUser === '' && portalView === 'participant' ? (
           <LoginFlow 
             usernameInput={usernameInput}
             setUsernameInput={setUsernameInput}

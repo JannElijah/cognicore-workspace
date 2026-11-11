@@ -1,5 +1,6 @@
 import { API_BASE } from './apiClient.js';
 import useCogniStore from '../store/useCogniStore';
+import { getStoredToken } from './authSession.js';
 
 const INSTALLED_FLAG = '__cognicoreFetchIntercepted';
 
@@ -9,10 +10,7 @@ const middlewares = [];
 export function getAuthTokenFromStore() {
   const storeToken = useCogniStore.getState?.()?.token;
   if (storeToken) return storeToken;
-  if (typeof window !== 'undefined' && window.localStorage) {
-    return window.localStorage.getItem('token') || null;
-  }
-  return null;
+  return getStoredToken();
 }
 
 function getHeaderCaseInsensitive(headers, name) {

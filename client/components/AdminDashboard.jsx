@@ -7,6 +7,7 @@ import {
 } from 'chart.js';
 import { Radar, Bar, Doughnut, Line } from 'react-chartjs-2';
 import useCogniStore from '../store/useCogniStore';
+import { getStoredToken } from '../utils/authSession.js';
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend, ArcElement, CategoryScale, LinearScale, BarElement);
 
@@ -15,7 +16,7 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const getAuthHeaders = () => {
   const token =
     useCogniStore.getState().token ||
-    (typeof window !== 'undefined' ? localStorage.getItem('token') : '') ||
+    getStoredToken() ||
     '';
   return token ? { Authorization: `Bearer ${token}` } : {};
 };

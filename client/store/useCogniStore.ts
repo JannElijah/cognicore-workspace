@@ -1,5 +1,6 @@
 import { API_BASE } from '../utils/apiClient.js';
 import { create } from 'zustand';
+import { clearSessionAuth, getStoredToken, setStoredToken } from '../utils/authSession.js';
 
 export interface CognitiveProfile {
   archetype: string | null;
@@ -33,7 +34,7 @@ export interface CogniStore {
   fetchInventory: () => Promise<void>;
 }
 
-const initialToken = typeof window !== 'undefined' ? (localStorage.getItem('token') || null) : null;
+const initialToken = getStoredToken();
 
 const useCogniStore = create<CogniStore>((set, get) => ({
   user: null,
@@ -49,16 +50,14 @@ const useCogniStore = create<CogniStore>((set, get) => ({
   },
   
   login: (userData, token) => {
-    if (typeof window !== 'undefined' && token) {
-      localStorage.setItem('token', token);
+    if (token) {
+      setStoredToken(token);
     }
     set({ user: userData, token });
   },
   
   logout: () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('token');
-    }
+    clearSessionAuth();
     set({ 
       user: null, 
       token: null, 

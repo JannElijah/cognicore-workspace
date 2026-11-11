@@ -7,4 +7,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error("Missing Supabase credentials in .env.local")
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Scope Supabase auth session to tab sessionStorage so fresh visits open on Login/Sign up
+const authStorage = typeof window !== 'undefined' ? window.sessionStorage : undefined;
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    storage: authStorage,
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  }
+})

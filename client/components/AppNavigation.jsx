@@ -1,6 +1,7 @@
 import React, { memo, useState } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import useCogniStore from '../store/useCogniStore';
+import { clearSessionAuth } from '../utils/authSession.js';
 
 const AppNavigation = memo(function AppNavigation({
   currentUser, setCurrentUser, portalView, setPortalView, setShowProfileModal, activeGame,
@@ -595,17 +596,7 @@ const AppNavigation = memo(function AppNavigation({
                   }
                   try {
                     useCogniStore.getState().logout();
-                    if (typeof window !== 'undefined') {
-                      localStorage.removeItem('cognicore_user');
-                      localStorage.removeItem('token');
-                      Object.keys(localStorage).forEach(key => {
-                        if (key.startsWith('sb-') || key.includes('supabase') || key.includes('cognicore')) {
-                          localStorage.removeItem(key);
-                        }
-                      });
-                      localStorage.clear();
-                      sessionStorage.clear();
-                    }
+                    clearSessionAuth();
                   } catch (_) {}
                   window.location.reload();
                 }}

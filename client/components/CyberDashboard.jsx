@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { DOMAIN_INFO, DOMAINS_LIST, DOMAIN_THEMES } from '../utils/constants.jsx';
 import useCogniStore from '../store/useCogniStore';
 import { API_BASE } from '../utils/apiClient.js';
+import { getCustomPrescribedGame, setCustomPrescribedGame } from '../utils/authSession.js';
 
 // Cyber Corner Brackets
 const CyberCorner = ({ color = '#00f0ff', size = 8 }) => (
@@ -213,12 +214,12 @@ const CyberDashboard = ({
 
   // User-controllable Prescribed Game State
   const [currentPrescribedGame, setCurrentPrescribedGame] = useState(() => {
-    return localStorage.getItem('cognicore_custom_prescribed') || prescribedGame || 'PriorityQueue';
+    return getCustomPrescribedGame() || prescribedGame || 'PriorityQueue';
   });
 
   useEffect(() => {
     if (prescribedGame) {
-      const saved = localStorage.getItem('cognicore_custom_prescribed');
+      const saved = getCustomPrescribedGame();
       if (!saved) setCurrentPrescribedGame(prescribedGame);
     }
   }, [prescribedGame]);
@@ -226,7 +227,7 @@ const CyberDashboard = ({
   const handleSetPrescribedGame = (gameId) => {
     audioEngine?.playClick();
     setCurrentPrescribedGame(gameId);
-    localStorage.setItem('cognicore_custom_prescribed', gameId);
+    setCustomPrescribedGame(gameId);
   };
 
   // Find prescribed game details
