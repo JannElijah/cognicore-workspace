@@ -3,8 +3,23 @@ from auth import token_required, is_admin_user
 from database import db, get_db_connection
 import logging
 from sqlalchemy import text
-from game_utils import safe_float, safe_int
+from game_utils import safe_float, safe_int, get_domain_for_game
 import math
+
+DOMAIN_NAMES = {
+    "reflexes_and_focus": "Reflexes & Focus",
+    "spatial_visual_memory": "Spatial-Visual Memory",
+    "executive_strategy": "Executive Strategy",
+    "logical_mathematical": "Logical-Mathematical",
+}
+
+# Recommended active game title per domain (aligned with active lobby games and assessments)
+DOMAIN_GAME_MAP = {
+    "reflexes_and_focus": "Speed Tap",
+    "spatial_visual_memory": "Matrix Recall",
+    "executive_strategy": "Priority Queue",
+    "logical_mathematical": "Equation Balance",
+}
 
 try:
     from scipy import stats
@@ -91,9 +106,15 @@ def get_user_analytics(current_user_id, current_username, username):
         try:
             cur = c.cursor()
             cur.execute("""
-                SELECT cognitive_domain, AVG(accuracy_rate) as avg_accuracy, AVG(reaction_time) as avg_rt 
-                FROM performance_metrics JOIN game_sessions ON performance_metrics.session_id = game_sessions.id 
-                WHERE game_sessions.user_id = %s GROUP BY cognitive_domain
+                SELECT performance_metrics.cognitive_domain AS cognitive_domain,
+                       COALESCE(performance_metrics.game_type, game_sessions.game_type) AS game_type,
+                       AVG(accuracy_rate) AS avg_accuracy,
+                       AVG(reaction_time) AS avg_rt,
+                       COUNT(*) AS metric_count
+                FROM performance_metrics
+                JOIN game_sessions ON performance_metrics.session_id = game_sessions.id
+                WHERE game_sessions.user_id = %s
+                GROUP BY performance_metrics.cognitive_domain, COALESCE(performance_metrics.game_type, game_sessions.game_type)
             """, (target_uid,))
             return cur.fetchall()
         finally:
@@ -209,7 +230,28 @@ def get_user_analytics(current_user_id, current_username, username):
         "longest_streak": streak_row["longest_streak"] if streak_row and streak_row["longest_streak"] is not None else 1
     }
 
-    domain_list = [dict(row) for row in domain_stats]
+    domain_agg = {}
+    for row in domain_stats:
+        dom = row["cognitive_domain"] or get_domain_for_game(row["game_type"], default=None)
+        if not dom:
+            continue
+        cnt = row["metric_count"] or 0
+        acc = float(row["avg_accuracy"] or 0.0)
+        rt = float(row["avg_rt"] or 0.0)
+        bucket = domain_agg.setdefault(dom, {"acc_sum": 0.0, "rt_sum": 0.0, "count": 0})
+        bucket["acc_sum"] += acc * cnt
+        bucket["rt_sum"] += rt * cnt
+        bucket["count"] += cnt
+
+    domain_list = [
+        {
+            "cognitive_domain": dom,
+            "avg_accuracy": bucket["acc_sum"] / bucket["count"],
+            "avg_rt": bucket["rt_sum"] / bucket["count"],
+        }
+        for dom, bucket in domain_agg.items()
+        if bucket["count"] > 0
+    ]
     top_strength = None
     primary_bottleneck = None
     insight_text = "Play more games to generate your personalized AI coaching insight!"
@@ -220,19 +262,8 @@ def get_user_analytics(current_user_id, current_username, username):
         top_strength = sorted_domains[0]['cognitive_domain']
         primary_bottleneck = sorted_domains[-1]['cognitive_domain']
 
-        domain_names = {
-            "reflexes_and_focus": "Reflexes & Focus",
-            "spatial_visual_memory": "Spatial-Visual Memory",
-            "executive_strategy": "Executive Strategy",
-            "logical_mathematical": "Logical-Mathematical"
-        }
-        
-        domain_game_map = {
-            "reflexes_and_focus": "Speed Tap",
-            "spatial_visual_memory": "Sequence Decoder",
-            "executive_strategy": "Rule Shifter",
-            "logical_mathematical": "Equation Balance"
-        }
+        domain_names = DOMAIN_NAMES
+        domain_game_map = DOMAIN_GAME_MAP
 
         strength_name = domain_names.get(top_strength, top_strength.replace("_", " ").title())
         bottleneck_name = domain_names.get(primary_bottleneck, primary_bottleneck.replace("_", " ").title())

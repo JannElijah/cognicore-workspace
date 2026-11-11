@@ -1,6 +1,4 @@
-from utils import safe_float
-
-GAME_TO_DOMAIN = {'MemoryMatch': 'spatial_visual_memory', 'memory_match': 'spatial_visual_memory', 'LogicLink': 'logical_mathematical', 'logic_link': 'logical_mathematical', 'EquationBalance': 'logical_mathematical', 'equation_balance': 'logical_mathematical', 'SequenceDecoder': 'logical_mathematical', 'sequence_decoder': 'logical_mathematical', 'RouteOptimizer': 'logical_mathematical', 'route_optimizer': 'logical_mathematical', 'SpeedTap': 'reflexes_and_focus', 'speed_tap': 'reflexes_and_focus', 'FocusFinder': 'reflexes_and_focus', 'focus_finder': 'reflexes_and_focus', 'MazeEscape': 'executive_strategy', 'maze_escape': 'executive_strategy', 'PriorityQueue': 'executive_strategy', 'priority_queue': 'executive_strategy', 'NeuroMaze': 'executive_strategy', 'neuro_maze': 'executive_strategy', 'MatrixRecall': 'spatial_visual_memory', 'matrix_recall': 'spatial_visual_memory', 'StroopShift': 'reflexes_and_focus', 'stroop_shift': 'reflexes_and_focus', 'MentalFlex': 'executive_strategy', 'mental_flex': 'executive_strategy', 'NeuralNBack': 'spatial_visual_memory', 'neural_n_back': 'spatial_visual_memory', 'SynapseSpin': 'spatial_visual_memory', 'synapse_spin': 'spatial_visual_memory', 'NexusMapper': 'spatial_visual_memory', 'nexus_mapper': 'spatial_visual_memory'}
+from utils import safe_float, GAME_TO_DOMAIN, DOMAIN_TITLE_MAP, get_domain_for_game
 
 def calculate_ols_slope(y_vals):
     """
@@ -72,7 +70,7 @@ def calculate_dda_parameters(difficulty_level, game_type='SpeedTap', user_avg_rt
     # Bound difficulty level between 1 and 5
     level = max(1, min(5, int(difficulty_level)))
     
-    if game_type == 'MemoryMatch':
+    if game_type in ['MemoryMatch', 'memory_match']:
         # Map levels to game-specific variables for the Memory Match game
         configs = {
             1: {
@@ -106,7 +104,7 @@ def calculate_dda_parameters(difficulty_level, game_type='SpeedTap', user_avg_rt
                 "flash_duration": 500
             }
         }
-    elif game_type == 'FocusFinder':
+    elif game_type in ['FocusFinder', 'focus_finder']:
         # Map levels to game-specific variables for the Focus Finder game (Attention)
         configs = {
             1: {
@@ -184,7 +182,7 @@ def calculate_dda_parameters(difficulty_level, game_type='SpeedTap', user_avg_rt
                 "memory_mask": True               # Grandmaster alternating + memory mask!
             }
         }
-    elif game_type == 'MazeEscape':
+    elif game_type in ['MazeEscape', 'maze_escape']:
         # Map levels to game-specific variables for the Maze Escape game (Problem Solving)
         configs = {
             1: {
@@ -459,6 +457,14 @@ def calculate_dda_parameters(difficulty_level, game_type='SpeedTap', user_avg_rt
                 dynamic_limit = (user_avg_rt * 1.2) + ((6 - lvl) * 1500)
                 min_floor = 2000 if lvl == 5 else 2500
                 configs[lvl]["time_limit"] = int(max(min_floor, min(10000, dynamic_limit)))
+    elif game_type in ['RuleShifter', 'rule_shifter']:
+        configs = {
+            1: {"difficulty_level": 1, "rule_switch_interval": 6, "choice_count": 2, "explicit_hint": True, "time_limit": 60000},
+            2: {"difficulty_level": 2, "rule_switch_interval": 5, "choice_count": 3, "explicit_hint": True, "time_limit": 60000},
+            3: {"difficulty_level": 3, "rule_switch_interval": 4, "choice_count": 3, "explicit_hint": True, "time_limit": 60000},
+            4: {"difficulty_level": 4, "rule_switch_interval": 3, "choice_count": 4, "explicit_hint": False, "time_limit": 60000},
+            5: {"difficulty_level": 5, "rule_switch_interval": 2, "choice_count": 4, "explicit_hint": False, "time_limit": 60000},
+        }
     elif game_type in ['EquationBalance', 'equation_balance']:
         # Map levels to game-specific variables for the Equation Balance game
         configs = {

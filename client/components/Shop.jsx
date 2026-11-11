@@ -29,10 +29,10 @@ const SHOP_ITEMS = [
     { id: 'default-title', type: 'title', name: 'Participant', description: 'Default user title.', price: 0, category: 'Titles' },
     { id: 'title-novice', type: 'title', name: 'Novice Scholar', description: 'Beginning the cognitive journey.', price: 100, category: 'Titles' },
     { id: 'title-scholar', type: 'title', name: 'Cognitive Scholar', description: 'Dedicated to mental improvement.', price: 300, category: 'Titles' },
-    { id: 'title-reflex-demon', type: 'title', name: 'The Reflex Demon', description: 'Exclusive to the Reflexes archetype.', price: 0, category: 'Titles', unlockReq: { archetype: 'Reflexes' } },
-    { id: 'title-zen-architect', type: 'title', name: 'Zen Architect', description: 'Exclusive to the Memory archetype.', price: 0, category: 'Titles', unlockReq: { archetype: 'Memory' } },
-    { id: 'title-logic-weaver', type: 'title', name: 'Logic Weaver', description: 'Exclusive to the Logic archetype.', price: 0, category: 'Titles', unlockReq: { archetype: 'Logic' } },
-    { id: 'title-strategist', type: 'title', name: 'Master Strategist', description: 'Exclusive to the Strategy archetype.', price: 0, category: 'Titles', unlockReq: { archetype: 'Strategy' } },
+    { id: 'title-reflex-demon', type: 'title', name: 'The Reflex Demon', description: 'Achieve Fast Learner or ≥75% accuracy as Steady Improver in Reflexes & Focus.', price: 0, category: 'Titles', unlockReq: { domain: 'reflexes_and_focus', domainLabel: 'Reflexes & Focus', archetypes: ['Fast Learner', 'Steady Improver'], minAccuracy: 0.75 } },
+    { id: 'title-zen-architect', type: 'title', name: 'Zen Architect', description: 'Achieve Fast Learner or ≥75% accuracy as Steady Improver in Spatial-Visual Memory.', price: 0, category: 'Titles', unlockReq: { domain: 'spatial_visual_memory', domainLabel: 'Spatial-Visual Memory', archetypes: ['Fast Learner', 'Steady Improver'], minAccuracy: 0.75 } },
+    { id: 'title-logic-weaver', type: 'title', name: 'Logic Weaver', description: 'Achieve Fast Learner or ≥75% accuracy as Steady Improver in Logical-Mathematical.', price: 0, category: 'Titles', unlockReq: { domain: 'logical_mathematical', domainLabel: 'Logical-Mathematical', archetypes: ['Fast Learner', 'Steady Improver'], minAccuracy: 0.75 } },
+    { id: 'title-strategist', type: 'title', name: 'Master Strategist', description: 'Achieve Fast Learner or ≥75% accuracy as Steady Improver in Executive Strategy.', price: 0, category: 'Titles', unlockReq: { domain: 'executive_strategy', domainLabel: 'Executive Strategy', archetypes: ['Fast Learner', 'Steady Improver'], minAccuracy: 0.75 } },
 ];
 
 const Shop = ({ onClose }) => {
@@ -283,10 +283,18 @@ const Shop = ({ onClose }) => {
                                 isLocked = true;
                                 lockReason = `🔒 Reach Level ${item.unlockReq.level} in ${item.unlockReq.game} to unlock`;
                             }
-                        } else if (item.unlockReq.archetype) {
-                            if (stats?.archetype !== item.unlockReq.archetype) {
+                        } else if (item.unlockReq.archetypes || item.unlockReq.archetype) {
+                            const allowedArchetypes = item.unlockReq.archetypes || [item.unlockReq.archetype];
+                            const hasArchetype = allowedArchetypes.includes(stats?.archetype);
+                            const domainAcc = item.unlockReq.domain ? stats?.domain_max_accuracy?.[item.unlockReq.domain] : 1;
+                            const minAcc = item.unlockReq.minAccuracy ?? 0.75;
+                            const hasPlayedDomain = !item.unlockReq.domain || (domainAcc !== undefined && domainAcc !== null);
+                            const hasDomainMastery = hasPlayedDomain && (stats?.archetype === 'Fast Learner' || domainAcc >= minAcc);
+                            if (!hasArchetype || !hasDomainMastery) {
                                 isLocked = true;
-                                lockReason = `🔒 Requires the ${item.unlockReq.archetype} Archetype (Currently: ${stats?.archetype || 'None'})`;
+                                lockReason = item.unlockReq.domainLabel
+                                    ? `🔒 Achieve ${allowedArchetypes.join(' or ')} (≥${Math.round(minAcc * 100)}% accuracy) in ${item.unlockReq.domainLabel} (Current: ${stats?.archetype || 'None'})`
+                                    : `🔒 Requires ${allowedArchetypes.join(' or ')} Archetype (Currently: ${stats?.archetype || 'None'})`;
                             }
                         }
                     }

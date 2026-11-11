@@ -127,6 +127,15 @@ def get_user_inventory(current_user_id, current_username, username):
     ).group_by(GameSession.game_type).all()
     
     max_difficulties = {game_type: int(max_level) for game_type, max_level in max_diff_query if game_type and max_level}
+
+    domain_acc_query = db.session.query(
+        PerformanceMetric.cognitive_domain, db.func.max(PerformanceMetric.accuracy_rate)
+    ).join(GameSession, GameSession.id == PerformanceMetric.session_id).filter(
+        GameSession.user_id == current_user_id,
+        PerformanceMetric.cognitive_domain.isnot(None)
+    ).group_by(PerformanceMetric.cognitive_domain).all()
+
+    domain_max_accuracy = {dom: float(max_acc) for dom, max_acc in domain_acc_query if dom and max_acc is not None}
     
     from models import CognitiveProfile
     profile = CognitiveProfile.query.filter_by(user_id=current_user_id).order_by(CognitiveProfile.id.desc()).first()
@@ -140,6 +149,7 @@ def get_user_inventory(current_user_id, current_username, username):
         "inventory": inventory,
         "stats": {
             "max_difficulties": max_difficulties,
+            "domain_max_accuracy": domain_max_accuracy,
             "archetype": archetype
         }
     }), 200
@@ -189,10 +199,10 @@ def api_purchase(current_user_id, current_username):
         'vis-hologram': {'type': 'visualizer', 'price': 1500, 'req_game': 'MemoryMatch', 'req_level': 5},
         'title-novice': {'type': 'title', 'price': 100},
         'title-scholar': {'type': 'title', 'price': 300},
-        'title-reflex-demon': {'type': 'title', 'price': 0, 'req_archetype': 'Reflexes'},
-        'title-zen-architect': {'type': 'title', 'price': 0, 'req_archetype': 'Memory'},
-        'title-logic-weaver': {'type': 'title', 'price': 0, 'req_archetype': 'Logic'},
-        'title-strategist': {'type': 'title', 'price': 0, 'req_archetype': 'Strategy'},
+        'title-reflex-demon': {'type': 'title', 'price': 0, 'req_domain': 'reflexes_and_focus', 'req_archetypes': ('Fast Learner', 'Steady Improver'), 'min_accuracy': 0.75},
+        'title-zen-architect': {'type': 'title', 'price': 0, 'req_domain': 'spatial_visual_memory', 'req_archetypes': ('Fast Learner', 'Steady Improver'), 'min_accuracy': 0.75},
+        'title-logic-weaver': {'type': 'title', 'price': 0, 'req_domain': 'logical_mathematical', 'req_archetypes': ('Fast Learner', 'Steady Improver'), 'min_accuracy': 0.75},
+        'title-strategist': {'type': 'title', 'price': 0, 'req_domain': 'executive_strategy', 'req_archetypes': ('Fast Learner', 'Steady Improver'), 'min_accuracy': 0.75},
     }
     
     if item_id not in catalog:
@@ -202,16 +212,27 @@ def api_purchase(current_user_id, current_username):
     price = item_info['price']
     item_type = item_info['type']
     
-    if 'req_archetype' in item_info:
-        from models import CognitiveProfile
+    if 'req_archetypes' in item_info:
+        from models import CognitiveProfile, PerformanceMetric, GameSession
         profile = CognitiveProfile.query.filter_by(user_id=current_user_id).order_by(CognitiveProfile.id.desc()).first()
-        if not profile or profile.archetype_name != item_info['req_archetype']:
-            return jsonify({"status": "error", "message": f"Requirement not met. Requires the {item_info['req_archetype']} archetype."}), 403
+        if not profile or profile.archetype_name not in item_info['req_archetypes']:
+            allowed = " or ".join(item_info['req_archetypes'])
+            return jsonify({"status": "error", "message": f"Requirement not met. Requires {allowed} archetype."}), 403
+        req_domain = item_info.get('req_domain')
+        if req_domain:
+            best_acc = db.session.query(db.func.max(PerformanceMetric.accuracy_rate)).join(
+                GameSession, GameSession.id == PerformanceMetric.session_id
+            ).filter(
+                GameSession.user_id == current_user_id,
+                PerformanceMetric.cognitive_domain == req_domain
+            ).scalar()
+            if best_acc is None or (profile.archetype_name != 'Fast Learner' and float(best_acc) < item_info.get('min_accuracy', 0.75)):
+                return jsonify({"status": "error", "message": f"Requirement not met. Complete {req_domain.replace('_', ' ')} with at least 75% accuracy or Fast Learner mastery."}), 403
 
     if 'req_game' in item_info:
         from models import PerformanceMetric, GameSession
         max_diff = db.session.query(db.func.max(PerformanceMetric.difficulty_level)).join(
-            PerformanceMetric, GameSession.id == PerformanceMetric.session_id
+            GameSession, GameSession.id == PerformanceMetric.session_id
         ).filter(
             GameSession.user_id == current_user_id,
             GameSession.game_type == item_info['req_game']

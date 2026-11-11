@@ -4,14 +4,21 @@ from database import db
 from models import (User, GameSession, PerformanceMetric, CognitiveProfile, 
                     UserStreak, UserProfile, DailyTask, UserAchievement, UserInventory, 
                     CognitiveAssessment, ArchetypeHistory)
-from game_utils import (GAME_TO_DOMAIN, calculate_dda_parameters, 
-                        calculate_ols_slope, archetype_classifier, 
-                        ml_history_cache, generate_pros_cons)
+from game_utils import (GAME_TO_DOMAIN, DOMAIN_TITLE_MAP, get_domain_for_game,
+                        calculate_dda_parameters, calculate_ols_slope,
+                        archetype_classifier, ml_history_cache, generate_pros_cons)
 from ai_engine import generate_post_test_ai_feedback
 from routes.leaderboard import invalidate_leaderboard_cache
 from utils import safe_float
 import logging
 import math
+
+ASSESSMENT_DOMAIN_TO_GAME = {
+    "spatial_visual_memory": "MatrixRecall",
+    "logical_mathematical": "LogicLink",
+    "reflexes_and_focus": "SpeedTap",
+    "executive_strategy": "PriorityQueue",
+}
 
 game_bp = Blueprint('game_bp', __name__)
 logger = logging.getLogger(__name__)
@@ -289,7 +296,7 @@ def start_session(current_user_id, current_username):
         db.session.add(session_obj)
         db.session.flush()
         
-        domain = GAME_TO_DOMAIN.get(game_type, "reflexes_and_focus")
+        domain = get_domain_for_game(game_type)
         domain_games = [g for g, d in GAME_TO_DOMAIN.items() if d == domain]
         
         last_metric = PerformanceMetric.query.join(GameSession).filter(
@@ -360,7 +367,7 @@ def dda(current_user_id, current_username):
             })
             
         game_type = session_obj.game_type
-        domain = GAME_TO_DOMAIN.get(game_type, "reflexes_and_focus")
+        domain = get_domain_for_game(game_type)
         
         k = 10 if game_type in ("SpeedTap", "StroopShift", "speed_tap", "stroop_shift") else (2 if game_type in ("LogicLink", "logic_link", "EquationBalance", "equation_balance", "MazeEscape", "RouteOptimizer", "maze_escape", "route_optimizer", "PriorityQueue", "priority_queue") else 3)
         
@@ -386,8 +393,10 @@ def dda(current_user_id, current_username):
         current_smooth_difficulty = session_obj.current_smooth_difficulty if session_obj.current_smooth_difficulty is not None else float(current_difficulty)
         
         # --- Upgraded Item Response Theory (IRT) / Elo DDA Algorithm ---
-        import math
+        # Sync continuous skill theta if difficulty shifted externally (e.g., seeded/batched difficulty step)
         theta = current_smooth_difficulty
+        if abs(theta - float(current_difficulty)) > 0.6:
+            theta = float(current_difficulty)
         discrimination = 2.0
         # Flow-state offset: we want expected accuracy to be ~80% when skill == difficulty
         # 1 / (1 + exp(-2(0 + 0.693))) = 0.80
@@ -402,12 +411,8 @@ def dda(current_user_id, current_username):
             elif avg_rt < 400:
                 theta_update += 0.15
             
-        new_theta = max(1.0, min(5.0, theta + theta_update))
-        new_difficulty = max(1, min(5, int(round(new_theta))))
-        if avg_accuracy >= 0.70 and new_difficulty <= current_difficulty:
-            new_difficulty = min(5, current_difficulty + 1)
-        elif avg_accuracy < 0.45 and new_difficulty >= current_difficulty:
-            new_difficulty = max(1, current_difficulty - 1)
+        new_theta = max(1.0, min(5.0, theta + (alpha * theta_update)))
+        new_difficulty = max(1, min(5, int(math.floor(new_theta + 0.5))))
         session_obj.current_smooth_difficulty = new_theta
         is_level_up = new_difficulty > current_difficulty
         is_level_down = new_difficulty < current_difficulty
@@ -466,19 +471,21 @@ def dda(current_user_id, current_username):
         arch_hist = ArchetypeHistory(user_id=current_user_id, session_id=session_id, archetype_name=archetype, confidence_score=confidence)
         db.session.add(arch_hist)
         
-        # Grant exclusive title based on archetype
+        # Grant exclusive domain title when demonstrating positive cognitive performance
         archetype_title_map = {
-            "Reflexes": "title-reflex-demon",
-            "Memory": "title-zen-architect",
-            "Logic": "title-logic-weaver",
-            "Strategy": "title-strategist"
+            "Fast Learner": DOMAIN_TITLE_MAP,
+            "Steady Improver": DOMAIN_TITLE_MAP,
         }
-        if archetype in archetype_title_map:
-            title_id = archetype_title_map[archetype]
-            existing_title = UserInventory.query.filter_by(user_id=current_user_id, item_type='title', item_id=title_id).first()
-            if not existing_title:
-                new_title = UserInventory(user_id=current_user_id, item_type='title', item_id=title_id)
-                db.session.add(new_title)
+        qualifies_for_title = archetype == "Fast Learner" or (
+            archetype in archetype_title_map and avg_accuracy >= 0.75
+        )
+        if qualifies_for_title:
+            title_id = archetype_title_map[archetype].get(domain)
+            if title_id:
+                existing_title = UserInventory.query.filter_by(user_id=current_user_id, item_type='title', item_id=title_id).first()
+                if not existing_title:
+                    new_title = UserInventory(user_id=current_user_id, item_type='title', item_id=title_id)
+                    db.session.add(new_title)
         
         db.session.commit()
         invalidate_leaderboard_cache()
@@ -537,7 +544,7 @@ def submit_metrics(current_user_id, current_username):
             
         session_obj = GameSession.query.get(session_id)
         game_type = data.get('game_type', session_obj.game_type if session_obj else None)
-        cognitive_domain = data.get('cognitive_domain', GAME_TO_DOMAIN.get(game_type))
+        cognitive_domain = data.get('cognitive_domain') or get_domain_for_game(game_type, default=None)
         
         pm = PerformanceMetric(
             session_id=session_id,
@@ -619,12 +626,11 @@ def submit_assessment(current_user_id, current_username):
         db.session.commit()
         
         weakest_domain = min(scores_map, key=scores_map.get)
-        domain_to_game = {"spatial_visual_memory": "MatrixRecall", "logical_mathematical": "LogicLink", "reflexes_and_focus": "SpeedTap", "executive_strategy": "PriorityQueue"}
         
         return jsonify({
             "status": "success", "user_id": current_user_id, "assessment_type": assessment_type,
             "scores": {"spatial_visual_memory": round(sv, 2), "logical_mathematical": round(lm, 2), "reflexes_and_focus": round(at, 2), "executive_strategy": round(ex, 2)},
-            "weakest_domain": weakest_domain, "prescribed_game": domain_to_game.get(weakest_domain),
+            "weakest_domain": weakest_domain, "prescribed_game": ASSESSMENT_DOMAIN_TO_GAME.get(weakest_domain),
             "personalized_report": generate_pros_cons(scores_map),
             "ai_feedback": ai_feedback_string
         }), 201
@@ -649,8 +655,7 @@ def get_assessment_status(username):
         if pre:
             pre_data = {"spatial_visual_memory": pre.spatial_visual_score, "logical_mathematical": pre.logical_math_score, "reflexes_and_focus": pre.attention_score, "executive_strategy": pre.executive_score}
             weakest_domain = min(pre_data, key=pre_data.get)
-            domain_to_game = {"spatial_visual_memory": "MatrixRecall", "logical_mathematical": "LogicLink", "reflexes_and_focus": "SpeedTap", "executive_strategy": "PriorityQueue"}
-            prescribed_game = domain_to_game.get(weakest_domain)
+            prescribed_game = ASSESSMENT_DOMAIN_TO_GAME.get(weakest_domain)
             
         post_data = None
         if post:
@@ -723,7 +728,7 @@ def submit_metrics_batch(current_user_id, current_username):
                 return jsonify({"status": "error", "message": f"metrics[{index}]: invalid session_id"}), 400
                 
             game_type = item.get('game_type', session_obj.game_type)
-            cognitive_domain = item.get('cognitive_domain', GAME_TO_DOMAIN.get(game_type))
+            cognitive_domain = item.get('cognitive_domain') or get_domain_for_game(game_type, default=None)
             
             pm = PerformanceMetric(
                 session_id=session_id,
