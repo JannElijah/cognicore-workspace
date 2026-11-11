@@ -1,25 +1,29 @@
-import React, { Suspense, lazy, memo, useState, useEffect } from 'react';
+import React, { Suspense, memo, useState, useEffect } from 'react';
 import ErrorBoundary from './ErrorBoundary';
 import { API_BASE } from '../utils/apiClient.js';
+import { lazyWithRecovery } from '../utils/chunkRecovery.js';
 
-const SpeedTapGame = lazy(() => import('./SpeedTapGame'));
-const MemoryMatchGame = lazy(() => import('./MemoryMatchGame'));
-const FocusFinderGame = lazy(() => import('./FocusFinderGame'));
-const LogicLinkGame = lazy(() => import('./LogicLinkGame'));
-const PriorityQueueGame = lazy(() => import('./PriorityQueueGame'));
-const MatrixRecallGame = lazy(() => import('./MatrixRecallGame'));
-const StroopShiftGame = lazy(() => import('./StroopShiftGame'));
-const MentalFlexGame = lazy(() => import('./MentalFlexGame'));
-const EquationBalanceGame = lazy(() => import('./EquationBalanceGame'));
-const SequenceDecoderGame = lazy(() => import('./SequenceDecoderGame'));
-const RouteOptimizerGame = lazy(() => import('./RouteOptimizerGame'));
-const NeuroMazeGame = lazy(() => import('./NeuroMazeGame'));
-const SynapseSpinGame = lazy(() => import('./SynapseSpinGame'));
-const NexusMapperGame = lazy(() => import('./NexusMapperGame'));
+const GAME_COMPONENTS = {
+  SpeedTap: lazyWithRecovery(() => import('./SpeedTapGame')),
+  MemoryMatch: lazyWithRecovery(() => import('./MemoryMatchGame')),
+  FocusFinder: lazyWithRecovery(() => import('./FocusFinderGame')),
+  LogicLink: lazyWithRecovery(() => import('./LogicLinkGame')),
+  PriorityQueue: lazyWithRecovery(() => import('./PriorityQueueGame')),
+  MatrixRecall: lazyWithRecovery(() => import('./MatrixRecallGame')),
+  StroopShift: lazyWithRecovery(() => import('./StroopShiftGame')),
+  MentalFlex: lazyWithRecovery(() => import('./MentalFlexGame')),
+  EquationBalance: lazyWithRecovery(() => import('./EquationBalanceGame')),
+  SequenceDecoder: lazyWithRecovery(() => import('./SequenceDecoderGame')),
+  RouteOptimizer: lazyWithRecovery(() => import('./RouteOptimizerGame')),
+  NeuroMaze: lazyWithRecovery(() => import('./NeuroMazeGame')),
+  SynapseSpin: lazyWithRecovery(() => import('./SynapseSpinGame')),
+  NexusMapper: lazyWithRecovery(() => import('./NexusMapperGame'))
+};
 
 const GameRenderer = memo(function GameRenderer({ activeGame, activeDashboardUser, handleGameFinished }) {
   const [isPortrait, setIsPortrait] = useState(false);
   const [dismissWarning, setDismissWarning] = useState(false);
+  const ActiveGameComponent = GAME_COMPONENTS[activeGame] || null;
 
   useEffect(() => {
     const checkOrientation = () => {
@@ -69,20 +73,14 @@ const GameRenderer = memo(function GameRenderer({ activeGame, activeDashboardUse
             <div style={{ fontWeight: 'bold', fontSize: '1.1rem', letterSpacing: '0.05em', color: 'var(--color-primary)' }}>LOADING NEURAL WORKSPACE...</div>
           </div>
         }>
-          {activeGame === 'SpeedTap' && <SpeedTapGame username={activeDashboardUser} apiUrl={API_BASE} onGameFinished={handleGameFinished} />}
-          {activeGame === 'MemoryMatch' && <MemoryMatchGame username={activeDashboardUser} apiUrl={API_BASE} onGameFinished={handleGameFinished} />}
-          {activeGame === 'FocusFinder' && <FocusFinderGame username={activeDashboardUser} apiUrl={API_BASE} onGameFinished={handleGameFinished} />}
-          {activeGame === 'LogicLink' && <LogicLinkGame username={activeDashboardUser} apiUrl={API_BASE} onGameFinished={handleGameFinished} />}
-          {activeGame === 'PriorityQueue' && <PriorityQueueGame username={activeDashboardUser} apiUrl={API_BASE} onGameFinished={handleGameFinished} />}
-          {activeGame === 'MatrixRecall' && <MatrixRecallGame username={activeDashboardUser} apiUrl={API_BASE} onGameFinished={handleGameFinished} />}
-          {activeGame === 'StroopShift' && <StroopShiftGame username={activeDashboardUser} apiUrl={API_BASE} onGameFinished={handleGameFinished} />}
-          {activeGame === 'MentalFlex' && <MentalFlexGame username={activeDashboardUser} apiUrl={API_BASE} onGameFinished={handleGameFinished} />}
-          {activeGame === 'EquationBalance' && <EquationBalanceGame username={activeDashboardUser} apiUrl={API_BASE} onGameFinished={handleGameFinished} />}
-          {activeGame === 'SequenceDecoder' && <SequenceDecoderGame username={activeDashboardUser} apiUrl={API_BASE} onGameFinished={handleGameFinished} />}
-          {activeGame === 'RouteOptimizer' && <RouteOptimizerGame username={activeDashboardUser} apiUrl={API_BASE} onGameFinished={handleGameFinished} />}
-          {activeGame === 'NeuroMaze' && <NeuroMazeGame username={activeDashboardUser} apiUrl={API_BASE} onGameFinished={handleGameFinished} />}
-          {activeGame === 'SynapseSpin' && <SynapseSpinGame username={activeDashboardUser} apiUrl={API_BASE} onGameFinished={handleGameFinished} />}
-          {activeGame === 'NexusMapper' && <NexusMapperGame username={activeDashboardUser} apiUrl={API_BASE} onGameFinished={handleGameFinished} />}
+          {ActiveGameComponent && (
+            <ActiveGameComponent
+              key={activeGame}
+              username={activeDashboardUser}
+              apiUrl={API_BASE}
+              onGameFinished={handleGameFinished}
+            />
+          )}
         </Suspense>
       </ErrorBoundary>
     </div>

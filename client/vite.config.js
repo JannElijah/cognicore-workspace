@@ -31,8 +31,21 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        maximumFileSizeToCacheInBytes: 4000000
+        globPatterns: ['**/*.{js,css,ico,png,svg}'],
+        globIgnores: ['**/index.html'],
+        navigateFallback: null,
+        cleanupOutdatedCaches: true,
+        maximumFileSizeToCacheInBytes: 4000000,
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'cognicore-html-navigations',
+              networkTimeoutSeconds: 4
+            }
+          }
+        ]
       }
     })
   ],
