@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from auth import token_required, admin_required
 from database import get_db_connection
+from extensions import limiter
 from routes.leaderboard import invalidate_leaderboard_cache
 
 admin_bp = Blueprint('admin_bp', __name__)
@@ -207,6 +208,7 @@ def get_audit_logs(current_user_id, current_username):
         conn.close()
 
 @admin_bp.route('/api/bug-report', methods=['POST'])
+@limiter.limit("10 per minute")
 @token_required
 def submit_bug_report(current_user_id, current_username):
     data = request.get_json(silent=True) or {}
@@ -320,6 +322,7 @@ def delete_user(current_user_id, current_username, username):
         conn.close()
 
 @admin_bp.route('/api/admin/export-telemetry', methods=['GET'])
+@limiter.limit("20 per minute")
 @admin_required
 def export_telemetry(current_user_id, current_username):
     conn = get_db_connection()
@@ -347,6 +350,7 @@ def export_telemetry(current_user_id, current_username):
 
 
 @admin_bp.route('/api/admin/export-telemetry/<username>', methods=['GET'])
+@limiter.limit("20 per minute")
 @admin_required
 def export_subject_telemetry(current_user_id, current_username, username):
     conn = get_db_connection()

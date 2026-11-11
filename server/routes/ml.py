@@ -7,6 +7,7 @@ import time
 from flask import Blueprint, jsonify, request
 from auth import admin_required
 from database import get_db_connection
+from extensions import limiter
 from game_utils import calculate_ols_slope
 from model import archetype_classifier, SKLEARN_AVAILABLE
 
@@ -34,6 +35,7 @@ def model_status():
 
 
 @ml_bp.route('/api/model/retrain', methods=['POST'])
+@limiter.limit("10 per minute")
 def retrain_model():
     cron_secret = os.environ.get("CRON_SECRET")
     provided_secret = (
@@ -197,6 +199,7 @@ def get_model_clusters():
         return jsonify({"status": "error", "message": "An internal server error occurred."}), 500
 
 @ml_bp.route('/api/admin/retrain', methods=['POST'])
+@limiter.limit("10 per minute")
 @admin_required
 def admin_retrain(current_user_id, current_username):
     """

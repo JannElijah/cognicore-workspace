@@ -5,6 +5,7 @@ import math
 from flask import Blueprint, jsonify, request, Response
 from auth import token_required, admin_required, is_admin_user
 from database import get_db_connection
+from extensions import limiter
 from game_utils import safe_int
 
 logger = logging.getLogger(__name__)
@@ -320,6 +321,7 @@ def get_overall_cohort_data(current_user_id, current_username):
         conn.close()
 
 @research_bp.route('/api/export-csv', methods=['GET'])
+@limiter.limit("20 per minute")
 @admin_required
 def export_csv(current_user_id, current_username):
     def _serialize_csv_rows(rows):

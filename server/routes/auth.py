@@ -2,11 +2,13 @@ from flask import Blueprint, request, jsonify
 import bcrypt
 from auth import token_required
 from database import db
+from extensions import limiter
 from models import User
 
 auth_bp = Blueprint('auth_bp', __name__)
 
 @auth_bp.route('/api/auth/set-pin', methods=['POST'])
+@limiter.limit("10 per minute")
 @token_required
 def set_pin(current_user_id, current_username):
     data = request.get_json()
@@ -26,6 +28,7 @@ def set_pin(current_user_id, current_username):
     return jsonify({"status": "error", "message": "User not found"}), 404
 
 @auth_bp.route('/api/auth/verify-pin', methods=['POST'])
+@limiter.limit("10 per minute")
 @token_required
 def verify_pin(current_user_id, current_username):
     data = request.get_json()
