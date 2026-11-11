@@ -344,7 +344,9 @@ export default function App() {
                 }
             }
             
-            const res = await fetch(`${API_BASE}/api/assessment-status/${username}`);
+            const res = await fetch(`${API_BASE}/api/assessment-status/${username}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
             if (res.ok) {
                 const asmtData = await res.json();
                 if (asmtData.status === 'success') {
@@ -481,7 +483,9 @@ export default function App() {
           throw new Error("Failed to securely synchronize user with backend. Please try again.");
       }
 
-      const res = await fetch(`${API_BASE}/api/assessment-status/${trimmedName}`);
+      const res = await fetch(`${API_BASE}/api/assessment-status/${trimmedName}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
 
       if (!res.ok) throw new Error("Failed to connect to backend server.");
       const data = await res.json();
@@ -505,7 +509,9 @@ export default function App() {
           } else {
             setAssessmentStage('none');
             // Fetch session history to check if they already played in the prescribed domain
-            const historyRes = await fetch(`${API_BASE}/api/user-session-history/${trimmedName}`);
+            const historyRes = await fetch(`${API_BASE}/api/user-session-history/${trimmedName}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
             if (historyRes.ok) {
               const histData = await historyRes.json();
               const prescribedDomain = DOMAINS_LIST.find(domain => domain.id === data.weakest_domain);

@@ -1,31 +1,100 @@
-from flask import Blueprint, jsonify, request, make_response
-from auth import token_required
-from database import db, get_db_connection
-import logging
-from sqlalchemy import text
-from game_utils import safe_float, safe_int, calculate_pearson_r
-import datetime
+import csv
 import io
+import logging
+import math
+from flask import Blueprint, jsonify, request, Response
+from auth import token_required, admin_required, is_admin_user
+from database import get_db_connection
+from game_utils import safe_int
 
 logger = logging.getLogger(__name__)
 
 
-
 research_bp = Blueprint('research_bp', __name__)
 
-@research_bp.route('/api/iso-evaluations', methods=['GET'])
-def get_iso_evaluations():
-    conn = get_db_connection()
+ISO_SCORE_FIELDS = (
+    'functionality_score',
+    'usability_score',
+    'reliability_score',
+    'efficiency_score',
+    'ux_score',
+)
+
+
+def _parse_iso_likert_score(raw):
+    """Parse an integer 1..5 ISO 25010 Likert score, rejecting booleans and non-integers."""
+    if raw is None or isinstance(raw, bool):
+        return None
+    if isinstance(raw, int):
+        return raw if 1 <= raw <= 5 else None
+    if isinstance(raw, float):
+        if not raw.is_integer():
+            return None
+        val = int(raw)
+        return val if 1 <= val <= 5 else None
+    if isinstance(raw, str) and raw.strip():
+        try:
+            fval = float(raw.strip())
+        except ValueError:
+            return None
+        if not fval.is_integer():
+            return None
+        val = int(fval)
+        return val if 1 <= val <= 5 else None
+    return None
+
+
+@research_bp.route('/api/iso-evaluations', methods=['GET', 'POST'])
+@token_required
+def iso_evaluations(current_user_id, current_username):
+    conn = None
     try:
-        limit = int(request.args.get('limit', 100))
-        offset = int(request.args.get('offset', 0))
+        if request.method == 'POST':
+            data = request.get_json() or {}
+            missing = [field for field in ISO_SCORE_FIELDS if data.get(field) is None]
+            if missing:
+                return jsonify({
+                    "status": "error",
+                    "message": "All scores are required (functionality, usability, reliability, efficiency, ux).",
+                }), 400
+
+            scores = []
+            for field in ISO_SCORE_FIELDS:
+                parsed = _parse_iso_likert_score(data.get(field))
+                if parsed is None:
+                    return jsonify({
+                        "status": "error",
+                        "message": f"Invalid {field}: must be an integer between 1 and 5.",
+                    }), 400
+                scores.append(parsed)
+
+            conn = get_db_connection()
+            with conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    """
+                    INSERT INTO iso_evaluations
+                    (functionality_score, usability_score, reliability_score, efficiency_score, ux_score)
+                    VALUES (%s, %s, %s, %s, %s)
+                    """,
+                    tuple(scores),
+                )
+
+            return jsonify({
+                "status": "success",
+                "message": "ISO 25010 evaluation recorded successfully.",
+            }), 201
+
+        limit = max(1, min(safe_int(request.args.get('limit'), 100), 500))
+        offset = max(0, safe_int(request.args.get('offset'), 0))
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
             "SELECT id, functionality_score, usability_score, reliability_score, efficiency_score, ux_score, created_at FROM iso_evaluations ORDER BY created_at DESC LIMIT %s OFFSET %s",
-            (limit, offset)
+            (limit, offset),
         )
         rows = cursor.fetchall()
-        
+
         evaluations = []
         for r in rows:
             evaluations.append({
@@ -35,24 +104,80 @@ def get_iso_evaluations():
                 "reliability_score": r["reliability_score"],
                 "efficiency_score": r["efficiency_score"],
                 "ux_score": r["ux_score"],
-                "created_at": r["created_at"]
+                "created_at": r["created_at"],
             })
-            
+
         return jsonify({
             "status": "success",
-            "evaluations": evaluations
+            "evaluations": evaluations,
         }), 200
-        
+
     except Exception as e:
-        logger.error(f"Error in get_iso_evaluations: {e}")
+        logger.error(f"Error in iso_evaluations: {e}")
         return jsonify({"status": "error", "message": "An internal server error occurred."}), 500
     finally:
-        conn.close()
+        if conn is not None:
+            conn.close()
+
+
+@research_bp.route('/api/iso-evaluations/summary', methods=['GET'])
+@token_required
+def get_iso_evaluations_summary(current_user_id, current_username):
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT
+                AVG(functionality_score) as avg_func,
+                AVG(usability_score) as avg_usab,
+                AVG(reliability_score) as avg_rel,
+                AVG(efficiency_score) as avg_eff,
+                AVG(ux_score) as avg_ux,
+                COUNT(*) as count
+            FROM iso_evaluations
+            """
+        )
+        row = cursor.fetchone()
+
+        count = int(row["count"] or 0) if row else 0
+        if row and count > 0:
+            summary = {
+                "avg_functionality": round(float(row["avg_func"] or 0.0), 2),
+                "avg_usability": round(float(row["avg_usab"] or 0.0), 2),
+                "avg_reliability": round(float(row["avg_rel"] or 0.0), 2),
+                "avg_efficiency": round(float(row["avg_eff"] or 0.0), 2),
+                "avg_ux": round(float(row["avg_ux"] or 0.0), 2),
+                "count": count,
+            }
+        else:
+            summary = {
+                "avg_functionality": 0.0,
+                "avg_usability": 0.0,
+                "avg_reliability": 0.0,
+                "avg_efficiency": 0.0,
+                "avg_ux": 0.0,
+                "count": 0,
+            }
+
+        return jsonify({
+            "status": "success",
+            "summary": summary,
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Error in get_iso_evaluations_summary: {e}")
+        return jsonify({"status": "error", "message": "An internal server error occurred."}), 500
+    finally:
+        if conn is not None:
+            conn.close()
 
 @research_bp.route('/api/cohort-db-scores', methods=['GET'])
-def get_cohort_db_scores():
-    limit = int(request.args.get('limit', 50))
-    offset = int(request.args.get('offset', 0))
+@token_required
+def get_cohort_db_scores(current_user_id, current_username):
+    limit = max(1, min(safe_int(request.args.get('limit'), 50), 500))
+    offset = max(0, safe_int(request.args.get('offset'), 0))
     cache_key = f"cognicore:cohort_db_scores_{limit}_{offset}"
     
     import redis
@@ -129,7 +254,8 @@ def get_cohort_db_scores():
         conn.close()
 
 @research_bp.route('/api/research/cohort-data', methods=['GET'])
-def get_overall_cohort_data():
+@token_required
+def get_overall_cohort_data(current_user_id, current_username):
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
@@ -194,19 +320,40 @@ def get_overall_cohort_data():
         conn.close()
 
 @research_bp.route('/api/export-csv', methods=['GET'])
-def export_csv():
-    from flask import Response
-    import csv
-    import io
+@admin_required
+def export_csv(current_user_id, current_username):
+    def _serialize_csv_rows(rows):
+        output = io.StringIO()
+        writer = csv.writer(output)
+        for r in rows:
+            writer.writerow([
+                r["metric_id"], r["session_id"], r["user_id"], r["username"],
+                r["cognitive_domain"], r["game_type"], r["reaction_time"],
+                r["accuracy_rate"], r["difficulty_level"], r["error_count"],
+                r["hesitation_ms"], r["spam_click_count"], r["rule_shift_latency_ms"],
+                r["path_efficiency"], r["recorded_at"],
+            ])
+        return output.getvalue()
 
     def generate():
-        conn = get_db_connection()
+        conn = None
+        cursor = None
+        was_autocommit = None
+        had_error = False
         try:
-            # Use a named server-side cursor to prevent memory exhaustion on massive tables
-            cursor = conn.cursor(name="csv_export_cursor")
-            
+            conn = get_db_connection()
+            if getattr(conn, "autocommit", None) is True:
+                was_autocommit = True
+                conn.autocommit = False
+
+            # Use a named server-side cursor on Postgres to prevent memory exhaustion on massive tables
+            try:
+                cursor = conn.cursor(name="csv_export_cursor")
+            except TypeError:
+                cursor = conn.cursor()
+
             query = """
-                SELECT 
+                SELECT
                     pm.id AS metric_id,
                     pm.session_id,
                     gs.user_id,
@@ -229,40 +376,58 @@ def export_csv():
             """
             cursor.execute(query)
 
-            output = io.StringIO()
-            writer = csv.writer(output)
-            
-            # Write headers
-            writer.writerow([
-                "Metric ID", "Session ID", "User ID", "Username", 
-                "Cognitive Domain", "Game Type", "Reaction Time (ms)", 
-                "Accuracy Rate", "Difficulty Level", "Error Count", 
-                "Hesitation (ms)", "Spam Click Count", "Rule-Shift Latency (ms)", "Path Efficiency", "Timestamp"
+            header_output = io.StringIO()
+            header_writer = csv.writer(header_output)
+            header_writer.writerow([
+                "Metric ID", "Session ID", "User ID", "Username",
+                "Cognitive Domain", "Game Type", "Reaction Time (ms)",
+                "Accuracy Rate", "Difficulty Level", "Error Count",
+                "Hesitation (ms)", "Spam Click Count", "Rule-Shift Latency (ms)",
+                "Path Efficiency", "Timestamp",
             ])
-            yield output.getvalue()
-            output.seek(0)
-            output.truncate(0)
-            
-            while True:
-                rows = cursor.fetchmany(1000)
-                if not rows:
-                    break
-                for r in rows:
-                    writer.writerow([
-                        r["metric_id"], r["session_id"], r["user_id"], r["username"],
-                        r["cognitive_domain"], r["game_type"], r["reaction_time"],
-                        r["accuracy_rate"], r["difficulty_level"], r["error_count"],
-                        r["hesitation_ms"], r["spam_click_count"], r["rule_shift_latency_ms"], r["path_efficiency"], r["recorded_at"]
-                    ])
-                yield output.getvalue()
-                output.seek(0)
-                output.truncate(0)
-                
+            yield header_output.getvalue()
+
+            fetchmany_fn = getattr(cursor, "fetchmany", None)
+            if callable(fetchmany_fn):
+                while True:
+                    rows = fetchmany_fn(1000)
+                    if not rows:
+                        break
+                    yield _serialize_csv_rows(rows)
+            else:
+                rows = cursor.fetchall()
+                if rows:
+                    yield _serialize_csv_rows(rows)
+
         except Exception as e:
+            had_error = True
             logger.error(f"Error in export_csv stream: {e}")
+            if conn is not None and was_autocommit:
+                try:
+                    conn.rollback()
+                except Exception:
+                    pass
         finally:
-            cursor.close()
-            conn.close()
+            if cursor is not None:
+                try:
+                    cursor.close()
+                except Exception:
+                    pass
+            if conn is not None:
+                if was_autocommit:
+                    if not had_error:
+                        try:
+                            conn.commit()
+                        except Exception:
+                            pass
+                    try:
+                        conn.autocommit = True
+                    except Exception:
+                        pass
+                try:
+                    conn.close()
+                except Exception:
+                    pass
 
     return Response(
         generate(),
@@ -271,12 +436,17 @@ def export_csv():
     )
 
 @research_bp.route('/api/research/correlations', methods=['GET'])
-def get_research_correlations():
+@token_required
+def get_research_correlations(current_user_id, current_username):
     try:
+        is_admin = is_admin_user(current_user_id, current_username)
         var1 = request.args.get('var1', 'rule_shift_latency_ms')
         var2 = request.args.get('var2', 'spam_click_count')
         cohort = request.args.get('cohort', 'all')  # 'all', 'clinical', 'active'
         active_username = request.args.get('username', '')
+
+        if cohort == 'active' and active_username and active_username != current_username and not is_admin:
+            return jsonify({"status": "error", "message": "Forbidden: you can only inspect your own active correlation data."}), 403
 
         valid_vars = {
             'reaction_time', 'accuracy_rate', 'difficulty_level', 
@@ -322,17 +492,20 @@ def get_research_correlations():
         n_points = 0
         
         if rows:
-            r_coeff = rows[0]['r_coeff'] if rows[0]['r_coeff'] is not None else 0.0
-            n_points = rows[0]['n_points']
+            raw_r = rows[0]['r_coeff']
+            r_coeff = float(raw_r) if raw_r is not None else 0.0
+            if math.isnan(r_coeff):
+                r_coeff = 0.0
+            n_points = int(rows[0]['n_points'] or 0)
             for r in rows:
+                point_username = r["username"] if (is_admin or r["username"] == current_username) else "participant"
                 data_points.append({
                     "x": float(r['val1']),
                     "y": float(r['val2']),
-                    "username": r["username"]
+                    "username": point_username
                 })
 
         # Calculate p-value manually
-        import math
         p_value = 1.0
         if n_points > 2 and abs(r_coeff) < 1.0:
             t_stat = r_coeff * math.sqrt((n_points - 2) / (1.0 - r_coeff**2))
@@ -375,7 +548,13 @@ def get_research_correlations():
         return jsonify({"status": "error", "message": "An internal server error occurred."}), 500
 
 @research_bp.route('/api/research/learning-curves/<username>', methods=['GET'])
-def get_learning_curves(username):
+@token_required
+def get_learning_curves(current_user_id, current_username, username):
+    if username in ["player_one", "", None]:
+        username = current_username
+    if current_username != username and not is_admin_user(current_user_id, current_username):
+        return jsonify({"status": "error", "message": "Unauthorized: you can only view your own learning curves"}), 403
+
     conn = get_db_connection()
     try:
         cursor = conn.cursor()

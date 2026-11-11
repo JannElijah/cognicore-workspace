@@ -457,7 +457,8 @@ def run_evaluation(current_user_id, current_username):
         conn.close()
 
 @analytics_bp.route('/api/cohort-analytics', methods=['GET'])
-def get_cohort_analytics():
+@token_required
+def get_cohort_analytics(current_user_id, current_username):
     import redis
     import json
     import os

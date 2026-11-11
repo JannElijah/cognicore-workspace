@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from auth import token_required
+from auth import token_required, is_admin_user
 from database import db
 from models import (User, GameSession, PerformanceMetric, CognitiveProfile, 
                     UserStreak, UserProfile, DailyTask, UserAchievement, UserInventory, 
@@ -37,6 +37,22 @@ def safe_int(val, default=0):
         return int(val) if val is not None else default
     except (ValueError, TypeError):
         return default
+
+
+def _authorize_session_access(
+    session_obj,
+    current_user_id,
+    *,
+    missing_status=404,
+    missing_message="Invalid session_id",
+    forbidden_message="Forbidden: session belongs to another user",
+):
+    """Ensure the session exists and belongs to current_user_id."""
+    if not session_obj:
+        return jsonify({"status": "error", "message": missing_message}), missing_status
+    if session_obj.user_id != current_user_id:
+        return jsonify({"status": "error", "message": forbidden_message}), 403
+    return None
 
 def parse_metric_value(raw, field_name, *, integer=False, required=False):
     if raw is None:
@@ -354,8 +370,9 @@ def dda(current_user_id, current_username):
         session_id = safe_int(data.get('session_id'))
         
         session_obj = GameSession.query.get(session_id)
-        if not session_obj:
-            return jsonify({"status": "error", "message": "Invalid session_id"}), 404
+        auth_err = _authorize_session_access(session_obj, current_user_id)
+        if auth_err:
+            return auth_err
             
         game_mode = session_obj.game_mode
         if game_mode in ('daily_challenge', 'pre-test', 'post-test'):
@@ -543,7 +560,10 @@ def submit_metrics(current_user_id, current_username):
             return jsonify({"status": "error", "message": "session_id is required"}), 400
             
         session_obj = GameSession.query.get(session_id)
-        game_type = data.get('game_type', session_obj.game_type if session_obj else None)
+        auth_err = _authorize_session_access(session_obj, current_user_id)
+        if auth_err:
+            return auth_err
+        game_type = data.get('game_type', session_obj.game_type)
         cognitive_domain = data.get('cognitive_domain') or get_domain_for_game(game_type, default=None)
         
         pm = PerformanceMetric(
@@ -640,8 +660,14 @@ def submit_assessment(current_user_id, current_username):
         return jsonify({"status": "error", "message": "An internal server error occurred."}), 500
 
 @game_bp.route('/api/assessment-status/<username>', methods=['GET'])
-def get_assessment_status(username):
+@token_required
+def get_assessment_status(current_user_id, current_username, username):
     try:
+        if username in ["player_one", "", None]:
+            username = current_username
+        if current_username != username and not is_admin_user(current_user_id, current_username):
+            return jsonify({"status": "error", "message": "Unauthorized: you can only view your own assessment status"}), 403
+
         user = User.query.filter_by(username=username).first()
         if not user:
             return jsonify({"status": "success", "exists": False, "pre_test": None, "post_test": None, "prescribed_game": None}), 200
@@ -724,8 +750,15 @@ def submit_metrics_batch(current_user_id, current_username):
                 return jsonify({"status": "error", "message": f"metrics[{index}]: session_id is required"}), 400
                 
             session_obj = sessions_map.get(session_id)
-            if not session_obj:
-                return jsonify({"status": "error", "message": f"metrics[{index}]: invalid session_id"}), 400
+            auth_err = _authorize_session_access(
+                session_obj,
+                current_user_id,
+                missing_status=400,
+                missing_message=f"metrics[{index}]: invalid session_id",
+                forbidden_message=f"metrics[{index}]: forbidden session_id",
+            )
+            if auth_err:
+                return auth_err
                 
             game_type = item.get('game_type', session_obj.game_type)
             cognitive_domain = item.get('cognitive_domain') or get_domain_for_game(game_type, default=None)
