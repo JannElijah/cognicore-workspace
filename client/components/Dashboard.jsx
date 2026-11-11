@@ -4,6 +4,7 @@ import HoverTooltip from './HoverTooltip';
 import { API_BASE } from '../utils/apiClient.js';
 import useCogniStore from '../store/useCogniStore';
 import PretestResults from './PretestResults';
+import { formatCohortValidationMetrics } from '../utils/cohortFormatters.js';
 
 const ProgressRing = ({ radius, stroke, progress, color }) => {
   const normalizedRadius = radius - stroke * 2;
@@ -113,6 +114,8 @@ export default function Dashboard({
         });
     }
   }, [activeTab]);
+
+  const cohortMetrics = formatCohortValidationMetrics(cohortData);
 
   return (
     <div className="dashboard-content" style={{ animation: 'fadeIn 0.4s ease-out' }}>
@@ -891,7 +894,7 @@ export default function Dashboard({
                 padding: '0.35rem 0.75rem', 
                 borderRadius: '6px'
               }}>
-                Cohort Size: N = 261
+                {cohortMetrics.cohortSizeText}
               </span>
             </div>
           </div>
@@ -972,9 +975,11 @@ export default function Dashboard({
                     Mean Cohort Shift
                   </div>
                   <div style={{ color: '#c084fc', fontSize: '2.1rem', fontWeight: '800', lineHeight: 1.1, marginTop: '0.2rem' }}>
-                    +18.09%
+                    {cohortMetrics.meanShiftText}
                   </div>
-                  <div style={{ color: '#4ade80', fontSize: '0.72rem', marginTop: '0.2rem', fontWeight: '700' }}>Overall Cognitive Index ↗</div>
+                  <div style={{ color: cohortMetrics.meanShiftSubtitleColor, fontSize: '0.72rem', marginTop: '0.2rem', fontWeight: '700' }}>
+                    {cohortMetrics.meanShiftSubtitle}
+                  </div>
                 </div>
               </div>
               
@@ -1030,7 +1035,9 @@ export default function Dashboard({
                           ].map((d) => {
                             const pre = cohortData.avg_pre_scores[d.key] || 0;
                             const post = cohortData.avg_post_scores[d.key] || 0;
-                            const delta = (post - pre).toFixed(2);
+                            const hasBoth = cohortData.pre_test_count > 0 && cohortData.post_test_count > 0;
+                            const deltaNum = post - pre;
+                            const delta = deltaNum.toFixed(2);
                             const isOverall = d.key === 'overall';
                             return (
                               <tr key={d.key} style={{ 
@@ -1044,10 +1051,14 @@ export default function Dashboard({
                                     <span>{d.label}</span>
                                   </div>
                                 </td>
-                                <td style={{ textAlign: 'center', padding: '0.75rem 0.4rem', color: '#94a3b8' }}>{pre}%</td>
-                                <td style={{ textAlign: 'center', padding: '0.75rem 0.4rem', color: '#f8fafc', fontWeight: '700' }}>{post}%</td>
-                                <td style={{ textAlign: 'right', padding: '0.75rem 0.4rem', color: delta > 0 ? '#4ade80' : '#ef4444', fontWeight: '800' }}>
-                                  {delta > 0 ? `+${delta}% ↗` : `${delta}%`}
+                                <td style={{ textAlign: 'center', padding: '0.75rem 0.4rem', color: '#94a3b8' }}>
+                                  {cohortData.pre_test_count > 0 ? `${pre}%` : '—'}
+                                </td>
+                                <td style={{ textAlign: 'center', padding: '0.75rem 0.4rem', color: '#f8fafc', fontWeight: '700' }}>
+                                  {cohortData.post_test_count > 0 ? `${post}%` : '—'}
+                                </td>
+                                <td style={{ textAlign: 'right', padding: '0.75rem 0.4rem', color: !hasBoth ? '#94a3b8' : (deltaNum >= 0 ? '#4ade80' : '#ef4444'), fontWeight: '800' }}>
+                                  {!hasBoth ? '—' : (deltaNum > 0 ? `+${delta}% ↗` : `${delta}%`)}
                                 </td>
                               </tr>
                             );
@@ -1117,25 +1128,27 @@ export default function Dashboard({
                       <h3 style={{ fontSize: '1.05rem', fontWeight: '800', color: '#f8fafc', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <span style={{ color: '#c084fc' }}>🧪</span> Empirical Statistical Validation
                       </h3>
-                      <span style={{ color: '#4ade80', fontSize: '0.72rem', fontWeight: '700' }}>Confidence: 99.9%</span>
+                      <span style={{ color: cohortMetrics.confidenceColor, fontSize: '0.72rem', fontWeight: '700' }}>
+                        {cohortMetrics.confidenceText}
+                      </span>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.45rem' }}>
                       <div style={{ background: 'rgba(255,255,255,0.04)', padding: '0.55rem 0.4rem', borderRadius: '8px', textAlign: 'center' }}>
                         <div style={{ color: '#94a3b8', fontSize: '0.65rem', textTransform: 'uppercase', fontWeight: '700' }}>Sample Power</div>
-                        <div style={{ color: '#38bdf8', fontSize: '1.1rem', fontWeight: '800', marginTop: '0.2rem' }}>N = 261</div>
+                        <div style={{ color: '#38bdf8', fontSize: '1.1rem', fontWeight: '800', marginTop: '0.2rem' }}>{cohortMetrics.pairedSampleText}</div>
                       </div>
                       <div style={{ background: 'rgba(255,255,255,0.04)', padding: '0.55rem 0.4rem', borderRadius: '8px', textAlign: 'center' }}>
                         <div style={{ color: '#94a3b8', fontSize: '0.65rem', textTransform: 'uppercase', fontWeight: '700' }}>Paired t-Test</div>
-                        <div style={{ color: '#4ade80', fontSize: '1.1rem', fontWeight: '800', marginTop: '0.2rem' }}>p &lt; 0.001</div>
+                        <div style={{ color: cohortMetrics.pValueColor, fontSize: '1.1rem', fontWeight: '800', marginTop: '0.2rem' }}>{cohortMetrics.pValueText}</div>
                       </div>
                       <div style={{ background: 'rgba(255,255,255,0.04)', padding: '0.55rem 0.4rem', borderRadius: '8px', textAlign: 'center' }}>
                         <div style={{ color: '#94a3b8', fontSize: '0.65rem', textTransform: 'uppercase', fontWeight: '700' }}>Effect Size</div>
-                        <div style={{ color: '#f59e0b', fontSize: '1.1rem', fontWeight: '800', marginTop: '0.2rem' }}>d = 0.62</div>
+                        <div style={{ color: cohortMetrics.effectSizeColor, fontSize: '1.1rem', fontWeight: '800', marginTop: '0.2rem' }}>{cohortMetrics.effectSizeText}</div>
                       </div>
                       <div style={{ background: 'rgba(255,255,255,0.04)', padding: '0.55rem 0.4rem', borderRadius: '8px', textAlign: 'center' }}>
                         <div style={{ color: '#94a3b8', fontSize: '0.65rem', textTransform: 'uppercase', fontWeight: '700' }}>ISO 25010</div>
-                        <div style={{ color: '#c084fc', fontSize: '1.1rem', fontWeight: '800', marginTop: '0.2rem' }}>4.67 / 5</div>
+                        <div style={{ color: cohortMetrics.isoScoreColor, fontSize: '1.1rem', fontWeight: '800', marginTop: '0.2rem' }}>{cohortMetrics.isoScoreText}</div>
                       </div>
                     </div>
                   </div>

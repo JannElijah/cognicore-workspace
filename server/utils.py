@@ -1,5 +1,12 @@
 import math
 
+try:
+    from scipy import stats as _scipy_stats
+    SCIPY_AVAILABLE = True
+except ImportError:
+    _scipy_stats = None
+    SCIPY_AVAILABLE = False
+
 def safe_float(val, default=0.0):
     if val is None:
         return default
@@ -88,5 +95,142 @@ def calculate_ols_slope(y_vals):
         return 0.0
     slope = (n * sum_xy - sum_x * sum_y) / denominator
     return slope
+
+
+def calculate_approx_t_p_value(t_stat, df):
+    """
+    Compute a mathematical approximation of the two-sided p-value for a
+    Student's t-distribution with `df` degrees of freedom without external libraries.
+    """
+    if df < 1:
+        return 1.0
+
+    t_abs = abs(t_stat)
+
+    # Exact calculation for df = 1 (Cauchy distribution)
+    if df == 1:
+        return 1.0 - (2.0 / math.pi) * math.atan(t_abs)
+    # Exact calculation for df = 2
+    if df == 2:
+        return 1.0 - t_abs / math.sqrt(2.0 + t_abs * t_abs)
+    # Exact calculation for df = 3
+    if df == 3:
+        term1 = t_abs / (math.pi * math.sqrt(3.0) * (1.0 + t_abs * t_abs / 3.0))
+        term2 = math.atan(t_abs / math.sqrt(3.0)) / math.pi
+        return max(0.0, min(1.0, 2.0 * (0.5 - term1 - term2)))
+    # Exact calculation for df = 4
+    if df == 4:
+        term = (t_abs / (2.0 * math.sqrt(4.0 + t_abs * t_abs))) * (1.0 + 2.0 / (4.0 + t_abs * t_abs))
+        return max(0.0, min(1.0, 2.0 * (0.5 - term)))
+
+    # Peizer-Pratt adjusted normal approximation for df >= 5
+    z = t_abs * (1.0 - 1.0 / (4.0 * df)) / math.sqrt(1.0 + t_abs * t_abs / (2.0 * df))
+
+    # Standard normal CDF approximation (Abramowitz & Stegun formula 26.2.17)
+    p = 0.2316419
+    b1 = 0.319381530
+    b2 = -0.356563782
+    b3 = 1.781477937
+    b4 = -1.821255978
+    b5 = 1.330274429
+
+    t = 1.0 / (1.0 + p * z)
+    exponential = math.exp(-0.5 * z * z)
+    prob = 1.0 - (1.0 / math.sqrt(2.0 * math.pi)) * exponential * (
+        b1 * t + b2 * (t ** 2) + b3 * (t ** 3) + b4 * (t ** 4) + b5 * (t ** 5)
+    )
+
+    two_sided_p = 2.0 * (1.0 - prob)
+    return max(0.0, min(1.0, two_sided_p))
+
+
+def compute_paired_ttest_stats(pre_values, post_values):
+    """
+    Compute paired pre-vs-post descriptive and inferential statistics.
+
+    Returns mean_pre, mean_post, mean_shift (net post - pre delta),
+    improvement_pct (relative %), paired t-statistic, two-sided p-value,
+    Cohen's d effect size, magnitude label, and significance flag. When fewer
+    than 2 paired observations exist, inferential fields are returned as None.
+    """
+    n = min(len(pre_values), len(post_values))
+    if n == 0:
+        return {
+            "sample_size": 0,
+            "mean_pre": 0.0,
+            "mean_post": 0.0,
+            "mean_shift": 0.0,
+            "improvement_pct": 0.0,
+            "t_statistic": None,
+            "p_value": None,
+            "cohens_d": None,
+            "effect_size_magnitude": "insufficient_data",
+            "statistically_significant": False,
+        }
+
+    mean_pre = sum(pre_values[:n]) / n
+    mean_post = sum(post_values[:n]) / n
+    mean_shift = mean_post - mean_pre
+    improvement_pct = ((mean_post - mean_pre) / mean_pre * 100.0) if mean_pre != 0 else 0.0
+
+    if n < 2:
+        return {
+            "sample_size": n,
+            "mean_pre": round(mean_pre, 2),
+            "mean_post": round(mean_post, 2),
+            "mean_shift": round(mean_shift, 2),
+            "improvement_pct": round(improvement_pct, 2),
+            "t_statistic": None,
+            "p_value": None,
+            "cohens_d": None,
+            "effect_size_magnitude": "insufficient_data",
+            "statistically_significant": False,
+        }
+
+    diffs = [post_values[i] - pre_values[i] for i in range(n)]
+    mean_diff = sum(diffs) / n
+    var_diff = sum((d - mean_diff) ** 2 for d in diffs) / (n - 1)
+    sd_diff = var_diff ** 0.5
+
+    if SCIPY_AVAILABLE:
+        t_stat, p_val = _scipy_stats.ttest_rel(post_values[:n], pre_values[:n])
+        t_stat = float(t_stat)
+        p_val = float(p_val)
+    else:
+        se_diff = sd_diff / (n ** 0.5)
+        t_stat = mean_diff / se_diff if se_diff != 0 else 0.0
+        p_val = calculate_approx_t_p_value(t_stat, n - 1)
+
+    if math.isnan(t_stat) or math.isinf(t_stat):
+        t_stat = 0.0
+    if math.isnan(p_val) or math.isinf(p_val):
+        p_val = 1.0
+
+    cohens_d = mean_diff / sd_diff if sd_diff > 0 else 0.0
+    if math.isnan(cohens_d) or math.isinf(cohens_d):
+        cohens_d = 0.0
+
+    abs_d = abs(cohens_d)
+    if abs_d < 0.2:
+        effect_magnitude = "negligible"
+    elif abs_d < 0.5:
+        effect_magnitude = "small"
+    elif abs_d < 0.8:
+        effect_magnitude = "medium"
+    else:
+        effect_magnitude = "large"
+
+    return {
+        "sample_size": n,
+        "mean_pre": round(mean_pre, 2),
+        "mean_post": round(mean_post, 2),
+        "mean_shift": round(mean_shift, 2),
+        "improvement_pct": round(improvement_pct, 2),
+        "t_statistic": round(t_stat, 4),
+        "p_value": round(p_val, 6),
+        "cohens_d": round(cohens_d, 4),
+        "effect_size_magnitude": effect_magnitude,
+        "statistically_significant": bool(p_val < 0.05),
+    }
 
 

@@ -4,7 +4,7 @@ from database import db, get_db_connection
 import logging
 from sqlalchemy import text
 from game_utils import safe_float, safe_int, get_domain_for_game
-import math
+from utils import compute_paired_ttest_stats
 
 DOMAIN_NAMES = {
     "reflexes_and_focus": "Reflexes & Focus",
@@ -20,59 +20,6 @@ DOMAIN_GAME_MAP = {
     "executive_strategy": "Priority Queue",
     "logical_mathematical": "Equation Balance",
 }
-
-try:
-    from scipy import stats
-    SCIPY_AVAILABLE = True
-except ImportError:
-    SCIPY_AVAILABLE = False
-
-def calculate_approx_t_p_value(t_stat, df):
-    """
-    Computes a highly accurate mathematical approximation of the two-sided p-value
-    for a Student's t-distribution with given degrees of freedom, without external libraries.
-    """
-    if df < 1:
-        return 1.0
-        
-    t_abs = abs(t_stat)
-    
-    # Exact calculation for df = 1 (Cauchy distribution)
-    if df == 1:
-        return 1.0 - (2.0 / math.pi) * math.atan(t_abs)
-    # Exact calculation for df = 2
-    if df == 2:
-        return 1.0 - t_abs / math.sqrt(2.0 + t_abs * t_abs)
-    # Exact calculation for df = 3
-    if df == 3:
-        term1 = t_abs / (math.pi * math.sqrt(3.0) * (1.0 + t_abs * t_abs / 3.0))
-        term2 = math.atan(t_abs / math.sqrt(3.0)) / math.pi
-        return max(0.0, min(1.0, 2.0 * (0.5 - term1 - term2)))
-    # Exact calculation for df = 4
-    if df == 4:
-        term = (t_abs / (2.0 * math.sqrt(4.0 + t_abs * t_abs))) * (1.0 + 2.0 / (4.0 + t_abs * t_abs))
-        return max(0.0, min(1.0, 2.0 * (0.5 - term)))
-        
-    # Peizer-Pratt adjusted normal approximation for df >= 5
-    z = t_abs * (1.0 - 1.0 / (4.0 * df)) / math.sqrt(1.0 + t_abs * t_abs / (2.0 * df))
-    
-    # Standard normal CDF approximation (Abramowitz & Stegun formula 26.2.17)
-    p = 0.2316419
-    b1 = 0.319381530
-    b2 = -0.356563782
-    b3 = 1.781477937
-    b4 = -1.821255978
-    b5 = 1.330274429
-    
-    t = 1.0 / (1.0 + p * z)
-    exponential = math.exp(-0.5 * z * z)
-    prob = 1.0 - (1.0 / math.sqrt(2.0 * math.pi)) * exponential * (
-        b1 * t + b2 * (t ** 2) + b3 * (t ** 3) + b4 * (t ** 4) + b5 * (t ** 5)
-    )
-    
-    # Return two-sided p-value
-    two_sided_p = 2.0 * (1.0 - prob)
-    return max(0.0, min(1.0, two_sided_p))
 
 logger = logging.getLogger(__name__)
 
@@ -248,58 +195,19 @@ def run_evaluation(current_user_id, current_username):
     if pre_scores is not None and post_scores is not None:
         if len(pre_scores) != len(post_scores) or len(pre_scores) < 2:
             return jsonify({"status": "error", "message": "Pretest and posttest cohorts must have the same length (minimum 2)."}), 400
-        n = len(pre_scores)
-        mean_pre = sum(pre_scores) / n
-        mean_post = sum(post_scores) / n
-        improvement_pct = ((mean_post - mean_pre) / mean_pre * 100) if mean_pre != 0 else 0.0
-        
-        import math
-        diffs = [post_scores[i] - pre_scores[i] for i in range(n)]
-        mean_diff = sum(diffs) / n
-        
-        if SCIPY_AVAILABLE:
-            t_stat, p_val = stats.ttest_rel(post_scores, pre_scores)
-        else:
-            var_diff = sum((d - mean_diff) ** 2 for d in diffs) / (n - 1) if n > 1 else 0.0
-            sd_diff = var_diff ** 0.5
-            se_diff = sd_diff / (n ** 0.5) if n > 0 else 0.0
-            t_stat = mean_diff / se_diff if se_diff != 0 else 0.0
-            p_val = calculate_approx_t_p_value(t_stat, n - 1)
-            
-        if math.isnan(t_stat) or math.isinf(t_stat):
-            t_stat = 0.0
-        if math.isnan(p_val) or math.isinf(p_val):
-            p_val = 1.0
-            
-        var_diff_d = sum((d - mean_diff) ** 2 for d in diffs) / (n - 1) if n > 1 else 0.0
-        sd_diff_d = var_diff_d ** 0.5
-        cohens_d = mean_diff / sd_diff_d if sd_diff_d > 0 else 0.0
-        
-        if math.isnan(cohens_d) or math.isinf(cohens_d):
-            cohens_d = 0.0
-            
-        abs_d = abs(cohens_d)
-        if abs_d < 0.2:
-            effect_magnitude = "negligible"
-        elif abs_d < 0.5:
-            effect_magnitude = "small"
-        elif abs_d < 0.8:
-            effect_magnitude = "medium"
-        else:
-            effect_magnitude = "large"
-            
-        significant = p_val < 0.05
+        stats_res = compute_paired_ttest_stats(pre_scores, post_scores)
+        significant = stats_res["statistically_significant"]
         return jsonify({
             "status": "success",
-            "sample_size": n,
-            "mean_pretest": round(mean_pre, 2),
-            "mean_posttest": round(mean_post, 2),
-            "overall_improvement_rate_pct": round(improvement_pct, 2),
-            "t_statistic": round(t_stat, 4),
-            "p_value": round(p_val, 6),
-            "cohens_d": round(cohens_d, 4),
-            "effect_size_magnitude": effect_magnitude,
-            "statistically_significant": bool(significant),
+            "sample_size": stats_res["sample_size"],
+            "mean_pretest": stats_res["mean_pre"],
+            "mean_posttest": stats_res["mean_post"],
+            "overall_improvement_rate_pct": stats_res["improvement_pct"],
+            "t_statistic": stats_res["t_statistic"],
+            "p_value": stats_res["p_value"],
+            "cohens_d": stats_res["cohens_d"],
+            "effect_size_magnitude": stats_res["effect_size_magnitude"],
+            "statistically_significant": significant,
             "hypothesis_result": "Reject Null Hypothesis: Significant improvement detected across domains." if significant else "Fail to Reject Null Hypothesis: Improvement is not statistically significant."
         }), 200
 
@@ -330,60 +238,21 @@ def run_evaluation(current_user_id, current_username):
             
         pre_scores = [pre_test['spatial_visual_score'], pre_test['logical_math_score'], pre_test['attention_score'], pre_test['executive_score']]
         post_scores = [post_test['spatial_visual_score'], post_test['logical_math_score'], post_test['attention_score'], post_test['executive_score']]
-        
-        n = 4 # Number of domains
-        mean_pre = sum(pre_scores) / n
-        mean_post = sum(post_scores) / n
-        improvement_pct = ((mean_post - mean_pre) / mean_pre * 100) if mean_pre != 0 else 0.0
-        
-        import math
-        diffs = [post_scores[i] - pre_scores[i] for i in range(n)]
-        mean_diff = sum(diffs) / n
-        
-        if SCIPY_AVAILABLE:
-            t_stat, p_val = stats.ttest_rel(post_scores, pre_scores)
-        else:
-            var_diff = sum((d - mean_diff) ** 2 for d in diffs) / (n - 1) if n > 1 else 0.0
-            sd_diff = var_diff ** 0.5
-            se_diff = sd_diff / (n ** 0.5) if n > 0 else 0.0
-            t_stat = mean_diff / se_diff if se_diff != 0 else 0.0
-            p_val = calculate_approx_t_p_value(t_stat, n - 1)
-            
-        if math.isnan(t_stat) or math.isinf(t_stat):
-            t_stat = 0.0
-        if math.isnan(p_val) or math.isinf(p_val):
-            p_val = 1.0
-            
-        var_diff_d = sum((d - mean_diff) ** 2 for d in diffs) / (n - 1) if n > 1 else 0.0
-        sd_diff_d = var_diff_d ** 0.5
-        cohens_d = mean_diff / sd_diff_d if sd_diff_d > 0 else 0.0
-        
-        if math.isnan(cohens_d) or math.isinf(cohens_d):
-            cohens_d = 0.0
-            
-        abs_d = abs(cohens_d)
-        if abs_d < 0.2:
-            effect_magnitude = "negligible"
-        elif abs_d < 0.5:
-            effect_magnitude = "small"
-        elif abs_d < 0.8:
-            effect_magnitude = "medium"
-        else:
-            effect_magnitude = "large"
-            
-        significant = p_val < 0.05
-        
+
+        stats_res = compute_paired_ttest_stats(pre_scores, post_scores)
+        significant = stats_res["statistically_significant"]
+
         return jsonify({
             "status": "success",
-            "sample_size": n,
-            "mean_pretest": round(mean_pre, 2),
-            "mean_posttest": round(mean_post, 2),
-            "overall_improvement_rate_pct": round(improvement_pct, 2),
-            "t_statistic": round(t_stat, 4),
-            "p_value": round(p_val, 6),
-            "cohens_d": round(cohens_d, 4),
-            "effect_size_magnitude": effect_magnitude,
-            "statistically_significant": bool(significant),
+            "sample_size": stats_res["sample_size"],
+            "mean_pretest": stats_res["mean_pre"],
+            "mean_posttest": stats_res["mean_post"],
+            "overall_improvement_rate_pct": stats_res["improvement_pct"],
+            "t_statistic": stats_res["t_statistic"],
+            "p_value": stats_res["p_value"],
+            "cohens_d": stats_res["cohens_d"],
+            "effect_size_magnitude": stats_res["effect_size_magnitude"],
+            "statistically_significant": significant,
             "hypothesis_result": "Reject Null Hypothesis: Significant improvement detected across domains." if significant else "Fail to Reject Null Hypothesis: Improvement is not statistically significant.",
             "domain_improvements": {
                 "spatial_visual_memory": round(post_test['spatial_visual_score'] - pre_test['spatial_visual_score'], 2),
@@ -453,9 +322,7 @@ def get_cohort_analytics(current_user_id, current_username):
                 "status": "error",
                 "message": "No research cohort subjects found in database. Please run the seeding script first."
             }), 404
-            
-        n = len(rows)
-        
+
         pre_sv_list = []
         pre_lm_list = []
         pre_at_list = []
@@ -518,60 +385,20 @@ def get_cohort_analytics(current_user_id, current_username):
         mean_pre_ex, std_pre_ex = get_mean_std(pre_ex_list)
         mean_post_ex, std_post_ex = get_mean_std(post_ex_list)
         
-        overall_pre_mean = sum(pre_averages) / n
-        overall_post_mean = sum(post_averages) / n
-        overall_improvement_rate = ((overall_post_mean - overall_pre_mean) / overall_pre_mean * 100) if overall_pre_mean != 0 else 0.0
-        
-        # Paired t-test
-        import math
-        diffs = [post_averages[i] - pre_averages[i] for i in range(n)]
-        mean_diff = sum(diffs) / n
-        
-        if SCIPY_AVAILABLE:
-            t_stat, p_val = stats.ttest_rel(post_averages, pre_averages)
-        else:
-            var_diff = sum((d - mean_diff) ** 2 for d in diffs) / (n - 1) if n > 1 else 0.0
-            sd_diff = var_diff ** 0.5
-            se_diff = sd_diff / (n ** 0.5) if n > 0 else 0.0
-            t_stat = mean_diff / se_diff if se_diff != 0 else 0.0
-            p_val = calculate_approx_t_p_value(t_stat, n - 1)
-            
-        if math.isnan(t_stat) or math.isinf(t_stat):
-            t_stat = 0.0
-        if math.isnan(p_val) or math.isinf(p_val):
-            p_val = 1.0
-            
-        # Cohen's d for cohort
-        var_diff_d = sum((d - mean_diff) ** 2 for d in diffs) / (n - 1) if n > 1 else 0.0
-        sd_diff_d = var_diff_d ** 0.5
-        cohens_d = mean_diff / sd_diff_d if sd_diff_d > 0 else 0.0
-        
-        if math.isnan(cohens_d) or math.isinf(cohens_d):
-            cohens_d = 0.0
-            
-        abs_d = abs(cohens_d)
-        if abs_d < 0.2:
-            effect_magnitude = "negligible"
-        elif abs_d < 0.5:
-            effect_magnitude = "small"
-        elif abs_d < 0.8:
-            effect_magnitude = "medium"
-        else:
-            effect_magnitude = "large"
-            
-        significant = p_val < 0.05
-        
+        stats_res = compute_paired_ttest_stats(pre_averages, post_averages)
+        significant = stats_res["statistically_significant"]
+
         response_data = {
             "status": "success",
-            "sample_size": n,
-            "overall_pre_mean": round(overall_pre_mean, 2),
-            "overall_post_mean": round(overall_post_mean, 2),
-            "overall_improvement_rate_pct": round(overall_improvement_rate, 2),
-            "cohort_t_statistic": round(t_stat, 4),
-            "cohort_p_value": round(p_val, 6),
-            "cohort_cohens_d": round(cohens_d, 4),
-            "effect_size_magnitude": effect_magnitude,
-            "statistically_significant": bool(significant),
+            "sample_size": stats_res["sample_size"],
+            "overall_pre_mean": stats_res["mean_pre"],
+            "overall_post_mean": stats_res["mean_post"],
+            "overall_improvement_rate_pct": stats_res["improvement_pct"],
+            "cohort_t_statistic": stats_res["t_statistic"],
+            "cohort_p_value": stats_res["p_value"],
+            "cohort_cohens_d": stats_res["cohens_d"],
+            "effect_size_magnitude": stats_res["effect_size_magnitude"],
+            "statistically_significant": significant,
             "hypothesis_verdict": "Reject Null Hypothesis: Significant improvement detected across the cohort." if significant else "Fail to Reject Null Hypothesis: Improvement is not statistically significant.",
             "domains": {
                 "spatial_visual_memory": {

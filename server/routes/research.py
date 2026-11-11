@@ -7,6 +7,7 @@ from auth import token_required, admin_required, is_admin_user
 from database import get_db_connection
 from extensions import limiter
 from game_utils import safe_int
+from utils import calculate_approx_t_p_value, compute_paired_ttest_stats
 
 logger = logging.getLogger(__name__)
 
@@ -271,39 +272,88 @@ def get_overall_cohort_data(current_user_id, current_username):
             status = u['pwd_status'] or 'None'
             pwd_distribution[status] = pwd_distribution.get(status, 0) + 1
             
-        # Average Pre/Post Scores
-        cursor.execute("SELECT assessment_type, spatial_visual_score, logical_math_score, attention_score, executive_score FROM cognitive_assessments")
+        # Average Pre/Post Scores (all assessments + paired per-user overall averages)
+        cursor.execute(
+            """
+            SELECT user_id, assessment_type, spatial_visual_score, logical_math_score, attention_score, executive_score
+            FROM cognitive_assessments
+            ORDER BY completed_at ASC, id ASC
+            """
+        )
         assessments = cursor.fetchall()
-        
+
         pre_scores = {"sv": 0, "lm": 0, "at": 0, "ex": 0, "count": 0}
         post_scores = {"sv": 0, "lm": 0, "at": 0, "ex": 0, "count": 0}
-        
+        latest_pre_by_user = {}
+        latest_post_by_user = {}
+
         for a in assessments:
+            sv = a['spatial_visual_score'] or 0
+            lm = a['logical_math_score'] or 0
+            at = a['attention_score'] or 0
+            ex = a['executive_score'] or 0
+            overall_score = (sv + lm + at + ex) / 4.0
+
             if a['assessment_type'] == 'pre-test':
-                pre_scores['sv'] += a['spatial_visual_score'] or 0
-                pre_scores['lm'] += a['logical_math_score'] or 0
-                pre_scores['at'] += a['attention_score'] or 0
-                pre_scores['ex'] += a['executive_score'] or 0
+                pre_scores['sv'] += sv
+                pre_scores['lm'] += lm
+                pre_scores['at'] += at
+                pre_scores['ex'] += ex
                 pre_scores['count'] += 1
+                latest_pre_by_user[a['user_id']] = overall_score
             elif a['assessment_type'] == 'post-test':
-                post_scores['sv'] += a['spatial_visual_score'] or 0
-                post_scores['lm'] += a['logical_math_score'] or 0
-                post_scores['at'] += a['attention_score'] or 0
-                post_scores['ex'] += a['executive_score'] or 0
+                post_scores['sv'] += sv
+                post_scores['lm'] += lm
+                post_scores['at'] += at
+                post_scores['ex'] += ex
                 post_scores['count'] += 1
-                
+                latest_post_by_user[a['user_id']] = overall_score
+
         def get_avg(data):
-            if data['count'] == 0: return {"sv": 0, "lm": 0, "at": 0, "ex": 0, "overall": 0}
+            if data['count'] == 0:
+                return {"sv": 0, "lm": 0, "at": 0, "ex": 0, "overall": 0}
             sv = data['sv'] / data['count']
             lm = data['lm'] / data['count']
             at = data['at'] / data['count']
             ex = data['ex'] / data['count']
             overall = (sv + lm + at + ex) / 4.0
-            return {"sv": round(sv, 2), "lm": round(lm, 2), "at": round(at, 2), "ex": round(ex, 2), "overall": round(overall, 2)}
-            
+            return {
+                "sv": round(sv, 2),
+                "lm": round(lm, 2),
+                "at": round(at, 2),
+                "ex": round(ex, 2),
+                "overall": round(overall, 2),
+            }
+
         avg_pre = get_avg(pre_scores)
         avg_post = get_avg(post_scores)
-        
+        mean_shift = (
+            round(avg_post['overall'] - avg_pre['overall'], 2)
+            if pre_scores['count'] > 0 and post_scores['count'] > 0
+            else None
+        )
+
+        paired_uids = sorted(set(latest_pre_by_user.keys()) & set(latest_post_by_user.keys()))
+        paired_pre = [latest_pre_by_user[uid] for uid in paired_uids]
+        paired_post = [latest_post_by_user[uid] for uid in paired_uids]
+        paired_stats = compute_paired_ttest_stats(paired_pre, paired_post)
+
+        cursor.execute(
+            """
+            SELECT
+                COUNT(*) AS count,
+                AVG((functionality_score + usability_score + reliability_score + efficiency_score + ux_score) / 5.0) AS overall_mean
+            FROM iso_evaluations
+            """
+        )
+        iso_row = cursor.fetchone()
+        iso_count = int(iso_row['count']) if iso_row and iso_row['count'] else 0
+        iso_overall_mean = (
+            round(float(iso_row['overall_mean']), 2)
+            if iso_count > 0 and iso_row['overall_mean'] is not None
+            else None
+        )
+
         return jsonify({
             "status": "success",
             "total_participants": total_participants,
@@ -311,7 +361,22 @@ def get_overall_cohort_data(current_user_id, current_username):
             "avg_pre_scores": avg_pre,
             "avg_post_scores": avg_post,
             "pre_test_count": pre_scores['count'],
-            "post_test_count": post_scores['count']
+            "post_test_count": post_scores['count'],
+            "mean_shift": mean_shift,
+            "statistics": {
+                "paired_sample_size": paired_stats["sample_size"],
+                "paired_mean_shift": paired_stats["mean_shift"],
+                "paired_improvement_pct": paired_stats["improvement_pct"],
+                "t_statistic": paired_stats["t_statistic"],
+                "p_value": paired_stats["p_value"],
+                "cohens_d": paired_stats["cohens_d"],
+                "effect_size_magnitude": paired_stats["effect_size_magnitude"],
+                "statistically_significant": paired_stats["statistically_significant"],
+            },
+            "iso_summary": {
+                "count": iso_count,
+                "overall_mean": iso_overall_mean,
+            },
         }), 200
         
     except Exception as e:
@@ -511,8 +576,6 @@ def get_research_correlations(current_user_id, current_username):
         p_value = 1.0
         if n_points > 2 and abs(r_coeff) < 1.0:
             t_stat = r_coeff * math.sqrt((n_points - 2) / (1.0 - r_coeff**2))
-            # Use approximation from analytics if possible, or simple fallback
-            from routes.analytics import calculate_approx_t_p_value
             p_value = calculate_approx_t_p_value(t_stat, n_points - 2)
         elif abs(r_coeff) >= 1.0:
             p_value = 0.0
