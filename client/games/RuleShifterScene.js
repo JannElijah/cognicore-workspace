@@ -116,7 +116,7 @@ export default class RuleShifterScene extends BaseCognitiveScene {
 
         this.rulePanelText = this.add.text(W / 2, 101, 'RULE: MATCH COLOR', {
             fontFamily: CogniTheme.fonts.body,
-            fontSize: '16px', fontWeight: '800', fill: '#c084fc', letterSpacing: '0.05em'
+            fontSize: '17px', fontStyle: 'bold', fill: '#c084fc', letterSpacing: 1
         }).setOrigin(0.5);
 
         this.statusText = this.add.text(W / 2, 136, 'CHOOSE THE CORRECT MATCH CARD BELOW', {
@@ -146,7 +146,60 @@ export default class RuleShifterScene extends BaseCognitiveScene {
         createTutorialOverlay(this, {
             title: "RULE SHIFTER",
             domain: "executive_strategy",
-            instructions: "• Match choice cards to the target template at the top center.\n\n• The rule switches dynamically (Color, Shape, or Count).\n\n• Implicit switches require you to discover rules via choice feedback.\n\n• Rate your Decision Confidence to increase points risk/reward.",
+            lead: "Match cards to the top template, adapt to hidden rule shifts, and wager your confidence.",
+            cards: [
+                {
+                    badge: "1 · MATCH TEMPLATE",
+                    color: "#a855f7",
+                    title: "Align With Top Card",
+                    text: "Pick the choice card matching the target by Color, Shape, or Count.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.pill(s, c, cx, cy - 26, 76, 36, "● ●", {
+                            fill: 0x0c4a6e, stroke: 0x38bdf8, textColor: "#38bdf8", fontSize: "16px"
+                        });
+                        d.pill(s, c, cx - 44, cy + 24, 68, 34, "■", {
+                            fill: 0x1e293b, stroke: 0x475569, textColor: "#f59e0b", fontSize: "16px"
+                        });
+                        d.pill(s, c, cx + 44, cy + 24, 68, 34, "●", {
+                            fill: 0x0c4a6e, stroke: 0x10b981, strokeWidth: 2, textColor: "#38bdf8", fontSize: "16px"
+                        });
+                        d.tapCursor(s, c, cx + 54, cy + 28, 0x10b981);
+                    }
+                },
+                {
+                    badge: "2 · SILENT SWITCHES",
+                    color: "#f59e0b",
+                    title: "Discover Rule Shifts",
+                    text: "Rules can switch silently — use ✓ / ✕ feedback to deduce the new rule.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.pill(s, c, cx, cy - 20, 152, 28, "COLOR  →  SHAPE ?", {
+                            fill: 0x451a03, stroke: 0xf59e0b, textColor: "#fbbf24", fontSize: "13px"
+                        });
+                        d.pill(s, c, cx - 42, cy + 22, 68, 26, "✓ HIT", {
+                            fill: 0x064e3b, stroke: 0x10b981, textColor: "#34d399", fontSize: "12px"
+                        });
+                        d.pill(s, c, cx + 42, cy + 22, 68, 26, "✕ SHIFT", {
+                            fill: 0x7f1d1d, stroke: 0xef4444, textColor: "#fca5a5", fontSize: "12px"
+                        });
+                    }
+                },
+                {
+                    badge: "3 · CONFIDENCE BET",
+                    color: "#38bdf8",
+                    title: "Rate Certainty",
+                    text: "Higher confidence wagers multiply points earned — or lost!",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.pill(s, c, cx - 56, cy - 8, 50, 32, "LOW", { fill: 0x1e293b, stroke: 0x64748b, textColor: "#cbd5e1", fontSize: "11px" });
+                        d.pill(s, c, cx, cy - 8, 50, 32, "MED", { fill: 0x1e3a8a, stroke: 0x38bdf8, textColor: "#7dd3fc", fontSize: "11px" });
+                        d.pill(s, c, cx + 56, cy - 8, 50, 32, "HIGH", { fill: 0x581c87, stroke: 0xa855f7, strokeWidth: 2, textColor: "#e9d5ff", fontSize: "11px" });
+                        const lbl = s.add.text(cx, cy + 32, "HIGH = BIGGER RISK / REWARD", {
+                            fontFamily: "system-ui, sans-serif", fontSize: "11px", fontStyle: "bold", fill: "#c084fc"
+                        }).setOrigin(0.5);
+                        c.add(lbl);
+                    }
+                }
+            ],
+            tip: "MOUSE / TOUCH ONLY  ·  Stay alert when a previously working match suddenly misses!",
             themeColorHex: parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16),
             onStart: () => this.startGameplay()
         });

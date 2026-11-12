@@ -104,9 +104,9 @@ export default class MemoryMatchScene extends BaseCognitiveScene {
         this.statusText = this.add.text(width / 2, 90, 'PREPARING TRAINING...', {
             fontFamily: CogniTheme.fonts.body,
             fontSize: '22px',
-            fontWeight: '800',
+            fontStyle: 'bold',
             fill: '#e2e8f0',
-            letterSpacing: '0.05em'
+            letterSpacing: 1
         }).setOrigin(0.5, 0);
 
         // 3. Draw grid and begin
@@ -116,7 +116,55 @@ export default class MemoryMatchScene extends BaseCognitiveScene {
         createTutorialOverlay(this, {
             title: "MEMORY MATCH",
             domain: "spatial_visual_memory",
-            instructions: "• Click cards to flip them and reveal their symbols.\n\n• Find matching pairs in as few moves as possible.\n\n• DDA adapts grid sizes based on your memory recall speed.",
+            lead: "Flip tiles two at a time, remember symbol positions, and match every pair.",
+            cards: [
+                {
+                    badge: "1 · FLIP TWO CARDS",
+                    color: "#38bdf8",
+                    title: "Reveal Hidden Symbols",
+                    text: "Click any two face-down cards to uncover what is underneath.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.pill(s, c, cx - 34, cy, 50, 68, "?", {
+                            fill: 0x1e293b, stroke: 0x475569, textColor: "#94a3b8", fontSize: "24px", radius: 10
+                        });
+                        d.pill(s, c, cx + 34, cy, 50, 68, "★", {
+                            fill: 0x0c4a6e, stroke: 0x38bdf8, textColor: "#38bdf8", fontSize: "24px", radius: 10
+                        });
+                        d.tapCursor(s, c, cx + 40, cy + 12, 0x38bdf8);
+                    }
+                },
+                {
+                    badge: "2 · LOCK PAIRS",
+                    color: "#10b981",
+                    title: "Match Identical Icons",
+                    text: "Matching symbols stay face up and increase your combo streak.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.pill(s, c, cx - 36, cy - 4, 48, 64, "◆", {
+                            fill: 0x064e3b, stroke: 0x10b981, textColor: "#34d399", fontSize: "24px", radius: 10
+                        });
+                        d.pill(s, c, cx + 28, cy - 4, 48, 64, "◆", {
+                            fill: 0x064e3b, stroke: 0x10b981, textColor: "#34d399", fontSize: "24px", radius: 10
+                        });
+                        d.statusBadge(s, c, cx + 66, cy - 36, true);
+                    }
+                },
+                {
+                    badge: "3 · FEWEST MOVES",
+                    color: "#a855f7",
+                    title: "Recall Mismatches",
+                    text: "Track where flipped symbols sit to clear boards in fewer turns.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.miniGrid(s, c, cx, cy - 12, 2, 4, 24, 5, [
+                            { row: 0, col: 0, fill: 0x065f46, stroke: 0x10b981, label: "◆" },
+                            { row: 1, col: 2, fill: 0x065f46, stroke: 0x10b981, label: "◆" }
+                        ]);
+                        d.pill(s, c, cx, cy + 40, 150, 24, "FEWER MOVES = +PTS", {
+                            fill: 0x2e1065, stroke: 0xa855f7, textColor: "#e9d5ff", fontSize: "11px"
+                        });
+                    }
+                }
+            ],
+            tip: "MOUSE / TOUCH ONLY  ·  Grid size expands automatically as your recall speed improves.",
             themeColorHex: parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16),
             onStart: () => this.startGameplay()
         });

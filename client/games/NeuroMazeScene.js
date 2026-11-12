@@ -105,51 +105,61 @@ export default class NeuroMazeScene extends BaseCognitiveScene {
         this.statusText = this.add.text(width / 2, 90, 'NAVIGATE THE NEURAL NETWORK!', {
             fontFamily: CogniTheme.fonts.body,
             fontSize: '20px',
-            fontWeight: '800',
+            fontStyle: 'bold',
             fill: '#e2e8f0',
-            letterSpacing: '0.05em'
+            letterSpacing: 1
         }).setOrigin(0.5, 0);
-
-        // Keyboard Controls
-        this.input.keyboard.on('keydown', (event) => {
-            if (this.isTutorialActive) return;
-            if (this.gamePhase !== 'PLAYING' || this.isMoving) return;
-
-            let dx = 0;
-            let dy = 0;
-            const key = event.key.toLowerCase();
-            
-            if (key === 'arrowup' || key === 'w') {
-                dy = -1;
-            } else if (key === 'arrowdown' || key === 's') {
-                dy = 1;
-            } else if (key === 'arrowleft' || key === 'a') {
-                dx = -1;
-            } else if (key === 'arrowright' || key === 'd') {
-                dx = 1;
-            }
-
-            if (dx !== 0 || dy !== 0) {
-                const nx = this.playerGridX + dx;
-                const ny = this.playerGridY + dy;
-
-                if (nx >= 0 && nx < this.gridSize && ny >= 0 && ny < this.gridSize) {
-                    const cell = this.gridCells[ny][nx];
-                    if (!cell.isBlocked) {
-                        this.movePlayerAlongPath([[this.playerGridX, this.playerGridY], [nx, ny]]);
-                    } else {
-                        // Tiny shake to signal blocked
-                        this.cameras.main.shake(50, 0.002);
-                    }
-                }
-            }
-        });
 
         createMlHud(this, 0x10b981);
         createTutorialOverlay(this, {
             title: "NEURO MAZE",
             domain: "executive_strategy",
-            instructions: "• Guide the neural signal node to the target terminal.\n\n• Plan paths efficiently using keyboard arrow keys or clicking.\n\n• Avoid collisions with static and moving obstacle nodes.",
+            lead: "Guide the cyan neural pulse step by step to the emerald terminal within your move budget.",
+            cards: [
+                {
+                    badge: "1 · REACH TERMINAL",
+                    color: "#10b981",
+                    title: "Plan Shortest Path",
+                    text: "Find an open path from your cyan node to the emerald goal.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.miniGrid(s, c, cx, cy, 3, 3, 28, 5, [
+                            { row: 0, col: 0, fill: 0x0284c7, alpha: 0.95, stroke: 0x38bdf8, label: "●", textColor: "#e0f2fe" },
+                            { row: 0, col: 1, fill: 0x0f172a, stroke: 0x38bdf8, label: "→", textColor: "#38bdf8" },
+                            { row: 1, col: 1, fill: 0x0f172a, stroke: 0x38bdf8, label: "↓", textColor: "#38bdf8" },
+                            { row: 2, col: 1, fill: 0x0f172a, stroke: 0x38bdf8, label: "→", textColor: "#38bdf8" },
+                            { row: 2, col: 2, fill: 0x065f46, alpha: 0.95, stroke: 0x10b981, label: "◆", textColor: "#34d399" }
+                        ]);
+                    }
+                },
+                {
+                    badge: "2 · DODGE HAZARDS",
+                    color: "#ef4444",
+                    title: "Avoid Walls & Blockers",
+                    text: "Steer clear of static walls and patrolling red obstacle nodes.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.miniGrid(s, c, cx - 8, cy, 3, 3, 28, 5, [
+                            { row: 0, col: 1, fill: 0x334155, alpha: 0.95, stroke: 0x64748b, label: "■", textColor: "#94a3b8" },
+                            { row: 1, col: 1, fill: 0x991b1b, alpha: 0.95, stroke: 0xef4444, label: "✕", textColor: "#fecaca" },
+                            { row: 2, col: 0, fill: 0x334155, alpha: 0.95, stroke: 0x64748b, label: "■", textColor: "#94a3b8" }
+                        ]);
+                        d.statusBadge(s, c, cx + 60, cy - 34, false);
+                    }
+                },
+                {
+                    badge: "3 · STEP BY STEP",
+                    color: "#38bdf8",
+                    title: "Click Adjacent Tiles",
+                    text: "Click or tap any open tile directly next to your node to move.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.miniGrid(s, c, cx, cy, 3, 3, 28, 5, [
+                            { row: 1, col: 1, fill: 0x0284c7, alpha: 0.95, stroke: 0x38bdf8, label: "●" },
+                            { row: 1, col: 2, fill: 0x064e3b, alpha: 0.8, stroke: 0x10b981, strokeWidth: 2, label: "·" }
+                        ]);
+                        d.tapCursor(s, c, cx + 34, cy + 4, 0x38bdf8);
+                    }
+                }
+            ],
+            tip: "MOUSE / TOUCH ONLY  ·  Click adjacent open squares step by step before moves run out.",
             themeColorHex: 0x10b981,
             onStart: () => this.startGameplay()
         });

@@ -138,10 +138,10 @@ export default class MentalFlexScene extends BaseCognitiveScene {
         // Dynamic helper status alert
         this.statusText = this.add.text(width / 2, 125, 'Match cards based on the active rule!', {
             fontFamily: CogniTheme.fonts.body,
-            fontSize: '14px',
-            fontWeight: '700',
-            fill: '#64748b',
-            letterSpacing: '1px'
+            fontSize: '15px',
+            fontStyle: 'bold',
+            fill: '#94a3b8',
+            letterSpacing: 1
         }).setOrigin(0.5, 0);
 
         // 3. Decision timer bar visual setup
@@ -155,7 +155,52 @@ export default class MentalFlexScene extends BaseCognitiveScene {
         createTutorialOverlay(this, {
             title: "MENTAL FLEX",
             domain: "logical_mathematical",
-            instructions: "• Sort cards dynamically based on the changing matching rule.\n\n• Pay attention to the ACTIVE rule at the top (Color, Shape, or Count).\n\n• Minimize shift latency when switching sorting criteria.",
+            lead: "Sort the matching card according to the ACTIVE rule — and adapt the moment it switches!",
+            cards: [
+                {
+                    badge: "1 · CHECK ACTIVE RULE",
+                    color: "#f59e0b",
+                    title: "Read Top Rule Banner",
+                    text: "The active sorting rule is always displayed at the top: Color, Shape, or Count.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.pill(s, c, cx, cy - 22, 168, 32, "RULE: SHAPE", {
+                            fill: 0x451a03, stroke: 0xf59e0b, textColor: "#fbbf24", fontSize: "14px"
+                        });
+                        d.pill(s, c, cx - 44, cy + 24, 76, 24, "COLOR", { fill: 0x1e293b, stroke: 0x475569, textColor: "#94a3b8", fontSize: "11px" });
+                        d.pill(s, c, cx + 44, cy + 24, 76, 24, "COUNT", { fill: 0x1e293b, stroke: 0x475569, textColor: "#94a3b8", fontSize: "11px" });
+                    }
+                },
+                {
+                    badge: "2 · MATCH TRAIT",
+                    color: "#10b981",
+                    title: "Click Matching Card",
+                    text: "Match ONLY the active trait — ignore conflicting colors or counts.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.pill(s, c, cx - 46, cy - 4, 68, 66, "★ ★", {
+                            fill: 0x451a03, stroke: 0xf59e0b, textColor: "#fbbf24", fontSize: "18px", radius: 10
+                        });
+                        d.pill(s, c, cx + 46, cy - 4, 68, 66, "★ ★ ★", {
+                            fill: 0x0c4a6e, stroke: 0x10b981, strokeWidth: 2.5, textColor: "#38bdf8", fontSize: "16px", radius: 10
+                        });
+                        d.statusBadge(s, c, cx + 68, cy - 38, true);
+                    }
+                },
+                {
+                    badge: "3 · FAST SHIFTING",
+                    color: "#38bdf8",
+                    title: "Switch Without Delay",
+                    text: "Minimize hesitation time right after a rule changes mid-session.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.pill(s, c, cx, cy - 18, 152, 30, "SHAPE  ↻  COLOR", {
+                            fill: 0x0c4a6e, stroke: 0x38bdf8, textColor: "#7dd3fc", fontSize: "13px"
+                        });
+                        d.pill(s, c, cx, cy + 24, 152, 26, "LOW SHIFT LATENCY", {
+                            fill: 0x0f172a, stroke: 0x10b981, textColor: "#34d399", fontSize: "11px"
+                        });
+                    }
+                }
+            ],
+            tip: "MOUSE / TOUCH ONLY  ·  Ignore distractors & watch the top rule banner before every click.",
             themeColorHex: 0xf59e0b,
             onStart: () => this.startGameplay()
         });

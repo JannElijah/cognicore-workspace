@@ -88,9 +88,9 @@ export default class SynapseSpinScene extends BaseCognitiveScene {
         this.statusText = this.add.text(width / 2, 90, 'IDENTIFY THE SAME SHAPE (MENTALLY ROTATED)!', {
             fontFamily: CogniTheme.fonts.body,
             fontSize: '18px',
-            fontWeight: '800',
+            fontStyle: 'bold',
             fill: '#e2e8f0',
-            letterSpacing: '0.05em'
+            letterSpacing: 1
         }).setOrigin(0.5, 0);
 
         // Background click spam check
@@ -114,9 +114,76 @@ export default class SynapseSpinScene extends BaseCognitiveScene {
         createMlHud(this, 0x10b981);
         createTutorialOverlay(this, {
             title: "SYNAPSE SPIN",
-            domain: "executive_strategy",
-            instructions: "• Rotate synapses to guide signal sparks to matched color receptors.\n\n• Click/tap to rotate receptors and switch directions.\n\n• DDA accelerates spark velocity based on correct routing.",
-            themeColorHex: 0x10b981,
+            domain: "spatial_visual_memory",
+            lead: "Find which rotated option (A, B, or C) is the EXACT same shape — not a mirror flip!",
+            cards: [
+                {
+                    badge: "1 · STUDY REFERENCE",
+                    color: "#a855f7",
+                    title: "Check Left Shape",
+                    text: "Inspect the corners & direction of the reference polygon.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        const g = s.add.graphics();
+                        g.fillStyle(0x8b5cf6, 0.85);
+                        g.lineStyle(2.5, 0xd8b4fe, 1);
+                        const pts = [
+                            { x: cx - 26, y: cy - 30 }, { x: cx - 4, y: cy - 30 },
+                            { x: cx - 4, y: cy + 8 }, { x: cx + 28, y: cy + 8 },
+                            { x: cx + 28, y: cy + 30 }, { x: cx - 26, y: cy + 30 }
+                        ];
+                        g.fillPoints(pts, true);
+                        g.strokePoints(pts, true);
+                        c.add(g);
+                        d.pill(s, c, cx + 52, cy - 36, 54, 22, "REF", {
+                            fill: 0x2e1065, stroke: 0xa855f7, textColor: "#e9d5ff", fontSize: "11px"
+                        });
+                    }
+                },
+                {
+                    badge: "2 · ROTATED MATCH",
+                    color: "#10b981",
+                    title: "Turn In Your Mind",
+                    text: "Tap the candidate card that matches after pure 2D rotation.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        const g = s.add.graphics();
+                        g.fillStyle(0x6366f1, 0.85);
+                        g.lineStyle(2.5, 0xa5b4fc, 1);
+                        // 90 deg clockwise rotated L-shape
+                        const pts = [
+                            { x: cx - 30, y: cy - 26 }, { x: cx + 30, y: cy - 26 },
+                            { x: cx + 30, y: cy - 4 }, { x: cx - 8, y: cy - 4 },
+                            { x: cx - 8, y: cy + 28 }, { x: cx - 30, y: cy + 28 }
+                        ];
+                        g.fillPoints(pts, true);
+                        g.strokePoints(pts, true);
+                        c.add(g);
+                        d.statusBadge(s, c, cx + 58, cy - 34, true, "SAME");
+                    }
+                },
+                {
+                    badge: "3 · MIRROR TRAP",
+                    color: "#ef4444",
+                    title: "Reject Flipped Decoys",
+                    text: "Two options are mirrored backwards — ignore flipped shapes!",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        const g = s.add.graphics();
+                        g.fillStyle(0x6366f1, 0.65);
+                        g.lineStyle(2.5, 0xfca5a5, 1);
+                        // Horizontally mirrored L-shape
+                        const pts = [
+                            { x: cx + 26, y: cy - 30 }, { x: cx + 4, y: cy - 30 },
+                            { x: cx + 4, y: cy + 8 }, { x: cx - 28, y: cy + 8 },
+                            { x: cx - 28, y: cy + 30 }, { x: cx + 26, y: cy + 30 }
+                        ];
+                        g.fillPoints(pts, true);
+                        g.strokePoints(pts, true);
+                        c.add(g);
+                        d.statusBadge(s, c, cx + 52, cy - 34, false, "FLIP");
+                    }
+                }
+            ],
+            tip: "MOUSE / TOUCH ONLY  ·  Click Card A, B, or C on the right to lock in your match.",
+            themeColorHex: 0x8b5cf6,
             onStart: () => this.startGameplay()
         });
     }

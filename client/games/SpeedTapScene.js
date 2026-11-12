@@ -183,7 +183,57 @@ export default class SpeedTapScene extends BaseCognitiveScene {
         createTutorialOverlay(this, {
             title: "SPEED TAP",
             domain: "reflexes_and_focus",
-            instructions: "• Tap the glowing cyan target circles as fast as possible.\n\n• DO NOT click the neon-orange triangles (false alarms/penalties).\n\n• Targets shrink over time; click before they get too small!\n\n• Rapid click spamming on blank space degrades accuracy.",
+            lead: "React fast to glowing cyan targets while ignoring orange decoy triangles.",
+            cards: [
+                {
+                    badge: "1 · TAP TARGETS",
+                    color: "#38bdf8",
+                    title: "Hit Cyan Circles",
+                    text: "Click glowing cyan circles quickly before they shrink away.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        const g = s.add.graphics();
+                        g.lineStyle(2, 0x38bdf8, 0.35);
+                        g.strokeCircle(cx - 10, cy, 38);
+                        g.fillStyle(0x06b6d4, 0.9);
+                        g.lineStyle(2.5, 0x67e8f9, 1);
+                        g.fillCircle(cx - 10, cy, 22);
+                        g.strokeCircle(cx - 10, cy, 22);
+                        c.add(g);
+                        d.tapCursor(s, c, cx + 6, cy + 6, 0x38bdf8);
+                        d.statusBadge(s, c, cx + 58, cy - 34, true);
+                    }
+                },
+                {
+                    badge: "2 · DO NOT TAP",
+                    color: "#fb923c",
+                    title: "Skip Orange Triangles",
+                    text: "Ignore neon-orange triangles — clicking them causes penalties.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        const g = s.add.graphics();
+                        g.fillStyle(0xf97316, 0.9);
+                        g.lineStyle(2.5, 0xfdba74, 1);
+                        const r = 28;
+                        g.fillTriangle(cx, cy - r, cx - r, cy + r * 0.8, cx + r, cy + r * 0.8);
+                        g.strokeTriangle(cx, cy - r, cx - r, cy + r * 0.8, cx + r, cy + r * 0.8);
+                        c.add(g);
+                        d.statusBadge(s, c, cx + 58, cy - 34, false);
+                    }
+                },
+                {
+                    badge: "3 · NO SPAMMING",
+                    color: "#a855f7",
+                    title: "Avoid Blank Clicks",
+                    text: "Rapid clicking on empty background drops your accuracy.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.miniGrid(s, c, cx, cy - 12, 2, 3, 24, 5);
+                        d.tapCursor(s, c, cx - 8, cy - 14, 0xef4444);
+                        d.pill(s, c, cx, cy + 42, 140, 26, "ACCURACY  ↓", {
+                            fill: 0x7f1d1d, alpha: 0.75, stroke: 0xef4444, textColor: "#fca5a5", fontSize: "12px"
+                        });
+                    }
+                }
+            ],
+            tip: "MOUSE / TOUCH ONLY  ·  Targets shrink faster & decoys increase at higher DDA levels.",
             themeColorHex: parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16),
             onStart: () => this.startGameplay()
         });

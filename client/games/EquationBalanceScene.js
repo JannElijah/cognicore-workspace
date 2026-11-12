@@ -91,9 +91,9 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
         this.statusText = this.add.text(width / 2, 90, 'BALANCE THE EQUATION!', {
             fontFamily: CogniTheme.fonts.body,
             fontSize: '20px',
-            fontWeight: '800',
+            fontStyle: 'bold',
             fill: '#e2e8f0',
-            letterSpacing: '0.05em'
+            letterSpacing: 1
         }).setOrigin(0.5, 0);
 
         // Round timer progress bar (shrinks as time runs out)
@@ -123,7 +123,49 @@ export default class EquationBalanceScene extends BaseCognitiveScene {
         createTutorialOverlay(this, {
             title: "EQUATION BALANCE",
             domain: "logical_mathematical",
-            instructions: "• Balance the equation by choosing the correct missing operator/number.\n\n• Work quickly to gain larger time bonuses.\n\n• Incorrect answers shake screen and incur a score penalty.",
+            lead: "Solve each math puzzle quickly by clicking the missing operator or number.",
+            cards: [
+                {
+                    badge: "1 · READ EQUATION",
+                    color: "#f59e0b",
+                    title: "Spot Missing Piece",
+                    text: "Find which operator or value completes both sides.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.pill(s, c, cx - 54, cy, 34, 38, "6", { fill: 0x1e293b, stroke: 0x475569, fontSize: "18px" });
+                        d.pill(s, c, cx - 14, cy, 34, 38, "?", { fill: 0x451a03, stroke: 0xf59e0b, textColor: "#fbbf24", fontSize: "18px" });
+                        d.pill(s, c, cx + 26, cy, 34, 38, "4", { fill: 0x1e293b, stroke: 0x475569, fontSize: "18px" });
+                        d.pill(s, c, cx + 68, cy, 42, 38, "=24", { fill: 0x0f172a, stroke: 0x38bdf8, textColor: "#38bdf8", fontSize: "14px" });
+                    }
+                },
+                {
+                    badge: "2 · PICK ANSWER",
+                    color: "#10b981",
+                    title: "Tap Correct Tile",
+                    text: "Click the choice button that makes the equation true.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.pill(s, c, cx - 34, cy - 22, 54, 34, "+", { fill: 0x1e293b, stroke: 0x475569, fontSize: "18px" });
+                        d.pill(s, c, cx + 34, cy - 22, 54, 34, "−", { fill: 0x1e293b, stroke: 0x475569, fontSize: "18px" });
+                        d.pill(s, c, cx - 34, cy + 22, 54, 34, "×", { fill: 0x064e3b, stroke: 0x10b981, strokeWidth: 2.5, textColor: "#34d399", fontSize: "18px" });
+                        d.pill(s, c, cx + 34, cy + 22, 54, 34, "÷", { fill: 0x1e293b, stroke: 0x475569, fontSize: "18px" });
+                        d.tapCursor(s, c, cx - 22, cy + 28, 0x10b981);
+                    }
+                },
+                {
+                    badge: "3 · SPEED & PENALTY",
+                    color: "#38bdf8",
+                    title: "Fast = Higher Bonus",
+                    text: "Quick solves boost points; wrong picks shake & deduct score.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.pill(s, c, cx, cy - 20, 168, 30, "⚡ QUICK SOLVE: +BONUS", {
+                            fill: 0x064e3b, stroke: 0x10b981, textColor: "#34d399", fontSize: "12px"
+                        });
+                        d.pill(s, c, cx, cy + 22, 168, 30, "✕ WRONG PICK: PENALTY", {
+                            fill: 0x7f1d1d, stroke: 0xef4444, textColor: "#fca5a5", fontSize: "12px"
+                        });
+                    }
+                }
+            ],
+            tip: "MOUSE / TOUCH ONLY  ·  Multi-step two-operator equations unlock at higher DDA levels.",
             themeColorHex: 0xf59e0b,
             onStart: () => this.startGameplay()
         });

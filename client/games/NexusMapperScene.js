@@ -95,9 +95,9 @@ export default class NexusMapperScene extends BaseCognitiveScene {
         this.statusText = this.add.text(width / 2, 90, 'MEMORIZE LETTER LOCATIONS!', {
             fontFamily: CogniTheme.fonts.body,
             fontSize: '24px',
-            fontWeight: '900',
+            fontStyle: 'bold',
             fill: (getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8'),
-            letterSpacing: '0.05em'
+            letterSpacing: 1
         }).setOrigin(0.5, 0);
 
         // Background click spam check
@@ -122,7 +122,47 @@ export default class NexusMapperScene extends BaseCognitiveScene {
         createTutorialOverlay(this, {
             title: "NEXUS MAPPER",
             domain: "spatial_visual_memory",
-            instructions: "• Memorize the letter locations on the node map.\n\n• Reconstruct their positions from memory.\n\n• Accuracy and response times govern difficulty.",
+            lead: "Memorize each letter's spot on the grid before it hides, then recall in A–Z order.",
+            cards: [
+                {
+                    badge: "1 · MEMORIZE MAP",
+                    color: "#38bdf8",
+                    title: "Lock In Positions",
+                    text: "Remember the exact grid square where each letter appears.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.miniGrid(s, c, cx, cy, 3, 3, 28, 5, [
+                            { row: 0, col: 0, fill: 0x0c4a6e, alpha: 0.95, stroke: 0x38bdf8, label: "A", textColor: "#38bdf8" },
+                            { row: 1, col: 2, fill: 0x0c4a6e, alpha: 0.95, stroke: 0x38bdf8, label: "B", textColor: "#38bdf8" },
+                            { row: 2, col: 1, fill: 0x0c4a6e, alpha: 0.95, stroke: 0x38bdf8, label: "C", textColor: "#38bdf8" }
+                        ]);
+                    }
+                },
+                {
+                    badge: "2 · LETTERS VANISH",
+                    color: "#f59e0b",
+                    title: "Follow Target Prompt",
+                    text: "Once letters disappear, check which letter is requested at top.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.pill(s, c, cx, cy - 42, 130, 24, "FIND: 'A'", {
+                            fill: 0x0f172a, stroke: 0x38bdf8, textColor: "#38bdf8", fontSize: "12px"
+                        });
+                        d.miniGrid(s, c, cx, cy + 12, 3, 3, 22, 4);
+                    }
+                },
+                {
+                    badge: "3 · CLICK ALPHABETICALLY",
+                    color: "#10b981",
+                    title: "Locate A → B → C",
+                    text: "Click the hidden cell for each prompted letter in order.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.miniGrid(s, c, cx, cy, 3, 3, 28, 5, [
+                            { row: 0, col: 0, fill: 0x065f46, alpha: 0.95, stroke: 0x10b981, label: "A", textColor: "#34d399" }
+                        ]);
+                        d.tapCursor(s, c, cx - 28, cy - 28, 0x10b981);
+                    }
+                }
+            ],
+            tip: "MOUSE / TOUCH ONLY  ·  Flash duration shortens & letter count grows with higher DDA levels.",
             themeColorHex: parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16),
             onStart: () => this.startGameplay()
         });

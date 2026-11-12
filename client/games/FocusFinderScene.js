@@ -254,7 +254,56 @@ export default class FocusFinderScene extends BaseCognitiveScene {
         createTutorialOverlay(this, {
             title: "FOCUS FINDER",
             domain: "reflexes_and_focus",
-            instructions: "• Locate and click the target shape matching the top preview window.\n\n• Ignore distracting shape/color combinations.\n\n• Maintain accuracy: misses and false clicks degrade score.",
+            lead: "Scan the field and click every item matching BOTH the target shape and color.",
+            cards: [
+                {
+                    badge: "1 · CHECK TARGET",
+                    color: "#38bdf8",
+                    title: "Read Top Preview",
+                    text: "Remember both the required shape AND color shown at the top.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.pill(s, c, cx, cy - 38, 120, 24, "TARGET", {
+                            fill: 0x0f172a, stroke: 0x38bdf8, textColor: "#38bdf8", fontSize: "12px"
+                        });
+                        const g = s.add.graphics();
+                        d.star(g, cx, cy + 14, 24, 11, 0x06b6d4, 0xffffff);
+                        c.add(g);
+                    }
+                },
+                {
+                    badge: "2 · FILTER DECOYS",
+                    color: "#f59e0b",
+                    title: "Skip Lookalikes",
+                    text: "Ignore items that match only the shape OR only the color.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        const g = s.add.graphics();
+                        d.star(g, cx - 56, cy - 6, 18, 8, 0xa855f7, 0xe9d5ff);
+                        g.fillStyle(0x06b6d4, 1);
+                        g.lineStyle(2, 0xffffff, 0.9);
+                        g.fillRect(cx - 14, cy - 20, 28, 28);
+                        g.strokeRect(cx - 14, cy - 20, 28, 28);
+                        d.star(g, cx + 56, cy - 6, 18, 8, 0x06b6d4, 0xffffff);
+                        c.add(g);
+                        d.statusBadge(s, c, cx - 56, cy + 34, false);
+                        d.statusBadge(s, c, cx, cy + 34, false);
+                        d.statusBadge(s, c, cx + 56, cy + 34, true);
+                    }
+                },
+                {
+                    badge: "3 · CLICK EXACT MATCH",
+                    color: "#10b981",
+                    title: "Stay Precise",
+                    text: "Clean taps boost speed bonus; false clicks hurt accuracy.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        const g = s.add.graphics();
+                        d.star(g, cx - 12, cy - 6, 24, 11, 0x06b6d4, 0xffffff);
+                        c.add(g);
+                        d.tapCursor(s, c, cx + 2, cy + 6, 0x10b981);
+                        d.statusBadge(s, c, cx + 58, cy - 34, true);
+                    }
+                }
+            ],
+            tip: "MOUSE / TOUCH ONLY  ·  Expect denser distractor fields as your DDA level rises.",
             themeColorHex: parseInt((getComputedStyle(document.body).getPropertyValue('--color-secondary').trim() || '#a855f7').replace('#', '0x'), 16),
             onStart: () => this.startGameplay()
         });

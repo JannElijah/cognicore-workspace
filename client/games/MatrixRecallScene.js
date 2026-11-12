@@ -110,9 +110,9 @@ export default class MatrixRecallScene extends BaseCognitiveScene {
         this.statusText = this.add.text(width / 2, 90, 'PREPARING MATRIX...', {
             fontFamily: CogniTheme.fonts.body,
             fontSize: '22px',
-            fontWeight: '800',
+            fontStyle: 'bold',
             fill: '#e2e8f0',
-            letterSpacing: '0.05em'
+            letterSpacing: 1
         }).setOrigin(0.5, 0);
 
         // 3. Draw grid (pre-draw cell visual blocks underneath)
@@ -141,7 +141,48 @@ export default class MatrixRecallScene extends BaseCognitiveScene {
         createTutorialOverlay(this, {
             title: "MATRIX RECALL",
             domain: "spatial_visual_memory",
-            instructions: "• Memorize the highlighted spatial nodes as they flash.\n\n• Click/tap the exact node sequence locations from memory.\n\n• DDA scales target grid sizing and decoy count.\n\n• Decoy cells flash red/coral at higher difficulty levels.",
+            lead: "Memorize all flashing BLUE target squares (in any order) and ignore red traps.",
+            cards: [
+                {
+                    badge: "1 · WATCH BLUE TILES",
+                    color: "#38bdf8",
+                    title: "Remember Blue Spots",
+                    text: "Lock in every glowing blue square shown before the grid hides.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.miniGrid(s, c, cx, cy, 3, 3, 28, 5, [
+                            { row: 0, col: 1, fill: 0x0284c7, alpha: 0.95, stroke: 0x38bdf8, label: "●", textColor: "#e0f2fe" },
+                            { row: 1, col: 2, fill: 0x0284c7, alpha: 0.95, stroke: 0x38bdf8, label: "●", textColor: "#e0f2fe" },
+                            { row: 2, col: 0, fill: 0x0284c7, alpha: 0.95, stroke: 0x38bdf8, label: "●", textColor: "#e0f2fe" }
+                        ]);
+                    }
+                },
+                {
+                    badge: "2 · SKIP RED DECOYS",
+                    color: "#ef4444",
+                    title: "Avoid Red Flashes",
+                    text: "At Level 3+, red decoy squares also flash — do NOT click them!",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.miniGrid(s, c, cx - 10, cy, 3, 3, 28, 5, [
+                            { row: 0, col: 2, fill: 0x0284c7, alpha: 0.95, stroke: 0x38bdf8, label: "✓", textColor: "#e0f2fe" },
+                            { row: 1, col: 1, fill: 0x991b1b, alpha: 0.95, stroke: 0xf87171, label: "✕", textColor: "#fecaca" }
+                        ]);
+                        d.statusBadge(s, c, cx + 62, cy - 34, false);
+                    }
+                },
+                {
+                    badge: "3 · RECALL PATTERN",
+                    color: "#10b981",
+                    title: "Pick In Any Order",
+                    text: "Click every blue square from memory; one wrong click ends the round.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.miniGrid(s, c, cx, cy, 3, 3, 28, 5, [
+                            { row: 0, col: 1, fill: 0x065f46, alpha: 0.95, stroke: 0x34d399, label: "✓" }
+                        ]);
+                        d.tapCursor(s, c, cx + 2, cy - 28, 0x34d399);
+                    }
+                }
+            ],
+            tip: "MOUSE / TOUCH ONLY  ·  Grid size expands and red decoy traps appear starting at Level 3.",
             themeColorHex: parseInt((getComputedStyle(document.body).getPropertyValue('--color-primary').trim() || '#38bdf8').replace('#', '0x'), 16),
             onStart: () => this.startGameplay()
         });
@@ -295,12 +336,12 @@ updateTimer() {
 
         console.log('[Matrix Recall] Targets:', this.targets, 'Decoys:', this.decoyTargets);
 
-        // Flash targets (Gold/Cyan) and decoys (Coral/Red) simultaneously
+        // Flash targets (Cyan/Blue) and decoys (Red/Coral) simultaneously
         this.targets.forEach(index => {
-            this.highlightCell(index, 0xef4444, 0xfca5a5, this.flashDuration); // Red target glow
+            this.highlightCell(index, 0x38bdf8, 0xe0f2fe, this.flashDuration); // Blue/Cyan target glow
         });
         this.decoyTargets.forEach(index => {
-            this.highlightCell(index, 0x38bdf8, 0xffffff, this.flashDuration); // Cyan decoy glow
+            this.highlightCell(index, 0xef4444, 0xfca5a5, this.flashDuration); // Red decoy glow
         });
 
         // Transition to recall phase after the flash duration ends

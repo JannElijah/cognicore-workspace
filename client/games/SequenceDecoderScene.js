@@ -92,8 +92,8 @@ export default class SequenceDecoderScene extends BaseCognitiveScene {
 
         this.statusText = this.add.text(W / 2, 82, 'FIND THE PATTERN!', {
             fontFamily: CogniTheme.fonts.body,
-            fontSize: '18px', fontWeight: '800', fill: '#e2e8f0',
-            letterSpacing: '0.08em'
+            fontSize: '19px', fontStyle: 'bold', fill: '#e2e8f0',
+            letterSpacing: 1.5
         }).setOrigin(0.5, 0);
 
         // ── Round timer bar
@@ -126,7 +126,50 @@ export default class SequenceDecoderScene extends BaseCognitiveScene {
         createTutorialOverlay(this, {
             title: "SEQUENCE DECODER",
             domain: "logical_mathematical",
-            instructions: "• Unravel numerical logic patterns in the sequence.\n\n• Click or enter the next number in the pattern progression.\n\n• Speed bonuses scale with rapid logical inference times.",
+            lead: "Crack the underlying number pattern and click the missing term before time runs out.",
+            cards: [
+                {
+                    badge: "1 · READ PATTERN",
+                    color: "#f59e0b",
+                    title: "Spot The Rule",
+                    text: "Check differences, ratios, or alternating steps between numbers.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.pill(s, c, cx - 64, cy - 8, 36, 38, "2", { fill: 0x1e293b, stroke: 0x475569, fontSize: "16px" });
+                        d.pill(s, c, cx - 20, cy - 8, 36, 38, "5", { fill: 0x1e293b, stroke: 0x475569, fontSize: "16px" });
+                        d.pill(s, c, cx + 24, cy - 8, 36, 38, "8", { fill: 0x1e293b, stroke: 0x475569, fontSize: "16px" });
+                        d.pill(s, c, cx + 68, cy - 8, 36, 38, "?", { fill: 0x451a03, stroke: 0xf59e0b, textColor: "#fbbf24", fontSize: "16px" });
+                        const diff = s.add.text(cx, cy + 32, "+3    →    +3    →    +3", {
+                            fontFamily: "system-ui, sans-serif", fontSize: "13px", fontStyle: "bold", fill: "#38bdf8"
+                        }).setOrigin(0.5);
+                        c.add(diff);
+                    }
+                },
+                {
+                    badge: "2 · TAP ANSWER",
+                    color: "#10b981",
+                    title: "Pick Missing Term",
+                    text: "Click the option card that fills the highlighted '?' slot.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.pill(s, c, cx - 36, cy - 20, 62, 32, "10", { fill: 0x1e293b, stroke: 0x475569, fontSize: "15px" });
+                        d.pill(s, c, cx + 36, cy - 20, 62, 32, "11", { fill: 0x064e3b, stroke: 0x10b981, strokeWidth: 2.5, textColor: "#34d399", fontSize: "15px" });
+                        d.pill(s, c, cx - 36, cy + 20, 62, 32, "12", { fill: 0x1e293b, stroke: 0x475569, fontSize: "15px" });
+                        d.pill(s, c, cx + 36, cy + 20, 62, 32, "14", { fill: 0x1e293b, stroke: 0x475569, fontSize: "15px" });
+                        d.tapCursor(s, c, cx + 48, cy - 12, 0x10b981);
+                    }
+                },
+                {
+                    badge: "3 · DDA PROGRESSION",
+                    color: "#38bdf8",
+                    title: "Deeper Logic Rules",
+                    text: "Higher levels introduce geometric & multi-step number rules.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.pill(s, c, cx, cy - 30, 152, 24, "LVL 1: +N  ARITHMETIC", { fill: 0x1e293b, stroke: 0x38bdf8, textColor: "#7dd3fc", fontSize: "11px" });
+                        d.pill(s, c, cx, cy + 2, 152, 24, "LVL 3: ×N  GEOMETRIC", { fill: 0x1e293b, stroke: 0xf59e0b, textColor: "#fde68a", fontSize: "11px" });
+                        d.pill(s, c, cx, cy + 34, 152, 24, "LVL 5: MULTI-STEP", { fill: 0x2e1065, stroke: 0xa855f7, textColor: "#e9d5ff", fontSize: "11px" });
+                    }
+                }
+            ],
+            tip: "MOUSE / TOUCH ONLY  ·  Fast inference before the round bar ends earns larger speed bonuses.",
             themeColorHex: 0xf59e0b,
             onStart: () => this.startGameplay()
         });

@@ -232,7 +232,60 @@ export default class RouteOptimizerScene extends BaseCognitiveScene {
         createTutorialOverlay(this, {
             title: "ROUTE OPTIMIZER",
             domain: "executive_strategy",
-            instructions: "• Connect all terminal hubs using the shortest possible path network.\n\n• DDA scales node cluster sizes dynamically.\n\n• Track your path efficiency to optimize routing performance.",
+            lead: "Visit every terminal hub in the network using the shortest connected route.",
+            cards: [
+                {
+                    badge: "1 · START AT HUB",
+                    color: "#10b981",
+                    title: "Begin At Origin Node",
+                    text: "Your route starts at the highlighted green START terminal.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        const g = s.add.graphics();
+                        g.lineStyle(2, 0x334155, 0.9);
+                        g.lineBetween(cx - 50, cy, cx + 10, cy - 28);
+                        g.lineBetween(cx - 50, cy, cx + 10, cy + 28);
+                        g.lineBetween(cx + 10, cy - 28, cx + 56, cy);
+                        g.lineBetween(cx + 10, cy + 28, cx + 56, cy);
+                        c.add(g);
+                        d.pill(s, c, cx - 50, cy, 44, 26, "START", { fill: 0x065f46, stroke: 0x10b981, textColor: "#34d399", fontSize: "10px", radius: 13 });
+                        d.pill(s, c, cx + 10, cy - 28, 22, 22, "B", { fill: 0x1e293b, stroke: 0x475569, radius: 11, fontSize: "11px" });
+                        d.pill(s, c, cx + 10, cy + 28, 22, 22, "C", { fill: 0x1e293b, stroke: 0x475569, radius: 11, fontSize: "11px" });
+                        d.pill(s, c, cx + 56, cy, 22, 22, "D", { fill: 0x1e293b, stroke: 0x475569, radius: 11, fontSize: "11px" });
+                    }
+                },
+                {
+                    badge: "2 · LINK ALL NODES",
+                    color: "#38bdf8",
+                    title: "Click Adjacent Hubs",
+                    text: "Tap neighboring nodes step-by-step to visit every hub.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        const g = s.add.graphics();
+                        g.lineStyle(3, 0x38bdf8, 0.95);
+                        g.lineBetween(cx - 52, cy + 10, cx, cy - 26);
+                        g.lineBetween(cx, cy - 26, cx + 52, cy + 10);
+                        c.add(g);
+                        d.pill(s, c, cx - 52, cy + 10, 26, 26, "A", { fill: 0x065f46, stroke: 0x10b981, radius: 13, fontSize: "12px" });
+                        d.pill(s, c, cx, cy - 26, 26, 26, "B", { fill: 0x0284c7, stroke: 0x38bdf8, radius: 13, fontSize: "12px" });
+                        d.pill(s, c, cx + 52, cy + 10, 26, 26, "C", { fill: 0x0284c7, stroke: 0x38bdf8, radius: 13, fontSize: "12px" });
+                        d.tapCursor(s, c, cx + 58, cy + 16, 0x38bdf8);
+                    }
+                },
+                {
+                    badge: "3 · MAX EFFICIENCY",
+                    color: "#f59e0b",
+                    title: "Minimize Distance",
+                    text: "Avoid backtracking or long detours to earn optimal route efficiency.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.pill(s, c, cx, cy - 20, 164, 30, "✓ OPTIMAL PATH: 100%", {
+                            fill: 0x064e3b, stroke: 0x10b981, textColor: "#34d399", fontSize: "12px"
+                        });
+                        d.pill(s, c, cx, cy + 22, 164, 30, "✕ DETOUR: LOW BONUS", {
+                            fill: 0x7f1d1d, stroke: 0xef4444, textColor: "#fca5a5", fontSize: "12px"
+                        });
+                    }
+                }
+            ],
+            tip: "MOUSE / TOUCH ONLY  ·  Network cluster size & route complexity scale with DDA difficulty.",
             themeColorHex: 0x10b981,
             onStart: () => this.startGameplay()
         });

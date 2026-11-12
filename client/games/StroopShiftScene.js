@@ -118,9 +118,9 @@ export default class StroopShiftScene extends BaseCognitiveScene {
         this.add.text(width / 2, 95, 'SELECT THE FONT / INK COLOR (IGNORE THE WORD MEANING)', {
             fontFamily: CogniTheme.fonts.body,
             fontSize: '18px',
-            fontWeight: '800',
+            fontStyle: 'bold',
             fill: '#cbd5e1',
-            letterSpacing: '2px'
+            letterSpacing: 2
         }).setOrigin(0.5);
 
         // 3. Option Selection Buttons (Laid out horizontally at the bottom)
@@ -211,7 +211,64 @@ export default class StroopShiftScene extends BaseCognitiveScene {
         createTutorialOverlay(this, {
             title: "STROOP SHIFT",
             domain: "reflexes_and_focus",
-            instructions: "• Focus on the glowing word in the center of the screen.\n\n• Click the button that matches the INK / FONT COLOR of the word (ignore the word meaning!).\n\n• React quickly before the reaction timeout expires.\n\n• At higher difficulty levels, rotating angles and dynamic spin distractors challenge your focus.",
+            lead: "Click the color button matching the INK COLOR of the center word — ignore its meaning!",
+            cards: [
+                {
+                    badge: "1 · READ INK COLOR",
+                    color: "#38bdf8",
+                    title: "Ignore What It Spells",
+                    text: "Focus strictly on the paint color of the letters.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        const word = s.add.text(cx, cy - 18, "RED", {
+                            fontFamily: "system-ui, sans-serif", fontSize: "34px", fontStyle: "bold", fill: "#38bdf8"
+                        }).setOrigin(0.5);
+                        c.add(word);
+                        d.pill(s, c, cx - 44, cy + 32, 82, 26, "✓ BLUE", {
+                            fill: 0x064e3b, stroke: 0x10b981, textColor: "#34d399", fontSize: "12px"
+                        });
+                        d.pill(s, c, cx + 46, cy + 32, 82, 26, "✕ RED", {
+                            fill: 0x7f1d1d, stroke: 0xef4444, textColor: "#fca5a5", fontSize: "12px"
+                        });
+                    }
+                },
+                {
+                    badge: "2 · TAP COLOR BUTTON",
+                    color: "#a855f7",
+                    title: "Select Ink Button",
+                    text: "Click the matching color button at the bottom before timeout.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.pill(s, c, cx - 48, cy - 18, 84, 30, "RED", {
+                            fill: 0x991b1b, stroke: 0xef4444, textColor: "#ffffff", fontSize: "13px"
+                        });
+                        d.pill(s, c, cx + 48, cy - 18, 84, 30, "BLUE", {
+                            fill: 0x0284c7, stroke: 0xffffff, strokeWidth: 2.5, textColor: "#ffffff", fontSize: "13px"
+                        });
+                        d.pill(s, c, cx - 48, cy + 22, 84, 30, "GREEN", {
+                            fill: 0x065f46, stroke: 0x10b981, textColor: "#ffffff", fontSize: "13px"
+                        });
+                        d.pill(s, c, cx + 48, cy + 22, 84, 30, "YELLOW", {
+                            fill: 0x92400e, stroke: 0xf59e0b, textColor: "#ffffff", fontSize: "13px"
+                        });
+                        d.tapCursor(s, c, cx + 62, cy - 10, 0x38bdf8);
+                    }
+                },
+                {
+                    badge: "3 · WATCH THE SPIN",
+                    color: "#f59e0b",
+                    title: "Tilting Distractors",
+                    text: "Higher DDA levels tilt & spin words to test your concentration.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        const tilted = s.add.text(cx, cy - 6, "GREEN", {
+                            fontFamily: "system-ui, sans-serif", fontSize: "30px", fontStyle: "bold", fill: "#f59e0b"
+                        }).setOrigin(0.5).setAngle(-18);
+                        c.add(tilted);
+                        d.pill(s, c, cx, cy + 38, 144, 24, "LVL 3+  ROTATION", {
+                            fill: 0x451a03, stroke: 0xf59e0b, textColor: "#fde68a", fontSize: "11px"
+                        });
+                    }
+                }
+            ],
+            tip: "MOUSE / TOUCH ONLY  ·  Respond fast before the round bar runs out for streak bonuses.",
             themeColorHex: 0xa855f7,
             onStart: () => this.startGameplay()
         });

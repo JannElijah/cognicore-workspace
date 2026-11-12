@@ -221,28 +221,28 @@ export default class PriorityQueueScene extends BaseCognitiveScene {
         // Header Title
         const title = this.add.text(W / 2, mY + 34, 'PRIORITY QUEUE // EVERYDAY LIFE TRIAGE', {
             fontFamily: 'system-ui, -apple-system, sans-serif',
-            fontSize: '26px',
+            fontSize: '32px',
             fontStyle: 'bold',
             fill: '#10b981'
         }).setOrigin(0.5);
         this.briefingContainer.add(title);
 
-        const sub = this.add.text(W / 2, mY + 64, 'EXECUTIVE STRATEGY · EISENHOWER MATRIX IN REAL-LIFE SITUATIONS', {
+        const sub = this.add.text(W / 2, mY + 70, 'EXECUTIVE STRATEGY · EISENHOWER MATRIX IN REAL-LIFE SITUATIONS', {
             fontFamily: 'system-ui, -apple-system, sans-serif',
-            fontSize: '12px',
+            fontSize: '15px',
             fontStyle: 'bold',
             fill: '#00f0ff'
         }).setOrigin(0.5);
         this.briefingContainer.add(sub);
 
         // Rule Explanation
-        const prompt = this.add.text(W / 2, mY + 102, 'Drag and drop each incoming card into the correct bin before it leaves the screen!\nEvaluate urgency and real-world value—don\'t fall for sales traps!', {
+        const prompt = this.add.text(W / 2, mY + 100, 'Drag and drop each incoming card into the correct bin before it leaves the screen!\nEvaluate urgency and real-world value—don\'t fall for sales traps!', {
             fontFamily: 'system-ui, -apple-system, sans-serif',
-            fontSize: '15px',
-            fontStyle: 'normal',
-            fill: '#cbd5e1',
+            fontSize: '18px',
+            fontStyle: 'bold',
+            fill: '#e2e8f0',
             align: 'center',
-            lineSpacing: 5
+            lineSpacing: 6
         }).setOrigin(0.5, 0);
         this.briefingContainer.add(prompt);
 
@@ -253,7 +253,7 @@ export default class PriorityQueueScene extends BaseCognitiveScene {
                 rule: 'CRITICAL EMERGENCIES\n(DUE RIGHT NOW)',
                 desc: '🔥 Kitchen Stove Fire\n🚗 Car Tire Blowout\n💳 Stolen Credit Card',
                 color: '#ef4444',
-                x: mX + 155
+                x: mX + 150
             },
             {
                 title: '⭐ IMPORTANT',
@@ -267,7 +267,7 @@ export default class PriorityQueueScene extends BaseCognitiveScene {
                 rule: 'DISTRACTIONS & CHORES\n(DISMISS / DELEGATE)',
                 desc: '👟 50% Shoe Flash Sale\n💬 Office Gossip Chat\n📱 TikTok Scrolling',
                 color: '#22c55e',
-                x: mX + 705
+                x: mX + 710
             }
         ];
 
@@ -275,53 +275,53 @@ export default class PriorityQueueScene extends BaseCognitiveScene {
             const cg = this.add.graphics();
             cg.fillStyle(0x0f172a, 0.95);
             cg.lineStyle(2, Phaser.Display.Color.HexStringToColor(c.color).color, 0.85);
-            cg.fillRoundedRect(c.x - 120, mY + 180, 240, 195, 14);
-            cg.strokeRoundedRect(c.x - 120, mY + 180, 240, 195, 14);
+            cg.fillRoundedRect(c.x - 125, mY + 180, 250, 204, 14);
+            cg.strokeRoundedRect(c.x - 125, mY + 180, 250, 204, 14);
             this.briefingContainer.add(cg);
 
             const cTitle = this.add.text(c.x, mY + 208, c.title, {
                 fontFamily: '"Segoe UI", "Segoe UI Emoji", system-ui, sans-serif',
-                fontSize: '20px',
+                fontSize: '22px',
                 fontStyle: 'bold',
                 fill: c.color
             }).setOrigin(0.5);
             this.briefingContainer.add(cTitle);
 
-            const cRule = this.add.text(c.x, mY + 252, c.rule, {
+            const cRule = this.add.text(c.x, mY + 254, c.rule, {
                 fontFamily: 'system-ui, -apple-system, sans-serif',
-                fontSize: '12px',
+                fontSize: '14px',
                 fontStyle: 'bold',
                 fill: '#ffffff',
                 align: 'center',
-                lineSpacing: 3
+                lineSpacing: 4
             }).setOrigin(0.5);
             this.briefingContainer.add(cRule);
 
-            const cDesc = this.add.text(c.x, mY + 322, c.desc, {
+            const cDesc = this.add.text(c.x, mY + 328, c.desc, {
                 fontFamily: 'system-ui, -apple-system, sans-serif',
-                fontSize: '12px',
+                fontSize: '14px',
                 fontStyle: 'normal',
-                fill: '#94a3b8',
+                fill: '#cbd5e1',
                 align: 'center',
-                lineSpacing: 4
+                lineSpacing: 6
             }).setOrigin(0.5);
             this.briefingContainer.add(cDesc);
         });
 
         // Warning Callout
-        const callout = this.add.text(W / 2, mY + 420, '💡 PRO TIP: A "50% Shoe Sale" or "Office Gossip" may feel urgent, but its life impact is LOW!\nAlways send distractions and low-impact chores to the DELEGATE bin!', {
+        const callout = this.add.text(W / 2, mY + 412, '💡 PRO TIP: A "50% Shoe Sale" or "Office Gossip" may feel urgent, but its life impact is LOW!\nAlways send distractions and low-impact chores to the DELEGATE bin!', {
             fontFamily: 'system-ui, -apple-system, sans-serif',
-            fontSize: '13px',
+            fontSize: '16px',
             fontStyle: 'bold',
             fill: '#38bdf8',
             align: 'center',
-            lineSpacing: 4
+            lineSpacing: 6
         }).setOrigin(0.5, 0);
         this.briefingContainer.add(callout);
 
         // Big Launch Button
-        const btnW = 320;
-        const btnH = 58;
+        const btnW = 340;
+        const btnH = 62;
         const btnX = W / 2;
         const btnY = mY + mH - 52;
 
@@ -332,7 +332,7 @@ export default class PriorityQueueScene extends BaseCognitiveScene {
 
         const btnTxt = this.add.text(btnX, btnY, '▶  START TRIAGE SESSION', {
             fontFamily: 'system-ui, -apple-system, sans-serif',
-            fontSize: '17px',
+            fontSize: '20px',
             fontStyle: 'bold',
             fill: '#021814'
         }).setOrigin(0.5);

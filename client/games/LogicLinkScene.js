@@ -101,9 +101,9 @@ export default class LogicLinkScene extends BaseCognitiveScene {
         this.statusText = this.add.text(width / 2, 80, 'INITIALIZING LOGIC PATHWAY...', {
             fontFamily: CogniTheme.fonts.body,
             fontSize: '20px',
-            fontWeight: '800',
+            fontStyle: 'bold',
             fill: '#f59e0b',
-            letterSpacing: '0.04em'
+            letterSpacing: 1
         }).setOrigin(0.5, 0);
 
         // Graphics Layer for drawing glowing paths
@@ -132,7 +132,50 @@ export default class LogicLinkScene extends BaseCognitiveScene {
         createTutorialOverlay(this, {
             title: "LOGIC LINK: HYBRID",
             domain: "logical_mathematical",
-            instructions: "• Connect targets in strict sequence:\n  - Lvl 1: Numbers (1 -> 2 -> 3 -> 4)\n  - Lvl 2-3: Alternating Trail (1 -> A -> 2 -> B -> 3 -> C)\n  - Lvl 4-5: Memory Mask (memorize board, tiles turn to '?' on first click!)\n\n• Beware of Decoy Traps: Fake numbers and letters are scattered across the board — ignore them!\n\n• Speed Bonus: Plan your path before clicking to rack up huge combo points.",
+            lead: "Connect nodes in strict sequence while ignoring decoy traps scattered on the board.",
+            cards: [
+                {
+                    badge: "1 · CONNECT TRAIL",
+                    color: "#f59e0b",
+                    title: "Strict Sequence",
+                    text: "Lvl 1: 1→2→3. Lvl 2+: alternate numbers & letters (1→A→2→B).",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        const g = s.add.graphics();
+                        g.lineStyle(3, 0x38bdf8, 0.85);
+                        g.lineBetween(cx - 60, cy + 12, cx - 18, cy - 22);
+                        g.lineBetween(cx - 18, cy - 22, cx + 22, cy + 16);
+                        g.lineBetween(cx + 22, cy + 16, cx + 62, cy - 18);
+                        c.add(g);
+                        d.pill(s, c, cx - 60, cy + 12, 30, 30, "1", { fill: 0x0284c7, stroke: 0x38bdf8, radius: 15, fontSize: "14px" });
+                        d.pill(s, c, cx - 18, cy - 22, 30, 30, "A", { fill: 0x78350f, stroke: 0xf59e0b, radius: 15, fontSize: "14px" });
+                        d.pill(s, c, cx + 22, cy + 16, 30, 30, "2", { fill: 0x0284c7, stroke: 0x38bdf8, radius: 15, fontSize: "14px" });
+                        d.pill(s, c, cx + 62, cy - 18, 30, 30, "B", { fill: 0x78350f, stroke: 0xf59e0b, radius: 15, fontSize: "14px" });
+                    }
+                },
+                {
+                    badge: "2 · MEMORY MASK",
+                    color: "#a855f7",
+                    title: "Hidden Tiles (Lvl 4–5)",
+                    text: "Memorize first! Remaining nodes flip to '?' after your first click.",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.pill(s, c, cx - 54, cy, 34, 34, "1✓", { fill: 0x064e3b, stroke: 0x10b981, textColor: "#34d399", radius: 17, fontSize: "13px" });
+                        d.pill(s, c, cx, cy, 34, 34, "?", { fill: 0x2e1065, stroke: 0xa855f7, textColor: "#e9d5ff", radius: 17, fontSize: "16px" });
+                        d.pill(s, c, cx + 54, cy, 34, 34, "?", { fill: 0x2e1065, stroke: 0xa855f7, textColor: "#e9d5ff", radius: 17, fontSize: "16px" });
+                    }
+                },
+                {
+                    badge: "3 · DODGE DECOYS",
+                    color: "#ef4444",
+                    title: "Ignore Trap Nodes",
+                    text: "Fake numbers & letters sit off-trail — never click decoys!",
+                    drawDiagram: (s, c, cx, cy, _w, _h, d) => {
+                        d.pill(s, c, cx - 34, cy - 6, 36, 36, "9", { fill: 0x7f1d1d, stroke: 0xef4444, textColor: "#fca5a5", radius: 18, fontSize: "16px" });
+                        d.pill(s, c, cx + 30, cy + 12, 36, 36, "Z", { fill: 0x7f1d1d, stroke: 0xef4444, textColor: "#fca5a5", radius: 18, fontSize: "16px" });
+                        d.statusBadge(s, c, cx + 60, cy - 34, false, "TRAP");
+                    }
+                }
+            ],
+            tip: "MOUSE / TOUCH ONLY  ·  Plan your whole route before clicking node 1 for max speed combo!",
             themeColorHex: 0xf59e0b,
             onStart: () => this.startGameplay()
         });
